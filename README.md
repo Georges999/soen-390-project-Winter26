@@ -1,2 +1,33 @@
-# soen-390-project-Winter26
-TEAM: Stats and furious ; developing the Concordia Campus Guide mobile application
+# Campus Guide - Concordia University Navigation App - TEAM STATS AND FURIOUS
+
+Mobile app for Concordia students to navigate campus with real-time directions, indoor navigation, and class schedule integration.
+
+
+## Tech Stack
+
+- **Frontend:** React Native (JavaScript)
+- **Backend:** Node.js + Express
+- **Database:** Supabase (PostgreSQL)
+- **Maps:** Google Maps API
+
+## Core Features
+
+1. **Campus Map** - Interactive SGW/Loyola campus maps
+2. **Outdoor Directions** - Walk/drive/transit directions
+3. **Next Class Navigation** - Auto-navigate to next class
+4. **Indoor Navigation** - Room-to-room directions inside buildings
+5. **Points of Interest** - Find washrooms, cafes, study spaces
+
+
+## API Keys
+
+- **Google Maps API** - [Get Key](https://developers.google.com/maps/documentation/javascript/get-api-key)
+- **Google Calendar API** - [Get Key](https://developers.google.com/calendar/api/quickstart/js)
+- **Supabase** - [Create Project](https://supabase.com/)
+- **Concordia Open Data API** - [Register](https://opendata.concordia.ca/)
+
+## Project Info
+
+- **Course:** ENGR 390, Concordia University
+- **Team Size:** 10 developers
+- **Timeline:** 12 weeks (6 sprints)
