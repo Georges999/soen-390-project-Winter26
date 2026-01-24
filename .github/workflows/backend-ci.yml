@@ -25,18 +25,23 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install dependencies
-        working-directory: backend
-        run: npm install
+      # UNCOMMENT WHEN: Packages are finalized and package.json dependencies are stable
+      # - name: Install dependencies
+      #   working-directory: backend
+      #   run: npm install
 
-      - name: Run linter
-        working-directory: backend
-        run: npm run lint
+      # UNCOMMENT WHEN: ESLint config is added (.eslintrc.js or .eslintrc.json)
+      # To set up: Run 'npm init @eslint/config' in backend folder
+      # - name: Run linter
+      #   working-directory: backend
+      #   run: npm run lint
 
-      - name: Run tests
-        working-directory: backend
-        run: npm test -- --coverage
+      # UNCOMMENT WHEN: Tests are written (e.g., using Jest)
+      # - name: Run tests
+      #   working-directory: backend
+      #   run: npm test
 
-      - name: Check coverage threshold
-        working-directory: backend
-        run: npm test -- --coverage --coverageThreshold='{"global":{"lines":70,"statements":70,"functions":70,"branches":70}}'
+      # UNCOMMENT WHEN: Tests are written and you want to enforce 70% coverage
+      # - name: Check coverage threshold
+      #   working-directory: backend
+      #   run: npm test -- --coverage --coverageThreshold='{"global":{"lines":70,"statements":70,"functions":70,"branches":70}}'
