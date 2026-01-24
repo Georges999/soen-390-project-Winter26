@@ -35,4 +35,5 @@ Mobile app for Concordia students to navigate campus with real-time directions, 
                      Peter Samaha ID40238955
                      Jana El Madhoun ID40272201
                      Nayla Nocera 40283927
+                     Rita Kardachian 40283698
 - **Timeline:** 12 weeks (6 sprints)
