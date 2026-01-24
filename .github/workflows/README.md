@@ -2,7 +2,7 @@
 
 This folder contains CI/CD automation for the project.
 
-Each workflow is seperated, meaning that if we only edited backend code, only the backend yml will be tested, same for frontend,
+Each workflow is seperated, meaning that if we only edited backend code, only the backend yml will be tested, same for frontend, caching is removed for now, as we didnt choose waht packages we want to work on yet, so I should re-add caching once packages are decided. 
 ## Workflows
 
 ### backend-ci.yml
