@@ -1,6 +1,6 @@
 # Architecture Documentation
 
-This folder contains all architecture-related documentation for the Campus Guide project.
+This folder contains all architecture-related documentation for the Campus Guide project, including the Domain Model (ERD), component diagrams, and other system design artifacts.
 
 ## Contents
 
@@ -8,6 +8,7 @@ This folder contains all architecture-related documentation for the Campus Guide
 - High-level system architecture diagrams
 - Component interaction diagrams
 - Data flow diagrams
+- Domain Model
 
 ### Database Schema
 - Entity-relationship diagrams
