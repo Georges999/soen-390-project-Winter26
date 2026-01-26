@@ -2,7 +2,7 @@
 
 Mobile app for Concordia students to navigate campus with real-time directions, indoor navigation, and class schedule integration.
 
-
+ 
 ## Tech Stack
 
 - **Frontend:** React Native (JavaScript)
