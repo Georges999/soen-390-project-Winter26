@@ -40,5 +40,6 @@ Mobile app for Concordia students to navigate campus with real-time directions, 
                      Ana Rostam 40187433
                      Ahmed Eskaf 40235587 
                      Mohammed Janoudi 40252494
+                     Marc El Haddad 40231208
        
 - **Timeline:** 12 weeks (6 sprints)
