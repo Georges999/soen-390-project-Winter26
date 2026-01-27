@@ -33,7 +33,8 @@ Mobile app for Concordia students to navigate campus with real-time directions, 
 - **Names and IDs**:       
                      Georges Ghazal ID40231026     
                      Boudy Joe Samaha ID40238965       
-                     Peter Samaha ID40238955       
+                     Peter Samaha ID40238955
+                     Samer Hasna ID40234608
                      Jana El Madhoun ID40272201      
                      Nayla Nocera 40283927      
                      Rita Kardachian 40283698      
