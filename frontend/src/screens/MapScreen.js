@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import MapView, { Marker, Polygon } from 'react-native-maps';
+import MapView, { Polygon } from 'react-native-maps';
 
 import CampusToggle from '../components/CampusToggle';
 import campuses from '../data/campuses.json';
@@ -82,18 +82,18 @@ export default function MapScreen() {
             <React.Fragment key={building.id}>
               <Polygon
                 coordinates={building.coordinates}
-                fillColor={building.fillColor ?? 'rgba(145, 35, 56, 0.35)'}
-                strokeColor={building.strokeColor ?? '#912338'}
+                fillColor={'rgba(145, 35, 56, 0.25)'}
+                strokeColor={'rgba(145, 35, 56, 0.8)'}
                 strokeWidth={2}
                 tappable
               />
-              {center && building.label ? (
+              {/* {center && building.label ? (
                 <Marker coordinate={center} anchor={{ x: 0.5, y: 0.5 }}>
                   <View style={styles.labelBubble}>
                     <Text style={styles.labelText}>{building.label}</Text>
                   </View>
                 </Marker>
-              ) : null}
+              ) : null} */}
             </React.Fragment>
           );
         })}
@@ -127,19 +127,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  labelBubble: {
-    backgroundColor: 'rgba(63, 63, 63, 0.83)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  labelText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
   },
   loadingContainer: {
     flex: 1,
