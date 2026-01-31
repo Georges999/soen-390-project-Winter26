@@ -7,13 +7,22 @@ export default ({ config }) => {
     ...config,
     name,
     slug,
+
     ios: {
       ...config.ios,
+
+      infoPlist: {
+        ...(config.ios?.infoPlist ?? {}),
+        NSLocationWhenInUseUsageDescription:
+          'We use your location to show where you are on campus.',
+      },
+
       config: {
         ...config.ios?.config,
         googleMapsApiKey,
       },
     },
+
     android: {
       ...config.android,
       config: {
