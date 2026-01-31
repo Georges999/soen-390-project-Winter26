@@ -1,0 +1,1065 @@
+{
+  "sgw": {
+    "id": "sgw",
+    "name": "SGW",
+    "region": {
+      "latitude": 45.4973,
+      "longitude": -73.5789,
+      "latitudeDelta": 0.0065,
+      "longitudeDelta": 0.0065
+    },
+    "buildings": [
+      {
+        "id": "sgw-b",
+        "label": "B",
+        "name": "B Annex",
+        "address": "2160 Bishop Street",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+        "coordinates": [
+          { "latitude": 45.49775209746397, "longitude": -73.57963141360815 },
+          { "latitude": 45.497715483679855, "longitude": -73.57956364118522 },
+          { "latitude": 45.49788697581374, "longitude":-73.57938954407052 },
+          { "latitude":45.497923868852496, "longitude":  -73.57946647070285},
+          { "latitude": 45.49775359308788, "longitude":-73.57963131348586}
+
+        ]
+      },
+      {
+        "id": "sgw-ci",
+        "label": "CI",
+        "name": "CI Annex",
+        "address": "2149 Mackay Street",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+        "coordinates": [
+        { "latitude": 45.497365135687375, "longitude": -73.5799219433353 },
+        { "latitude": 45.49754086021338,  "longitude": -73.57975206288316 },
+        { "latitude": 45.4975817067172,   "longitude": -73.57984552106701 },
+        { "latitude": 45.49740598947176,  "longitude": -73.5800137457966 },
+        { "latitude": 45.497388263578586, "longitude": -73.57997416350712 },
+        { "latitude": 45.49737362044547,  "longitude": -73.5799719644912 },
+        { "latitude": 45.497362060074835, "longitude": -73.579945576298 },
+        { "latitude": 45.49736514284044,  "longitude": -73.5799213871214 }
+            ]
+
+        },
+      {
+        "id": "sgw-cl",
+        "label": "CL",
+        "name": "CL Annex",
+        "address": "1665 St. Catherine W",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+        "coordinates": [
+        { "latitude": 45.494167215991666, "longitude": -73.57963990602207 },
+        { "latitude": 45.494472136668065, "longitude": -73.57927849476275 },
+        { "latitude": 45.49425216918172,  "longitude": -73.57892141178296 },
+        { "latitude": 45.493970002734926, "longitude": -73.57930446443429 },
+        { "latitude": 45.49416569896937,  "longitude": -73.57964423430032 }
+            ]
+
+      },
+      {
+        "id": "sgw-d",
+        "label": "D",
+        "name": "D Annex",
+        "address": "2140 Bishop Street",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+        "coordinates": [
+        { "latitude": 45.49771011875808, "longitude": -73.57945351131183 },
+        { "latitude": 45.49784953003956, "longitude": -73.5793166584887 },
+        { "latitude": 45.49781435750114, "longitude": -73.57923910855591 },
+        { "latitude": 45.49771651377853, "longitude": -73.57933673023638 },
+        { "latitude": 45.49773122232298, "longitude": -73.57936683785705 },
+        { "latitude": 45.49768837568334, "longitude": -73.57940789370394 },
+        { "latitude": 45.49770947925606, "longitude": -73.57945351131183 }
+        ]
+
+      },
+      {
+        "id": "sgw-en",
+        "label": "EN",
+        "name": "EN Annex",
+        "address": "2070 Mackay Street",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+        "coordinates": [
+            { "latitude": 45.49671723455279,  "longitude": -73.5797875486897 },
+            { "latitude": 45.49695126954765,  "longitude": -73.57956495988101 },
+            { "latitude": 45.496927782208616, "longitude": -73.57951350117767 },
+            { "latitude": 45.49691855503707,  "longitude": -73.57952307488996 },
+            { "latitude": 45.496900100689516, "longitude": -73.57948478004074 },
+            { "latitude": 45.49679189098322,  "longitude": -73.5795865007328 },
+            { "latitude": 45.49680782885997,  "longitude": -73.57962120544016 },
+            { "latitude": 45.49669039176743,  "longitude": -73.57973489327239 },
+            { "latitude": 45.49671639571602,  "longitude": -73.57978874540363 }
+        ]
+
+      },
+      {
+        "id": "sgw-er",
+        "label": "ER",
+        "name": "ER Building",
+        "address": "2155 Guy Street",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+"coordinates": [
+  { "latitude": 45.49613857919175,  "longitude": -73.58000470005744 },
+  { "latitude": 45.496516990523304, "longitude": -73.57963468973742 },
+  { "latitude": 45.49667505484658,  "longitude": -73.57997163285675 },
+  { "latitude": 45.49623616633022,  "longitude": -73.58038677547435 },
+  { "latitude": 45.496144695890166, "longitude": -73.5800955895233 },
+  { "latitude": 45.49615989164792,  "longitude": -73.58007867619452 },
+  { "latitude": 45.49613942156887,  "longitude": -73.58001319238181 }
+]
+
+      },
+      {
+        "id": "sgw-ev",
+        "label": "EV",
+        "name": "Engineering, Computer Science and Visual Arts Integrated Complex",
+        "address": "1515 Ste-Catherine W",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+"coordinates": [
+  { "latitude": 45.495187087598055, "longitude": -73.5778765330779 },
+  { "latitude": 45.495551603857336, "longitude": -73.57868587046917 },
+  { "latitude": 45.49558978720765,  "longitude": -73.57865976856591 },
+  { "latitude": 45.495627363101846, "longitude": -73.57873440561487 },
+  { "latitude": 45.49592551621677,  "longitude": -73.57845132472724 },
+  { "latitude": 45.49588270892474,  "longitude": -73.5783434103763 },
+  { "latitude": 45.49590386726163,  "longitude": -73.57830934982418 },
+  { "latitude": 45.495756714918826, "longitude": -73.57800309057065 },
+  { "latitude": 45.49606270053357,  "longitude": -73.57770792767404 },
+  { "latitude": 45.49583588815511,  "longitude": -73.57722798271524 },
+  { "latitude": 45.49551432156636,  "longitude": -73.57753291835046 },
+  { "latitude": 45.49558896103082,  "longitude": -73.57769184062313 },
+  { "latitude": 45.495523655834745, "longitude": -73.57775456534071 },
+  { "latitude": 45.49551344768068,  "longitude": -73.57773230838481 },
+  { "latitude": 45.49550074617645,  "longitude": -73.57774239866475 },
+  { "latitude": 45.49543826495349,  "longitude": -73.5776159239082 },
+  { "latitude": 45.49517871529008,  "longitude": -73.577871038017 }
+]
+
+      },
+      {
+        "id": "sgw-fa",
+        "label": "FA",
+        "name": "FA Annex",
+        "address": "2060 Mackay Street",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+"coordinates": [
+  { "latitude": 45.49674170581392,  "longitude": -73.57951794125762 },
+  { "latitude": 45.496778667156036, "longitude": -73.57959626147515 },
+  { "latitude": 45.496883588590094, "longitude": -73.57949832080962 },
+  { "latitude": 45.49684303822241,  "longitude": -73.57941444386452 },
+  { "latitude": 45.49674122906745,  "longitude": -73.5795169017791 }
+]
+
+      },
+      {
+        "id": "sgw-fb",
+        "label": "FB",
+        "name": "Faubourg Building",
+        "address": "1250 Guy Street",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+"coordinates": [
+  { "latitude": 45.49438285690911,  "longitude": -73.57749472188131 },
+  { "latitude": 45.49467848571109,  "longitude": -73.57801508733817 },
+  { "latitude": 45.49474372752164,  "longitude": -73.57793793727012 },
+  { "latitude": 45.49475569801655,  "longitude": -73.57796203100604 },
+  { "latitude": 45.494851010929494, "longitude": -73.57784569614084 },
+  { "latitude": 45.494840646455174, "longitude": -73.57782937238457 },
+  { "latitude": 45.49489181440774,  "longitude": -73.57776108549143 },
+  { "latitude": 45.49485438628042,  "longitude": -73.57769202896112 },
+  { "latitude": 45.49486071286296,  "longitude": -73.57767654519047 },
+  { "latitude": 45.49481369957138,  "longitude": -73.57760959409265 },
+  { "latitude": 45.494819561813074, "longitude": -73.57759728042134 },
+  { "latitude": 45.49477768932172,  "longitude": -73.57752689903205 },
+  { "latitude": 45.494785225783005, "longitude": -73.57752123258666 },
+  { "latitude": 45.494743637667995, "longitude": -73.57744945169829 },
+  { "latitude": 45.49475200308652,  "longitude": -73.5774394708443 },
+  { "latitude": 45.49470735950783,  "longitude": -73.57737035511994 },
+  { "latitude": 45.49471466595989,  "longitude": -73.5773613239098 },
+  { "latitude": 45.49467030960432,  "longitude": -73.57729118246324 },
+  { "latitude": 45.494678376885304, "longitude": -73.57728220357612 },
+  { "latitude": 45.49463243167398,  "longitude": -73.5772019560928 },
+  { "latitude": 45.494381800900385, "longitude": -73.57749239876705 }
+]
+
+      },
+      {
+        "id": "sgw-fg",
+        "label": "FG",
+        "name": "Faubourg Ste-Catherine Building",
+        "address": "1610 St-Catherine W",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+"coordinates": [
+  { "latitude": 45.493619754504664, "longitude": -73.57871427580298 },
+  { "latitude": 45.493808363771564, "longitude": -73.57903625185806 },
+  { "latitude": 45.49467752422561,  "longitude": -73.57801754443679 },
+  { "latitude": 45.49443324330028,  "longitude": -73.57759773936978 },
+  { "latitude": 45.494413300000815, "longitude": -73.57762913597959 },
+  { "latitude": 45.494411866911776, "longitude": -73.57769437866877 },
+  { "latitude": 45.49444136192221,  "longitude": -73.57774566340866 },
+  { "latitude": 45.49361576806106,  "longitude": -73.57871153646332 },
+  { "latitude": 45.49363660255332,  "longitude": -73.57874251158196 }
+]
+
+      },
+      {
+        "id": "sgw-ga",
+        "label": "GA",
+        "name": "Grey Nuns Annex",
+        "address": "1215, Saint Mathieu Street",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+"coordinates": [
+  { "latitude": 45.49408028417824, "longitude": -73.57793056994203 },
+  { "latitude": 45.49379072273683, "longitude": -73.5782666136306 },
+  { "latitude": 45.493852108043,   "longitude": -73.57836275933546 },
+  { "latitude": 45.49414797877566, "longitude": -73.57801534598447 },
+  { "latitude": 45.49412235880959, "longitude": -73.57797623867154 },
+  { "latitude": 45.49435021751751, "longitude": -73.57774436948081 },
+  { "latitude": 45.49429384725872, "longitude": -73.577629842777 },
+  { "latitude": 45.49405615866414, "longitude": -73.57786540703991 },
+  { "latitude": 45.49408162911746, "longitude": -73.5779293145475 }
+]
+
+      },
+      {
+        "id": "sgw-gm",
+        "label": "GM",
+        "name": "Guy-De Maisonneuve Building",
+        "address": "1550 De Maisonneuve W",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+"coordinates": [
+  { "latitude": 45.495627669378905, "longitude": -73.57873618692616 },
+  { "latitude": 45.4959560265612,   "longitude": -73.57841656666753 },
+  { "latitude": 45.496132667131064, "longitude": -73.57878184689928 },
+  { "latitude": 45.49578060287931,  "longitude": -73.579120069395 },
+  { "latitude": 45.49576637801502,  "longitude": -73.57908624714558 },
+  { "latitude": 45.495787715310456, "longitude": -73.57906257157089 },
+  { "latitude": 45.495625405786456, "longitude": -73.57873631727637 }
+]
+
+      },
+      {
+        "id": "sgw-gn",
+        "label": "GN",
+        "name": "Grey Nuns Building",
+        "address": "1190 Guy St. (main entrance) / 1175 St-Mathieu St.",
+        "fillColor": "rgba(0, 188, 212, 0.35)",
+        "strokeColor": "rgba(0, 188, 212, 0.9)",
+        "coordinates": [
+          { "latitude": 45.493842, "longitude": -73.577283 },
+          { "latitude": 45.493842, "longitude": -73.576723 },
+          { "latitude": 45.493402, "longitude": -73.576723 },
+          { "latitude": 45.493402, "longitude": -73.577283 }
+        ]
+      },
+      {
+        "id": "sgw-gs",
+        "label": "GS",
+        "name": "Guy-Sherbrooke Building",
+        "address": "1538 Sherbrooke Street West",
+        "fillColor": "rgba(233, 30, 99, 0.35)",
+        "strokeColor": "rgba(233, 30, 99, 0.9)",
+"coordinates": [
+  { "latitude": 45.496620826025406, "longitude": -73.58144733712382 },
+  { "latitude": 45.49677501719958,  "longitude": -73.581293026687 },
+  { "latitude": 45.49666340124247,  "longitude": -73.58101559622034 },
+  { "latitude": 45.49660471647579,  "longitude": -73.58106812743297 },
+  { "latitude": 45.49652301797255,  "longitude": -73.5808251705748 },
+  { "latitude": 45.496409100143495, "longitude": -73.5809335162006 },
+  { "latitude": 45.496573648044915, "longitude": -73.58142927951968 },
+  { "latitude": 45.49662312738917,  "longitude": -73.58145226192516 }
+]
+
+      },
+      {
+        "id": "sgw-h",
+        "label": "H",
+        "name": "Henry F. Hall Building",
+        "address": "1455 DeMaisonneuve W",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+"coordinates": [
+  { "latitude": 45.496835335113985, "longitude": -73.57883760792055 },
+  { "latitude": 45.49737160164315,  "longitude": -73.57829047277453 },
+  { "latitude": 45.497716109567364, "longitude": -73.579009167246 },
+  { "latitude": 45.49716684593449,  "longitude": -73.57953775543844 },
+  { "latitude": 45.496838585229796, "longitude": -73.57883760792055 }
+]
+
+      },
+      {
+        "id": "sgw-k",
+        "label": "K",
+        "name": "K Annex",
+        "address": "2150 Bishop Street",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+"coordinates": [
+  { "latitude": 45.49763879794881,  "longitude": -73.57964142636716 },
+  { "latitude": 45.497888168005574, "longitude": -73.57938623508811 },
+  { "latitude": 45.49785134127336,  "longitude": -73.5793186844558 },
+  { "latitude": 45.49776190482382,  "longitude": -73.57940875196603 },
+  { "latitude": 45.49777137457227,  "longitude": -73.5794342710936 },
+  { "latitude": 45.49774506971136,  "longitude": -73.57946429359733 },
+  { "latitude": 45.497751382879244, "longitude": -73.57948080597401 },
+  { "latitude": 45.49770613849492,  "longitude": -73.57952884197951 },
+  { "latitude": 45.49767983360411,  "longitude": -73.57947780372386 },
+  { "latitude": 45.49759671006686,  "longitude": -73.57956186673336 },
+  { "latitude": 45.49763669355556,  "longitude": -73.57964442861777 }
+]
+
+      },
+      {
+        "id": "sgw-lb",
+        "label": "LB",
+        "name": "J.W. McConnell Building",
+        "address": "1400 De Maisonneuve W",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+"coordinates": [
+  { "latitude": 45.49624894286404,  "longitude": -73.57770400568445 },
+  { "latitude": 45.496666270858384, "longitude": -73.57856825534124 },
+  { "latitude": 45.49670127242072,  "longitude": -73.57852984424555 },
+  { "latitude": 45.496725504258734, "longitude": -73.57857593756047 },
+  { "latitude": 45.497258602056576, "longitude": -73.57804202332802 },
+  { "latitude": 45.49688704957893,  "longitude": -73.57728148362969 },
+  { "latitude": 45.49661780712091,  "longitude": -73.57754267908133 },
+  { "latitude": 45.496650116284144, "longitude": -73.57764254793105 },
+  { "latitude": 45.496601652532775, "longitude": -73.57768480013604 },
+  { "latitude": 45.49649126272121,  "longitude": -73.57745433356084 },
+  { "latitude": 45.49624355796641,  "longitude": -73.5776924823553 }
+]
+
+      },
+      {
+        "id": "sgw-ld",
+        "label": "LD",
+        "name": "LD Building",
+        "address": "1424 Bishop Street",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+"coordinates": [
+  { "latitude": 45.49657674741073,  "longitude": -73.5774461178839 },
+  { "latitude": 45.49682948128873,  "longitude": -73.57719519582209 },
+  { "latitude": 45.4968221957854,   "longitude": -73.57717830593862 },
+  { "latitude": 45.496845873667695, "longitude": -73.57714322695078 },
+  { "latitude": 45.49682492784905,  "longitude": -73.57709775418951 },
+  { "latitude": 45.49680580339955,  "longitude": -73.57711594329385 },
+  { "latitude": 45.4967976072048,   "longitude": -73.57709775418951 },
+  { "latitude": 45.49667648552142,  "longitude": -73.57721468414815 },
+  { "latitude": 45.49668012828295,  "longitude": -73.57723417247497 },
+  { "latitude": 45.49654232540129,  "longitude": -73.57737129818646 },
+  { "latitude": 45.49657328893781,  "longitude": -73.57744925149223 },
+  { "latitude": 45.49658512793226,  "longitude": -73.57743755849629 }
+]
+
+      },
+      {
+        "id": "sgw-ls",
+        "label": "LS",
+        "name": "Learning Square",
+        "address": "1535 De Maisonneuve Blvd. W.",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+"coordinates": [
+  { "latitude": 45.496175841680355, "longitude": -73.57946436467257 },
+  { "latitude": 45.496385109103784, "longitude": -73.57925444957355 },
+  { "latitude": 45.49652898000667,  "longitude": -73.57955921519874 },
+  { "latitude": 45.4964112674773,   "longitude": -73.57967272484501 },
+  { "latitude": 45.49636331045025,  "longitude": -73.57957165461211 },
+  { "latitude": 45.496268486208976, "longitude": -73.57966339528517 },
+  { "latitude": 45.496173661807376, "longitude": -73.57946591959912 }
+]
+
+      },
+      {
+        "id": "sgw-m",
+        "label": "M",
+        "name": "M Annex",
+        "address": "2135 Mackay Street",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+"coordinates": [
+  { "latitude": 45.49728541878622,  "longitude": -73.57975920304715 },
+  { "latitude": 45.497282434338274, "longitude": -73.57978049185017 },
+  { "latitude": 45.497291814030916, "longitude": -73.57980299715695 },
+  { "latitude": 45.497305244043105, "longitude": -73.5798084714207 },
+  { "latitude": 45.49732059262419,  "longitude": -73.57983584273931 },
+  { "latitude": 45.49742647500764,  "longitude": -73.57973169907463 },
+  { "latitude": 45.49738848251042,  "longitude": -73.57965774108132 },
+  { "latitude": 45.497285345672594, "longitude": -73.57975905340012 }
+]
+
+      },
+      {
+        "id": "sgw-mb",
+        "label": "MB",
+        "name": "John Molson Building",
+        "address": "1450 Guy Street",
+        "fillColor": "rgba(0, 188, 212, 0.35)",
+        "strokeColor": "rgba(0, 188, 212, 0.9)",
+"coordinates": [
+  { "latitude": 45.49495122789406,  "longitude": -73.57879901399482 },
+  { "latitude": 45.49520590706015,  "longitude": -73.57846441826645 },
+  { "latitude": 45.495379433112106, "longitude": -73.57886148704101 },
+  { "latitude": 45.49541391655552,  "longitude": -73.57890740156654 },
+  { "latitude": 45.49548671486798,  "longitude": -73.57908012764074 },
+  { "latitude": 45.49547878336517,  "longitude": -73.57908790806259 },
+  { "latitude": 45.495540158461296, "longitude": -73.57922795504979 },
+  { "latitude": 45.49537233718078,  "longitude": -73.57944603431228 },
+  { "latitude": 45.49527346221603,  "longitude": -73.5795672371066 },
+  { "latitude": 45.49511819162541,  "longitude": -73.57930393457727 },
+  { "latitude": 45.495187770940106, "longitude": -73.57922452635222 },
+  { "latitude": 45.494950920151894, "longitude": -73.57880075749082 }
+]
+
+      },
+      {
+        "id": "sgw-mi",
+        "label": "MI",
+        "name": "MI Annex",
+        "address": "2130 Bishop Street",
+        "fillColor": "rgba(233, 30, 99, 0.35)",
+        "strokeColor": "rgba(233, 30, 99, 0.9)",
+"coordinates": [
+  { "latitude": 45.49764535601284,  "longitude": -73.57940323526391 },
+  { "latitude": 45.49781519844137,  "longitude": -73.57923504534132 },
+  { "latitude": 45.4977765676596,   "longitude": -73.57915522639502 },
+  { "latitude": 45.49767932453938,  "longitude": -73.57925690052873 },
+  { "latitude": 45.49769264552458,  "longitude": -73.5792806561677 },
+  { "latitude": 45.497621378216905, "longitude": -73.5793547737605 },
+  { "latitude": 45.49764335786327,  "longitude": -73.57940418548941 },
+  { "latitude": 45.497652016509875, "longitude": -73.57939658368491 }
+]
+
+      },
+      {
+        "id": "sgw-mu",
+        "label": "MU",
+        "name": "MU Annex",
+        "address": "2170 Bishop Street",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+"coordinates": [
+  { "latitude": 45.49774782034018,  "longitude": -73.5797526723938 },
+  { "latitude": 45.497960087059,    "longitude": -73.57953546785713 },
+  { "latitude": 45.49792568526584,  "longitude": -73.57946863569207 },
+  { "latitude": 45.49770902668081,  "longitude": -73.57967853046054 },
+  { "latitude": 45.497747431720114, "longitude": -73.57975538999997 }
+]
+
+      },
+      {
+        "id": "sgw-p",
+        "label": "P",
+        "name": "P Annex",
+        "address": "2020 Mackay Street",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+"coordinates": [
+  { "latitude": 45.496587205179594, "longitude": -73.57919201864485 },
+  { "latitude": 45.496684040746715, "longitude": -73.57909704133745 },
+  { "latitude": 45.49672035404137,  "longitude": -73.57917408586644 },
+  { "latitude": 45.49662072520255,  "longitude": -73.57926773482 },
+  { "latitude": 45.496585808511355, "longitude": -73.57919201864485 }
+]
+
+      },
+      {
+        "id": "sgw-pr",
+        "label": "PR",
+        "name": "PR Annex",
+        "address": "2100 Mackay Street",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+"coordinates": [
+  { "latitude": 45.49684801970639,  "longitude": -73.57989266495294 },
+  { "latitude": 45.496782812377916, "longitude": -73.57995468309961 },
+  { "latitude": 45.49682529594884,  "longitude": -73.58005052932569 },
+  { "latitude": 45.49689445518169,  "longitude": -73.57998921593105 },
+  { "latitude": 45.49688956393865,  "longitude": -73.57997153822649 },
+  { "latitude": 45.496927707496695, "longitude": -73.57993477562343 },
+  { "latitude": 45.496934881315696, "longitude": -73.57994966211149 },
+  { "latitude": 45.49693129440632,  "longitude": -73.57992872798783 },
+  { "latitude": 45.49703303217527,  "longitude": -73.5798277789898 },
+  { "latitude": 45.4970310756828,   "longitude": -73.57979707560877 },
+  { "latitude": 45.49700792384846,  "longitude": -73.57974636850898 },
+  { "latitude": 45.496891199309914, "longitude": -73.57985335532108 },
+  { "latitude": 45.49691565552365,  "longitude": -73.57990778404262 },
+  { "latitude": 45.496873590829495, "longitude": -73.57994732627613 },
+  { "latitude": 45.49684816894097,  "longitude": -73.57989195816313 }
+]
+
+      },
+      {
+        "id": "sgw-q",
+        "label": "Q",
+        "name": "Q Annex",
+        "address": "2010 Mackay Street",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+"coordinates": [
+  { "latitude": 45.49654935495073,  "longitude": -73.57913083083976 },
+  { "latitude": 45.496652222517525, "longitude": -73.57903001191795 },
+  { "latitude": 45.496683166383036, "longitude": -73.57909623026323 },
+  { "latitude": 45.49657737174567,  "longitude": -73.57919764574629 },
+  { "latitude": 45.496548936789765, "longitude": -73.57912844459324 }
+]
+
+      },
+      {
+        "id": "sgw-r",
+        "label": "R",
+        "name": "R Annex",
+        "address": "2050 Mackay Street",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+"coordinates": [
+  { "latitude": 45.49670240862028, "longitude": -73.57942566128334 },
+  { "latitude": 45.49680269261276, "longitude": -73.57933250024004 },
+  { "latitude": 45.49684350579915, "longitude": -73.57941401436429 },
+  { "latitude": 45.49674050099523, "longitude": -73.57951549335769 },
+  { "latitude": 45.49670218723816, "longitude": -73.57942618966608 }
+]
+
+      },
+      {
+        "id": "sgw-rr",
+        "label": "RR",
+        "name": "RR Annex",
+        "address": "2040 Mackay Street",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+"coordinates": [
+  { "latitude": 45.49661417948303,  "longitude": -73.57938305339349 },
+  { "latitude": 45.496765353408904, "longitude": -73.57924428217991 },
+  { "latitude": 45.49680314682715,  "longitude": -73.57933443927404 },
+  { "latitude": 45.49665135343673,  "longitude": -73.5794696749155 },
+  { "latitude": 45.496613559917364, "longitude": -73.57938216950045 }
+]
+
+      },
+      {
+        "id": "sgw-s",
+        "label": "S",
+        "name": "S Annex",
+        "address": "2145 Mackay Street",
+        "fillColor": "rgba(0, 188, 212, 0.35)",
+        "strokeColor": "rgba(0, 188, 212, 0.9)",
+"coordinates": [
+  { "latitude": 45.497322232867674, "longitude": -73.57983638671342 },
+  { "latitude": 45.49742058990026,  "longitude": -73.57973733644262 },
+  { "latitude": 45.49743257456893,  "longitude": -73.57976091984034 },
+  { "latitude": 45.49745861020864,  "longitude": -73.57973374940923 },
+  { "latitude": 45.49749001827976,  "longitude": -73.57979919333853 },
+  { "latitude": 45.497362319685465, "longitude": -73.57992123730908 },
+  { "latitude": 45.49734537582148,  "longitude": -73.57988468304272 },
+  { "latitude": 45.4973338043996,   "longitude": -73.57988350387289 },
+  { "latitude": 45.49732187289595,  "longitude": -73.57985751669612 },
+  { "latitude": 45.497320633100145, "longitude": -73.57983570205278 }
+]
+
+      },
+      {
+        "id": "sgw-sb",
+        "label": "SB",
+        "name": "Samuel Bronfman Building",
+        "address": "1590 Doctor Penfield",
+        "fillColor": "rgba(233, 30, 99, 0.35)",
+        "strokeColor": "rgba(233, 30, 99, 0.9)",
+        "coordinates": [
+          { "latitude": 45.497498, "longitude": -73.583392 },
+          { "latitude": 45.497498, "longitude": -73.582832 },
+          { "latitude": 45.497058, "longitude": -73.582832 },
+          { "latitude": 45.497058, "longitude": -73.583392 }
+        ]
+      },
+      {
+        "id": "sgw-t",
+        "label": "T",
+        "name": "T Annex",
+        "address": "2030 Mackay Street",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+        "coordinates": [
+          { "latitude": 45.497557, "longitude": -73.578267 },
+          { "latitude": 45.497557, "longitude": -73.577707 },
+          { "latitude": 45.497117, "longitude": -73.577707 },
+          { "latitude": 45.497117, "longitude": -73.578267 }
+        ]
+      },
+      {
+        "id": "sgw-td",
+        "label": "TD",
+        "name": "TD Building",
+        "address": "1410 Guy Street",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+        "coordinates": [
+          { "latitude": 45.496671, "longitude": -73.580157 },
+          { "latitude": 45.496671, "longitude": -73.579597 },
+          { "latitude": 45.496231, "longitude": -73.579597 },
+          { "latitude": 45.496231, "longitude": -73.580157 }
+        ]
+      },
+      {
+        "id": "sgw-v",
+        "label": "V",
+        "name": "V Annex",
+        "address": "2110 Mackay Street",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+        "coordinates": [
+          { "latitude": 45.497889, "longitude": -73.578796 },
+          { "latitude": 45.497889, "longitude": -73.578236 },
+          { "latitude": 45.497449, "longitude": -73.578236 },
+          { "latitude": 45.497449, "longitude": -73.578796 }
+        ]
+      },
+      {
+        "id": "sgw-va",
+        "label": "VA",
+        "name": "Visual Arts Building",
+        "address": "1395 Rene Levesque W",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+        "coordinates": [
+          { "latitude": 45.49745, "longitude": -73.572367 },
+          { "latitude": 45.49745, "longitude": -73.571807 },
+          { "latitude": 45.49701, "longitude": -73.571807 },
+          { "latitude": 45.49701, "longitude": -73.572367 }
+        ]
+      },
+      {
+        "id": "sgw-x",
+        "label": "X",
+        "name": "X Annex",
+        "address": "2080 Mackay Street",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+        "coordinates": [
+          { "latitude": 45.497786, "longitude": -73.578689 },
+          { "latitude": 45.497786, "longitude": -73.578129 },
+          { "latitude": 45.497346, "longitude": -73.578129 },
+          { "latitude": 45.497346, "longitude": -73.578689 }
+        ]
+      },
+      {
+        "id": "sgw-z",
+        "label": "Z",
+        "name": "Z Annex",
+        "address": "2090 Mackay Street",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+        "coordinates": [
+          { "latitude": 45.497852, "longitude": -73.578724 },
+          { "latitude": 45.497852, "longitude": -73.578164 },
+          { "latitude": 45.497412, "longitude": -73.578164 },
+          { "latitude": 45.497412, "longitude": -73.578724 }
+        ]
+      }
+    ]
+  },
+  "loyola": {
+    "id": "loyola",
+    "name": "Loyola",
+    "region": {
+      "latitude": 45.4588,
+      "longitude": -73.6409,
+      "latitudeDelta": 0.0075,
+      "longitudeDelta": 0.0075
+    },
+    "buildings": [
+      {
+        "id": "loyola-ad",
+        "label": "AD",
+        "name": "Administration Building",
+        "address": "7141, Sherbrooke West",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458244, "longitude": -73.640164 },
+          { "latitude": 45.458244, "longitude": -73.639504 },
+          { "latitude": 45.457724, "longitude": -73.639504 },
+          { "latitude": 45.457724, "longitude": -73.640164 }
+        ]
+      },
+      {
+        "id": "loyola-bb",
+        "label": "BB",
+        "name": "BB-BH Annex",
+        "address": "3502 Bermore Avenue",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+        "coordinates": [
+          { "latitude": 45.460053, "longitude": -73.639504 },
+          { "latitude": 45.460053, "longitude": -73.638844 },
+          { "latitude": 45.459533, "longitude": -73.638844 },
+          { "latitude": 45.459533, "longitude": -73.639504 }
+        ]
+      },
+      {
+        "id": "loyola-bh",
+        "label": "BH",
+        "name": "BB-BH Annex",
+        "address": "3500 Bermore Avenue",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+        "coordinates": [
+          { "latitude": 45.460079, "longitude": -73.639482 },
+          { "latitude": 45.460079, "longitude": -73.638822 },
+          { "latitude": 45.459559, "longitude": -73.638822 },
+          { "latitude": 45.459559, "longitude": -73.639482 }
+        ]
+      },
+      {
+        "id": "loyola-cc",
+        "label": "CC",
+        "name": "Central Building",
+        "address": "7141 Sherbrooke West",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458464, "longitude": -73.64063 },
+          { "latitude": 45.458464, "longitude": -73.63997 },
+          { "latitude": 45.457944, "longitude": -73.63997 },
+          { "latitude": 45.457944, "longitude": -73.64063 }
+        ]
+      },
+      {
+        "id": "loyola-cj",
+        "label": "CJ",
+        "name": "Communication Studies and Journalism Building",
+        "address": "7141 Sherbrooke St. W.",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+        "coordinates": [
+          { "latitude": 45.457738, "longitude": -73.640684 },
+          { "latitude": 45.457738, "longitude": -73.640024 },
+          { "latitude": 45.457218, "longitude": -73.640024 },
+          { "latitude": 45.457218, "longitude": -73.640684 }
+        ]
+      },
+      {
+        "id": "loyola-do",
+        "label": "DO",
+        "name": "Stinger Dome",
+        "address": "7141 Sherbrooke St. W. (also listed as 7200 Sherbrooke St. W.)",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+        "coordinates": [
+          { "latitude": 45.457034, "longitude": -73.63794 },
+          { "latitude": 45.457034, "longitude": -73.63728 },
+          { "latitude": 45.456514, "longitude": -73.63728 },
+          { "latitude": 45.456514, "longitude": -73.63794 }
+        ]
+      },
+      {
+        "id": "loyola-fc",
+        "label": "FC",
+        "name": "FC Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(0, 188, 212, 0.35)",
+        "strokeColor": "rgba(0, 188, 212, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458154, "longitude": -73.641554 },
+          { "latitude": 45.458154, "longitude": -73.640894 },
+          { "latitude": 45.457634, "longitude": -73.640894 },
+          { "latitude": 45.457634, "longitude": -73.641554 }
+        ]
+      },
+      {
+        "id": "loyola-ge",
+        "label": "GE",
+        "name": "Centre for Structural and Functional Genomics",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(233, 30, 99, 0.35)",
+        "strokeColor": "rgba(233, 30, 99, 0.9)",
+        "coordinates": [
+          { "latitude": 45.457277, "longitude": -73.640762 },
+          { "latitude": 45.457277, "longitude": -73.640102 },
+          { "latitude": 45.456757, "longitude": -73.640102 },
+          { "latitude": 45.456757, "longitude": -73.640762 }
+        ]
+      },
+      {
+        "id": "loyola-ha",
+        "label": "HA",
+        "name": "Hingston Hall, wing HA",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458504, "longitude": -73.639941 },
+          { "latitude": 45.458504, "longitude": -73.639281 },
+          { "latitude": 45.457984, "longitude": -73.639281 },
+          { "latitude": 45.457984, "longitude": -73.639941 }
+        ]
+      },
+      {
+        "id": "loyola-hb",
+        "label": "HB",
+        "name": "Hingston Hall, wing HB",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458364, "longitude": -73.640011 },
+          { "latitude": 45.458364, "longitude": -73.639351 },
+          { "latitude": 45.457844, "longitude": -73.639351 },
+          { "latitude": 45.457844, "longitude": -73.640011 }
+        ]
+      },
+      {
+        "id": "loyola-hc",
+        "label": "HC",
+        "name": "Hingston Hall, wing HC",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+        "coordinates": [
+          { "latitude": 45.45828, "longitude": -73.640334 },
+          { "latitude": 45.45828, "longitude": -73.639674 },
+          { "latitude": 45.45776, "longitude": -73.639674 },
+          { "latitude": 45.45776, "longitude": -73.640334 }
+        ]
+      },
+      {
+        "id": "loyola-hu",
+        "label": "HU",
+        "name": "HU Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458519, "longitude": -73.639743 },
+          { "latitude": 45.458519, "longitude": -73.639083 },
+          { "latitude": 45.457999, "longitude": -73.639083 },
+          { "latitude": 45.457999, "longitude": -73.639743 }
+        ]
+      },
+      {
+        "id": "loyola-jr",
+        "label": "JR",
+        "name": "JR Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+        "coordinates": [
+          { "latitude": 45.45892, "longitude": -73.640148 },
+          { "latitude": 45.45892, "longitude": -73.639488 },
+          { "latitude": 45.4584, "longitude": -73.639488 },
+          { "latitude": 45.4584, "longitude": -73.640148 }
+        ]
+      },
+      {
+        "id": "loyola-pc",
+        "label": "PC",
+        "name": "PERFORM centre",
+        "address": "7200 Sherbrooke West",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+        "coordinates": [
+          { "latitude": 45.457348, "longitude": -73.638013 },
+          { "latitude": 45.457348, "longitude": -73.637353 },
+          { "latitude": 45.456828, "longitude": -73.637353 },
+          { "latitude": 45.456828, "longitude": -73.638013 }
+        ]
+      },
+      {
+        "id": "loyola-ps",
+        "label": "PS",
+        "name": "PS Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(0, 188, 212, 0.35)",
+        "strokeColor": "rgba(0, 188, 212, 0.9)",
+        "coordinates": [
+          { "latitude": 45.459088, "longitude": -73.641406 },
+          { "latitude": 45.459088, "longitude": -73.640746 },
+          { "latitude": 45.458568, "longitude": -73.640746 },
+          { "latitude": 45.458568, "longitude": -73.641406 }
+        ]
+      },
+      {
+        "id": "loyola-pt",
+        "label": "PT",
+        "name": "PT Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(233, 30, 99, 0.35)",
+        "strokeColor": "rgba(233, 30, 99, 0.9)",
+        "coordinates": [
+          { "latitude": 45.4589, "longitude": -73.641326 },
+          { "latitude": 45.4589, "longitude": -73.640666 },
+          { "latitude": 45.45838, "longitude": -73.640666 },
+          { "latitude": 45.45838, "longitude": -73.641326 }
+        ]
+      },
+      {
+        "id": "loyola-py",
+        "label": "PY",
+        "name": "PY Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458815, "longitude": -73.64102 },
+          { "latitude": 45.458815, "longitude": -73.64036 },
+          { "latitude": 45.458295, "longitude": -73.64036 },
+          { "latitude": 45.458295, "longitude": -73.64102 }
+        ]
+      },
+      {
+        "id": "loyola-qa",
+        "label": "QA",
+        "name": "Quadrangle",
+        "address": "7141 Sherbrooke St. W.",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458464, "longitude": -73.64063 },
+          { "latitude": 45.458464, "longitude": -73.63997 },
+          { "latitude": 45.457944, "longitude": -73.63997 },
+          { "latitude": 45.457944, "longitude": -73.64063 }
+        ]
+      },
+      {
+        "id": "loyola-ra",
+        "label": "RA",
+        "name": "Recreation and Athletics Complex",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+        "coordinates": [
+          { "latitude": 45.457034, "longitude": -73.63794 },
+          { "latitude": 45.457034, "longitude": -73.63728 },
+          { "latitude": 45.456514, "longitude": -73.63728 },
+          { "latitude": 45.456514, "longitude": -73.63794 }
+        ]
+      },
+      {
+        "id": "loyola-rf",
+        "label": "RF",
+        "name": "RF Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(76, 175, 80, 0.35)",
+        "strokeColor": "rgba(76, 175, 80, 0.9)",
+        "coordinates": [
+          { "latitude": 45.459103, "longitude": -73.640926 },
+          { "latitude": 45.459103, "longitude": -73.640266 },
+          { "latitude": 45.458583, "longitude": -73.640266 },
+          { "latitude": 45.458583, "longitude": -73.640926 }
+        ]
+      },
+      {
+        "id": "loyola-sc",
+        "label": "SC",
+        "name": "SC Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(156, 39, 176, 0.35)",
+        "strokeColor": "rgba(156, 39, 176, 0.9)",
+        "coordinates": [
+          { "latitude": 45.459101, "longitude": -73.640898 },
+          { "latitude": 45.459101, "longitude": -73.640238 },
+          { "latitude": 45.458581, "longitude": -73.640238 },
+          { "latitude": 45.458581, "longitude": -73.640898 }
+        ]
+      },
+      {
+        "id": "loyola-sh",
+        "label": "SH",
+        "name": "SH Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(255, 152, 0, 0.35)",
+        "strokeColor": "rgba(255, 152, 0, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458839, "longitude": -73.641095 },
+          { "latitude": 45.458839, "longitude": -73.640435 },
+          { "latitude": 45.458319, "longitude": -73.640435 },
+          { "latitude": 45.458319, "longitude": -73.641095 }
+        ]
+      },
+      {
+        "id": "loyola-si",
+        "label": "SI",
+        "name": "St. Ignatius of Loyola Church",
+        "address": "4455 West Broadway St.",
+        "fillColor": "rgba(0, 188, 212, 0.35)",
+        "strokeColor": "rgba(0, 188, 212, 0.9)",
+        "coordinates": [
+          { "latitude": 45.457788, "longitude": -73.642302 },
+          { "latitude": 45.457788, "longitude": -73.641642 },
+          { "latitude": 45.457268, "longitude": -73.641642 },
+          { "latitude": 45.457268, "longitude": -73.642302 }
+        ]
+      },
+      {
+        "id": "loyola-sp",
+        "label": "SP",
+        "name": "SP Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(233, 30, 99, 0.35)",
+        "strokeColor": "rgba(233, 30, 99, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458141, "longitude": -73.641895 },
+          { "latitude": 45.458141, "longitude": -73.641235 },
+          { "latitude": 45.457621, "longitude": -73.641235 },
+          { "latitude": 45.457621, "longitude": -73.641895 }
+        ]
+      },
+      {
+        "id": "loyola-ta",
+        "label": "TA",
+        "name": "TA Building",
+        "address": "7079 De Terrebonne",
+        "fillColor": "rgba(145, 35, 56, 0.35)",
+        "strokeColor": "rgba(145, 35, 56, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458443, "longitude": -73.639654 },
+          { "latitude": 45.458443, "longitude": -73.638994 },
+          { "latitude": 45.457923, "longitude": -73.638994 },
+          { "latitude": 45.457923, "longitude": -73.639654 }
+        ]
+      },
+      {
+        "id": "loyola-ve",
+        "label": "VE",
+        "name": "VE Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(74, 144, 226, 0.35)",
+        "strokeColor": "rgba(74, 144, 226, 0.9)",
+        "coordinates": [
+          { "latitude": 45.458761, "longitude": -73.64073 },
+          { "latitude": 45.458761, "longitude": -73.64007 },
+          { "latitude": 45.458241, "longitude": -73.64007 },
+          { "latitude": 45.458241, "longitude": -73.64073 }
+        ]
+      },
+      {
+        "id": "loyola-vl",
+        "label": "VL",
+        "name": "VL Building",
+        "address": "7141, Sherbrooke Wes",
+        "fillColor": "rgba(255, 215, 0, 0.35)",
+        "strokeColor": "rgba(255, 215, 0, 0.95)",
+        "coordinates": [
+          { "latitude": 45.458329, "longitude": -73.640432 },
+          { "latitude": 45.458329, "longitude": -73.639772 },
+          { "latitude": 45.457809, "longitude": -73.639772 },
+          { "latitude": 45.457809, "longitude": -73.640432 }
+        ]
+      }
+    ]
+  }
+}
