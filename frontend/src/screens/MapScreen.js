@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Keyboard } from 'react-native';
 import MapView, { Polygon } from 'react-native-maps';
 
 import CampusToggle from '../components/CampusToggle';
@@ -7,6 +7,8 @@ import campuses from '../data/campuses.json';
 
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 const defaultCampusId = campuses.sgw?.id ?? campusList[0]?.id;
+
+const MAROON = '#912338';
 
 const getPolygonCenter = (points = []) => {
   if (!points.length) return null;
@@ -27,7 +29,14 @@ const getPolygonCenter = (points = []) => {
 
 export default function MapScreen() {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
+
+  // Building info bottom sheet
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+
+  // Start/Destination inputs
+  const [activeField, setActiveField] = useState(null); // null | 'start' | 'dest'
+  const [startText, setStartText] = useState('');
+  const [destText, setDestText] = useState('');
 
   const mapRef = useRef(null);
 
@@ -36,25 +45,45 @@ export default function MapScreen() {
     [selectedCampusId]
   );
 
+  const getBuildingName = (b) => b?.name || b?.label || 'Building';
+
   const openBuilding = (building) => {
     setSelectedBuilding(building);
 
     const center = getPolygonCenter(building.coordinates);
     if (center) {
       mapRef.current?.animateToRegion(
-        {
-          ...center,
-          latitudeDelta: 0.003,
-          longitudeDelta: 0.003,
-        },
+        { ...center, latitudeDelta: 0.003, longitudeDelta: 0.003 },
         500
       );
     }
   };
 
+  const handleBuildingPress = (building) => {
+    const name = getBuildingName(building);
+
+    // Only fill if user explicitly selected a field first
+    if (activeField === 'start') {
+      setStartText(name);
+      setActiveField(null);
+      Keyboard.dismiss();
+      return;
+    }
+
+    if (activeField === 'dest') {
+      setDestText(name);
+      setActiveField(null);
+      Keyboard.dismiss();
+      return;
+    }
+
+    // Otherwise, normal behavior: show building info
+    openBuilding(building);
+  };
+
   useEffect(() => {
     if (mapRef.current && selectedCampus) {
-      setSelectedBuilding(null); // close sheet when switching campus
+      setSelectedBuilding(null);
       mapRef.current.animateToRegion(selectedCampus.region, 600);
     }
   }, [selectedCampus]);
@@ -69,6 +98,7 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Select Your Campus</Text>
         <Text style={styles.subtitle}>
@@ -82,8 +112,34 @@ export default function MapScreen() {
         onSelect={setSelectedCampusId}
       />
 
-      {/* Wrapper so bottom sheet can overlay the map */}
+      {/* Wrapper so overlays can sit above map */}
       <View style={{ flex: 1 }}>
+        {/* red input box: Start + Destination */}
+        <View style={styles.redBox}>
+          <View style={styles.inputRow}>
+            <TextInput
+              value={startText}
+              onChangeText={setStartText}
+              placeholder="Start"
+              placeholderTextColor="#EED7DE"
+              style={styles.input}
+              onFocus={() => setActiveField('start')}
+            />
+          </View>
+
+          <View style={[styles.inputRow, { marginBottom: 0 }]}>
+            <TextInput
+              value={destText}
+              onChangeText={setDestText}
+              placeholder="Destination"
+              placeholderTextColor="#EED7DE"
+              style={styles.input}
+              onFocus={() => setActiveField('dest')}
+            />
+          </View>
+        </View>
+
+        {/* Map */}
         <MapView
           ref={mapRef}
           style={styles.map}
@@ -95,21 +151,23 @@ export default function MapScreen() {
           showsUserLocation
           showsCompass
           showsScale
+          // Tap empty map 
+          onPress={() => setActiveField(null)}
         >
           {selectedCampus.buildings.map((building) => (
             <Polygon
               key={building.id}
               coordinates={building.coordinates}
               fillColor="rgba(145, 35, 56, 0.25)"
-              strokeColor="rgba(145, 35, 56, 0.8)"
+              strokeColor="rgba(145, 35, 56, 0.9)"
               strokeWidth={2}
               tappable
-              onPress={() => openBuilding(building)}
+              onPress={() => handleBuildingPress(building)}
             />
           ))}
         </MapView>
 
-        {/* Bottom sheet */}
+        {/* Bottom sheet (building info) */}
         {selectedBuilding && (
           <View style={styles.sheetWrap} pointerEvents="box-none">
             <View style={styles.sheet}>
@@ -123,11 +181,7 @@ export default function MapScreen() {
 
                   <View style={{ flex: 1 }}>
                     <Text style={styles.buildingTitle} numberOfLines={1}>
-                      {(
-                        selectedBuilding.name ||
-                        selectedBuilding.label ||
-                        'Building'
-                      ).toUpperCase()}
+                      {getBuildingName(selectedBuilding).toUpperCase()}
                     </Text>
 
                     {selectedBuilding.address ? (
@@ -150,8 +204,6 @@ export default function MapScreen() {
                   <Text style={styles.closeBtnText}>✕</Text>
                 </Pressable>
               </View>
-
-              
             </View>
           </View>
         )}
@@ -161,38 +213,48 @@ export default function MapScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+
   header: {
     paddingTop: 48,
     paddingHorizontal: 20,
     paddingBottom: 12,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 26,
+  title: { fontSize: 26, fontWeight: '700', color: MAROON },
+  subtitle: { marginTop: 4, fontSize: 15, color: '#666' },
+
+  map: { flex: 1 },
+
+  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: '#666' },
+
+  // Red box (start/destination)
+  redBox: {
+    position: 'absolute',
+    top: 10,
+    left: 16,
+    right: 16,
+    zIndex: 50,
+    backgroundColor: MAROON,
+    borderRadius: 22,
+    padding: 12,
+  },
+  inputRow: {
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  input: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '700',
-    color: '#912338',
-  },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 15,
-    color: '#666',
-  },
-  map: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: '#666',
+    paddingVertical: 0,
   },
 
+  // Bottom sheet
   sheetWrap: {
     position: 'absolute',
     left: 0,
@@ -236,27 +298,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#912338',
+    backgroundColor: MAROON,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buildingIconText: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 18,
-  },
-  buildingTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#111',
-    letterSpacing: 0.4,
-  },
-  buildingSub: {
-    marginTop: 4,
-    fontSize: 13,
-    color: '#666',
-    lineHeight: 18,
-  },
+  buildingIconText: { color: '#fff', fontWeight: '800', fontSize: 18 },
+  buildingTitle: { fontSize: 16, fontWeight: '800', color: '#111', letterSpacing: 0.4 },
+  buildingSub: { marginTop: 4, fontSize: 13, color: '#666', lineHeight: 18 },
+
   closeBtn: {
     width: 34,
     height: 34,
@@ -265,9 +314,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeBtnText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '700',
-  },
+  closeBtnText: { fontSize: 16, color: '#333', fontWeight: '700' },
 });
