@@ -1,9 +1,12 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Keyboard } from 'react-native';
-import MapView, { Polygon } from 'react-native-maps';
+import MapView, { Polygon, Polyline } from 'react-native-maps';
 
 import CampusToggle from '../components/CampusToggle';
 import campuses from '../data/campuses.json';
+
+import { useDefaultStartMyLocation } from '../hooks/useDefaultStartMyLocation';
+import { useDirectionsRoute } from '../hooks/useDirectionsRoute';
 
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 const defaultCampusId = campuses.sgw?.id ?? campusList[0]?.id;
@@ -34,14 +37,25 @@ export default function MapScreen() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
 
   // Start/Destination inputs
-  const [activeField, setActiveField] = useState(null); // null | 'start' | 'dest'
+  const [activeField, setActiveField] = useState(null);
   const [startText, setStartText] = useState('');
   const [destText, setDestText] = useState('');
+  const [hasLocationPerm, setHasLocationPerm] = useState(false);
+
+  // coords for directions
+  const [startCoord, setStartCoord] = useState(null);
+  const [destCoord, setDestCoord] = useState(null);
 
   const mapRef = useRef(null);
 
   const selectedCampus = useMemo(
     () => campusList.find((campus) => campus.id === selectedCampusId),
+    [selectedCampusId]
+  );
+
+  // campuses other than the selected one
+  const otherCampuses = useMemo(
+    () => campusList.filter((c) => c.id !== selectedCampusId),
     [selectedCampusId]
   );
 
@@ -61,10 +75,12 @@ export default function MapScreen() {
 
   const handleBuildingPress = (building) => {
     const name = getBuildingName(building);
+    const center = getPolygonCenter(building.coordinates);
 
     // Only fill if user explicitly selected a field first
     if (activeField === 'start') {
       setStartText(name);
+      if (center) setStartCoord(center);
       setActiveField(null);
       Keyboard.dismiss();
       return;
@@ -72,13 +88,27 @@ export default function MapScreen() {
 
     if (activeField === 'dest') {
       setDestText(name);
+      if (center) setDestCoord(center);
       setActiveField(null);
       Keyboard.dismiss();
       return;
     }
 
-    // Otherwise, normal behavior: show building info
     openBuilding(building);
+  };
+
+  // Bottom-sheet "Directions" button action
+  const setDestinationToSelectedBuilding = () => {
+    if (!selectedBuilding) return;
+
+    const name = getBuildingName(selectedBuilding);
+    const center = getPolygonCenter(selectedBuilding.coordinates);
+
+    setDestText(name);
+    if (center) setDestCoord(center);
+
+    setSelectedBuilding(null);
+    Keyboard.dismiss();
   };
 
   useEffect(() => {
@@ -87,6 +117,17 @@ export default function MapScreen() {
       mapRef.current.animateToRegion(selectedCampus.region, 600);
     }
   }, [selectedCampus]);
+
+  // Default Start = current location (only if Start is empty)
+  useDefaultStartMyLocation({
+    startText,
+    setStartText,
+    setHasLocationPerm,
+    setStartCoord,
+  });
+
+  // Route coordinates from Google Directions
+  const { routeCoords } = useDirectionsRoute({ startCoord, destCoord, mapRef });
 
   if (!selectedCampus) {
     return (
@@ -101,25 +142,22 @@ export default function MapScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Select Your Campus</Text>
-        <Text style={styles.subtitle}>
-          Choose a campus to explore buildings and get directions
-        </Text>
+        <Text style={styles.subtitle}>Choose a campus to explore buildings and get directions</Text>
       </View>
 
-      <CampusToggle
-        campuses={campusList}
-        selectedId={selectedCampusId}
-        onSelect={setSelectedCampusId}
-      />
+      <CampusToggle campuses={campusList} selectedId={selectedCampusId} onSelect={setSelectedCampusId} />
 
-      {/* Wrapper so overlays can sit above map */}
       <View style={{ flex: 1 }}>
-        {/* red input box: Start + Destination */}
+        {/* red input box */}
         <View style={styles.redBox}>
           <View style={styles.inputRow}>
             <TextInput
               value={startText}
-              onChangeText={setStartText}
+              onChangeText={(t) => {
+                setStartText(t);
+                // If they type random text, it no longer matches a known coordinate
+                if (t !== 'My location') setStartCoord(null);
+              }}
               placeholder="Start"
               placeholderTextColor="#EED7DE"
               style={styles.input}
@@ -130,7 +168,10 @@ export default function MapScreen() {
           <View style={[styles.inputRow, { marginBottom: 0 }]}>
             <TextInput
               value={destText}
-              onChangeText={setDestText}
+              onChangeText={(t) => {
+                setDestText(t);
+                setDestCoord(null);
+              }}
               placeholder="Destination"
               placeholderTextColor="#EED7DE"
               style={styles.input}
@@ -148,10 +189,9 @@ export default function MapScreen() {
           scrollEnabled
           rotateEnabled
           pitchEnabled
-          showsUserLocation
+          showsUserLocation={hasLocationPerm}
           showsCompass
           showsScale
-          // Tap empty map 
           onPress={() => setActiveField(null)}
         >
           {selectedCampus.buildings.map((building) => (
@@ -165,9 +205,29 @@ export default function MapScreen() {
               onPress={() => handleBuildingPress(building)}
             />
           ))}
+
+          {/* show other campus buildings too */}
+          {otherCampuses.map((campus) =>
+            campus.buildings.map((building) => (
+              <Polygon
+                key={`${campus.id}-${building.id}`}
+                coordinates={building.coordinates}
+                fillColor="rgba(145, 35, 56, 0.10)"
+                strokeColor="rgba(145, 35, 56, 0.55)"
+                strokeWidth={2}
+                tappable
+                onPress={() => handleBuildingPress(building)}
+              />
+            ))
+          )}
+
+          {/* Draw the path */}
+          {routeCoords.length > 0 && (
+            <Polyline coordinates={routeCoords} strokeWidth={5} strokeColor="#2563eb" />
+          )}
         </MapView>
 
-        {/* Bottom sheet (building info) */}
+        {/* Bottom sheet */}
         {selectedBuilding && (
           <View style={styles.sheetWrap} pointerEvents="box-none">
             <View style={styles.sheet}>
@@ -196,14 +256,15 @@ export default function MapScreen() {
                   </View>
                 </View>
 
-                <Pressable
-                  onPress={() => setSelectedBuilding(null)}
-                  hitSlop={12}
-                  style={styles.closeBtn}
-                >
+                <Pressable onPress={() => setSelectedBuilding(null)} hitSlop={12} style={styles.closeBtn}>
                   <Text style={styles.closeBtnText}>✕</Text>
                 </Pressable>
               </View>
+
+              {/* Directions button */}
+              <Pressable style={styles.directionsBtn} onPress={setDestinationToSelectedBuilding}>
+                <Text style={styles.directionsBtnText}>Directions</Text>
+              </Pressable>
             </View>
           </View>
         )}
@@ -214,22 +275,14 @@ export default function MapScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-
-  header: {
-    paddingTop: 48,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    backgroundColor: '#fff',
-  },
+  header: { paddingTop: 48, paddingHorizontal: 20, paddingBottom: 12, backgroundColor: '#fff' },
   title: { fontSize: 26, fontWeight: '700', color: MAROON },
   subtitle: { marginTop: 4, fontSize: 15, color: '#666' },
 
   map: { flex: 1 },
-
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   loadingText: { color: '#666' },
 
-  // Red box (start/destination)
   redBox: {
     position: 'absolute',
     top: 10,
@@ -247,22 +300,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 10,
   },
-  input: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-    paddingVertical: 0,
-  },
+  input: { color: '#fff', fontSize: 14, fontWeight: '700', paddingVertical: 0 },
 
-  // Bottom sheet
-  sheetWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
+  sheetWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingBottom: 16 },
   sheet: {
     backgroundColor: '#fff',
     borderRadius: 22,
@@ -275,44 +315,29 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     elevation: 6,
   },
-  sheetHandle: {
-    alignSelf: 'center',
-    width: 44,
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: '#E6E6E6',
-    marginBottom: 12,
-  },
-  sheetHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  sheetHeaderLeft: {
-    flexDirection: 'row',
-    gap: 12,
-    flex: 1,
-    paddingRight: 8,
-  },
-  buildingIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: MAROON,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  sheetHandle: { alignSelf: 'center', width: 44, height: 5, borderRadius: 999, backgroundColor: '#E6E6E6', marginBottom: 12 },
+  sheetHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  sheetHeaderLeft: { flexDirection: 'row', gap: 12, flex: 1, paddingRight: 8 },
+
+  buildingIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: MAROON, alignItems: 'center', justifyContent: 'center' },
   buildingIconText: { color: '#fff', fontWeight: '800', fontSize: 18 },
   buildingTitle: { fontSize: 16, fontWeight: '800', color: '#111', letterSpacing: 0.4 },
   buildingSub: { marginTop: 4, fontSize: 13, color: '#666', lineHeight: 18 },
 
-  closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#F2F2F2',
+  closeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center' },
+  closeBtnText: { fontSize: 16, color: '#333', fontWeight: '700' },
+
+  directionsBtn: {
+    marginTop: 16,
+    backgroundColor: MAROON,
+    borderRadius: 18,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeBtnText: { fontSize: 16, color: '#333', fontWeight: '700' },
+  directionsBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '800',
+  },
 });
