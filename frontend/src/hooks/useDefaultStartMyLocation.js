@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { getUserCoords } from '../services/locationService';
 
 // Default Start = current location 
@@ -8,10 +8,13 @@ export function useDefaultStartMyLocation({
   setHasLocationPerm,
   setStartCoord,
 }) {
+  const didAutoFill = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
+      if (didAutoFill.current) return;
       if (startText !== '') return;
 
       const coords = await getUserCoords();
@@ -20,7 +23,8 @@ export function useDefaultStartMyLocation({
       if (coords) {
         setHasLocationPerm(true);
         setStartText('My location');
-        setStartCoord(coords); 
+        setStartCoord(coords);
+        didAutoFill.current = true;
       } else {
         setHasLocationPerm(false);
       }

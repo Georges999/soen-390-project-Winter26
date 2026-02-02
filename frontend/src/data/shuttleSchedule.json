@@ -1,0 +1,25 @@
+{
+  "updatedAt": "2026-02-02T12:00:00Z",
+  "routes": [
+    {
+      "id": "sgw-to-loyola",
+      "from": "sgw",
+      "to": "loyola",
+      "stopName": "Henry F. Hall Building front doors",
+      "address": "1455 De Maisonneuve Blvd. W.",
+      "weekday": { "start": "09:30", "end": "18:30", "intervalMin": 15 },
+      "friday": { "start": "09:45", "end": "18:15", "intervalMin": 15 },
+      "estimatedTravelMin": 25
+    },
+    {
+      "id": "loyola-to-sgw",
+      "from": "loyola",
+      "to": "sgw",
+      "stopName": "Loyola Chapel",
+      "address": "7137 Sherbrooke St. W.",
+      "weekday": { "start": "09:15", "end": "18:30", "intervalMin": 15 },
+      "friday": { "start": "09:15", "end": "18:15", "intervalMin": 15 },
+      "estimatedTravelMin": 25
+    }
+  ]
+}

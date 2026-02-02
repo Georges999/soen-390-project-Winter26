@@ -1,17 +1,31 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Keyboard } from 'react-native';
-import MapView, { Polygon, Polyline } from 'react-native-maps';
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  Keyboard,
+  Image,
+  Modal,
+} from "react-native";
+import MapView, { Polygon, Polyline } from "react-native-maps";
+import { MaterialIcons } from "@expo/vector-icons";
+import * as Speech from "expo-speech";
 
-import CampusToggle from '../components/CampusToggle';
-import campuses from '../data/campuses.json';
+import CampusToggle from "../components/CampusToggle";
+import campuses from "../data/campuses.json";
+import shuttleSchedule from "../data/shuttleSchedule.json";
 
-import { useDefaultStartMyLocation } from '../hooks/useDefaultStartMyLocation';
-import { useDirectionsRoute } from '../hooks/useDirectionsRoute';
+import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
+import { useDirectionsRoute } from "../hooks/useDirectionsRoute";
+import { findBuildingUserIsIn } from "../utils/geo";
+import { getUserCoords, watchUserCoords } from "../services/locationService";
 
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 const defaultCampusId = campuses.sgw?.id ?? campusList[0]?.id;
 
-const MAROON = '#912338';
+const MAROON = "#95223D";
 
 const getPolygonCenter = (points = []) => {
   if (!points.length) return null;
@@ -21,7 +35,7 @@ const getPolygonCenter = (points = []) => {
       latitude: acc.latitude + point.latitude,
       longitude: acc.longitude + point.longitude,
     }),
-    { latitude: 0, longitude: 0 }
+    { latitude: 0, longitude: 0 },
   );
 
   return {
@@ -32,63 +46,104 @@ const getPolygonCenter = (points = []) => {
 
 export default function MapScreen() {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   // Building info bottom sheet
   const [selectedBuilding, setSelectedBuilding] = useState(null);
+  const [currentBuilding, setCurrentBuilding] = useState(null);
 
   // Start/Destination inputs
   const [activeField, setActiveField] = useState(null);
-  const [startText, setStartText] = useState('');
-  const [destText, setDestText] = useState('');
+  const [startText, setStartText] = useState("");
+  const [destText, setDestText] = useState("");
   const [hasLocationPerm, setHasLocationPerm] = useState(false);
+  const [startCampusId, setStartCampusId] = useState(null);
+  const [destCampusId, setDestCampusId] = useState(null);
 
   // coords for directions
   const [startCoord, setStartCoord] = useState(null);
   const [destCoord, setDestCoord] = useState(null);
+  const [userCoord, setUserCoord] = useState(null);
+  const [travelMode, setTravelMode] = useState("walking");
+  const [showDirectionsPanel, setShowDirectionsPanel] = useState(false);
+  const [followUser, setFollowUser] = useState(false);
+  const [navActive, setNavActive] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [speechEnabled, setSpeechEnabled] = useState(true);
+  const [isShuttleModalOpen, setIsShuttleModalOpen] = useState(false);
+  const simTimerRef = useRef(null);
+  const simIndexRef = useRef(0);
+  const simActiveRef = useRef(false);
 
   const mapRef = useRef(null);
 
   const selectedCampus = useMemo(
     () => campusList.find((campus) => campus.id === selectedCampusId),
-    [selectedCampusId]
+    [selectedCampusId],
   );
 
   // campuses other than the selected one
   const otherCampuses = useMemo(
     () => campusList.filter((c) => c.id !== selectedCampusId),
-    [selectedCampusId]
+    [selectedCampusId],
   );
 
-  const getBuildingName = (b) => b?.name || b?.label || 'Building';
+  const allBuildings = useMemo(
+    () =>
+      campusList.flatMap((campus) =>
+        campus.buildings.map((building) => ({
+          ...building,
+          __campusId: campus.id,
+        })),
+      ),
+    [],
+  );
+
+  const getBuildingName = (b) => b?.name || b?.label || "Building";
+  const getBuildingKey = (campusId, b) =>
+    `${campusId}:${b?.id ?? b?.name ?? b?.label ?? "unknown"}`;
+  const isCurrentBuilding = (campusId, building) => {
+    if (!currentBuilding) return false;
+    return (
+      currentBuilding.__campusId === campusId &&
+      getBuildingKey(campusId, currentBuilding) ===
+        getBuildingKey(campusId, building)
+    );
+  };
 
   const openBuilding = (building) => {
+    setShowDirectionsPanel(false);
     setSelectedBuilding(building);
 
     const center = getPolygonCenter(building.coordinates);
     if (center) {
       mapRef.current?.animateToRegion(
         { ...center, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-        500
+        500,
       );
     }
   };
 
   const handleBuildingPress = (building) => {
+    setHasInteracted(true);
     const name = getBuildingName(building);
     const center = getPolygonCenter(building.coordinates);
 
     // Only fill if user explicitly selected a field first
-    if (activeField === 'start') {
+    if (activeField === "start") {
       setStartText(name);
       if (center) setStartCoord(center);
+      setStartCampusId(building.__campusId ?? selectedCampus?.id ?? null);
       setActiveField(null);
       Keyboard.dismiss();
       return;
     }
 
-    if (activeField === 'dest') {
+    if (activeField === "dest") {
       setDestText(name);
       if (center) setDestCoord(center);
+      setDestCampusId(building.__campusId ?? selectedCampus?.id ?? null);
       setActiveField(null);
       Keyboard.dismiss();
       return;
@@ -96,6 +151,157 @@ export default function MapScreen() {
 
     openBuilding(building);
   };
+
+  const normalizeText = (text = "") =>
+    text.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const getShuttleDepartures = (now = new Date(), schedule) => {
+    const day = now.getDay(); // 0 Sun ... 6 Sat
+    if (day === 0 || day === 6) return { active: false, times: [] };
+
+    const isFriday = day === 5;
+    const parseTime = (t) => {
+      const [h, m] = t.split(":").map((v) => parseInt(v, 10));
+      return h * 60 + m;
+    };
+    const startMinutes = isFriday
+      ? parseTime(schedule.friday.start)
+      : parseTime(schedule.weekday.start);
+    const endMinutes = isFriday
+      ? parseTime(schedule.friday.end)
+      : parseTime(schedule.weekday.end);
+    const interval = isFriday
+      ? schedule.friday.intervalMin
+      : schedule.weekday.intervalMin;
+
+    const minutesNow = now.getHours() * 60 + now.getMinutes();
+    if (minutesNow > endMinutes) return { active: false, times: [] };
+
+    const nextTimes = [];
+    const first =
+      minutesNow <= startMinutes
+        ? startMinutes
+        : minutesNow +
+          ((interval - ((minutesNow - startMinutes) % interval)) % interval);
+
+    for (
+      let t = first;
+      t <= endMinutes && nextTimes.length < 6;
+      t += interval
+    ) {
+      const h = Math.floor(t / 60);
+      const m = t % 60;
+      const label = `${h.toString().padStart(2, "0")}:${m
+        .toString()
+        .padStart(2, "0")}`;
+      nextTimes.push(label);
+    }
+
+    return { active: true, times: nextTimes };
+  };
+
+  const shuttleSchedules = shuttleSchedule.routes.map((route) => ({
+    id: route.id,
+    from: route.from,
+    to: route.to,
+    stop: route.stopName,
+    address: route.address,
+    weekday: route.weekday,
+    friday: route.friday,
+    estimatedTravelMin: route.estimatedTravelMin,
+  }));
+
+  const filteredShuttleSchedules = useMemo(() => {
+    if (!startCampusId || !destCampusId) return shuttleSchedules;
+    if (startCampusId === "sgw" && destCampusId === "loyola") {
+      return shuttleSchedules.filter((s) => s.from === "sgw");
+    }
+    if (startCampusId === "loyola" && destCampusId === "sgw") {
+      return shuttleSchedules.filter((s) => s.from === "loyola");
+    }
+    return shuttleSchedules;
+  }, [startCampusId, destCampusId, shuttleSchedules]);
+
+  const stripHtml = (html = "") => html.replace(/<[^>]+>/g, "");
+
+  const distanceMeters = (a, b) => {
+    if (!a || !b) return Infinity;
+    const toRad = (v) => (v * Math.PI) / 180;
+    const R = 6371000;
+    const dLat = toRad(b.latitude - a.latitude);
+    const dLon = toRad(b.longitude - a.longitude);
+    const lat1 = toRad(a.latitude);
+    const lat2 = toRad(b.latitude);
+    const h =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  };
+
+  const stopSimulation = () => {
+    if (simTimerRef.current) {
+      clearInterval(simTimerRef.current);
+      simTimerRef.current = null;
+    }
+    setIsSimulating(false);
+  };
+
+  const selectBuildingForField = (building, field) => {
+    const name = getBuildingName(building);
+    const center = getPolygonCenter(building.coordinates);
+
+    if (field === "start") {
+      setStartText(name);
+      if (center) setStartCoord(center);
+      setStartCampusId(building.__campusId ?? null);
+    } else if (field === "dest") {
+      setDestText(name);
+      if (center) setDestCoord(center);
+      setDestCampusId(building.__campusId ?? null);
+    }
+
+    setActiveField(null);
+    Keyboard.dismiss();
+  };
+
+  const selectMyLocationForField = async (field) => {
+    const coords = await getUserCoords();
+    if (!coords) return;
+
+    if (field === "start") {
+      setStartText("My location");
+      setStartCoord(coords);
+      setStartCampusId(null);
+    } else if (field === "dest") {
+      setDestText("My location");
+      setDestCoord(coords);
+      setDestCampusId(null);
+    }
+
+    setActiveField(null);
+    Keyboard.dismiss();
+  };
+
+  const searchResults = useMemo(() => {
+    if (!activeField) return [];
+    const query = activeField === "start" ? startText : destText;
+    const normalized = normalizeText(query);
+    if (!normalized || normalized.length < 2) return [];
+
+    return allBuildings
+      .filter((building) => {
+        const name = getBuildingName(building);
+        return normalizeText(name).includes(normalized);
+      })
+      .slice(0, 6);
+  }, [activeField, startText, destText, allBuildings]);
+
+  const shouldShowMyLocationOption = useMemo(() => {
+    if (!activeField) return false;
+    const query = activeField === "start" ? startText : destText;
+    const normalized = normalizeText(query);
+    return normalized.startsWith("my");
+  }, [activeField, startText, destText]);
 
   // Bottom-sheet "Directions" button action
   const setDestinationToSelectedBuilding = () => {
@@ -106,9 +312,77 @@ export default function MapScreen() {
 
     setDestText(name);
     if (center) setDestCoord(center);
+    setDestCampusId(selectedBuilding.__campusId ?? selectedCampus?.id ?? null);
 
     setSelectedBuilding(null);
+    setShowDirectionsPanel(true);
     Keyboard.dismiss();
+  };
+
+  const handleGoPress = () => {
+    if (!startCoord || !destCoord) return;
+    setFollowUser(true);
+    setNavActive(true);
+    setCurrentStepIndex(0);
+    const firstInstruction = routeInfo?.steps?.[0]?.instruction;
+    if (firstInstruction && speechEnabled) {
+      Speech.stop();
+      Speech.speak(stripHtml(firstInstruction));
+    }
+
+    if (routeCoords.length > 1) {
+      mapRef.current?.fitToCoordinates(routeCoords, {
+        edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+        animated: true,
+      });
+    } else if (userCoord) {
+      mapRef.current?.animateToRegion(
+        { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+        500,
+      );
+    }
+  };
+
+  const handleSimulatePress = () => {
+    if (isSimulating) {
+      stopSimulation();
+      return;
+    }
+
+    if (!routeCoords.length) return;
+    setIsSimulating(true);
+    setFollowUser(true);
+    setHasLocationPerm(true);
+    simIndexRef.current = 0;
+    setUserCoord(routeCoords[0]);
+
+    simTimerRef.current = setInterval(() => {
+      simIndexRef.current += 1;
+      if (simIndexRef.current >= routeCoords.length) {
+        stopSimulation();
+        return;
+      }
+      setUserCoord(routeCoords[simIndexRef.current]);
+    }, 1000);
+  };
+
+  const isCrossCampusTrip =
+    startCampusId && destCampusId && startCampusId !== destCampusId;
+
+  const handleSwapStartDest = () => {
+    const nextStartText = destText;
+    const nextDestText = startText;
+    const nextStartCoord = destCoord;
+    const nextDestCoord = startCoord;
+    const nextStartCampusId = destCampusId;
+    const nextDestCampusId = startCampusId;
+
+    setStartText(nextStartText);
+    setDestText(nextDestText);
+    setStartCoord(nextStartCoord);
+    setDestCoord(nextDestCoord);
+    setStartCampusId(nextStartCampusId);
+    setDestCampusId(nextDestCampusId);
   };
 
   useEffect(() => {
@@ -117,6 +391,55 @@ export default function MapScreen() {
       mapRef.current.animateToRegion(selectedCampus.region, 600);
     }
   }, [selectedCampus]);
+
+  // Track user location for "current building" highlight + blue dot
+  useEffect(() => {
+    let cancelled = false;
+    let subscription = null;
+
+    (async () => {
+      try {
+        const sub = await watchUserCoords((coords) => {
+          if (cancelled) return;
+          if (simActiveRef.current) return;
+          setHasLocationPerm(true);
+          setUserCoord(coords);
+        });
+
+        if (cancelled) return;
+        subscription = sub;
+        if (!sub) setHasLocationPerm(false);
+      } catch (err) {
+        if (!cancelled) setHasLocationPerm(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      subscription?.remove?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    simActiveRef.current = isSimulating;
+  }, [isSimulating]);
+
+  useEffect(() => {
+    if (!userCoord) {
+      setCurrentBuilding(null);
+      return;
+    }
+
+    const found = findBuildingUserIsIn(userCoord, allBuildings);
+    setCurrentBuilding(found ?? null);
+  }, [userCoord, allBuildings]);
+
+  useEffect(() => {
+    if (startText !== "My location") return;
+    if (currentBuilding?.__campusId) {
+      setStartCampusId(currentBuilding.__campusId);
+    }
+  }, [startText, currentBuilding]);
 
   // Default Start = current location (only if Start is empty)
   useDefaultStartMyLocation({
@@ -127,7 +450,72 @@ export default function MapScreen() {
   });
 
   // Route coordinates from Google Directions
-  const { routeCoords } = useDirectionsRoute({ startCoord, destCoord, mapRef });
+  const { routeCoords, routeInfo } = useDirectionsRoute({
+    startCoord,
+    destCoord,
+    mapRef,
+    mode: travelMode,
+  });
+
+  const canShowDirectionsPanel = Boolean(
+    showDirectionsPanel && startCoord && destCoord,
+  );
+
+  useEffect(() => {
+    if (!startCoord || !destCoord) {
+      setShowDirectionsPanel(false);
+      setNavActive(false);
+      setFollowUser(false);
+      setCurrentStepIndex(0);
+      stopSimulation();
+      return;
+    }
+
+    setShowDirectionsPanel(true);
+  }, [startCoord, destCoord]);
+
+  useEffect(() => {
+    if (!isCrossCampusTrip && travelMode === "transit") {
+      setTravelMode("walking");
+    }
+  }, [isCrossCampusTrip, travelMode]);
+
+  useEffect(() => {
+    if (!followUser || !userCoord) return;
+    mapRef.current?.animateToRegion(
+      { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+      500,
+    );
+  }, [followUser, userCoord]);
+
+  useEffect(() => {
+    if (!navActive || !userCoord || !routeInfo?.steps?.length) return;
+    const currentStep = routeInfo.steps[currentStepIndex];
+    if (!currentStep?.endLocation) return;
+
+    const meters = distanceMeters(userCoord, currentStep.endLocation);
+    if (meters > 25) return;
+
+    const nextIndex = Math.min(
+      currentStepIndex + 1,
+      routeInfo.steps.length - 1,
+    );
+
+    if (nextIndex !== currentStepIndex) {
+      setCurrentStepIndex(nextIndex);
+      const nextInstruction = routeInfo.steps[nextIndex]?.instruction;
+      if (nextInstruction && speechEnabled) {
+        Speech.stop();
+        Speech.speak(stripHtml(nextInstruction));
+      }
+    }
+  }, [navActive, userCoord, routeInfo, currentStepIndex, speechEnabled]);
+
+  useEffect(() => {
+    return () => {
+      stopSimulation();
+    };
+  }, []);
 
   if (!selectedCampus) {
     return (
@@ -142,42 +530,132 @@ export default function MapScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Select Your Campus</Text>
-        <Text style={styles.subtitle}>Choose a campus to explore buildings and get directions</Text>
+        {!hasInteracted && (
+          <Text style={styles.subtitle}>
+            Choose a campus to explore buildings and get directions
+          </Text>
+        )}
+        {currentBuilding && (
+          <Text style={styles.currentBuildingText}>
+            Current building: {getBuildingName(currentBuilding)}
+          </Text>
+        )}
       </View>
 
-      <CampusToggle campuses={campusList} selectedId={selectedCampusId} onSelect={setSelectedCampusId} />
+      <CampusToggle
+        campuses={campusList}
+        selectedId={selectedCampusId}
+        onSelect={(id) => {
+          setSelectedCampusId(id);
+          setHasInteracted(true);
+        }}
+      />
 
       <View style={{ flex: 1 }}>
         {/* red input box */}
         <View style={styles.redBox}>
           <View style={styles.inputRow}>
+            <Image
+              source={require("../../assets/magnifier.png")}
+              style={styles.searchIcon}
+              resizeMode="contain"
+            />
             <TextInput
               value={startText}
               onChangeText={(t) => {
+                setHasInteracted(true);
                 setStartText(t);
                 // If they type random text, it no longer matches a known coordinate
-                if (t !== 'My location') setStartCoord(null);
+                if (t !== "My location") setStartCoord(null);
+                if (!t) setStartCampusId(null);
+                if (!t) setShowDirectionsPanel(false);
               }}
-              placeholder="Start"
+              placeholder="Search or click on a building..."
               placeholderTextColor="#EED7DE"
-              style={styles.input}
-              onFocus={() => setActiveField('start')}
+              style={[styles.input, !startText && styles.inputPlaceholder]}
+              onFocus={() => {
+                setHasInteracted(true);
+                setActiveField("start");
+              }}
             />
+            {startText.length > 0 && (
+              <Pressable
+                onPress={() => {
+                  setStartText("");
+                  setStartCoord(null);
+                }}
+                hitSlop={10}
+                style={styles.clearBtn}
+              >
+                <Text style={styles.clearBtnText}>✕</Text>
+              </Pressable>
+            )}
           </View>
 
           <View style={[styles.inputRow, { marginBottom: 0 }]}>
+            <Image
+              source={require("../../assets/magnifier.png")}
+              style={styles.searchIcon}
+              resizeMode="contain"
+            />
             <TextInput
               value={destText}
               onChangeText={(t) => {
+                setHasInteracted(true);
                 setDestText(t);
                 setDestCoord(null);
+                if (!t) setDestCampusId(null);
+                if (!t) setShowDirectionsPanel(false);
               }}
-              placeholder="Destination"
+              placeholder="Search or click on a building..."
               placeholderTextColor="#EED7DE"
-              style={styles.input}
-              onFocus={() => setActiveField('dest')}
+              style={[styles.input, !destText && styles.inputPlaceholder]}
+              onFocus={() => {
+                setHasInteracted(true);
+                setActiveField("dest");
+              }}
             />
+            {destText.length > 0 && (
+              <Pressable
+                onPress={() => {
+                  setDestText("");
+                  setDestCoord(null);
+                }}
+                hitSlop={10}
+                style={styles.clearBtn}
+              >
+                <Text style={styles.clearBtnText}>✕</Text>
+              </Pressable>
+            )}
           </View>
+
+          <Pressable style={styles.swapBtn} onPress={handleSwapStartDest}>
+            <MaterialIcons name="swap-vert" size={18} color="#95223D" />
+          </Pressable>
+
+          {(shouldShowMyLocationOption || searchResults.length > 0) && (
+            <View style={styles.searchResults}>
+              {shouldShowMyLocationOption && (
+                <Pressable
+                  onPress={() => selectMyLocationForField(activeField)}
+                  style={styles.searchResultRow}
+                >
+                  <Text style={styles.searchResultText}>My location</Text>
+                </Pressable>
+              )}
+              {searchResults.map((building) => (
+                <Pressable
+                  key={getBuildingKey(building.__campusId, building)}
+                  onPress={() => selectBuildingForField(building, activeField)}
+                  style={styles.searchResultRow}
+                >
+                  <Text style={styles.searchResultText}>
+                    {getBuildingName(building)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Map */}
@@ -198,8 +676,16 @@ export default function MapScreen() {
             <Polygon
               key={building.id}
               coordinates={building.coordinates}
-              fillColor="rgba(145, 35, 56, 0.25)"
-              strokeColor="rgba(145, 35, 56, 0.9)"
+              fillColor={
+                isCurrentBuilding(selectedCampus.id, building)
+                  ? "rgba(37, 99, 235, 0.35)"
+                  : "rgba(149, 34, 61, 0.25)"
+              }
+              strokeColor={
+                isCurrentBuilding(selectedCampus.id, building)
+                  ? "rgba(37, 99, 235, 0.95)"
+                  : "rgba(149, 34, 61, 0.9)"
+              }
               strokeWidth={2}
               tappable
               onPress={() => handleBuildingPress(building)}
@@ -212,18 +698,30 @@ export default function MapScreen() {
               <Polygon
                 key={`${campus.id}-${building.id}`}
                 coordinates={building.coordinates}
-                fillColor="rgba(145, 35, 56, 0.10)"
-                strokeColor="rgba(145, 35, 56, 0.55)"
+                fillColor={
+                  isCurrentBuilding(campus.id, building)
+                    ? "rgba(37, 99, 235, 0.2)"
+                    : "rgba(149, 34, 61, 0.10)"
+                }
+                strokeColor={
+                  isCurrentBuilding(campus.id, building)
+                    ? "rgba(37, 99, 235, 0.85)"
+                    : "rgba(149, 34, 61, 0.55)"
+                }
                 strokeWidth={2}
                 tappable
                 onPress={() => handleBuildingPress(building)}
               />
-            ))
+            )),
           )}
 
           {/* Draw the path */}
           {routeCoords.length > 0 && (
-            <Polyline coordinates={routeCoords} strokeWidth={5} strokeColor="#2563eb" />
+            <Polyline
+              coordinates={routeCoords}
+              strokeWidth={5}
+              strokeColor="#2563eb"
+            />
           )}
         </MapView>
 
@@ -236,7 +734,11 @@ export default function MapScreen() {
               <View style={styles.sheetHeaderRow}>
                 <View style={styles.sheetHeaderLeft}>
                   <View style={styles.buildingIcon}>
-                    <Text style={styles.buildingIconText}>C</Text>
+                    <Image
+                      source={require("../../assets/Clogo.png")}
+                      style={styles.buildingIconImage}
+                      resizeMode="contain"
+                    />
                   </View>
 
                   <View style={{ flex: 1 }}>
@@ -256,35 +758,304 @@ export default function MapScreen() {
                   </View>
                 </View>
 
-                <Pressable onPress={() => setSelectedBuilding(null)} hitSlop={12} style={styles.closeBtn}>
+                <Pressable
+                  onPress={() => setSelectedBuilding(null)}
+                  hitSlop={12}
+                  style={styles.closeBtn}
+                >
                   <Text style={styles.closeBtnText}>✕</Text>
                 </Pressable>
               </View>
 
               {/* Directions button */}
-              <Pressable style={styles.directionsBtn} onPress={setDestinationToSelectedBuilding}>
+              <Pressable
+                style={styles.directionsBtn}
+                onPress={setDestinationToSelectedBuilding}
+              >
+                <Image
+                  source={require("../../assets/directionsLogo.png")}
+                  style={styles.directionsBtnIcon}
+                  resizeMode="contain"
+                />
                 <Text style={styles.directionsBtnText}>Directions</Text>
               </Pressable>
             </View>
           </View>
         )}
+
+        {canShowDirectionsPanel && (
+          <View style={styles.directionsWrap} pointerEvents="box-none">
+            <View style={styles.directionsPanel}>
+              <View style={styles.modeRow}>
+                <Pressable
+                  style={[
+                    styles.modeBtn,
+                    travelMode === "driving" && styles.modeBtnActive,
+                  ]}
+                  onPress={() => setTravelMode("driving")}
+                >
+                  <MaterialIcons
+                    name="directions-car"
+                    size={18}
+                    color={travelMode === "driving" ? MAROON : "#111"}
+                  />
+                  <Text
+                    style={[
+                      styles.modeBtnLabel,
+                      travelMode === "driving" && styles.modeBtnTextActive,
+                    ]}
+                  >
+                    Car
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.modeBtn,
+                    travelMode === "walking" && styles.modeBtnActive,
+                  ]}
+                  onPress={() => setTravelMode("walking")}
+                >
+                  <MaterialIcons
+                    name="directions-walk"
+                    size={18}
+                    color={travelMode === "walking" ? MAROON : "#111"}
+                  />
+                  <Text
+                    style={[
+                      styles.modeBtnLabel,
+                      travelMode === "walking" && styles.modeBtnTextActive,
+                    ]}
+                  >
+                    Walk
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.modeBtn,
+                    travelMode === "bicycling" && styles.modeBtnActive,
+                  ]}
+                  onPress={() => setTravelMode("bicycling")}
+                >
+                  <MaterialIcons
+                    name="directions-bike"
+                    size={18}
+                    color={travelMode === "bicycling" ? MAROON : "#111"}
+                  />
+                  <Text
+                    style={[
+                      styles.modeBtnLabel,
+                      travelMode === "bicycling" && styles.modeBtnTextActive,
+                    ]}
+                  >
+                    Bike
+                  </Text>
+                </Pressable>
+
+                {isCrossCampusTrip && (
+                  <Pressable
+                    style={[
+                      styles.modeBtn,
+                      travelMode === "transit" && styles.modeBtnActive,
+                    ]}
+                    onPress={() => setTravelMode("transit")}
+                  >
+                    <MaterialIcons
+                      name="directions-transit"
+                      size={18}
+                      color={travelMode === "transit" ? MAROON : "#111"}
+                    />
+                    <Text
+                      style={[
+                        styles.modeBtnLabel,
+                        travelMode === "transit" && styles.modeBtnTextActive,
+                      ]}
+                    >
+                      Transit
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+
+              {travelMode === "transit" && isCrossCampusTrip && (
+                <View style={styles.shuttlePanel}>
+                  <Pressable
+                    style={styles.shuttleBtn}
+                    onPress={() => setIsShuttleModalOpen(true)}
+                  >
+                    <Text style={styles.shuttleBtnText}>
+                      Concordia Shuttle (SGW to Loyola)
+                    </Text>
+                  </Pressable>
+                  <Text style={styles.shuttleNote}>
+                    Public transit will be added later.
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.routeInfoRow}>
+                <View>
+                  <Text style={styles.routeInfoTitle}>
+                    {routeInfo?.durationText ?? "--"}
+                  </Text>
+                  <Text style={styles.routeInfoSub}>
+                    {routeInfo?.distanceText ?? ""}
+                  </Text>
+                </View>
+
+                <View style={styles.routeInfoActions}>
+                  <Pressable
+                    style={[
+                      styles.muteBtn,
+                      !speechEnabled && styles.muteBtnActive,
+                    ]}
+                    onPress={() => {
+                      setSpeechEnabled((prev) => !prev);
+                      Speech.stop();
+                    }}
+                  >
+                    <MaterialIcons
+                      name={speechEnabled ? "volume-up" : "volume-off"}
+                      size={18}
+                      color={speechEnabled ? "#111" : MAROON}
+                    />
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.simBtn, isSimulating && styles.simBtnActive]}
+                    onPress={handleSimulatePress}
+                  >
+                    <Text
+                      style={[
+                        styles.simBtnText,
+                        isSimulating && styles.simBtnTextActive,
+                      ]}
+                    >
+                      {isSimulating ? "Stop" : "Simulate"}
+                    </Text>
+                  </Pressable>
+
+                  <Pressable style={styles.goBtn} onPress={handleGoPress}>
+                    <Text style={styles.goBtnText}>GO</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
       </View>
+
+      <Modal
+        visible={isShuttleModalOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setIsShuttleModalOpen(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Concordia Shuttle</Text>
+              <Pressable
+                onPress={() => setIsShuttleModalOpen(false)}
+                hitSlop={10}
+                style={styles.modalClose}
+              >
+                <Text style={styles.modalCloseText}>X</Text>
+              </Pressable>
+            </View>
+
+            {filteredShuttleSchedules.map((schedule) => {
+              const { active, times } = getShuttleDepartures(
+                new Date(),
+                schedule,
+              );
+              return (
+                <View key={schedule.id} style={styles.modalSection}>
+                  <Text style={styles.modalSubtitle}>
+                    {schedule.campus} - {schedule.stop}
+                  </Text>
+                  <Text style={styles.modalAddress}>{schedule.address}</Text>
+
+                  <View style={styles.modalSchedule}>
+                    <Text style={styles.modalScheduleTitle}>Schedule</Text>
+                    <Text style={styles.modalScheduleText}>
+                      Monday to Thursday: every {schedule.weekday.intervalMin}{" "}
+                      minutes ({schedule.weekday.start}–{schedule.weekday.end})
+                    </Text>
+                    <Text style={styles.modalScheduleText}>
+                      Friday: every {schedule.friday.intervalMin} minutes (
+                      {schedule.friday.start}–{schedule.friday.end})
+                    </Text>
+                  </View>
+
+                  <View style={styles.modalDepartures}>
+                    <Text style={styles.modalScheduleTitle}>
+                      Next departures
+                    </Text>
+                    {!active || times.length === 0 ? (
+                      <Text style={styles.modalEmpty}>
+                        No more departures today.
+                      </Text>
+                    ) : (
+                      times.map((t) => (
+                        <View
+                          key={`${schedule.id}-${t}`}
+                          style={styles.departureRow}
+                        >
+                          <Image
+                            source={require("../../assets/Clogo.png")}
+                            style={styles.departureIcon}
+                            resizeMode="contain"
+                          />
+                          <Text style={styles.departureTime}>{t}</Text>
+                          <Text style={styles.departureEta}>
+                            ETA{" "}
+                            {(() => {
+                              const [h, m] = t
+                                .split(":")
+                                .map((v) => parseInt(v, 10));
+                              const mins =
+                                h * 60 + m + (schedule.estimatedTravelMin || 0);
+                              const eh = Math.floor(mins / 60) % 24;
+                              const em = mins % 60;
+                              return `${eh.toString().padStart(2, "0")}:${em
+                                .toString()
+                                .padStart(2, "0")}`;
+                            })()}
+                          </Text>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { paddingTop: 48, paddingHorizontal: 20, paddingBottom: 12, backgroundColor: '#fff' },
-  title: { fontSize: 26, fontWeight: '700', color: MAROON },
-  subtitle: { marginTop: 4, fontSize: 15, color: '#666' },
+  container: { flex: 1, backgroundColor: "#fff" },
+  header: {
+    paddingTop: 48,
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    backgroundColor: "#fff",
+  },
+  title: { fontSize: 26, fontWeight: "700", color: MAROON },
+  subtitle: { marginTop: 4, fontSize: 15, color: "#666" },
+  currentBuildingText: { marginTop: 6, fontSize: 13, color: "#2563eb" },
 
   map: { flex: 1 },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: '#666' },
+  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  loadingText: { color: "#666" },
 
   redBox: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     left: 16,
     right: 16,
@@ -294,50 +1065,374 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   inputRow: {
-    backgroundColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: "rgba(255,255,255,0.10)",
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
   },
-  input: { color: '#fff', fontSize: 14, fontWeight: '700', paddingVertical: 0 },
+  input: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+    paddingVertical: 0,
+    flex: 1,
+  },
+  searchIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+    opacity: 0.8,
+  },
+  inputPlaceholder: {
+    fontSize: 12,
+    fontStyle: "italic",
+    fontWeight: "500",
+  },
+  searchResults: {
+    marginTop: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  searchResultRow: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.12)",
+  },
+  searchResultText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  clearBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+  },
+  clearBtnText: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  swapBtn: {
+    position: "absolute",
+    right: 350,
+    top: 47,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
 
-  sheetWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingBottom: 16 },
+  sheetWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
   sheet: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 22,
     paddingTop: 10,
     paddingHorizontal: 16,
     paddingBottom: 18,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
     elevation: 6,
   },
-  sheetHandle: { alignSelf: 'center', width: 44, height: 5, borderRadius: 999, backgroundColor: '#E6E6E6', marginBottom: 12 },
-  sheetHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  sheetHeaderLeft: { flexDirection: 'row', gap: 12, flex: 1, paddingRight: 8 },
+  sheetHandle: {
+    alignSelf: "center",
+    width: 44,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "#E6E6E6",
+    marginBottom: 12,
+  },
+  sheetHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  sheetHeaderLeft: { flexDirection: "row", gap: 12, flex: 1, paddingRight: 8 },
 
-  buildingIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: MAROON, alignItems: 'center', justifyContent: 'center' },
-  buildingIconText: { color: '#fff', fontWeight: '800', fontSize: 18 },
-  buildingTitle: { fontSize: 16, fontWeight: '800', color: '#111', letterSpacing: 0.4 },
-  buildingSub: { marginTop: 4, fontSize: 13, color: '#666', lineHeight: 18 },
+  buildingIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: MAROON,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buildingIconImage: { width: 28, height: 28 },
+  buildingTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#111",
+    letterSpacing: 0.4,
+  },
+  buildingSub: { marginTop: 4, fontSize: 13, color: "#666", lineHeight: 18 },
 
-  closeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F2F2F2', alignItems: 'center', justifyContent: 'center' },
-  closeBtnText: { fontSize: 16, color: '#333', fontWeight: '700' },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  closeBtnText: { fontSize: 16, color: "#333", fontWeight: "700" },
 
   directionsBtn: {
     marginTop: 16,
     backgroundColor: MAROON,
     borderRadius: 18,
     paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
   },
   directionsBtnText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: "800",
+  },
+  directionsBtnIcon: { width: 18, height: 18 },
+  directionsWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  directionsPanel: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  modeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 12,
+  },
+  modeBtn: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  modeBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  modeBtnLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#444",
+  },
+  modeBtnTextActive: {
+    color: MAROON,
+  },
+  shuttlePanel: {
+    marginTop: 8,
+    marginBottom: 6,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: "#F7F7F7",
+  },
+  shuttleBtn: {
+    backgroundColor: MAROON,
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shuttleBtnText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  shuttleNote: {
+    marginTop: 6,
+    fontSize: 11,
+    color: "#666",
+    textAlign: "center",
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    padding: 30,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#111",
+  },
+  modalClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalCloseText: { fontSize: 16, color: "#333", fontWeight: "700" },
+  modalSubtitle: {
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#111",
+  },
+  modalAddress: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#666",
+  },
+  modalSchedule: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "#F7F7F7",
+  },
+  modalSection: {
+    marginTop: 12,
+  },
+  modalScheduleTitle: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#111",
+  },
+  modalScheduleText: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#444",
+  },
+  modalDepartures: {
+    marginTop: 12,
+  },
+  modalEmpty: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#666",
+  },
+  departureRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  departureIcon: { width: 20, height: 20 },
+  departureTime: { fontSize: 14, fontWeight: "700", color: "#111" },
+  departureEta: {
+    marginLeft: "auto",
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "600",
+  },
+  routeInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  routeInfoActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  routeInfoTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#111",
+  },
+  routeInfoSub: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#666",
+  },
+  goBtn: {
+    backgroundColor: MAROON,
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+  },
+  goBtnText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
+  simBtn: {
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    backgroundColor: "#fff",
+  },
+  simBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  simBtnText: {
+    color: "#444",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  simBtnTextActive: {
+    color: MAROON,
+  },
+  muteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  muteBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
   },
 });
