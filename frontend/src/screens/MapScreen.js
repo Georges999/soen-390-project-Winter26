@@ -1362,12 +1362,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   departureIcon: { width: 20, height: 20 },
-  departureTime: { fontSize: 14, fontWeight: "700", color: "#111" },
+  departureTime: {
+    width: 56,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111",
+    fontVariant: ["tabular-nums"],
+  },
   departureEta: {
     marginLeft: "auto",
+    width: 70,
     fontSize: 12,
     color: "#666",
     fontWeight: "600",
+    textAlign: "right",
+    fontVariant: ["tabular-nums"],
   },
   routeInfoRow: {
     flexDirection: "row",
