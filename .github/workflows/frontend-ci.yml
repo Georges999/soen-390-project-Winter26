@@ -23,27 +23,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20' 
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
 
-      # UNCOMMENT WHEN: Packages are finalized and dependency conflicts are resolved
-      # Fix current issue: react-native-maps requires react >= 18.3.1 but package.json has 18.2.0
-      # Solution: Update react version in package.json or adjust react-native-maps version
-      # - name: Install dependencies
-      #   working-directory: frontend
-      #   run: npm install
+      - name: Install dependencies
+        working-directory: frontend
+        # Added --legacy-peer-deps to handle the React 19 version mismatch
+        run: npm install --legacy-peer-deps
 
-      # UNCOMMENT WHEN: ESLint config is added (.eslintrc.js or .eslintrc.json)
-      # To set up: Run 'npm init @eslint/config' in frontend folder
-      # - name: Run linter
-      #   working-directory: frontend
-      #   run: npm run lint
-
-      # UNCOMMENT WHEN: Tests are written (e.g., using Jest or React Native Testing Library)
-      # - name: Run tests
-      #   working-directory: frontend
-      #   run: npm test
-
-      # UNCOMMENT WHEN: Tests are written and you want to enforce 70% coverage
-      # - name: Check coverage threshold
-      #   working-directory: frontend
-      #   run: npm test -- --coverage --coverageThreshold='{"global":{"lines":70,"statements":70,"functions":70,"branches":70}}'
+      - name: Run tests
+        working-directory: frontend
+        run: npm test
