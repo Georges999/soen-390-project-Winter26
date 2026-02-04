@@ -9,22 +9,23 @@ const MODE_MAP = {
   transit: "transit",
 };
 
-export function useDirectionsRoute({ startCoord, destCoord, mapRef, mode }) {
+export function useDirectionsRoute({
+  startCoord,
+  destCoord,
+  mapRef,
+  mode,
+  routeIndex = 0,
+}) {
   const [routeCoords, setRouteCoords] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
+  const [routeOptions, setRouteOptions] = useState([]);
 
   useEffect(() => {
-    // clear when missing one end
-    if (!startCoord || !destCoord) {
+    // clear when missing one end or when directions are disabled
+    if (!startCoord || !destCoord || !mode) {
       setRouteCoords([]);
       setRouteInfo(null);
-      return;
-    }
-
-    // Transit disabled for now (shuttle will be handled separately)
-    if (mode === "transit") {
-      setRouteCoords([]);
-      setRouteInfo(null);
+      setRouteOptions([]);
       return;
     }
 
@@ -40,7 +41,8 @@ export function useDirectionsRoute({ startCoord, destCoord, mapRef, mode }) {
           `&destination=${destCoord.latitude},${destCoord.longitude}` +
           `&mode=${apiMode}` +
           (isTransit ? `&departure_time=now` : "") +
-          (isTransit ? `&transit_mode=bus|subway|rail|tram` : "") +
+          (isTransit ? `&transit_mode=bus|subway` : "") +
+          (isTransit ? `&alternatives=true` : "") +
           `&key=${GOOGLE_MAPS_API_KEY}`;
 
         const res = await fetch(url);
@@ -50,11 +52,67 @@ export function useDirectionsRoute({ startCoord, destCoord, mapRef, mode }) {
           console.log("Directions API error:", data.status, data.error_message); //when no route is returned
           if (!cancelled) setRouteCoords([]);
           if (!cancelled) setRouteInfo(null);
+          if (!cancelled) setRouteOptions([]);
           return;
         }
 
+        const pickBestRoute = (routes) => {
+          if (!routes?.length) return null;
+          if (!isTransit) return routes[0];
+          return routes.reduce((best, current) => {
+            const bestDur = best?.legs?.[0]?.duration?.value ?? Infinity;
+            const curDur = current?.legs?.[0]?.duration?.value ?? Infinity;
+            return curDur < bestDur ? current : best;
+          }, routes[0]);
+        };
+
+        const buildRouteOptions = (routes) =>
+          routes.map((route) => {
+            const leg = route?.legs?.[0];
+            const steps = leg?.steps ?? [];
+            const transitSteps = steps.filter(
+              (step) => step.travel_mode === "TRANSIT",
+            );
+            const transitLines = transitSteps
+              .map((step) => {
+                const line = step.transit_details?.line;
+                return (
+                  line?.short_name ||
+                  line?.name ||
+                  line?.vehicle?.type ||
+                  "Transit"
+                );
+              })
+              .filter(Boolean);
+            const transitVehicles = transitSteps
+              .map((step) => step.transit_details?.line?.vehicle?.type || "")
+              .filter(Boolean);
+            return {
+              durationText: leg?.duration?.text ?? "",
+              durationValue: leg?.duration?.value ?? Infinity,
+              distanceText: leg?.distance?.text ?? "",
+              transitLines,
+              transitVehicles,
+            };
+          });
+
+        const options = isTransit ? buildRouteOptions(data.routes) : [];
+        const clampedIndex = Math.min(
+          Math.max(routeIndex, 0),
+          isTransit ? Math.max(options.length - 1, 0) : 0,
+        );
+        const selectedRoute = isTransit
+          ? data.routes[clampedIndex]
+          : pickBestRoute(data.routes);
+
         //decode the polyline returned by Google
-        const encoded = data.routes[0].overview_polyline.points;
+        const encoded = selectedRoute?.overview_polyline?.points;
+        if (!encoded) {
+          if (!cancelled) setRouteCoords([]);
+          if (!cancelled) setRouteInfo(null);
+          if (!cancelled) setRouteOptions([]);
+          return;
+        }
         const points = polyline.decode(encoded).map(([lat, lng]) => ({
           latitude: lat,
           longitude: lng,
@@ -63,7 +121,8 @@ export function useDirectionsRoute({ startCoord, destCoord, mapRef, mode }) {
         if (cancelled) return;
 
         setRouteCoords(points);
-        const leg = data.routes[0]?.legs?.[0];
+        if (!cancelled) setRouteOptions(options);
+        const leg = selectedRoute?.legs?.[0];
         setRouteInfo(
           leg
             ? {
@@ -96,6 +155,7 @@ export function useDirectionsRoute({ startCoord, destCoord, mapRef, mode }) {
                           lineName: step.transit_details.line?.name ?? "",
                           vehicleType:
                             step.transit_details.line?.vehicle?.type ?? "",
+                          numStops: step.transit_details.num_stops ?? null,
                         }
                       : null,
                   })) ?? [],
@@ -112,13 +172,14 @@ export function useDirectionsRoute({ startCoord, destCoord, mapRef, mode }) {
         console.log("fetchRoute error:", e);
         if (!cancelled) setRouteCoords([]);
         if (!cancelled) setRouteInfo(null);
+        if (!cancelled) setRouteOptions([]);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [startCoord, destCoord, mapRef, mode]);
+  }, [startCoord, destCoord, mapRef, mode, routeIndex]);
 
-  return { routeCoords, routeInfo };
+  return { routeCoords, routeInfo, routeOptions };
 }

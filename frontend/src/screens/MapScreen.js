@@ -71,7 +71,10 @@ export default function MapScreen() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isSimulating, setIsSimulating] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
+  const [transitSubMode, setTransitSubMode] = useState("shuttle"); // shuttle | public
   const [isShuttleModalOpen, setIsShuttleModalOpen] = useState(false);
+  const [transitRouteIndex, setTransitRouteIndex] = useState(0);
+  const [isTransitCollapsed, setIsTransitCollapsed] = useState(false);
   const simTimerRef = useRef(null);
   const simIndexRef = useRef(0);
   const simActiveRef = useRef(false);
@@ -450,11 +453,19 @@ export default function MapScreen() {
   });
 
   // Route coordinates from Google Directions
-  const { routeCoords, routeInfo } = useDirectionsRoute({
+  const directionsMode =
+    travelMode === "transit"
+      ? transitSubMode === "public"
+        ? "transit"
+        : null
+      : travelMode;
+
+  const { routeCoords, routeInfo, routeOptions } = useDirectionsRoute({
     startCoord,
     destCoord,
     mapRef,
-    mode: travelMode,
+    mode: directionsMode,
+    routeIndex: transitRouteIndex,
   });
 
   const canShowDirectionsPanel = Boolean(
@@ -473,6 +484,12 @@ export default function MapScreen() {
 
     setShowDirectionsPanel(true);
   }, [startCoord, destCoord]);
+
+  useEffect(() => {
+    if (isSimulating) {
+      setIsTransitCollapsed(true);
+    }
+  }, [isSimulating]);
 
   useEffect(() => {
     if (!isCrossCampusTrip && travelMode === "transit") {
@@ -880,17 +897,239 @@ export default function MapScreen() {
 
               {travelMode === "transit" && isCrossCampusTrip && (
                 <View style={styles.shuttlePanel}>
-                  <Pressable
-                    style={styles.shuttleBtn}
-                    onPress={() => setIsShuttleModalOpen(true)}
-                  >
-                    <Text style={styles.shuttleBtnText}>
-                      Concordia Shuttle (SGW to Loyola)
-                    </Text>
-                  </Pressable>
-                  <Text style={styles.shuttleNote}>
-                    Public transit will be added later.
-                  </Text>
+                  <View style={styles.transitSubRow}>
+                    <Pressable
+                      style={[
+                        styles.transitSubBtn,
+                        transitSubMode === "shuttle" &&
+                          styles.transitSubBtnActive,
+                      ]}
+                      onPress={() => {
+                        setTransitSubMode("shuttle");
+                        setIsShuttleModalOpen(true);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.transitSubText,
+                          transitSubMode === "shuttle" &&
+                            styles.transitSubTextActive,
+                        ]}
+                      >
+                        Shuttle
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={[
+                        styles.transitSubBtn,
+                        transitSubMode === "public" &&
+                          styles.transitSubBtnActive,
+                      ]}
+                      onPress={() => setTransitSubMode("public")}
+                    >
+                      <Text
+                        style={[
+                          styles.transitSubText,
+                          transitSubMode === "public" &&
+                            styles.transitSubTextActive,
+                        ]}
+                      >
+                        Public
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {transitSubMode === "public" && (
+                    <>
+                      <View style={styles.transitHeaderRow}>
+                        <Text style={styles.shuttleNote}>
+                          Showing 3 shortest public transit routes.
+                        </Text>
+                        <Pressable
+                          onPress={() => setIsTransitCollapsed((prev) => !prev)}
+                          style={styles.collapseBtn}
+                        >
+                          <MaterialIcons
+                            name={
+                              isTransitCollapsed ? "expand-less" : "expand-more"
+                            }
+                            size={18}
+                            color={MAROON}
+                          />
+                        </Pressable>
+                      </View>
+
+                      {!isTransitCollapsed && (
+                        <View style={styles.transitList}>
+                          {routeOptions.length === 0 ? (
+                            <Text style={styles.transitEmpty}>
+                              No public transit routes found.
+                            </Text>
+                          ) : (
+                            routeOptions.slice(0, 3).map((opt, idx) => {
+                              const isSelected = idx === transitRouteIndex;
+                              return (
+                                <Pressable
+                                  key={`route-${idx}`}
+                                  onPress={() => setTransitRouteIndex(idx)}
+                                  style={[
+                                    styles.transitRow,
+                                    isSelected && styles.transitRowActive,
+                                  ]}
+                                >
+                                  <View style={styles.transitSummaryRow}>
+                                    <View style={styles.transitSummaryLeft}>
+                                      {(opt.transitVehicles || [])
+                                        .slice(0, 3)
+                                        .map((vehicle, vIdx) => {
+                                          const icon =
+                                            vehicle === "SUBWAY"
+                                              ? "subway"
+                                              : "directions-bus";
+                                          const line =
+                                            opt.transitLines?.[vIdx] ||
+                                            "Transit";
+                                          return (
+                                            <View
+                                              key={`veh-${idx}-${vIdx}`}
+                                              style={styles.transitBadge}
+                                            >
+                                              <MaterialIcons
+                                                name={icon}
+                                                size={14}
+                                                color={
+                                                  isSelected ? MAROON : "#111"
+                                                }
+                                              />
+                                              <Text
+                                                style={[
+                                                  styles.transitBadgeText,
+                                                  isSelected &&
+                                                    styles.transitLineActive,
+                                                ]}
+                                              >
+                                                {line}
+                                              </Text>
+                                            </View>
+                                          );
+                                        })}
+                                    </View>
+                                    <Text style={styles.transitMeta}>
+                                      {opt.durationText || "--"}
+                                      {opt.durationValue &&
+                                      isFinite(opt.durationValue)
+                                        ? ` (ETA ${(() => {
+                                            const now = new Date();
+                                            const mins = Math.round(
+                                              opt.durationValue / 60,
+                                            );
+                                            const eta = new Date(
+                                              now.getTime() + mins * 60000,
+                                            );
+                                            const hh = eta
+                                              .getHours()
+                                              .toString()
+                                              .padStart(2, "0");
+                                            const mm = eta
+                                              .getMinutes()
+                                              .toString()
+                                              .padStart(2, "0");
+                                            return `${hh}:${mm}`;
+                                          })()})`
+                                        : ""}
+                                    </Text>
+                                  </View>
+                                  <Text style={styles.transitStops}>
+                                    Tap to view details
+                                  </Text>
+                                  {isSelected &&
+                                    routeInfo?.steps?.length > 0 && (
+                                      <View style={styles.transitSteps}>
+                                        {routeInfo.steps.map(
+                                          (step, stepIdx) => {
+                                            const mode = step.travelMode;
+                                            let icon = "directions-walk";
+                                            if (mode === "TRANSIT") {
+                                              const vehicle =
+                                                step.transitDetails
+                                                  ?.vehicleType || "";
+                                              icon =
+                                                vehicle === "SUBWAY"
+                                                  ? "subway"
+                                                  : "directions-bus";
+                                            }
+                                            return (
+                                              <View
+                                                key={`step-${stepIdx}`}
+                                                style={styles.transitStepRow}
+                                              >
+                                                <MaterialIcons
+                                                  name={icon}
+                                                  size={16}
+                                                  color="#111"
+                                                />
+                                                <Text
+                                                  style={styles.transitStepText}
+                                                >
+                                                  {step.transitDetails
+                                                    ?.lineShortName ||
+                                                    step.transitDetails
+                                                      ?.lineName ||
+                                                    stripHtml(
+                                                      step.instruction || "",
+                                                    )}
+                                                  {step.travelMode ===
+                                                    "TRANSIT" && (
+                                                    <>
+                                                      {step.transitDetails
+                                                        ?.arrivalStop && (
+                                                        <Text
+                                                          style={
+                                                            styles.transitStopName
+                                                          }
+                                                        >
+                                                          {" "}
+                                                          (
+                                                          {
+                                                            step.transitDetails
+                                                              .arrivalStop
+                                                          }
+                                                          )
+                                                        </Text>
+                                                      )}
+                                                      {step.transitDetails
+                                                        ?.numStops != null && (
+                                                        <Text
+                                                          style={
+                                                            styles.transitStopCount
+                                                          }
+                                                        >
+                                                          {" "}
+                                                          •{" "}
+                                                          {
+                                                            step.transitDetails
+                                                              .numStops
+                                                          }{" "}
+                                                          stops
+                                                        </Text>
+                                                      )}
+                                                    </>
+                                                  )}
+                                                </Text>
+                                              </View>
+                                            );
+                                          },
+                                        )}
+                                      </View>
+                                    )}
+                                </Pressable>
+                              );
+                            })
+                          )}
+                        </View>
+                      )}
+                    </>
+                  )}
                 </View>
               )}
 
@@ -1268,6 +1507,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: "#F7F7F7",
   },
+  transitSubRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  transitSubBtn: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingVertical: 8,
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  transitSubBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  transitSubText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#444",
+  },
+  transitSubTextActive: {
+    color: MAROON,
+  },
   shuttleBtn: {
     backgroundColor: MAROON,
     borderRadius: 14,
@@ -1286,6 +1551,110 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#666",
     textAlign: "center",
+  },
+  transitList: {
+    marginTop: 8,
+    gap: 8,
+  },
+  transitSummaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  transitSummaryLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  transitBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    backgroundColor: "#F3F3F3",
+  },
+  transitBadgeText: {
+    fontSize: 11,
+    color: "#111",
+    fontWeight: "700",
+  },
+  transitMeta: {
+    fontSize: 11,
+    color: "#555",
+    fontWeight: "700",
+  },
+  transitHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  collapseBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  transitRow: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EDEDED",
+  },
+  transitRowActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.06)",
+  },
+  transitLine: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#111",
+  },
+  transitLineActive: {
+    color: MAROON,
+  },
+  transitStops: {
+    marginTop: 2,
+    fontSize: 11,
+    color: "#444",
+  },
+  transitTimes: {
+    marginTop: 2,
+    fontSize: 11,
+    color: "#666",
+  },
+  transitEmpty: {
+    fontSize: 11,
+    color: "#666",
+    textAlign: "center",
+    paddingVertical: 6,
+  },
+  transitSteps: {
+    marginTop: 6,
+    gap: 4,
+  },
+  transitStepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  transitStepText: {
+    fontSize: 11,
+    color: "#333",
+    flex: 1,
+  },
+  transitStopCount: {
+    fontSize: 11,
+    color: "#666",
+    fontWeight: "600",
   },
   modalBackdrop: {
     flex: 1,

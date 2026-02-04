@@ -2291,7 +2291,7 @@
       {
         "id": "loyola-fc",
         "label": "FC",
-        "name": "FC Building",
+        "name": "F.C. Smith Building",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(0, 188, 212, 0.35)",
         "strokeColor": "rgba(0, 188, 212, 0.9)",
@@ -2425,7 +2425,7 @@
       {
         "id": "loyola-hu",
         "label": "HU",
-        "name": "HU Building",
+        "name": "Applied Science Hub",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
@@ -2442,7 +2442,7 @@
       {
         "id": "loyola-jr",
         "label": "JR",
-        "name": "JR Building",
+        "name": "Jesuit Residence",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
@@ -2468,7 +2468,7 @@
       {
         "id": "loyola-pc",
         "label": "PC",
-        "name": "PERFORM centre",
+        "name": "PERFORM Centre",
         "address": "7200 Sherbrooke West",
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
@@ -2483,7 +2483,7 @@
       {
         "id": "loyola-ps",
         "label": "PS",
-        "name": "PS Building",
+        "name": "Physical Services Building",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(0, 188, 212, 0.35)",
         "strokeColor": "rgba(0, 188, 212, 0.9)",
@@ -2506,7 +2506,7 @@
       {
         "id": "loyola-pt",
         "label": "PT",
-        "name": "PT Building",
+        "name": "Oscar Peterson Concert Hall",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(233, 30, 99, 0.35)",
         "strokeColor": "rgba(233, 30, 99, 0.9)",
@@ -2522,7 +2522,7 @@
       {
         "id": "loyola-py",
         "label": "PY",
-        "name": "PY Building",
+        "name": "Psychology Building",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
@@ -2589,7 +2589,7 @@
       {
         "id": "loyola-rf",
         "label": "RF",
-        "name": "RF Building",
+        "name": "Loyola Jesuit Hall and Conference Centre",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
@@ -2612,7 +2612,7 @@
       {
         "id": "loyola-sc",
         "label": "SC",
-        "name": "SC Building",
+        "name": "Student Centre",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
@@ -2636,7 +2636,7 @@
       {
         "id": "loyola-sh",
         "label": "SH",
-        "name": "SH Building",
+        "name": "Future Buildings Laboratory",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
@@ -2694,7 +2694,7 @@
       {
         "id": "loyola-sp",
         "label": "SP",
-        "name": "SP Building",
+        "name": "Richard J. Renaud Science Complex",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(233, 30, 99, 0.35)",
         "strokeColor": "rgba(233, 30, 99, 0.9)",
@@ -2726,7 +2726,7 @@
       {
         "id": "loyola-ta",
         "label": "TA",
-        "name": "TA Building",
+        "name": "Terrebonne Building",
         "address": "7079 De Terrebonne",
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
@@ -2741,7 +2741,7 @@
       {
         "id": "loyola-ve",
         "label": "VE",
-        "name": "VE Building",
+        "name": "Vanier Extension",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
@@ -2756,7 +2756,7 @@
       {
         "id": "loyola-vl",
         "label": "VL",
-        "name": "VL Building",
+        "name": "Vanier Library Building",
         "address": "7141, Sherbrooke Wes",
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
