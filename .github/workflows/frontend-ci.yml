@@ -2,12 +2,12 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, develop]
+   
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'
   pull_request:
-    branches: [main, develop]
+ 
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'
@@ -29,7 +29,6 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        # Added --legacy-peer-deps to handle the React 19 version mismatch
         run: npm install --legacy-peer-deps
 
       - name: Run tests
