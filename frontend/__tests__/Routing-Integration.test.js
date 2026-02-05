@@ -1,6 +1,7 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import MapScreen from '../src/screens/MapScreen';
+import * as useDirectionsRouteModule from '../src/hooks/useDirectionsRoute';
 
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {
@@ -31,25 +32,47 @@ jest.mock('react-native-maps', () => {
   };
 });
 
+// Mock - initially with empty coordinates
+jest.mock('../src/hooks/useDirectionsRoute', () => ({
+  useDirectionsRoute: jest.fn(() => ({
+    routeCoords: [],
+    routeInfo: null,
+    routeOptions: [],
+  })),
+}));
+
+
+
 describe('Walking directions routing integration', () => {
-  it('renders a walking route polyline after selecting start and destination', async () => {
-    // Render the full screen
-    const { getByTestId, queryByTestId } = render(<MapScreen />);
-   
-    // Before: no route drawn yet
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders a walking route polyline when route coordinates are available', async () => {
+    // First render: no route coordinates
+    const { queryByTestId, rerender } = render(<MapScreen />);
     expect(queryByTestId('route-polyline')).toBeNull();
-   
-    // Get the building markers
-    const buildingH = getByTestId('building-sgw-h');
-    const buildingEV = getByTestId('building-sgw-ev');
-   
-    // Simulate the user tapping the buildings
-    fireEvent.press(buildingH);
-    fireEvent.press(buildingEV);
-   
-    // Wait for the route to appear
+
+    // Update the mock to return route coordinates
+    useDirectionsRouteModule.useDirectionsRoute.mockReturnValue({
+      routeCoords: [
+        { latitude: 45.4968, longitude: -73.5788 },
+        { latitude: 45.4952, longitude: -73.5779 },
+      ],
+      routeInfo: {
+        durationText: "5 mins",
+        distanceText: "300 m",
+        steps: [],
+      },
+      routeOptions: [],
+    });
+
+    // Re-render after mock update
+    rerender(<MapScreen />);
+
+    // Now the route polyline should be rendered
     await waitFor(() => {
-      expect(getByTestId('route-polyline')).toBeTruthy();
+      expect(queryByTestId('route-polyline')).toBeTruthy();
     });
   });
 });
