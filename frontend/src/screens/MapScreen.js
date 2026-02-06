@@ -578,6 +578,7 @@ export default function MapScreen() {
               resizeMode="contain"
             />
             <TextInput
+              testID="start-input"
               value={startText}
               onChangeText={(t) => {
                 setHasInteracted(true);
@@ -616,6 +617,7 @@ export default function MapScreen() {
               resizeMode="contain"
             />
             <TextInput
+              testID="dest-input"
               value={destText}
               onChangeText={(t) => {
                 setHasInteracted(true);
@@ -691,6 +693,7 @@ export default function MapScreen() {
         >
           {selectedCampus.buildings.map((building) => (
             <Polygon
+              testID={`building-${building.id}`}
               key={building.id}
               coordinates={building.coordinates}
               fillColor={
@@ -713,6 +716,7 @@ export default function MapScreen() {
           {otherCampuses.map((campus) =>
             campus.buildings.map((building) => (
               <Polygon
+                testID={`building-${campus.id}-${building.id}`}
                 key={`${campus.id}-${building.id}`}
                 coordinates={building.coordinates}
                 fillColor={
@@ -735,6 +739,7 @@ export default function MapScreen() {
           {/* Draw the path */}
           {routeCoords.length > 0 && (
             <Polyline
+              testID="route-polyline"
               coordinates={routeCoords}
               strokeWidth={5}
               strokeColor="#2563eb"
