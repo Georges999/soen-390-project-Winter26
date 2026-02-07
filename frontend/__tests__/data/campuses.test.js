@@ -95,4 +95,92 @@ describe('campuses.json', () => {
       expect(ccBuilding).toBeDefined();
     });
   });
+
+  describe('Building Labels', () => {
+    it('should have non-empty labels for all buildings', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          expect(building.label).toBeTruthy();
+          expect(building.label.length).toBeGreaterThan(0);
+        });
+      });
+    });
+
+    it('should have non-empty names for all buildings', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          expect(building.name).toBeTruthy();
+          expect(building.name.length).toBeGreaterThan(0);
+        });
+      });
+    });
+
+    it('should have string type labels', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          expect(typeof building.label).toBe('string');
+        });
+      });
+    });
+  });
+
+  describe('Coordinate Consistency', () => {
+    it('should have numeric latitude values', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          building.coordinates.forEach((coord) => {
+            expect(typeof coord.latitude).toBe('number');
+            expect(isNaN(coord.latitude)).toBe(false);
+          });
+        });
+      });
+    });
+
+    it('should have numeric longitude values', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          building.coordinates.forEach((coord) => {
+            expect(typeof coord.longitude).toBe('number');
+            expect(isNaN(coord.longitude)).toBe(false);
+          });
+        });
+      });
+    });
+
+    it('should have coordinates in Montreal area', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          building.coordinates.forEach((coord) => {
+            // Montreal is roughly at 45.5°N, 73.5°W
+            expect(coord.latitude).toBeGreaterThan(45);
+            expect(coord.latitude).toBeLessThan(46);
+            expect(coord.longitude).toBeGreaterThan(-74);
+            expect(coord.longitude).toBeLessThan(-73);
+          });
+        });
+      });
+    });
+  });
+
+  describe('Data Integrity', () => {
+    it('should have consistent building structure', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          const keys = Object.keys(building);
+          expect(keys).toContain('id');
+          expect(keys).toContain('label');
+          expect(keys).toContain('name');
+          expect(keys).toContain('coordinates');
+        });
+      });
+    });
+
+    it('should have at least 3 coordinate points per building', () => {
+      ['sgw', 'loyola'].forEach((campusKey) => {
+        campuses[campusKey].buildings.forEach((building) => {
+          expect(building.coordinates.length).toBeGreaterThanOrEqual(3);
+        });
+      });
+    });
+  });
 });

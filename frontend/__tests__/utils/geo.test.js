@@ -45,6 +45,17 @@ describe('geo utils', () => {
       // Point on boundary - result may vary based on algorithm
       expect(typeof isPointInPolygon(point, polygon)).toBe('boolean');
     });
+
+    it('should handle triangle polygon', () => {
+      const point = { latitude: 45.5, longitude: -73.6 };
+      const polygon = [
+        { latitude: 45.4, longitude: -73.5 },
+        { latitude: 45.6, longitude: -73.5 },
+        { latitude: 45.5, longitude: -73.7 },
+      ];
+      
+      expect(typeof isPointInPolygon(point, polygon)).toBe('boolean');
+    });
   });
 
   describe('findBuildingUserIsIn', () => {
@@ -139,6 +150,76 @@ describe('geo utils', () => {
       const result = findBuildingUserIsIn(userPoint, overlappingBuildings);
       
       expect(result.id).toBe('building-1');
+    });
+
+    it('should handle buildings with empty coordinates array', () => {
+      const buildings = [
+        {
+          id: 'building-1',
+          name: 'Building A',
+          coordinates: [],
+        },
+      ];
+      const userPoint = { latitude: 45.5, longitude: -73.6 };
+      
+      const result = findBuildingUserIsIn(userPoint, buildings);
+      
+      expect(result).toBeNull();
+    });
+
+    it('should check all buildings in array', () => {
+      const buildings = [
+        {
+          id: 'building-1',
+          name: 'Building A',
+          coordinates: [
+            { latitude: 45.1, longitude: -73.1 },
+            { latitude: 45.2, longitude: -73.1 },
+            { latitude: 45.2, longitude: -73.2 },
+            { latitude: 45.1, longitude: -73.2 },
+          ],
+        },
+        {
+          id: 'building-2',
+          name: 'Building B',
+          coordinates: [
+            { latitude: 45.4, longitude: -73.5 },
+            { latitude: 45.6, longitude: -73.5 },
+            { latitude: 45.6, longitude: -73.7 },
+            { latitude: 45.4, longitude: -73.7 },
+          ],
+        },
+      ];
+      const userPoint = { latitude: 45.5, longitude: -73.6 };
+      
+      const result = findBuildingUserIsIn(userPoint, buildings);
+      
+      expect(result).not.toBeNull();
+      expect(result.id).toBe('building-2');
+    });
+
+    it('should handle large polygon with many points', () => {
+      const buildings = [
+        {
+          id: 'complex-building',
+          name: 'Complex Building',
+          coordinates: [
+            { latitude: 45.4, longitude: -73.5 },
+            { latitude: 45.5, longitude: -73.5 },
+            { latitude: 45.55, longitude: -73.55 },
+            { latitude: 45.6, longitude: -73.6 },
+            { latitude: 45.6, longitude: -73.7 },
+            { latitude: 45.5, longitude: -73.75 },
+            { latitude: 45.4, longitude: -73.7 },
+            { latitude: 45.35, longitude: -73.65 },
+          ],
+        },
+      ];
+      const userPoint = { latitude: 45.5, longitude: -73.6 };
+      
+      const result = findBuildingUserIsIn(userPoint, buildings);
+      
+      expect(result).not.toBeNull();
     });
   });
 });

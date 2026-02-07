@@ -34,6 +34,16 @@ describe('locationService', () => {
 
       expect(result).toBe(false);
     });
+
+    it('should return false for undetermined status', async () => {
+      Location.requestForegroundPermissionsAsync.mockResolvedValue({
+        status: 'undetermined',
+      });
+
+      const result = await requestLocationPermission();
+
+      expect(result).toBe(false);
+    });
   });
 
   describe('getUserCoords', () => {

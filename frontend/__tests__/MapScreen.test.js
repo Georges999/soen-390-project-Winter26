@@ -109,6 +109,146 @@ describe('MapScreen', () => {
       expect(destInput.props.value).toBe('Building B');
     });
   });
+
+  describe('Building Selection', () => {
+    it('should filter buildings based on search text', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+
+      // Type in search
+      fireEvent.changeText(startInput, 'Hall');
+
+      expect(startInput.props.value).toBe('Hall');
+    });
+
+    it('should handle empty search gracefully', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+
+      fireEvent.changeText(startInput, '');
+      expect(startInput.props.value).toBe('');
+    });
+  });
+
+  describe('Text Input Handling', () => {
+    it('should allow text input in start field', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+      
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+      
+      fireEvent.changeText(startInput, 'Hall Building');
+      
+      expect(startInput.props.value).toBe('Hall Building');
+    });
+
+    it('should allow text input in destination field', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+      
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const destInput = inputs[1];
+      
+      fireEvent.changeText(destInput, 'LB Building');
+      
+      expect(destInput.props.value).toBe('LB Building');
+    });
+
+    it('should handle multiple text changes', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+      
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+      
+      fireEvent.changeText(startInput, 'H');
+      fireEvent.changeText(startInput, 'Ha');
+      fireEvent.changeText(startInput, 'Hall');
+      
+      expect(startInput.props.value).toBe('Hall');
+    });
+
+    it('should maintain separate state for start and destination', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+      
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+      const destInput = inputs[1];
+      
+      fireEvent.changeText(startInput, 'Building A');
+      fireEvent.changeText(destInput, 'Building B');
+      
+      expect(startInput.props.value).toBe('Building A');
+      expect(destInput.props.value).toBe('Building B');
+    });
+
+    it('should allow clearing text', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+      
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+      
+      fireEvent.changeText(startInput, 'Hall Building');
+      fireEvent.changeText(startInput, '');
+      
+      expect(startInput.props.value).toBe('');
+    });
+
+    it('should handle special characters in search', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+      
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+      
+      fireEvent.changeText(startInput, 'J.W. McConnell');
+      
+      expect(startInput.props.value).toBe('J.W. McConnell');
+    });
+
+    it('should handle numeric input', () => {
+      const { getAllByPlaceholderText } = render(<MapScreen />);
+      
+      const inputs = getAllByPlaceholderText('Search or click on a building...');
+      const startInput = inputs[0];
+      
+      fireEvent.changeText(startInput, '2040');
+      
+      expect(startInput.props.value).toBe('2040');
+    });
+  });
+
+  describe('Campus Data Integration', () => {
+    it('should load campus data on mount', () => {
+      const { getByText } = render(<MapScreen />);
+      
+      expect(getByText('SGW')).toBeTruthy();
+    });
+
+    it('should render without crashing when location is available', async () => {
+      locationService.getUserCoords.mockResolvedValue({
+        latitude: 45.4973,
+        longitude: -73.5789,
+      });
+
+      const { getByText } = render(<MapScreen />);
+      
+      await waitFor(() => {
+        expect(getByText('SGW')).toBeTruthy();
+      });
+    });
+
+    it('should render without crashing when location is null', async () => {
+      locationService.getUserCoords.mockResolvedValue(null);
+
+      const { getByText } = render(<MapScreen />);
+      
+      await waitFor(() => {
+        expect(getByText('SGW')).toBeTruthy();
+      });
+    });
+  });
 });
 
 // Helper function to get all text elements

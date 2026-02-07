@@ -109,4 +109,23 @@ describe('useDefaultStartMyLocation', () => {
       expect(setStartText).not.toHaveBeenCalled();
     });
   });
+
+  it('should not call getUserCoords if startText is whitespace', async () => {
+    const setStartText = jest.fn();
+    const setHasLocationPerm = jest.fn();
+    const setStartCoord = jest.fn();
+
+    renderHook(() =>
+      useDefaultStartMyLocation({
+        startText: '   ',
+        setStartText,
+        setHasLocationPerm,
+        setStartCoord,
+      })
+    );
+
+    await waitFor(() => {
+      expect(locationService.getUserCoords).not.toHaveBeenCalled();
+    });
+  });
 });

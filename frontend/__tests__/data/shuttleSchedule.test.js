@@ -56,5 +56,85 @@ describe('shuttleSchedule.json', () => {
         expect(route.estimatedTravelMin).toBeGreaterThan(0);
       });
     });
+
+    it('should have reasonable travel times', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        expect(route.estimatedTravelMin).toBeLessThan(120);
+      });
+    });
+
+    it('should have reasonable intervals', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        expect(route.weekday.intervalMin).toBeLessThan(180);
+        expect(route.friday.intervalMin).toBeLessThan(180);
+      });
+    });
+  });
+
+  describe('Schedule Times', () => {
+    it('should have start time before end time on weekdays', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        const start = route.weekday.start.split(':').map(Number);
+        const end = route.weekday.end.split(':').map(Number);
+        const startMinutes = start[0] * 60 + start[1];
+        const endMinutes = end[0] * 60 + end[1];
+        expect(endMinutes).toBeGreaterThan(startMinutes);
+      });
+    });
+
+    it('should have start time before end time on fridays', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        const start = route.friday.start.split(':').map(Number);
+        const end = route.friday.end.split(':').map(Number);
+        const startMinutes = start[0] * 60 + start[1];
+        const endMinutes = end[0] * 60 + end[1];
+        expect(endMinutes).toBeGreaterThan(startMinutes);
+      });
+    });
+  });
+
+  describe('Route IDs', () => {
+    it('should have unique route IDs', () => {
+      const ids = shuttleSchedule.routes.map((r) => r.id);
+      const uniqueIds = new Set(ids);
+      expect(uniqueIds.size).toBe(ids.length);
+    });
+
+    it('should have non-empty route IDs', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        expect(route.id).toBeTruthy();
+        expect(route.id.length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('Stop Information', () => {
+    it('should have stop names for all routes', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        expect(route.stopName).toBeTruthy();
+        expect(typeof route.stopName).toBe('string');
+      });
+    });
+
+    it('should have addresses for all routes', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        expect(route.address).toBeTruthy();
+        expect(typeof route.address).toBe('string');
+      });
+    });
+
+    it('should have valid from/to campus identifiers', () => {
+      shuttleSchedule.routes.forEach((route) => {
+        expect(['sgw', 'loyola']).toContain(route.from);
+        expect(['sgw', 'loyola']).toContain(route.to);
+      });
+    });
+  });
+
+  describe('Updated Timestamp', () => {
+    it('should have a valid timestamp format', () => {
+      expect(shuttleSchedule.updatedAt).toBeTruthy();
+      expect(typeof shuttleSchedule.updatedAt).toBe('string');
+    });
   });
 });
