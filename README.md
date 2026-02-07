@@ -29,7 +29,7 @@ Mobile app for Concordia students to navigate campus with real-time directions, 
 ## Project Info
 
 - **Course:** ENGR 390, Concordia University
-- **Team Size:** 11 developers
+- **Team Size:** 12 developers
 - **Names and IDs**:       
                      Georges Ghazal ID40231026     
                      Boudy Joe Samaha ID40238965
@@ -38,9 +38,10 @@ Mobile app for Concordia students to navigate campus with real-time directions, 
                      Jana El Madhoun ID40272201             
                      Nayla Nocera 40283927      
                      Rita Kardachian 40283698      
-                     Ana Rostam 40187433
-                     Ahmed Eskaf 40235587 
-                     Mohammed Janoudi 40252494
-                     Marc El Haddad 40231208
+                     Ana Rostam 40187433       
+                     Ahmed Eskaf 40235587          
+                     Mohammed Janoudi 40252494         
+                     Marc El Haddad 40231208       
+                     Peter Torbey 40246387    
        
 - **Timeline:** 12 weeks (6 sprints)
