@@ -9,7 +9,7 @@ import {
   Image,
   Modal,
 } from "react-native";
-import MapView, { Polygon, Polyline } from "react-native-maps";
+import MapView, { Polygon, Polyline, Marker } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
@@ -41,6 +41,20 @@ const getPolygonCenter = (points = []) => {
   return {
     latitude: totals.latitude / points.length,
     longitude: totals.longitude / points.length,
+  };
+};
+
+const getAmenities = (building) => {
+  const a = building?.amenities ?? {};
+  return {
+    bathrooms: Boolean(a.bathrooms),
+    waterFountains: Boolean(a.waterFountains),
+    genderNeutralBathrooms: Boolean(a.genderNeutralBathrooms),
+    wheelchairAccessible: Boolean(
+      a.wheelchairAccessible ??
+        a.wheelchairAccessibleEntrances ??
+        a.wheelchairAccessibleEntrance,
+    ),
   };
 };
 
@@ -546,7 +560,7 @@ export default function MapScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Select Your Campus</Text>
+        {/* <Text style={styles.title}>Select Your Campus</Text> */}
         {!hasInteracted && (
           <Text style={styles.subtitle}>
             Choose a campus to explore buildings and get directions
@@ -691,49 +705,88 @@ export default function MapScreen() {
           showsScale
           onPress={() => setActiveField(null)}
         >
-          {selectedCampus.buildings.map((building) => (
-            <Polygon
-              testID={`building-${building.id}`}
-              key={building.id}
-              coordinates={building.coordinates}
-              fillColor={
-                isCurrentBuilding(selectedCampus.id, building)
-                  ? "rgba(37, 99, 235, 0.35)"
-                  : "rgba(149, 34, 61, 0.25)"
-              }
-              strokeColor={
-                isCurrentBuilding(selectedCampus.id, building)
-                  ? "rgba(37, 99, 235, 0.95)"
-                  : "rgba(149, 34, 61, 0.9)"
-              }
-              strokeWidth={2}
-              tappable
-              onPress={() => handleBuildingPress(building)}
-            />
-          ))}
+          {selectedCampus.buildings.map((building) => {
+            const center = getPolygonCenter(building.coordinates);
+            const label = building.label || building.name;
+
+            return (
+              <React.Fragment key={building.id}>
+                <Polygon
+                  testID={`building-${building.id}`}
+                  coordinates={building.coordinates}
+                  fillColor={
+                    isCurrentBuilding(selectedCampus.id, building)
+                      ? "rgba(37, 99, 235, 0.35)"
+                      : "rgba(149, 34, 61, 0.25)"
+                  }
+                  strokeColor={
+                    isCurrentBuilding(selectedCampus.id, building)
+                      ? "rgba(37, 99, 235, 0.95)"
+                      : "rgba(149, 34, 61, 0.9)"
+                  }
+                  strokeWidth={2}
+                  tappable
+                  onPress={() => handleBuildingPress(building)}
+                />
+
+                {center && label ? (
+                  <Marker
+                    coordinate={center}
+                    anchor={{ x: 0.5, y: 0.5 }}
+                    tracksViewChanges={false}
+                    pointerEvents="none"
+                  >
+                    <View style={styles.buildingLabel}>
+                      <Text style={styles.buildingLabelText}>{label}</Text>
+                    </View>
+                  </Marker>
+                ) : null}
+              </React.Fragment>
+            );
+          })}
 
           {/* show other campus buildings too */}
           {otherCampuses.map((campus) =>
-            campus.buildings.map((building) => (
-              <Polygon
-                testID={`building-${campus.id}-${building.id}`}
-                key={`${campus.id}-${building.id}`}
-                coordinates={building.coordinates}
-                fillColor={
-                  isCurrentBuilding(campus.id, building)
-                    ? "rgba(37, 99, 235, 0.2)"
-                    : "rgba(149, 34, 61, 0.10)"
-                }
-                strokeColor={
-                  isCurrentBuilding(campus.id, building)
-                    ? "rgba(37, 99, 235, 0.85)"
-                    : "rgba(149, 34, 61, 0.55)"
-                }
-                strokeWidth={2}
-                tappable
-                onPress={() => handleBuildingPress(building)}
-              />
-            )),
+            campus.buildings.map((building) => {
+              const center = getPolygonCenter(building.coordinates);
+              const label = building.label || building.name;
+              const key = `${campus.id}-${building.id}`;
+
+              return (
+                <React.Fragment key={key}>
+                  <Polygon
+                    testID={`building-${campus.id}-${building.id}`}
+                    coordinates={building.coordinates}
+                    fillColor={
+                      isCurrentBuilding(campus.id, building)
+                        ? "rgba(37, 99, 235, 0.2)"
+                        : "rgba(149, 34, 61, 0.10)"
+                    }
+                    strokeColor={
+                      isCurrentBuilding(campus.id, building)
+                        ? "rgba(37, 99, 235, 0.85)"
+                        : "rgba(149, 34, 61, 0.55)"
+                    }
+                    strokeWidth={2}
+                    tappable
+                    onPress={() => handleBuildingPress(building)}
+                  />
+
+                  {center && label ? (
+                    <Marker
+                      coordinate={center}
+                      anchor={{ x: 0.5, y: 0.5 }}
+                      tracksViewChanges={false}
+                      pointerEvents="none"
+                    >
+                      <View style={styles.buildingLabel}>
+                        <Text style={styles.buildingLabelText}>{label}</Text>
+                      </View>
+                    </Marker>
+                  ) : null}
+                </React.Fragment>
+              );
+            }),
           )}
 
           {/* Draw the path */}
@@ -777,6 +830,54 @@ export default function MapScreen() {
                         No address available
                       </Text>
                     )}
+
+                    {(() => {
+                      const a = getAmenities(selectedBuilding);
+                      return (
+                        <View style={styles.amenitiesWrap}>
+                          <Text style={styles.amenitiesTitle}>Amenities</Text>
+
+                          <View style={styles.amenityRow}>
+                            <View style={styles.amenityLeft}>
+                              <MaterialIcons name="wc" size={16} color={MAROON} />
+                              <Text style={styles.amenityLabel}>Bathrooms</Text>
+                            </View>
+                            <Text style={styles.amenityValue}>
+                              {a.bathrooms ? "Available" : "Not available"}
+                            </Text>
+                          </View>
+
+                          <View style={styles.amenityRow}>
+                            <View style={styles.amenityLeft}>
+                              <MaterialIcons name="water-drop" size={16} color={MAROON} />
+                              <Text style={styles.amenityLabel}>Water fountains</Text>
+                            </View>
+                            <Text style={styles.amenityValue}>
+                              {a.waterFountains ? "Available" : "Not available"}
+                            </Text>
+                          </View>
+
+                          <View style={styles.amenityRow}>
+                            <View style={styles.amenityLeft}>
+                              <MaterialIcons name="wc" size={16} color={MAROON} />
+                              <Text style={styles.amenityLabel}>Gender-neutral bathrooms</Text>
+                            </View>
+                            <Text style={styles.amenityValue}>
+                              {a.genderNeutralBathrooms ? "Yes" : "No"}
+                            </Text>
+                          </View>
+                          <View style={styles.amenityRow}>
+                            <View style={styles.amenityLeft}>
+                              <MaterialIcons name="accessible" size={16} color={MAROON} />
+                              <Text style={styles.amenityLabel}>Wheelchair accessible</Text>
+                            </View>
+                            <Text style={styles.amenityValue}>
+                              {a.wheelchairAccessible ? "Yes" : "No"}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })()}
                   </View>
                 </View>
 
@@ -1293,6 +1394,19 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: "700", color: MAROON },
   subtitle: { marginTop: 4, fontSize: 15, color: "#666" },
   currentBuildingText: { marginTop: 6, fontSize: 13, color: "#2563eb" },
+  buildingLabel: {
+    backgroundColor: "rgba(255,255,255,0.92)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(149, 34, 61, 0.35)",
+  },
+  buildingLabelText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#95223D",
+  },
 
   map: { flex: 1 },
   loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
@@ -1430,6 +1544,44 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   buildingSub: { marginTop: 4, fontSize: 13, color: "#666", lineHeight: 18 },
+
+  amenitiesWrap: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#EAEAEA",
+  },
+  amenitiesTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#111",
+    marginBottom: 8,
+    letterSpacing: 0.3,
+  },
+  amenityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+  },
+  amenityLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+    paddingRight: 10,
+  },
+  amenityLabel: {
+    fontSize: 13,
+    color: "#333",
+    fontWeight: "700",
+    flexShrink: 1,
+  },
+  amenityValue: {
+    fontSize: 13,
+    color: "#666",
+    fontWeight: "800",
+  },
 
   closeBtn: {
     width: 34,
