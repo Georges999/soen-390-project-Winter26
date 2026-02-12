@@ -14,6 +14,10 @@
         "label": "B",
         "name": "B Annex",
         "address": "2160 Bishop Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
         "coordinates": [
@@ -44,6 +48,10 @@
         "label": "CI",
         "name": "CI Annex",
         "address": "2149 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
         "coordinates": [
@@ -86,6 +94,10 @@
         "label": "CL",
         "name": "CL Annex",
         "address": "1665 St. Catherine W",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
         "coordinates": [
@@ -116,6 +128,10 @@
         "label": "D",
         "name": "D Annex",
         "address": "2140 Bishop Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
         "coordinates": [
@@ -154,6 +170,10 @@
         "label": "EN",
         "name": "EN Annex",
         "address": "2070 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
         "coordinates": [
@@ -200,6 +220,10 @@
         "label": "ER",
         "name": "ER Building",
         "address": "2155 Guy Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
         "coordinates": [
@@ -238,6 +262,12 @@
         "label": "EV",
         "name": "Engineering, Computer Science and Visual Arts Integrated Complex",
         "address": "1515 Ste-Catherine W",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
         "coordinates": [
@@ -316,6 +346,10 @@
         "label": "FA",
         "name": "FA Annex",
         "address": "2060 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
         "coordinates": [
@@ -346,6 +380,12 @@
         "label": "FB",
         "name": "Faubourg Building",
         "address": "1250 Guy Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
         "coordinates": [
@@ -440,6 +480,10 @@
         "label": "FG",
         "name": "Faubourg Ste-Catherine Building",
         "address": "1610 St-Catherine W",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
         "coordinates": [
@@ -486,6 +530,10 @@
         "label": "GA",
         "name": "Grey Nuns Annex",
         "address": "1215, Saint Mathieu Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
         "coordinates": [
@@ -532,6 +580,12 @@
         "label": "GM",
         "name": "Guy-De Maisonneuve Building",
         "address": "1550 De Maisonneuve W",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
         "coordinates": [
@@ -570,6 +624,10 @@
         "label": "GN",
         "name": "Grey Nuns Building",
         "address": "1190 Guy St. (main entrance) / 1175 St-Mathieu St.",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(0, 188, 212, 0.35)",
         "strokeColor": "rgba(0, 188, 212, 0.9)",
         "coordinates": [
@@ -1084,6 +1142,10 @@
         "label": "GS",
         "name": "Guy-Sherbrooke Building",
         "address": "1538 Sherbrooke Street West",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(233, 30, 99, 0.35)",
         "strokeColor": "rgba(233, 30, 99, 0.9)",
         "coordinates": [
@@ -1126,6 +1188,12 @@
         "label": "H",
         "name": "Henry F. Hall Building",
         "address": "1455 DeMaisonneuve W",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
         "coordinates": [
@@ -1156,6 +1224,10 @@
         "label": "K",
         "name": "K Annex",
         "address": "2150 Bishop Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
         "coordinates": [
@@ -1210,6 +1282,12 @@
         "label": "LB",
         "name": "J.W. McConnell Building",
         "address": "1400 De Maisonneuve W",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
         "coordinates": [
@@ -1264,6 +1342,10 @@
         "label": "LD",
         "name": "LD Building",
         "address": "1424 Bishop Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
         "coordinates": [
@@ -1322,6 +1404,12 @@
         "label": "LS",
         "name": "Learning Square",
         "address": "1535 De Maisonneuve Blvd. W.",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
         "coordinates": [
@@ -1360,6 +1448,10 @@
         "label": "M",
         "name": "M Annex",
         "address": "2135 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
         "coordinates": [
@@ -1402,6 +1494,12 @@
         "label": "MB",
         "name": "John Molson Building",
         "address": "1450 Guy Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(0, 188, 212, 0.35)",
         "strokeColor": "rgba(0, 188, 212, 0.9)",
         "coordinates": [
@@ -1460,6 +1558,10 @@
         "label": "MI",
         "name": "MI Annex",
         "address": "2130 Bishop Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(233, 30, 99, 0.35)",
         "strokeColor": "rgba(233, 30, 99, 0.9)",
         "coordinates": [
@@ -1502,6 +1604,10 @@
         "label": "MU",
         "name": "MU Annex",
         "address": "2170 Bishop Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
         "coordinates": [
@@ -1532,6 +1638,10 @@
         "label": "P",
         "name": "P Annex",
         "address": "2020 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
         "coordinates": [
@@ -1562,6 +1672,10 @@
         "label": "PR",
         "name": "PR Annex",
         "address": "2100 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
         "coordinates": [
@@ -1632,6 +1746,10 @@
         "label": "Q",
         "name": "Q Annex",
         "address": "2010 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
         "coordinates": [
@@ -1662,6 +1780,10 @@
         "label": "R",
         "name": "R Annex",
         "address": "2050 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
         "coordinates": [
@@ -1692,6 +1814,10 @@
         "label": "RR",
         "name": "RR Annex",
         "address": "2040 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
         "coordinates": [
@@ -1722,6 +1848,10 @@
         "label": "S",
         "name": "S Annex",
         "address": "2145 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(0, 188, 212, 0.35)",
         "strokeColor": "rgba(0, 188, 212, 0.9)",
         "coordinates": [
@@ -1772,6 +1902,10 @@
         "label": "SB",
         "name": "Samuel Bronfman Building",
         "address": "1590 Doctor Penfield",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(233, 30, 99, 0.35)",
         "strokeColor": "rgba(233, 30, 99, 0.9)",
         "coordinates": [
@@ -1870,6 +2004,10 @@
         "label": "T",
         "name": "T Annex",
         "address": "2030 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
         "coordinates": [
@@ -1900,6 +2038,10 @@
         "label": "TD",
         "name": "TD Building",
         "address": "1410 Guy Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
         "coordinates": [
@@ -1958,6 +2100,10 @@
         "label": "V",
         "name": "V Annex",
         "address": "2110 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
         "coordinates": [
@@ -1988,6 +2134,10 @@
         "label": "VA",
         "name": "Visual Arts Building",
         "address": "1395 Rene Levesque W",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
         "coordinates": [
@@ -2026,6 +2176,10 @@
         "label": "X",
         "name": "X Annex",
         "address": "2080 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
         "coordinates": [
@@ -2084,6 +2238,10 @@
         "label": "Z",
         "name": "Z Annex",
         "address": "2090 Mackay Street",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
         "coordinates": [
@@ -2130,6 +2288,10 @@
         "label": "AD",
         "name": "Administration Building",
         "address": "7141, Sherbrooke West",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
         "coordinates": [
@@ -2179,6 +2341,10 @@
         "label": "BB",
         "name": "BB-BH Annex",
         "address": "3502 Bermore Avenue",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
         "coordinates": [
@@ -2209,6 +2375,10 @@
         "label": "BH",
         "name": "BB-BH Annex",
         "address": "3500 Bermore Avenue",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
         "coordinates": [
@@ -2224,6 +2394,10 @@
         "label": "CC",
         "name": "Central Building",
         "address": "7141 Sherbrooke West",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
         "coordinates": [
@@ -2245,6 +2419,10 @@
         "label": "CJ",
         "name": "Communication Studies and Journalism Building",
         "address": "7141 Sherbrooke St. W.",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
         "coordinates": [
@@ -2278,6 +2456,10 @@
         "label": "DO",
         "name": "Stinger Dome",
         "address": "7141 Sherbrooke St. W. (also listed as 7200 Sherbrooke St. W.)",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
         "coordinates": [
@@ -2293,6 +2475,10 @@
         "label": "FC",
         "name": "F.C. Smith Building",
         "address": "7141, Sherbrooke Wes",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(0, 188, 212, 0.35)",
         "strokeColor": "rgba(0, 188, 212, 0.9)",
         "coordinates": [
@@ -2328,6 +2514,12 @@
         "label": "GE",
         "name": "Centre for Structural and Functional Genomics",
         "address": "7141, Sherbrooke Wes",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(233, 30, 99, 0.35)",
         "strokeColor": "rgba(233, 30, 99, 0.9)",
         "coordinates": [
@@ -2349,6 +2541,10 @@
         "label": "HA",
         "name": "Hingston Hall, wing HA",
         "address": "7141, Sherbrooke Wes",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(145, 35, 56, 0.35)",
         "strokeColor": "rgba(145, 35, 56, 0.9)",
         "coordinates": [
@@ -2377,6 +2573,10 @@
         "label": "HB",
         "name": "Hingston Hall, wing HB",
         "address": "7141, Sherbrooke Wes",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(74, 144, 226, 0.35)",
         "strokeColor": "rgba(74, 144, 226, 0.9)",
         "coordinates": [
@@ -2408,6 +2608,10 @@
         "label": "HC",
         "name": "Hingston Hall, wing HC",
         "address": "7141, Sherbrooke Wes",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 215, 0, 0.35)",
         "strokeColor": "rgba(255, 215, 0, 0.95)",
         "coordinates": [
@@ -2427,6 +2631,12 @@
         "label": "HU",
         "name": "Applied Science Hub",
         "address": "7141, Sherbrooke Wes",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true,
+          "genderNeutralBathrooms": true,
+          "wheelchairAccessibleEntrances": true
+        },
         "fillColor": "rgba(76, 175, 80, 0.35)",
         "strokeColor": "rgba(76, 175, 80, 0.9)",
         "coordinates": [
@@ -2444,6 +2654,10 @@
         "label": "JR",
         "name": "Jesuit Residence",
         "address": "7141, Sherbrooke Wes",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(156, 39, 176, 0.35)",
         "strokeColor": "rgba(156, 39, 176, 0.9)",
         "coordinates": [
@@ -2470,6 +2684,10 @@
         "label": "PC",
         "name": "PERFORM Centre",
         "address": "7200 Sherbrooke West",
+        "amenities": {
+          "bathrooms": true,
+          "waterFountains": true
+        },
         "fillColor": "rgba(255, 152, 0, 0.35)",
         "strokeColor": "rgba(255, 152, 0, 0.9)",
         "coordinates": [

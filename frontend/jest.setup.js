@@ -17,8 +17,14 @@ jest.mock('react-native-maps', () => {
   return {
     __esModule: true,
     default: MockMapView,
-    Polygon: (props) => <View {...props} />,
-    Polyline: (props) => <View {...props} />,
+
+    // Geometry
+    Polygon: (props) => <View {...props}>{props.children}</View>,
+    Polyline: (props) => <View {...props}>{props.children}</View>,
+
+    // Markers / labels / callouts
+    Marker: (props) => <View {...props}>{props.children}</View>,
+    Callout: (props) => <View {...props}>{props.children}</View>,
   };
 });
 
@@ -28,10 +34,6 @@ jest.mock('expo-speech', () => ({
   stop: jest.fn(),
 }));
 
-// Mock expo-vector-icons
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: 'MaterialIcons',
-}));
 
 // Mock expo-vector-icons virtually
 jest.mock('@expo/vector-icons', () => {
@@ -40,7 +42,7 @@ jest.mock('@expo/vector-icons', () => {
   return {
     MaterialIcons: (props) => <Text {...props} />,
     Ionicons: (props) => <Text {...props} />,
-   
+    FontAwesome5: (props) => <Text {...props} />,
   };
 }, { virtual: true });
 
