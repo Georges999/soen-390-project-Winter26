@@ -29,6 +29,7 @@ jest.mock('react-native-maps', () => {
     Marker: MockMarker,
     Polyline: MockPolyline,
     Polygon: MockMapView,
+    Circle: MockMapView,
   };
 });
 

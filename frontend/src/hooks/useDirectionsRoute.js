@@ -15,6 +15,9 @@ export function useDirectionsRoute({
   mapRef,
   mode,
   routeIndex = 0,
+  originOverride = null,
+  destinationOverride = null,
+  waypoints = null,
 }) {
   const [routeCoords, setRouteCoords] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
@@ -22,7 +25,9 @@ export function useDirectionsRoute({
 
   useEffect(() => {
     // clear when missing one end or when directions are disabled
-    if (!startCoord || !destCoord || !mode) {
+    const hasOrigin = Boolean(originOverride) || Boolean(startCoord);
+    const hasDestination = Boolean(destinationOverride) || Boolean(destCoord);
+    if (!hasOrigin || !hasDestination || !mode) {
       setRouteCoords([]);
       setRouteInfo(null);
       setRouteOptions([]);
@@ -35,11 +40,21 @@ export function useDirectionsRoute({
       try {
         const apiMode = MODE_MAP[mode] || "walking"; //travel modes or when missing-> walking
         const isTransit = apiMode === "transit";
+        const originParam = originOverride
+          ? encodeURIComponent(originOverride)
+          : `${startCoord.latitude},${startCoord.longitude}`;
+        const destinationParam = destinationOverride
+          ? encodeURIComponent(destinationOverride)
+          : `${destCoord.latitude},${destCoord.longitude}`;
+        const waypointsParam = Array.isArray(waypoints) && waypoints.length
+          ? `&waypoints=${waypoints.map((p) => encodeURIComponent(p)).join("|")}`
+          : "";
         const url =
           `https://maps.googleapis.com/maps/api/directions/json?` +
-          `origin=${startCoord.latitude},${startCoord.longitude}` +
-          `&destination=${destCoord.latitude},${destCoord.longitude}` +
+          `origin=${originParam}` +
+          `&destination=${destinationParam}` +
           `&mode=${apiMode}` +
+          waypointsParam +
           (isTransit ? `&departure_time=now` : "") +
           (isTransit ? `&transit_mode=bus|subway` : "") +
           (isTransit ? `&alternatives=true` : "") +
@@ -130,6 +145,19 @@ export function useDirectionsRoute({
                 distanceText: leg.distance?.text ?? "",
                 steps:
                   leg.steps?.map((step) => ({
+                    coords: (() => {
+                      if (!step.polyline?.points) return [];
+                      try {
+                        return polyline
+                          .decode(step.polyline.points)
+                          .map(([lat, lng]) => ({
+                            latitude: lat,
+                            longitude: lng,
+                          }));
+                      } catch {
+                        return [];
+                      }
+                    })(),
                     instruction: step.html_instructions ?? "",
                     distanceText: step.distance?.text ?? "",
                     durationText: step.duration?.text ?? "",
@@ -179,7 +207,16 @@ export function useDirectionsRoute({
     return () => {
       cancelled = true;
     };
-  }, [startCoord, destCoord, mapRef, mode, routeIndex]);
+  }, [
+    startCoord,
+    destCoord,
+    mapRef,
+    mode,
+    routeIndex,
+    originOverride,
+    destinationOverride,
+    waypoints,
+  ]);
 
   return { routeCoords, routeInfo, routeOptions };
 }
