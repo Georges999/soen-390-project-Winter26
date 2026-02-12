@@ -243,6 +243,14 @@ export default function MapScreen() {
     return shuttleSchedules;
   }, [startCampusId, destCampusId, shuttleSchedules]);
 
+  const isShuttleServiceActive = useMemo(
+    () =>
+      filteredShuttleSchedules.some(
+        (schedule) => getShuttleDepartures(new Date(), schedule).active,
+      ),
+    [filteredShuttleSchedules],
+  );
+
   const stripHtml = (html = "") => html.replace(/<[^>]+>/g, "");
 
   const distanceMeters = (a, b) => {
@@ -403,58 +411,42 @@ export default function MapScreen() {
   const isCrossCampusTrip =
     startCampusId && destCampusId && startCampusId !== destCampusId;
 
-  const shuttleStopAddressByCampus = useMemo(() => {
-    const map = {};
-    shuttleSchedules.forEach((route) => {
-      if (!map[route.from] && route.address) {
-        map[route.from] = route.address;
-      }
-    });
-    return map;
-  }, [shuttleSchedules]);
+  const shuttleStopCoordByCampus = useMemo(() => {
+    return {
+      // SGW shuttle stop on De Maisonneuve side
+      sgw: "45.496820,-73.578760",
+      // Loyola stop on Sherbrooke Street
+      loyola: "45.458360,-73.638150",
+    };
+  }, []);
 
   const shuttleRouting = useMemo(() => {
     if (
       travelMode !== "transit" ||
       transitSubMode !== "shuttle" ||
-      !isCrossCampusTrip
+      !isCrossCampusTrip ||
+      !isShuttleServiceActive
     ) {
       return null;
     }
 
-    const originAddress = shuttleStopAddressByCampus[startCampusId];
-    const destinationAddress = shuttleStopAddressByCampus[destCampusId];
+    const originAddress = shuttleStopCoordByCampus[startCampusId];
+    const destinationAddress = shuttleStopCoordByCampus[destCampusId];
     if (!originAddress || !destinationAddress) return null;
-
-    const sgwToLoyola = startCampusId === "sgw" && destCampusId === "loyola";
-    const waypoints = sgwToLoyola
-      ? [
-          "Boulevard De Maisonneuve Ouest, Montreal, QC",
-          "Boulevard Rene-Levesque Ouest, Montreal, QC",
-          "A-136 Rue Saint-Jacques Exit, Montreal, QC",
-          "A-138, Montreal, QC",
-          "Sherbrooke Street West, Montreal, QC",
-        ]
-      : [
-          "Sherbrooke Street West, Montreal, QC",
-          "A-138, Montreal, QC",
-          "A-136 Rue Saint-Jacques Exit, Montreal, QC",
-          "Boulevard Rene-Levesque Ouest, Montreal, QC",
-          "Boulevard De Maisonneuve Ouest, Montreal, QC",
-        ];
 
     return {
       originAddress,
       destinationAddress,
-      waypoints,
+      waypoints: [],
     };
   }, [
     travelMode,
     transitSubMode,
     isCrossCampusTrip,
+    isShuttleServiceActive,
     startCampusId,
     destCampusId,
-    shuttleStopAddressByCampus,
+    shuttleStopCoordByCampus,
   ]);
 
   const handleSwapStartDest = () => {
@@ -543,24 +535,140 @@ export default function MapScreen() {
     travelMode === "transit"
       ? transitSubMode === "public"
         ? "transit"
-        : shuttleRouting
-          ? "driving"
-          : null
+        : null
       : travelMode;
 
-  const { routeCoords, routeInfo, routeOptions } = useDirectionsRoute({
+  const {
+    routeCoords: baseRouteCoords,
+    routeInfo: baseRouteInfo,
+    routeOptions,
+  } = useDirectionsRoute({
     startCoord,
     destCoord,
     mapRef,
     mode: directionsMode,
     routeIndex: transitRouteIndex,
-    originOverride: shuttleRouting?.originAddress ?? null,
-    destinationOverride: shuttleRouting?.destinationAddress ?? null,
-    waypoints: shuttleRouting?.waypoints ?? null,
+    fitToRoute: true,
   });
+  const isActiveShuttleTrip = Boolean(
+    shuttleRouting && startCoord && destCoord && travelMode === "transit" && transitSubMode === "shuttle",
+  );
+
+  const { routeCoords: shuttleRideCoords, routeInfo: shuttleRideInfo } =
+    useDirectionsRoute({
+      startCoord: null,
+      destCoord: null,
+      mapRef: null,
+      mode: isActiveShuttleTrip ? "driving" : null,
+      originOverride: shuttleRouting?.originAddress ?? null,
+      destinationOverride: shuttleRouting?.destinationAddress ?? null,
+      waypoints: shuttleRouting?.waypoints ?? null,
+      fitToRoute: false,
+    });
+
+  const { routeCoords: walkToShuttleCoords } = useDirectionsRoute({
+    startCoord,
+    destCoord: null,
+    mapRef: null,
+    mode: isActiveShuttleTrip ? "walking" : null,
+    originOverride: null,
+    destinationOverride: shuttleRouting?.originAddress ?? null,
+    waypoints: null,
+    fitToRoute: false,
+  });
+
+  const { routeCoords: walkFromShuttleCoords } = useDirectionsRoute({
+    startCoord: null,
+    destCoord,
+    mapRef: null,
+    mode: isActiveShuttleTrip ? "walking" : null,
+    originOverride: shuttleRouting?.destinationAddress ?? null,
+    destinationOverride: null,
+    waypoints: null,
+    fitToRoute: false,
+  });
+
+  const snappedShuttleSegments = useMemo(() => {
+    if (!isActiveShuttleTrip) {
+      return {
+        walkTo: Array.isArray(walkToShuttleCoords) ? walkToShuttleCoords : [],
+        ride: Array.isArray(shuttleRideCoords) ? shuttleRideCoords : [],
+        walkFrom: Array.isArray(walkFromShuttleCoords) ? walkFromShuttleCoords : [],
+      };
+    }
+
+    const walkTo = Array.isArray(walkToShuttleCoords) ? [...walkToShuttleCoords] : [];
+    const ride = Array.isArray(shuttleRideCoords) ? [...shuttleRideCoords] : [];
+    const walkFrom = Array.isArray(walkFromShuttleCoords)
+      ? [...walkFromShuttleCoords]
+      : [];
+
+    if (walkTo.length > 0 && ride.length > 0) {
+      walkTo[walkTo.length - 1] = ride[0];
+    }
+    if (walkFrom.length > 0 && ride.length > 0) {
+      walkFrom[0] = ride[ride.length - 1];
+    }
+
+    return { walkTo, ride, walkFrom };
+  }, [isActiveShuttleTrip, walkToShuttleCoords, shuttleRideCoords, walkFromShuttleCoords]);
+
+  const shuttleCompositeCoords = useMemo(() => {
+    if (!isActiveShuttleTrip) return [];
+    const chunks = [
+      snappedShuttleSegments.walkTo,
+      snappedShuttleSegments.ride,
+      snappedShuttleSegments.walkFrom,
+    ]
+      .filter((c) => Array.isArray(c) && c.length > 0);
+    if (chunks.length === 0) return [];
+
+    const merged = [];
+    chunks.forEach((chunk) => {
+      chunk.forEach((point) => {
+        const prev = merged[merged.length - 1];
+        if (
+          prev &&
+          prev.latitude === point.latitude &&
+          prev.longitude === point.longitude
+        ) {
+          return;
+        }
+        merged.push(point);
+      });
+    });
+    return merged;
+  }, [isActiveShuttleTrip, snappedShuttleSegments]);
+
+  const shuttleWalkDotCoords = useMemo(() => {
+    if (!isActiveShuttleTrip) return [];
+    return [
+      ...buildDotCoords(snappedShuttleSegments.walkTo, 3),
+      ...buildDotCoords(snappedShuttleSegments.walkFrom, 3),
+    ];
+  }, [isActiveShuttleTrip, snappedShuttleSegments]);
+
+  const shuttleRideSegments = useMemo(() => {
+    if (!isActiveShuttleTrip) return [];
+    return Array.isArray(snappedShuttleSegments.ride) &&
+      snappedShuttleSegments.ride.length > 1
+      ? [snappedShuttleSegments.ride]
+      : [];
+  }, [isActiveShuttleTrip, snappedShuttleSegments]);
+
+  const routeCoords = isActiveShuttleTrip ? shuttleCompositeCoords : baseRouteCoords;
+  const routeInfo = isActiveShuttleTrip ? shuttleRideInfo : baseRouteInfo;
   const safeRouteCoords = Array.isArray(routeCoords) ? routeCoords : [];
 
-  const buildDotCoords = (coords, spacingMeters = 3) => {
+  useEffect(() => {
+    if (!isActiveShuttleTrip || safeRouteCoords.length < 2) return;
+    mapRef.current?.fitToCoordinates(safeRouteCoords, {
+      edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+      animated: true,
+    });
+  }, [isActiveShuttleTrip, safeRouteCoords]);
+
+  function buildDotCoords(coords, spacingMeters = 3) {
     if (!Array.isArray(coords) || coords.length < 2) return [];
 
     const dots = [];
@@ -585,7 +693,7 @@ export default function MapScreen() {
     }
 
     return dots;
-  };
+  }
 
   const walkingDotCoords = useMemo(() => {
     if (travelMode !== "walking") return [];
@@ -971,6 +1079,30 @@ export default function MapScreen() {
               </>
             ) : (
               <>
+                {isActiveShuttleTrip ? (
+                  <>
+                    {shuttleRideSegments.map((segment, idx) => (
+                      <Polyline
+                        key={`shuttle-ride-${idx}`}
+                        testID={idx === 0 ? "route-polyline" : undefined}
+                        coordinates={segment}
+                        strokeWidth={5}
+                        strokeColor="#2563eb"
+                      />
+                    ))}
+                    {shuttleWalkDotCoords.map((dot, idx) => (
+                      <Circle
+                        key={`shuttle-walk-dot-${idx}`}
+                        center={dot}
+                        radius={1}
+                        fillColor="#2563eb"
+                        strokeColor="#2563eb"
+                        strokeWidth={1}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <>
                 {(() => {
                   const isMixedMode = travelMode === "transit";
                   const hasSegmentData =
@@ -1012,6 +1144,8 @@ export default function MapScreen() {
                     />
                   );
                 })()}
+                  </>
+                )}
               </>
             )
           )}

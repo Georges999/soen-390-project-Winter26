@@ -18,6 +18,7 @@ export function useDirectionsRoute({
   originOverride = null,
   destinationOverride = null,
   waypoints = null,
+  fitToRoute = true,
 }) {
   const [routeCoords, setRouteCoords] = useState([]);
   const [routeInfo, setRouteInfo] = useState(null);
@@ -192,10 +193,12 @@ export function useDirectionsRoute({
         );
 
         // zoom to the route
-        mapRef?.current?.fitToCoordinates(points, {
-          edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
-          animated: true,
-        });
+        if (fitToRoute) {
+          mapRef?.current?.fitToCoordinates(points, {
+            edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+            animated: true,
+          });
+        }
       } catch (e) {
         console.log("fetchRoute error:", e);
         if (!cancelled) setRouteCoords([]);
@@ -216,6 +219,7 @@ export function useDirectionsRoute({
     originOverride,
     destinationOverride,
     waypoints,
+    fitToRoute,
   ]);
 
   return { routeCoords, routeInfo, routeOptions };
