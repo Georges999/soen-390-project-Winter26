@@ -6,8 +6,6 @@ Mobile app for Concordia students to navigate campus with real-time directions, 
 ## Tech Stack
 
 - **Frontend:** React Native (JavaScript)
-- **Backend:** Node.js + Express
-- **Database:** Supabase (PostgreSQL)
 - **Maps:** Google Maps API
 
 ## Core Features
@@ -23,7 +21,6 @@ Mobile app for Concordia students to navigate campus with real-time directions, 
 
 - **Google Maps API** - [Get Key](https://developers.google.com/maps/documentation/javascript/get-api-key)
 - **Google Calendar API** - [Get Key](https://developers.google.com/calendar/api/quickstart/js)
-- **Supabase** - [Create Project](https://supabase.com/)
 - **Concordia Open Data API** - [Register](https://opendata.concordia.ca/)
 
 ## Project Info
