@@ -275,6 +275,14 @@ export default function MapScreen() {
     setIsSimulating(false);
   };
 
+  const handleRecenter = () => {
+    if (!userCoord) return;
+    mapRef.current?.animateToRegion(
+      { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+      500,
+    );
+  };
+
   const selectBuildingForField = (building, field) => {
     const name = getBuildingName(building);
     const center = getPolygonCenter(building.coordinates);
@@ -732,6 +740,10 @@ export default function MapScreen() {
     showDirectionsPanel && startCoord && destCoord,
   );
 
+  const isBottomPanelOpen = Boolean(selectedBuilding) || canShowDirectionsPanel;
+
+  const recenterBottomOffset = isBottomPanelOpen ? 170 : 30;
+
   useEffect(() => {
     if (!startCoord || !destCoord) {
       setShowDirectionsPanel(false);
@@ -1035,6 +1047,30 @@ export default function MapScreen() {
               );
             }),
           )}
+          
+          {/* Recenter Button - recenter on route start */}
+          {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
+            <Pressable
+              style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
+              onPress={() => {
+                // Use first point of route if available, otherwise user location
+                const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
+                if (targetCoord) {
+                  mapRef.current?.animateToRegion(
+                    {
+                      latitude: targetCoord.latitude,
+                      longitude: targetCoord.longitude,
+                      latitudeDelta: 0.003,
+                      longitudeDelta: 0.003,
+                    },
+                    500
+                  );
+                }
+              }}
+            >
+              <MaterialIcons name="my-location" size={24} color={MAROON} />
+            </Pressable>
+          )}
 
           {showCampusLabels &&
             campusList.map((campus) => (
@@ -1150,6 +1186,7 @@ export default function MapScreen() {
             )
           )}
         </MapView>
+
 
         {/* Bottom sheet */}
         {selectedBuilding && (
@@ -1773,6 +1810,7 @@ const styles = StyleSheet.create({
   },
 
   map: { flex: 1 },
+
   loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
   loadingText: { color: "#666" },
 
@@ -1795,6 +1833,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+
   input: {
     color: "#fff",
     fontSize: 14,
@@ -1982,6 +2021,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
+recenterBtn: {
+  position: 'absolute',
+  left: 16,      
+  bottom: 80,   
+  backgroundColor: '#fff',
+  width: 48,
+  height: 48,
+  borderRadius: 24,
+  justifyContent: 'center',
+  alignItems: 'center',
+  elevation: 2,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+},
   directionsPanel: {
     backgroundColor: "#fff",
     borderRadius: 22,
