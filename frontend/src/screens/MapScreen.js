@@ -9,7 +9,7 @@ import {
   Image,
   Modal,
 } from "react-native";
-import MapView, { Polygon, Polyline, Marker } from "react-native-maps";
+import MapView, { Polygon, Polyline, Marker, Circle } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
@@ -89,6 +89,9 @@ export default function MapScreen() {
   const [isShuttleModalOpen, setIsShuttleModalOpen] = useState(false);
   const [transitRouteIndex, setTransitRouteIndex] = useState(0);
   const [isTransitCollapsed, setIsTransitCollapsed] = useState(false);
+  const [mapRegion, setMapRegion] = useState(
+    campuses.sgw?.region ?? campusList[0]?.region ?? null,
+  );
   const simTimerRef = useRef(null);
   const simIndexRef = useRef(0);
   const simActiveRef = useRef(false);
@@ -128,6 +131,7 @@ export default function MapScreen() {
         getBuildingKey(campusId, building)
     );
   };
+  const showCampusLabels = (mapRegion?.latitudeDelta ?? 0) > 0.02;
 
   const openBuilding = (building) => {
     setShowDirectionsPanel(false);
@@ -239,6 +243,14 @@ export default function MapScreen() {
     return shuttleSchedules;
   }, [startCampusId, destCampusId, shuttleSchedules]);
 
+  const isShuttleServiceActive = useMemo(
+    () =>
+      filteredShuttleSchedules.some(
+        (schedule) => getShuttleDepartures(new Date(), schedule).active,
+      ),
+    [filteredShuttleSchedules],
+  );
+
   const stripHtml = (html = "") => html.replace(/<[^>]+>/g, "");
 
   const distanceMeters = (a, b) => {
@@ -261,6 +273,14 @@ export default function MapScreen() {
       simTimerRef.current = null;
     }
     setIsSimulating(false);
+  };
+
+  const handleRecenter = () => {
+    if (!userCoord) return;
+    mapRef.current?.animateToRegion(
+      { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+      500,
+    );
   };
 
   const selectBuildingForField = (building, field) => {
@@ -303,14 +323,27 @@ export default function MapScreen() {
     if (!activeField) return [];
     const query = activeField === "start" ? startText : destText;
     const normalized = normalizeText(query);
-    if (!normalized || normalized.length < 2) return [];
+    if (!normalized) return [];
 
-    return allBuildings
-      .filter((building) => {
-        const name = getBuildingName(building);
-        return normalizeText(name).includes(normalized);
-      })
-      .slice(0, 6);
+    const startsWithMatches = [];
+    const includesMatches = [];
+
+    allBuildings.forEach((building) => {
+      const fullName = normalizeText(building?.name || "");
+      const shortName = normalizeText(building?.label || "");
+      const startsWith =
+        fullName.startsWith(normalized) || shortName.startsWith(normalized);
+      const includes =
+        fullName.includes(normalized) || shortName.includes(normalized);
+
+      if (startsWith) {
+        startsWithMatches.push(building);
+      } else if (includes) {
+        includesMatches.push(building);
+      }
+    });
+
+    return [...startsWithMatches, ...includesMatches].slice(0, 6);
   }, [activeField, startText, destText, allBuildings]);
 
   const shouldShowMyLocationOption = useMemo(() => {
@@ -386,6 +419,44 @@ export default function MapScreen() {
   const isCrossCampusTrip =
     startCampusId && destCampusId && startCampusId !== destCampusId;
 
+  const shuttleStopCoordByCampus = useMemo(() => {
+    return {
+      // SGW shuttle stop on De Maisonneuve side
+      sgw: "45.496820,-73.578760",
+      // Loyola stop on Sherbrooke Street
+      loyola: "45.458360,-73.638150",
+    };
+  }, []);
+
+  const shuttleRouting = useMemo(() => {
+    if (
+      travelMode !== "transit" ||
+      transitSubMode !== "shuttle" ||
+      !isCrossCampusTrip ||
+      !isShuttleServiceActive
+    ) {
+      return null;
+    }
+
+    const originAddress = shuttleStopCoordByCampus[startCampusId];
+    const destinationAddress = shuttleStopCoordByCampus[destCampusId];
+    if (!originAddress || !destinationAddress) return null;
+
+    return {
+      originAddress,
+      destinationAddress,
+      waypoints: [],
+    };
+  }, [
+    travelMode,
+    transitSubMode,
+    isCrossCampusTrip,
+    isShuttleServiceActive,
+    startCampusId,
+    destCampusId,
+    shuttleStopCoordByCampus,
+  ]);
+
   const handleSwapStartDest = () => {
     const nextStartText = destText;
     const nextDestText = startText;
@@ -405,6 +476,7 @@ export default function MapScreen() {
   useEffect(() => {
     if (mapRef.current && selectedCampus) {
       setSelectedBuilding(null);
+      setMapRegion(selectedCampus.region);
       mapRef.current.animateToRegion(selectedCampus.region, 600);
     }
   }, [selectedCampus]);
@@ -474,17 +546,203 @@ export default function MapScreen() {
         : null
       : travelMode;
 
-  const { routeCoords, routeInfo, routeOptions } = useDirectionsRoute({
+  const {
+    routeCoords: baseRouteCoords,
+    routeInfo: baseRouteInfo,
+    routeOptions,
+  } = useDirectionsRoute({
     startCoord,
     destCoord,
     mapRef,
     mode: directionsMode,
     routeIndex: transitRouteIndex,
+    fitToRoute: true,
   });
+  const isActiveShuttleTrip = Boolean(
+    shuttleRouting && startCoord && destCoord && travelMode === "transit" && transitSubMode === "shuttle",
+  );
+
+  const { routeCoords: shuttleRideCoords, routeInfo: shuttleRideInfo } =
+    useDirectionsRoute({
+      startCoord: null,
+      destCoord: null,
+      mapRef: null,
+      mode: isActiveShuttleTrip ? "driving" : null,
+      originOverride: shuttleRouting?.originAddress ?? null,
+      destinationOverride: shuttleRouting?.destinationAddress ?? null,
+      waypoints: shuttleRouting?.waypoints ?? null,
+      fitToRoute: false,
+    });
+
+  const { routeCoords: walkToShuttleCoords } = useDirectionsRoute({
+    startCoord,
+    destCoord: null,
+    mapRef: null,
+    mode: isActiveShuttleTrip ? "walking" : null,
+    originOverride: null,
+    destinationOverride: shuttleRouting?.originAddress ?? null,
+    waypoints: null,
+    fitToRoute: false,
+  });
+
+  const { routeCoords: walkFromShuttleCoords } = useDirectionsRoute({
+    startCoord: null,
+    destCoord,
+    mapRef: null,
+    mode: isActiveShuttleTrip ? "walking" : null,
+    originOverride: shuttleRouting?.destinationAddress ?? null,
+    destinationOverride: null,
+    waypoints: null,
+    fitToRoute: false,
+  });
+
+  const snappedShuttleSegments = useMemo(() => {
+    if (!isActiveShuttleTrip) {
+      return {
+        walkTo: Array.isArray(walkToShuttleCoords) ? walkToShuttleCoords : [],
+        ride: Array.isArray(shuttleRideCoords) ? shuttleRideCoords : [],
+        walkFrom: Array.isArray(walkFromShuttleCoords) ? walkFromShuttleCoords : [],
+      };
+    }
+
+    const walkTo = Array.isArray(walkToShuttleCoords) ? [...walkToShuttleCoords] : [];
+    const ride = Array.isArray(shuttleRideCoords) ? [...shuttleRideCoords] : [];
+    const walkFrom = Array.isArray(walkFromShuttleCoords)
+      ? [...walkFromShuttleCoords]
+      : [];
+
+    if (walkTo.length > 0 && ride.length > 0) {
+      walkTo[walkTo.length - 1] = ride[0];
+    }
+    if (walkFrom.length > 0 && ride.length > 0) {
+      walkFrom[0] = ride[ride.length - 1];
+    }
+
+    return { walkTo, ride, walkFrom };
+  }, [isActiveShuttleTrip, walkToShuttleCoords, shuttleRideCoords, walkFromShuttleCoords]);
+
+  const shuttleCompositeCoords = useMemo(() => {
+    if (!isActiveShuttleTrip) return [];
+    const chunks = [
+      snappedShuttleSegments.walkTo,
+      snappedShuttleSegments.ride,
+      snappedShuttleSegments.walkFrom,
+    ]
+      .filter((c) => Array.isArray(c) && c.length > 0);
+    if (chunks.length === 0) return [];
+
+    const merged = [];
+    chunks.forEach((chunk) => {
+      chunk.forEach((point) => {
+        const prev = merged[merged.length - 1];
+        if (
+          prev &&
+          prev.latitude === point.latitude &&
+          prev.longitude === point.longitude
+        ) {
+          return;
+        }
+        merged.push(point);
+      });
+    });
+    return merged;
+  }, [isActiveShuttleTrip, snappedShuttleSegments]);
+
+  const shuttleWalkDotCoords = useMemo(() => {
+    if (!isActiveShuttleTrip) return [];
+    return [
+      ...buildDotCoords(snappedShuttleSegments.walkTo, 3),
+      ...buildDotCoords(snappedShuttleSegments.walkFrom, 3),
+    ];
+  }, [isActiveShuttleTrip, snappedShuttleSegments]);
+
+  const shuttleRideSegments = useMemo(() => {
+    if (!isActiveShuttleTrip) return [];
+    return Array.isArray(snappedShuttleSegments.ride) &&
+      snappedShuttleSegments.ride.length > 1
+      ? [snappedShuttleSegments.ride]
+      : [];
+  }, [isActiveShuttleTrip, snappedShuttleSegments]);
+
+  const routeCoords = isActiveShuttleTrip ? shuttleCompositeCoords : baseRouteCoords;
+  const routeInfo = isActiveShuttleTrip ? shuttleRideInfo : baseRouteInfo;
+  const safeRouteCoords = Array.isArray(routeCoords) ? routeCoords : [];
+
+  useEffect(() => {
+    if (!isActiveShuttleTrip || safeRouteCoords.length < 2) return;
+    mapRef.current?.fitToCoordinates(safeRouteCoords, {
+      edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+      animated: true,
+    });
+  }, [isActiveShuttleTrip, safeRouteCoords]);
+
+  function buildDotCoords(coords, spacingMeters = 3) {
+    if (!Array.isArray(coords) || coords.length < 2) return [];
+
+    const dots = [];
+    let nextAt = 0;
+
+    for (let i = 1; i < coords.length; i++) {
+      const from = coords[i - 1];
+      const to = coords[i];
+      const segmentLength = distanceMeters(from, to);
+      if (!Number.isFinite(segmentLength) || segmentLength <= 0) continue;
+
+      while (nextAt <= segmentLength) {
+        const t = nextAt / segmentLength;
+        dots.push({
+          latitude: from.latitude + (to.latitude - from.latitude) * t,
+          longitude: from.longitude + (to.longitude - from.longitude) * t,
+        });
+        nextAt += spacingMeters;
+      }
+
+      nextAt -= segmentLength;
+    }
+
+    return dots;
+  }
+
+  const walkingDotCoords = useMemo(() => {
+    if (travelMode !== "walking") return [];
+    return buildDotCoords(safeRouteCoords, 3);
+  }, [travelMode, safeRouteCoords]);
+
+  const transitWalkingDotCoords = useMemo(() => {
+    if (travelMode !== "transit") return [];
+    const steps = Array.isArray(routeInfo?.steps) ? routeInfo.steps : [];
+
+    return steps
+      .filter(
+        (step) =>
+          String(step?.travelMode || "").toUpperCase() === "WALKING" &&
+          Array.isArray(step?.coords) &&
+          step.coords.length > 1,
+      )
+      .flatMap((step) => buildDotCoords(step.coords, 3));
+  }, [travelMode, routeInfo]);
+
+  const transitRideSegments = useMemo(() => {
+    if (travelMode !== "transit") return [];
+    const steps = Array.isArray(routeInfo?.steps) ? routeInfo.steps : [];
+
+    return steps
+      .filter(
+        (step) =>
+          String(step?.travelMode || "").toUpperCase() !== "WALKING" &&
+          Array.isArray(step?.coords) &&
+          step.coords.length > 1,
+      )
+      .map((step) => step.coords);
+  }, [travelMode, routeInfo]);
 
   const canShowDirectionsPanel = Boolean(
     showDirectionsPanel && startCoord && destCoord,
   );
+
+  const isBottomPanelOpen = Boolean(selectedBuilding) || canShowDirectionsPanel;
+
+  const recenterBottomOffset = isBottomPanelOpen ? 170 : 30;
 
   useEffect(() => {
     if (!startCoord || !destCoord) {
@@ -704,6 +962,7 @@ export default function MapScreen() {
           showsCompass
           showsScale
           onPress={() => setActiveField(null)}
+          onRegionChangeComplete={(region) => setMapRegion(region)}
         >
           {selectedCampus.buildings.map((building) => {
             const center = getPolygonCenter(building.coordinates);
@@ -729,7 +988,7 @@ export default function MapScreen() {
                   onPress={() => handleBuildingPress(building)}
                 />
 
-                {center && label ? (
+                {!showCampusLabels && center && label ? (
                   <Marker
                     coordinate={center}
                     anchor={{ x: 0.5, y: 0.5 }}
@@ -772,7 +1031,7 @@ export default function MapScreen() {
                     onPress={() => handleBuildingPress(building)}
                   />
 
-                  {center && label ? (
+                  {!showCampusLabels && center && label ? (
                     <Marker
                       coordinate={center}
                       anchor={{ x: 0.5, y: 0.5 }}
@@ -788,17 +1047,146 @@ export default function MapScreen() {
               );
             }),
           )}
+          
+          {/* Recenter Button - recenter on route start */}
+          {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
+            <Pressable
+              style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
+              onPress={() => {
+                // Use first point of route if available, otherwise user location
+                const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
+                if (targetCoord) {
+                  mapRef.current?.animateToRegion(
+                    {
+                      latitude: targetCoord.latitude,
+                      longitude: targetCoord.longitude,
+                      latitudeDelta: 0.003,
+                      longitudeDelta: 0.003,
+                    },
+                    500
+                  );
+                }
+              }}
+            >
+              <MaterialIcons name="my-location" size={24} color={MAROON} />
+            </Pressable>
+          )}
+
+          {showCampusLabels &&
+            campusList.map((campus) => (
+              <Marker
+                key={`campus-label-${campus.id}`}
+                coordinate={{
+                  latitude: campus.region.latitude,
+                  longitude: campus.region.longitude,
+                }}
+                anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={false}
+                pointerEvents="none"
+              >
+                <View style={styles.campusLabel}>
+                  <Text style={styles.campusLabelText}>
+                    {campus.id === "sgw" ? "SGW" : "Loyola"}
+                  </Text>
+                </View>
+              </Marker>
+            ))}
 
           {/* Draw the path */}
-          {routeCoords.length > 0 && (
-            <Polyline
-              testID="route-polyline"
-              coordinates={routeCoords}
-              strokeWidth={5}
-              strokeColor="#2563eb"
-            />
+          {safeRouteCoords.length > 0 && (
+            travelMode === "walking" ? (
+              <>
+                <Polyline
+                  testID="route-polyline"
+                  coordinates={safeRouteCoords}
+                  strokeWidth={6}
+                  strokeColor="rgba(37, 99, 235, 0.15)"
+                />
+                {walkingDotCoords.map((dot, idx) => (
+                  <Circle
+                    key={`walk-dot-${idx}`}
+                    center={dot}
+                    radius={1}
+                    fillColor="#2563eb"
+                    strokeColor="#2563eb"
+                    strokeWidth={1}
+                  />
+                ))}
+              </>
+            ) : (
+              <>
+                {isActiveShuttleTrip ? (
+                  <>
+                    {shuttleRideSegments.map((segment, idx) => (
+                      <Polyline
+                        key={`shuttle-ride-${idx}`}
+                        testID={idx === 0 ? "route-polyline" : undefined}
+                        coordinates={segment}
+                        strokeWidth={5}
+                        strokeColor="#2563eb"
+                      />
+                    ))}
+                    {shuttleWalkDotCoords.map((dot, idx) => (
+                      <Circle
+                        key={`shuttle-walk-dot-${idx}`}
+                        center={dot}
+                        radius={1}
+                        fillColor="#2563eb"
+                        strokeColor="#2563eb"
+                        strokeWidth={1}
+                      />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                {(() => {
+                  const isMixedMode = travelMode === "transit";
+                  const hasSegmentData =
+                    transitRideSegments.length > 0 ||
+                    transitWalkingDotCoords.length > 0;
+
+                  if (isMixedMode && hasSegmentData) {
+                    return (
+                      <>
+                        {transitRideSegments.map((segment, idx) => (
+                          <Polyline
+                            key={`transit-ride-${idx}`}
+                            testID={idx === 0 ? "route-polyline" : undefined}
+                            coordinates={segment}
+                            strokeWidth={5}
+                            strokeColor="#2563eb"
+                          />
+                        ))}
+                        {transitWalkingDotCoords.map((dot, idx) => (
+                          <Circle
+                            key={`transit-walk-dot-${idx}`}
+                            center={dot}
+                            radius={1}
+                            fillColor="#2563eb"
+                            strokeColor="#2563eb"
+                            strokeWidth={1}
+                          />
+                        ))}
+                      </>
+                    );
+                  }
+
+                  return (
+                    <Polyline
+                      testID="route-polyline"
+                      coordinates={safeRouteCoords}
+                      strokeWidth={5}
+                      strokeColor="#2563eb"
+                    />
+                  );
+                })()}
+                  </>
+                )}
+              </>
+            )
           )}
         </MapView>
+
 
         {/* Bottom sheet */}
         {selectedBuilding && (
@@ -1407,8 +1795,22 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#95223D",
   },
+  campusLabel: {
+    backgroundColor: "rgba(255,255,255,0.92)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(149, 34, 61, 0.35)",
+  },
+  campusLabelText: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: MAROON,
+  },
 
   map: { flex: 1 },
+
   loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
   loadingText: { color: "#666" },
 
@@ -1431,6 +1833,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+
   input: {
     color: "#fff",
     fontSize: 14,
@@ -1618,6 +2021,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
+recenterBtn: {
+  position: 'absolute',
+  left: 16,      
+  bottom: 80,   
+  backgroundColor: '#fff',
+  width: 48,
+  height: 48,
+  borderRadius: 24,
+  justifyContent: 'center',
+  alignItems: 'center',
+  elevation: 2,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  borderWidth: 1,
+  borderColor: '#e0e0e0',
+},
   directionsPanel: {
     backgroundColor: "#fff",
     borderRadius: 22,

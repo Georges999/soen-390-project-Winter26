@@ -21,6 +21,7 @@ jest.mock('react-native-maps', () => {
     // Geometry
     Polygon: (props) => <View {...props}>{props.children}</View>,
     Polyline: (props) => <View {...props}>{props.children}</View>,
+    Circle: (props) => <View {...props}>{props.children}</View>,
 
     // Markers / labels / callouts
     Marker: (props) => <View {...props}>{props.children}</View>,
