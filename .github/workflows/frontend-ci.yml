@@ -78,6 +78,6 @@ jobs:
       # SonarCloud: add SONAR_TOKEN (from https://sonarcloud.io → My Account → Security)
       - name: SonarCloud scan
         working-directory: frontend
-        run: SonarSource/sonarqube-scan-action@v5
+        run: npx sonar-scanner
         env:
           SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
