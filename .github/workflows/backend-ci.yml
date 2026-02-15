@@ -61,10 +61,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # SonarCloud: add SONAR_TOKEN (from https://sonarcloud.io → My Account → Security). No SONAR_HOST_URL needed.
+      # Official scanner (no old npm package); uses SonarCloud-compatible scanner
       - name: SonarCloud scan
         working-directory: backend
-        run: npx sonar-scanner
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
 

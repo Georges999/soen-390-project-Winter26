@@ -75,9 +75,9 @@ jobs:
       - name: Restore coverage path for SonarCloud
         run: mkdir -p frontend/coverage && mv lcov.info frontend/coverage/lcov.info
 
-      # SonarCloud: add SONAR_TOKEN (from https://sonarcloud.io → My Account → Security)
+      # Official scanner (no old npm package); uses SonarCloud-compatible scanner
       - name: SonarCloud scan
         working-directory: frontend
-        run: npx sonar-scanner
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
