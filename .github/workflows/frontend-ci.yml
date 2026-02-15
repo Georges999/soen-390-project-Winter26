@@ -31,6 +31,53 @@ jobs:
         working-directory: frontend
         run: npm install --legacy-peer-deps
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: frontend
-        run: npm test
+        run: npm run test:coverage
+
+      - name: Upload coverage for SonarCloud
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/lcov.info
+
+  sonarcloud:
+    name: SonarCloud report
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      pull-requests: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install --legacy-peer-deps
+
+      - name: Download coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+
+      - name: Restore coverage path for SonarCloud
+        run: mkdir -p frontend/coverage && mv lcov.info frontend/coverage/lcov.info
+
+      # SonarCloud: add SONAR_TOKEN (from https://sonarcloud.io → My Account → Security)
+      - name: SonarCloud scan
+        working-directory: frontend
+        run: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
