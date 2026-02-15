@@ -75,16 +75,16 @@ jobs:
       - name: Restore coverage path for SonarCloud
         run: mkdir -p frontend/coverage && mv lcov.info frontend/coverage/lcov.info
 
-      # Official SonarScanner: current branch, less log noise, then show report link
+      # Run from repo root so container sees full repo (including .git); use frontend config
       - name: SonarCloud scan
-        working-directory: frontend
         run: |
           docker run --rm \
             -v "$PWD:/usr/src" -w /usr/src \
             -e SONAR_TOKEN="$SONAR_TOKEN" \
             sonarsource/sonar-scanner-cli:latest \
+            -Dproject.settings=frontend/sonar-project.properties \
             -Dsonar.branch.name="$BRANCH_NAME" \
-            -Dsonar.log.level=WARN
+            -Dsonar.log.level=ERROR
         env:
           SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
