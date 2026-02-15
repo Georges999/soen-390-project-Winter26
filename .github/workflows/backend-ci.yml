@@ -61,14 +61,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Official SonarScanner via Docker (step has run: for validators that require it)
+      # Official SonarScanner: current branch, less log noise, then show report link
       - name: SonarCloud scan
         working-directory: backend
         run: |
           docker run --rm \
             -v "$PWD:/usr/src" -w /usr/src \
             -e SONAR_TOKEN="$SONAR_TOKEN" \
-            sonarsource/sonar-scanner-cli:latest
+            sonarsource/sonar-scanner-cli:latest \
+            -Dsonar.branch.name="$BRANCH_NAME" \
+            -Dsonar.log.level=WARN
         env:
           SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+      - name: SonarCloud report link
+        run: |
+          echo "## SonarCloud report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**[View Backend report](https://sonarcloud.io/dashboard?id=campus-guide-backend)**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
