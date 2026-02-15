@@ -61,16 +61,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Run from repo root so container sees full repo (including .git); use backend config
       - name: SonarCloud scan
+        working-directory: backend
         run: |
           docker run --rm \
             -v "$PWD:/usr/src" -w /usr/src \
             -e SONAR_TOKEN="$SONAR_TOKEN" \
             sonarsource/sonar-scanner-cli:latest \
-            -Dproject.settings=backend/sonar-project.properties \
-            -Dsonar.branch.name="$BRANCH_NAME" \
-            -Dsonar.log.level=ERROR
+            -Dsonar.branch.name="$BRANCH_NAME"
         env:
           SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
