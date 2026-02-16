@@ -1,0 +1,138 @@
+name: Burndown (Project v2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sprint_name:
+        description: "Sprint name used in filenames (e.g., sprint3)"
+        required: true
+        default: "sprint3"
+
+  # GitHub cron is UTC.
+  # Sunday 10:00 PM America/Montreal (EST, UTC-5) = Monday 03:00 UTC
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  burndown:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.BURNDOWN_TOKEN }}
+      OWNER: Georges999
+      PROJECT_NUMBER: "2"
+
+      POINTS_FIELD_NAME: "Story Point (1 --> 5)"
+      STATUS_FIELD_NAME: "Status"
+      DONE_STATUS_NAME: "Done"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate burndown snapshot + chart
+        env:
+          SPRINT_NAME: ${{ inputs.sprint_name }}
+        run: |
+          set -e
+
+          # Run only every 2 weeks (even ISO week numbers)
+          WEEK=$(date -u +%V)
+          if [ $((10#$WEEK % 2)) -ne 0 ]; then
+            echo "Skipping this week (biweekly schedule). ISO week: $WEEK"
+            exit 0
+          fi
+
+          mkdir -p data docs
+
+          CSV_FILE="data/burndown_${SPRINT_NAME}.csv"
+          PNG_FILE="docs/burndown_${SPRINT_NAME}.png"
+
+          # 1) Get Project v2 ID (user-owned project)
+          PROJECT_ID=$(curl -s \
+            -H "Authorization: bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"query{ user(login:\\\"$OWNER\\\"){ projectV2(number:$PROJECT_NUMBER){ id }}}\"}" \
+            https://api.github.com/graphql \
+            | python -c "import sys,json; print(json.load(sys.stdin)['data']['user']['projectV2']['id'])")
+
+          # 2) Fetch items + field values (first 200 items)
+          RESP=$(curl -s \
+            -H "Authorization: bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"query{ node(id:\\\"$PROJECT_ID\\\"){ ... on ProjectV2 { items(first:200){ nodes{ fieldValues(first:50){ nodes{ ... on ProjectV2ItemFieldNumberValue{ number field{... on ProjectV2FieldCommon{ name }} } ... on ProjectV2ItemFieldSingleSelectValue{ name field{... on ProjectV2FieldCommon{ name }} } }}}}}}}\"}" \
+            https://api.github.com/graphql)
+
+          # 3) Sum remaining points where Status != Done
+          REMAINING=$(echo "$RESP" | python - <<'PY'
+          import os, sys, json
+          j=json.load(sys.stdin)
+          items=j["data"]["node"]["items"]["nodes"]
+
+          POINTS_FIELD=os.environ["POINTS_FIELD_NAME"]
+          STATUS_FIELD=os.environ["STATUS_FIELD_NAME"]
+          DONE=os.environ["DONE_STATUS_NAME"]
+
+          remaining=0.0
+          for it in items:
+              points=0.0
+              status=None
+              for fv in it.get("fieldValues",{}).get("nodes",[]):
+                  field=fv.get("field",{}).get("name")
+                  if field == POINTS_FIELD and fv.get("number") is not None:
+                      points=float(fv["number"])
+                  if field == STATUS_FIELD and fv.get("name") is not None:
+                      status=fv["name"]
+              if status != DONE:
+                  remaining += points
+
+          print(int(remaining) if abs(remaining-round(remaining))<1e-9 else remaining)
+          PY
+          )
+
+          echo "Remaining points for ${SPRINT_NAME}: $REMAINING"
+
+          TODAY=$(date -u +%F)
+
+          # 4) Append/update CSV (one row per date)
+          if [ ! -f "$CSV_FILE" ]; then
+            echo "date,remaining_points" > "$CSV_FILE"
+          fi
+          grep -v "^$TODAY," "$CSV_FILE" > data/tmp.csv || true
+          mv data/tmp.csv "$CSV_FILE"
+          echo "$TODAY,$REMAINING" >> "$CSV_FILE"
+
+          # 5) Generate chart PNG using QuickChart
+          python - <<'PY'
+          import os, csv, json, urllib.parse
+          from pathlib import Path
+
+          sprint=os.environ["SPRINT_NAME"]
+          csv_path=f"data/burndown_{sprint}.csv"
+          rows=list(csv.DictReader(open(csv_path)))
+
+          labels=[r["date"] for r in rows]
+          data=[float(r["remaining_points"]) for r in rows]
+
+          config={
+            "type":"line",
+            "data":{"labels":labels,"datasets":[{"label":"Remaining Story Points","data":data}]},
+            "options":{"scales":{"y":{"beginAtZero":True}}}
+          }
+
+          url="https://quickchart.io/chart?c="+urllib.parse.quote(json.dumps(config))
+          Path("docs/burndown_url.txt").write_text(url)
+          PY
+
+          curl -s "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
+
+      - name: Commit updated burndown files
+        env:
+          SPRINT_NAME: ${{ inputs.sprint_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "data/burndown_${SPRINT_NAME}.csv" "docs/burndown_${SPRINT_NAME}.png"
+          git commit -m "Update burndown (${SPRINT_NAME})" || exit 0
+          git push
