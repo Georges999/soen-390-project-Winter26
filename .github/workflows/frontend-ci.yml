@@ -65,7 +65,7 @@ jobs:
         run: |
           mkdir -p frontend/coverage
           mv lcov.info frontend/coverage/lcov.info
-          sed -i "s|SF:${GITHUB_WORKSPACE}/frontend/|SF:|g" frontend/coverage/lcov.info
+          sed -i "s|SF:${GITHUB_WORKSPACE}/frontend/|SF:frontend/|g" frontend/coverage/lcov.info
 
       - name: SonarCloud scan
         run: |
