@@ -65,7 +65,6 @@ export default function MapScreen() {
   // Building info bottom sheet
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [currentBuilding, setCurrentBuilding] = useState(null);
-  const [test2, test1] = useState(null);
 
   // Start/Destination inputs
   const [activeField, setActiveField] = useState(null);
