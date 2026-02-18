@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import MapView, { Polygon, Polyline, Marker, Circle } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
 import CampusToggle from "../components/CampusToggle";
@@ -66,6 +65,7 @@ export default function MapScreen() {
   // Building info bottom sheet
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [currentBuilding, setCurrentBuilding] = useState(null);
+  const [test2, test1] = useState(null);
 
   // Start/Destination inputs
   const [activeField, setActiveField] = useState(null);
