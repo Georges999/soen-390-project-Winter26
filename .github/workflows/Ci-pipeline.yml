@@ -2,15 +2,13 @@ name:  Tests and scans CI
 
 on:
   push:
-   
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/Ci-pipeline.yml'
   pull_request:
- 
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+      - '.github/workflows/Ci-pipeline.yml'
 
 jobs:
   test:
@@ -41,6 +39,12 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
 
+      - name: Add coverage to job summary
+        if: success()
+        run: |
+          echo "## Coverage (frontend)" >> $GITHUB_STEP_SUMMARY
+          echo "LCOV report generated and uploaded for SonarCloud. See the **SonarCloud report** job for the dashboard link." >> $GITHUB_STEP_SUMMARY
+
   sonarcloud:
     name: SonarCloud report
     runs-on: ubuntu-latest
@@ -61,11 +65,24 @@ jobs:
         with:
           name: frontend-coverage
 
-      - name: Restore coverage
+      - name: Restore and fix coverage paths for SonarCloud
         run: |
-          mkdir -p frontend/coverage
-          mv lcov.info frontend/coverage/lcov.info
-          sed -i "s|SF:${GITHUB_WORKSPACE}/frontend/|SF:frontend/|g" frontend/coverage/lcov.info
+          # Artifact may be at root (lcov.info) or preserved path (frontend/coverage/lcov.info)
+          if [ -f frontend/coverage/lcov.info ]; then
+            LCOV_FILE=frontend/coverage/lcov.info
+          else
+            mkdir -p frontend/coverage
+            mv lcov.info frontend/coverage/lcov.info
+            LCOV_FILE=frontend/coverage/lcov.info
+          fi
+          # Paths in lcov must match sonar.sources (relative to repo root).
+          # Jest runs from frontend/ so it emits paths like SF:src/... and SF:App.js
+          sed -i "s|SF:${GITHUB_WORKSPACE}/frontend/|SF:frontend/|g" "$LCOV_FILE"
+          sed -i 's|SF:src/|SF:frontend/src/|g' "$LCOV_FILE"
+          sed -i 's|SF:App\.js|SF:frontend/App.js|g' "$LCOV_FILE"
+          sed -i 's|SF:app\.config\.js|SF:frontend/app.config.js|g' "$LCOV_FILE"
+          echo "Sample paths in lcov (first 5 SF: lines):"
+          grep '^SF:' "$LCOV_FILE" | head -5
 
       - name: SonarCloud scan
         run: |
