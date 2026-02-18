@@ -49,7 +49,7 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < "$LCOV"
 
 # Print table to stdout (visible in the Coverage report step — last step)
-echo "Frontend coverage"
+echo "Test coverage"
 echo ""
 row "File" "Lines" "Covered" "%"
 row "------------------------------------" "--------" "--------" "------"
@@ -68,7 +68,7 @@ fi
 if [ -n "$SUMMARY" ]; then
   {
     echo ""
-    echo "## Frontend coverage"
+    echo "## Test coverage"
     echo ""
     echo '```'
     row "File" "Lines" "Covered" "%"
