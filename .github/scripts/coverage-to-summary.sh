@@ -6,27 +6,30 @@ set -e
 LCOV="${LCOV_FILE:-frontend/coverage/lcov.info}"
 SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 
-append() {
-  echo "$1" >> "$SUMMARY"
-  echo "$1"
+# Fixed-width columns: File 36, Lines 8, Covered 8, % 6
+row() {
+  local line
+  line=$(printf "%-36s %8s %8s %6s" "$1" "$2" "$3" "$4")
+  echo "$line" >> "$SUMMARY"
+  echo "$line"
 }
 
-append "## Frontend coverage"
-append ""
-
 if [ ! -f "$LCOV" ]; then
-  append "No \`lcov.info\` found at \`$LCOV\`."
+  echo "No lcov.info found at $LCOV" >> "$SUMMARY"
+  echo "No lcov.info found at $LCOV"
   exit 0
 fi
 
+# Collect rows first so we can print an aligned table
 total_lf=0
 total_lh=0
 file_lf=0
 file_lh=0
 current_file=""
-
-append "| File | Lines | Covered | % |"
-append "|------|------:|--------:|--:|"
+declare -a names
+declare -a lfs
+declare -a lhs
+declare -a pcts
 
 while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in
@@ -41,15 +44,39 @@ while IFS= read -r line || [ -n "$line" ]; do
       else
         pct=100
       fi
-      append "| \`$name\` | $file_lf | $file_lh | ${pct}% |"
+      names+=("$name")
+      lfs+=("$file_lf")
+      lhs+=("$file_lh")
+      pcts+=("$pct")
       ;;
   esac
 done < "$LCOV"
 
-append ""
+# Write aligned table to summary (in code block so it stays monospace) and stdout
+echo "## Frontend coverage" >> "$SUMMARY"
+echo "" >> "$SUMMARY"
+echo '```' >> "$SUMMARY"
+echo "## Frontend coverage"
+echo ""
+
+row "File" "Lines" "Covered" "%"
+row "------------------------------------" "--------" "--------" "------"
+
+for i in "${!names[@]}"; do
+  row "${names[$i]}" "${lfs[$i]}" "${lhs[$i]}" "${pcts[$i]}%"
+done
+
 if [ "$total_lf" -gt 0 ]; then
   pct=$((total_lh * 100 / total_lf))
-  append "**Total: $total_lh / $total_lf lines ($pct%)**"
+  total_line=$(printf "%-36s %8s %8s %6s" "Total" "$total_lf" "$total_lh" "${pct}%")
+  echo "" >> "$SUMMARY"
+  echo "$total_line" >> "$SUMMARY"
+  echo ""
+  echo "$total_line"
 fi
-append ""
-append "Full report is also sent to SonarCloud (see **SonarCloud report** job)."
+
+echo '```' >> "$SUMMARY"
+echo "" >> "$SUMMARY"
+echo "Full report is also sent to SonarCloud (see **SonarCloud report** job)." >> "$SUMMARY"
+echo ""
+echo "Full report is also sent to SonarCloud (see SonarCloud report job)."
