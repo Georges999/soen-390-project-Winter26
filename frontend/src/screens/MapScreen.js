@@ -20,40 +20,34 @@ import shuttleSchedule from "../data/shuttleSchedule.json";
 import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
 import { useDirectionsRoute } from "../hooks/useDirectionsRoute";
 import { findBuildingUserIsIn } from "../utils/geo";
+import {
+  buildDotCoords,
+  distanceMeters,
+  getPolygonCenter,
+} from "../utils/geoUtils";
+import { normalizeText, stripHtml } from "../utils/textUtils";
+import {
+  getShuttleDepartures,
+  mapShuttleSchedules,
+} from "../utils/shuttleUtils";
 import { getUserCoords, watchUserCoords } from "../services/locationService";
 
+//array of campuses with default as SGW + .? optional chaining to avoid crash if null -> undefined instead
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 const defaultCampusId = campuses.sgw?.id ?? campusList[0]?.id;
 
 const MAROON = "#95223D";
 
-const getPolygonCenter = (points = []) => {
-  if (!points.length) return null;
-
-  const totals = points.reduce(
-    (acc, point) => ({
-      latitude: acc.latitude + point.latitude,
-      longitude: acc.longitude + point.longitude,
-    }),
-    { latitude: 0, longitude: 0 },
-  );
-
-  return {
-    latitude: totals.latitude / points.length,
-    longitude: totals.longitude / points.length,
-  };
-};
-
 const getAmenities = (building) => {
-  const a = building?.amenities ?? {};
+  const a = building?.amenities ?? {}; //empty when building is missing or amentites dont exist
   return {
     bathrooms: Boolean(a.bathrooms),
     waterFountains: Boolean(a.waterFountains),
     genderNeutralBathrooms: Boolean(a.genderNeutralBathrooms),
     wheelchairAccessible: Boolean(
       a.wheelchairAccessible ??
-        a.wheelchairAccessibleEntrances ??
-        a.wheelchairAccessibleEntrance,
+      a.wheelchairAccessibleEntrances ??
+      a.wheelchairAccessibleEntrance,
     ),
   };
 };
@@ -82,7 +76,7 @@ export default function MapScreen() {
   const [showDirectionsPanel, setShowDirectionsPanel] = useState(false);
   const [followUser, setFollowUser] = useState(false);
   const [navActive, setNavActive] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0); //step i'm currently on for voice
   const [isSimulating, setIsSimulating] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [transitSubMode, setTransitSubMode] = useState("shuttle"); // shuttle | public
@@ -92,15 +86,18 @@ export default function MapScreen() {
   const [mapRegion, setMapRegion] = useState(
     campuses.sgw?.region ?? campusList[0]?.region ?? null,
   );
+
+  //Unlike state, changing a ref's value does not trigger a re-render of the component -> efficient for storing transient data
   const simTimerRef = useRef(null);
   const simIndexRef = useRef(0);
   const simActiveRef = useRef(false);
 
   const mapRef = useRef(null);
 
+  //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
     () => campusList.find((campus) => campus.id === selectedCampusId),
-    [selectedCampusId],
+    [selectedCampusId], //checking the dependency array, if changed, it runs find again
   );
 
   // campuses other than the selected one
@@ -109,6 +106,7 @@ export default function MapScreen() {
     [selectedCampusId],
   );
 
+  //one array with both campuses + extra id
   const allBuildings = useMemo(
     () =>
       campusList.flatMap((campus) =>
@@ -117,7 +115,7 @@ export default function MapScreen() {
           __campusId: campus.id,
         })),
       ),
-    [],
+    [], //runs once only
   );
 
   const getBuildingName = (b) => b?.name || b?.label || "Building";
@@ -131,7 +129,7 @@ export default function MapScreen() {
         getBuildingKey(campusId, building)
     );
   };
-  const showCampusLabels = (mapRegion?.latitudeDelta ?? 0) > 0.02;
+  const showCampusLabels = (mapRegion?.latitudeDelta ?? 0) > 0.02; //if false view is zoomed in -> building-level labels instead
 
   const openBuilding = (building) => {
     setShowDirectionsPanel(false);
@@ -140,7 +138,7 @@ export default function MapScreen() {
     const center = getPolygonCenter(building.coordinates);
     if (center) {
       mapRef.current?.animateToRegion(
-        { ...center, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+        { ...center, latitudeDelta: 0.003, longitudeDelta: 0.003 }, //zoom into building when selected 0.003 with 500 ms
         500,
       );
     }
@@ -151,12 +149,12 @@ export default function MapScreen() {
     const name = getBuildingName(building);
     const center = getPolygonCenter(building.coordinates);
 
-    // Only fill if user explicitly selected a field first
+    //Only fill if user explicitly selected a field first
     if (activeField === "start") {
       setStartText(name);
       if (center) setStartCoord(center);
       setStartCampusId(building.__campusId ?? selectedCampus?.id ?? null);
-      setActiveField(null);
+      setActiveField(null); //resetting to false so next tap doesn't also change start
       Keyboard.dismiss();
       return;
     }
@@ -173,64 +171,11 @@ export default function MapScreen() {
     openBuilding(building);
   };
 
-  const normalizeText = (text = "") =>
-    text.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-  const getShuttleDepartures = (now = new Date(), schedule) => {
-    const day = now.getDay(); // 0 Sun ... 6 Sat
-    if (day === 0 || day === 6) return { active: false, times: [] };
-
-    const isFriday = day === 5;
-    const parseTime = (t) => {
-      const [h, m] = t.split(":").map((v) => parseInt(v, 10));
-      return h * 60 + m;
-    };
-    const startMinutes = isFriday
-      ? parseTime(schedule.friday.start)
-      : parseTime(schedule.weekday.start);
-    const endMinutes = isFriday
-      ? parseTime(schedule.friday.end)
-      : parseTime(schedule.weekday.end);
-    const interval = isFriday
-      ? schedule.friday.intervalMin
-      : schedule.weekday.intervalMin;
-
-    const minutesNow = now.getHours() * 60 + now.getMinutes();
-    if (minutesNow > endMinutes) return { active: false, times: [] };
-
-    const nextTimes = [];
-    const first =
-      minutesNow <= startMinutes
-        ? startMinutes
-        : minutesNow +
-          ((interval - ((minutesNow - startMinutes) % interval)) % interval);
-
-    for (
-      let t = first;
-      t <= endMinutes && nextTimes.length < 6;
-      t += interval
-    ) {
-      const h = Math.floor(t / 60);
-      const m = t % 60;
-      const label = `${h.toString().padStart(2, "0")}:${m
-        .toString()
-        .padStart(2, "0")}`;
-      nextTimes.push(label);
-    }
-
-    return { active: true, times: nextTimes };
-  };
-
-  const shuttleSchedules = shuttleSchedule.routes.map((route) => ({
-    id: route.id,
-    from: route.from,
-    to: route.to,
-    stop: route.stopName,
-    address: route.address,
-    weekday: route.weekday,
-    friday: route.friday,
-    estimatedTravelMin: route.estimatedTravelMin,
-  }));
+  //read array from json
+  const shuttleSchedules = useMemo(
+    () => mapShuttleSchedules(shuttleSchedule),
+    [],
+  );
 
   const filteredShuttleSchedules = useMemo(() => {
     if (!startCampusId || !destCampusId) return shuttleSchedules;
@@ -251,22 +196,6 @@ export default function MapScreen() {
     [filteredShuttleSchedules],
   );
 
-  const stripHtml = (html = "") => html.replace(/<[^>]+>/g, "");
-
-  const distanceMeters = (a, b) => {
-    if (!a || !b) return Infinity;
-    const toRad = (v) => (v * Math.PI) / 180;
-    const R = 6371000;
-    const dLat = toRad(b.latitude - a.latitude);
-    const dLon = toRad(b.longitude - a.longitude);
-    const lat1 = toRad(a.latitude);
-    const lat2 = toRad(b.latitude);
-    const h =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-    return 2 * R * Math.asin(Math.sqrt(h));
-  };
-
   const stopSimulation = () => {
     if (simTimerRef.current) {
       clearInterval(simTimerRef.current);
@@ -275,14 +204,7 @@ export default function MapScreen() {
     setIsSimulating(false);
   };
 
-  const handleRecenter = () => {
-    if (!userCoord) return;
-    mapRef.current?.animateToRegion(
-      { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-      500,
-    );
-  };
-
+  //picking a building from search results
   const selectBuildingForField = (building, field) => {
     const name = getBuildingName(building);
     const center = getPolygonCenter(building.coordinates);
@@ -301,6 +223,7 @@ export default function MapScreen() {
     Keyboard.dismiss();
   };
 
+  //selecting my location from search
   const selectMyLocationForField = async (field) => {
     const coords = await getUserCoords();
     if (!coords) return;
@@ -319,11 +242,12 @@ export default function MapScreen() {
     Keyboard.dismiss();
   };
 
+  //autocomplete search if applicable
   const searchResults = useMemo(() => {
     if (!activeField) return [];
     const query = activeField === "start" ? startText : destText;
     const normalized = normalizeText(query);
-    if (!normalized) return [];
+    if (!normalized) return []; //no suggestions
 
     const startsWithMatches = [];
     const includesMatches = [];
@@ -342,10 +266,11 @@ export default function MapScreen() {
         includesMatches.push(building);
       }
     });
-
+    //return merged list with max 6 results
     return [...startsWithMatches, ...includesMatches].slice(0, 6);
   }, [activeField, startText, destText, allBuildings]);
 
+  //decide whether to show the “My location” suggestion row
   const shouldShowMyLocationOption = useMemo(() => {
     if (!activeField) return false;
     const query = activeField === "start" ? startText : destText;
@@ -353,7 +278,7 @@ export default function MapScreen() {
     return normalized.startsWith("my");
   }, [activeField, startText, destText]);
 
-  // Bottom-sheet "Directions" button action
+  //building open and user selects “Directions”
   const setDestinationToSelectedBuilding = () => {
     if (!selectedBuilding) return;
 
@@ -373,19 +298,21 @@ export default function MapScreen() {
     if (!startCoord || !destCoord) return;
     setFollowUser(true);
     setNavActive(true);
-    setCurrentStepIndex(0);
+    setCurrentStepIndex(0); //resets navigation to the first instruction step
     const firstInstruction = routeInfo?.steps?.[0]?.instruction;
     if (firstInstruction && speechEnabled) {
       Speech.stop();
       Speech.speak(stripHtml(firstInstruction));
     }
-
+    //adjusts map camera for navigation if route path exists
     if (routeCoords.length > 1) {
       mapRef.current?.fitToCoordinates(routeCoords, {
         edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
         animated: true,
       });
-    } else if (userCoord) {
+    }
+    //if route has no usable polyline, center map on user location.
+    else if (userCoord) {
       mapRef.current?.animateToRegion(
         { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
         500,
@@ -404,8 +331,9 @@ export default function MapScreen() {
     setFollowUser(true);
     setHasLocationPerm(true);
     simIndexRef.current = 0;
-    setUserCoord(routeCoords[0]);
+    setUserCoord(routeCoords[0]); //Put simulated user at first route point
 
+    //move to next route point every sec
     simTimerRef.current = setInterval(() => {
       simIndexRef.current += 1;
       if (simIndexRef.current >= routeCoords.length) {
@@ -428,35 +356,40 @@ export default function MapScreen() {
     };
   }, []);
 
-  const shuttleRouting = useMemo(() => {
-    if (
-      travelMode !== "transit" ||
-      transitSubMode !== "shuttle" ||
-      !isCrossCampusTrip ||
-      !isShuttleServiceActive
-    ) {
-      return null;
-    }
+  const shuttleRouting = useMemo(
+    () => {
+      if (
+        travelMode !== "transit" ||
+        transitSubMode !== "shuttle" ||
+        !isCrossCampusTrip ||
+        !isShuttleServiceActive
+      ) {
+        return null;
+      }
 
-    const originAddress = shuttleStopCoordByCampus[startCampusId];
-    const destinationAddress = shuttleStopCoordByCampus[destCampusId];
-    if (!originAddress || !destinationAddress) return null;
+      const originAddress = shuttleStopCoordByCampus[startCampusId];
+      const destinationAddress = shuttleStopCoordByCampus[destCampusId];
+      if (!originAddress || !destinationAddress) return null;
 
-    return {
-      originAddress,
-      destinationAddress,
-      waypoints: [],
-    };
-  }, [
-    travelMode,
-    transitSubMode,
-    isCrossCampusTrip,
-    isShuttleServiceActive,
-    startCampusId,
-    destCampusId,
-    shuttleStopCoordByCampus,
-  ]);
+      return {
+        originAddress,
+        destinationAddress,
+        waypoints: [],
+      };
+    },
+    //Recompute shuttle routing using memo when any of these following inputs changes
+    [
+      travelMode,
+      transitSubMode,
+      isCrossCampusTrip,
+      isShuttleServiceActive,
+      startCampusId,
+      destCampusId,
+      shuttleStopCoordByCampus,
+    ],
+  );
 
+  //swapping destinations
   const handleSwapStartDest = () => {
     const nextStartText = destText;
     const nextDestText = startText;
@@ -473,24 +406,26 @@ export default function MapScreen() {
     setDestCampusId(nextDestCampusId);
   };
 
+  //when campus selection/toggle change this makes sure context is reset cleanly
   useEffect(() => {
     if (mapRef.current && selectedCampus) {
       setSelectedBuilding(null);
       setMapRegion(selectedCampus.region);
-      mapRef.current.animateToRegion(selectedCampus.region, 600);
+      mapRef.current.animateToRegion(selectedCampus.region, 600); //animate smoothly moves camera to target region
     }
   }, [selectedCampus]);
 
-  // Track user location for "current building" highlight + blue dot
+  //Track user location for "current building" highlight + blue dot continuously
   useEffect(() => {
     let cancelled = false;
-    let subscription = null;
+    let subscription = null; //holds location watcher object
 
+    //Call watchUserCoords to subscribe to position updates
     (async () => {
       try {
         const sub = await watchUserCoords((coords) => {
           if (cancelled) return;
-          if (simActiveRef.current) return;
+          if (simActiveRef.current) return; //ignored if simulation is running
           setHasLocationPerm(true);
           setUserCoord(coords);
         });
@@ -509,10 +444,12 @@ export default function MapScreen() {
     };
   }, []);
 
+  //when is sumlating is tiggered location updates don’t override it
   useEffect(() => {
     simActiveRef.current = isSimulating;
   }, [isSimulating]);
 
+  //whenever user loc changes
   useEffect(() => {
     if (!userCoord) {
       setCurrentBuilding(null);
@@ -523,6 +460,7 @@ export default function MapScreen() {
     setCurrentBuilding(found ?? null);
   }, [userCoord, allBuildings]);
 
+  //detect campus when start is my location
   useEffect(() => {
     if (startText !== "My location") return;
     if (currentBuilding?.__campusId) {
@@ -530,7 +468,7 @@ export default function MapScreen() {
     }
   }, [startText, currentBuilding]);
 
-  // Default Start = current location (only if Start is empty)
+  //Default Start = current location (only if Start is empty)
   useDefaultStartMyLocation({
     startText,
     setStartText,
@@ -538,14 +476,15 @@ export default function MapScreen() {
     setStartCoord,
   });
 
-  // Route coordinates from Google Directions
+  //Route to send to google directions API
   const directionsMode =
     travelMode === "transit"
       ? transitSubMode === "public"
         ? "transit"
-        : null
+        : null //null is sent if shuttle
       : travelMode;
 
+  //fetch/prepare route data
   const {
     routeCoords: baseRouteCoords,
     routeInfo: baseRouteInfo,
@@ -558,22 +497,30 @@ export default function MapScreen() {
     routeIndex: transitRouteIndex,
     fitToRoute: true,
   });
+
+  //valid shuttle trip flow?
   const isActiveShuttleTrip = Boolean(
-    shuttleRouting && startCoord && destCoord && travelMode === "transit" && transitSubMode === "shuttle",
+    shuttleRouting &&
+    startCoord &&
+    destCoord &&
+    travelMode === "transit" &&
+    transitSubMode === "shuttle",
   );
 
+  //shuttle ride
   const { routeCoords: shuttleRideCoords, routeInfo: shuttleRideInfo } =
     useDirectionsRoute({
       startCoord: null,
       destCoord: null,
       mapRef: null,
       mode: isActiveShuttleTrip ? "driving" : null,
-      originOverride: shuttleRouting?.originAddress ?? null,
+      originOverride: shuttleRouting?.originAddress ?? null, //Start/end come from shuttle stop coordinates from routing config
       destinationOverride: shuttleRouting?.destinationAddress ?? null,
       waypoints: shuttleRouting?.waypoints ?? null,
       fitToRoute: false,
     });
 
+  //Compute walking route from user start point to departure shuttle stop
   const { routeCoords: walkToShuttleCoords } = useDirectionsRoute({
     startCoord,
     destCoord: null,
@@ -585,6 +532,7 @@ export default function MapScreen() {
     fitToRoute: false,
   });
 
+  //Compute walking route from arrival shuttle stop to final destination
   const { routeCoords: walkFromShuttleCoords } = useDirectionsRoute({
     startCoord: null,
     destCoord,
@@ -596,21 +544,27 @@ export default function MapScreen() {
     fitToRoute: false,
   });
 
+  //connecting 3 shuttle segments together
   const snappedShuttleSegments = useMemo(() => {
     if (!isActiveShuttleTrip) {
       return {
         walkTo: Array.isArray(walkToShuttleCoords) ? walkToShuttleCoords : [],
         ride: Array.isArray(shuttleRideCoords) ? shuttleRideCoords : [],
-        walkFrom: Array.isArray(walkFromShuttleCoords) ? walkFromShuttleCoords : [],
+        walkFrom: Array.isArray(walkFromShuttleCoords)
+          ? walkFromShuttleCoords
+          : [],
       };
     }
 
-    const walkTo = Array.isArray(walkToShuttleCoords) ? [...walkToShuttleCoords] : [];
+    const walkTo = Array.isArray(walkToShuttleCoords)
+      ? [...walkToShuttleCoords]
+      : [];
     const ride = Array.isArray(shuttleRideCoords) ? [...shuttleRideCoords] : [];
     const walkFrom = Array.isArray(walkFromShuttleCoords)
       ? [...walkFromShuttleCoords]
       : [];
 
+    //boundaries -> End of walk-to is forced to equal start of ride & Start of walk-from is forced to equal end of ride
     if (walkTo.length > 0 && ride.length > 0) {
       walkTo[walkTo.length - 1] = ride[0];
     }
@@ -619,22 +573,28 @@ export default function MapScreen() {
     }
 
     return { walkTo, ride, walkFrom };
-  }, [isActiveShuttleTrip, walkToShuttleCoords, shuttleRideCoords, walkFromShuttleCoords]);
+  }, [
+    isActiveShuttleTrip,
+    walkToShuttleCoords,
+    shuttleRideCoords,
+    walkFromShuttleCoords,
+  ]);
 
+  //one final shuttle route polyline by combining 3 segments
   const shuttleCompositeCoords = useMemo(() => {
     if (!isActiveShuttleTrip) return [];
     const chunks = [
       snappedShuttleSegments.walkTo,
       snappedShuttleSegments.ride,
       snappedShuttleSegments.walkFrom,
-    ]
-      .filter((c) => Array.isArray(c) && c.length > 0);
+    ].filter((c) => Array.isArray(c) && c.length > 0);
     if (chunks.length === 0) return [];
 
     const merged = [];
     chunks.forEach((chunk) => {
       chunk.forEach((point) => {
         const prev = merged[merged.length - 1];
+        //Skip duplicate boundary points -> If new point equals last added point, skip it
         if (
           prev &&
           prev.latitude === point.latitude &&
@@ -648,6 +608,7 @@ export default function MapScreen() {
     return merged;
   }, [isActiveShuttleTrip, snappedShuttleSegments]);
 
+  //creates many small points every ~3 meters along that segment
   const shuttleWalkDotCoords = useMemo(() => {
     if (!isActiveShuttleTrip) return [];
     return [
@@ -656,18 +617,22 @@ export default function MapScreen() {
     ];
   }, [isActiveShuttleTrip, snappedShuttleSegments]);
 
+  //prepare shuttle ride data in the format expected by render code
   const shuttleRideSegments = useMemo(() => {
     if (!isActiveShuttleTrip) return [];
     return Array.isArray(snappedShuttleSegments.ride) &&
       snappedShuttleSegments.ride.length > 1
-      ? [snappedShuttleSegments.ride]
+      ? [snappedShuttleSegments.ride] //wrap it in another array if valid
       : [];
   }, [isActiveShuttleTrip, snappedShuttleSegments]);
 
-  const routeCoords = isActiveShuttleTrip ? shuttleCompositeCoords : baseRouteCoords;
+  const routeCoords = isActiveShuttleTrip
+    ? shuttleCompositeCoords
+    : baseRouteCoords;
   const routeInfo = isActiveShuttleTrip ? shuttleRideInfo : baseRouteInfo;
   const safeRouteCoords = Array.isArray(routeCoords) ? routeCoords : [];
 
+  //auto-zoom map to the full shuttle route when shuttle route becomes available
   useEffect(() => {
     if (!isActiveShuttleTrip || safeRouteCoords.length < 2) return;
     mapRef.current?.fitToCoordinates(safeRouteCoords, {
@@ -675,33 +640,6 @@ export default function MapScreen() {
       animated: true,
     });
   }, [isActiveShuttleTrip, safeRouteCoords]);
-
-  function buildDotCoords(coords, spacingMeters = 3) {
-    if (!Array.isArray(coords) || coords.length < 2) return [];
-
-    const dots = [];
-    let nextAt = 0;
-
-    for (let i = 1; i < coords.length; i++) {
-      const from = coords[i - 1];
-      const to = coords[i];
-      const segmentLength = distanceMeters(from, to);
-      if (!Number.isFinite(segmentLength) || segmentLength <= 0) continue;
-
-      while (nextAt <= segmentLength) {
-        const t = nextAt / segmentLength;
-        dots.push({
-          latitude: from.latitude + (to.latitude - from.latitude) * t,
-          longitude: from.longitude + (to.longitude - from.longitude) * t,
-        });
-        nextAt += spacingMeters;
-      }
-
-      nextAt -= segmentLength;
-    }
-
-    return dots;
-  }
 
   const walkingDotCoords = useMemo(() => {
     if (travelMode !== "walking") return [];
@@ -719,7 +657,7 @@ export default function MapScreen() {
           Array.isArray(step?.coords) &&
           step.coords.length > 1,
       )
-      .flatMap((step) => buildDotCoords(step.coords, 3));
+      .flatMap((step) => buildDotCoords(step.coords, 3)); //For each walking step -> generate dot points every 3m
   }, [travelMode, routeInfo]);
 
   const transitRideSegments = useMemo(() => {
@@ -742,6 +680,7 @@ export default function MapScreen() {
 
   const isBottomPanelOpen = Boolean(selectedBuilding) || canShowDirectionsPanel;
 
+  //Move recenter floating button upward when panel is open, so it doesn’t overlap the panel
   const recenterBottomOffset = isBottomPanelOpen ? 170 : 30;
 
   useEffect(() => {
@@ -757,18 +696,21 @@ export default function MapScreen() {
     setShowDirectionsPanel(true);
   }, [startCoord, destCoord]);
 
+  //when user starts simulation, transit details auto-hide to free map space
   useEffect(() => {
     if (isSimulating) {
       setIsTransitCollapsed(true);
     }
   }, [isSimulating]);
 
+  //walking in one campus
   useEffect(() => {
     if (!isCrossCampusTrip && travelMode === "transit") {
       setTravelMode("walking");
     }
   }, [isCrossCampusTrip, travelMode]);
 
+  //as user location updates, map keeps centering on them
   useEffect(() => {
     if (!followUser || !userCoord) return;
     mapRef.current?.animateToRegion(
@@ -777,13 +719,14 @@ export default function MapScreen() {
     );
   }, [followUser, userCoord]);
 
+  //advance turn-by-turn guidance to the next step when user gets close enough to current step endpoint
   useEffect(() => {
     if (!navActive || !userCoord || !routeInfo?.steps?.length) return;
     const currentStep = routeInfo.steps[currentStepIndex];
     if (!currentStep?.endLocation) return;
 
     const meters = distanceMeters(userCoord, currentStep.endLocation);
-    if (meters > 25) return;
+    if (meters > 25) return; //if user is farther than 25m from end of current step stay on same step
 
     const nextIndex = Math.min(
       currentStepIndex + 1,
@@ -1047,14 +990,15 @@ export default function MapScreen() {
               );
             }),
           )}
-          
+
           {/* Recenter Button - recenter on route start */}
           {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
             <Pressable
               style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
               onPress={() => {
                 // Use first point of route if available, otherwise user location
-                const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
+                const targetCoord =
+                  routeCoords.length > 0 ? routeCoords[0] : userCoord;
                 if (targetCoord) {
                   mapRef.current?.animateToRegion(
                     {
@@ -1063,7 +1007,7 @@ export default function MapScreen() {
                       latitudeDelta: 0.003,
                       longitudeDelta: 0.003,
                     },
-                    500
+                    500,
                   );
                 }
               }}
@@ -1093,8 +1037,8 @@ export default function MapScreen() {
             ))}
 
           {/* Draw the path */}
-          {safeRouteCoords.length > 0 && (
-            travelMode === "walking" ? (
+          {safeRouteCoords.length > 0 &&
+            (travelMode === "walking" ? (
               <>
                 <Polyline
                   testID="route-polyline"
@@ -1139,54 +1083,54 @@ export default function MapScreen() {
                   </>
                 ) : (
                   <>
-                {(() => {
-                  const isMixedMode = travelMode === "transit";
-                  const hasSegmentData =
-                    transitRideSegments.length > 0 ||
-                    transitWalkingDotCoords.length > 0;
+                    {(() => {
+                      const isMixedMode = travelMode === "transit";
+                      const hasSegmentData =
+                        transitRideSegments.length > 0 ||
+                        transitWalkingDotCoords.length > 0;
 
-                  if (isMixedMode && hasSegmentData) {
-                    return (
-                      <>
-                        {transitRideSegments.map((segment, idx) => (
-                          <Polyline
-                            key={`transit-ride-${idx}`}
-                            testID={idx === 0 ? "route-polyline" : undefined}
-                            coordinates={segment}
-                            strokeWidth={5}
-                            strokeColor="#2563eb"
-                          />
-                        ))}
-                        {transitWalkingDotCoords.map((dot, idx) => (
-                          <Circle
-                            key={`transit-walk-dot-${idx}`}
-                            center={dot}
-                            radius={1}
-                            fillColor="#2563eb"
-                            strokeColor="#2563eb"
-                            strokeWidth={1}
-                          />
-                        ))}
-                      </>
-                    );
-                  }
+                      if (isMixedMode && hasSegmentData) {
+                        return (
+                          <>
+                            {transitRideSegments.map((segment, idx) => (
+                              <Polyline
+                                key={`transit-ride-${idx}`}
+                                testID={
+                                  idx === 0 ? "route-polyline" : undefined
+                                }
+                                coordinates={segment}
+                                strokeWidth={5}
+                                strokeColor="#2563eb"
+                              />
+                            ))}
+                            {transitWalkingDotCoords.map((dot, idx) => (
+                              <Circle
+                                key={`transit-walk-dot-${idx}`}
+                                center={dot}
+                                radius={1}
+                                fillColor="#2563eb"
+                                strokeColor="#2563eb"
+                                strokeWidth={1}
+                              />
+                            ))}
+                          </>
+                        );
+                      }
 
-                  return (
-                    <Polyline
-                      testID="route-polyline"
-                      coordinates={safeRouteCoords}
-                      strokeWidth={5}
-                      strokeColor="#2563eb"
-                    />
-                  );
-                })()}
+                      return (
+                        <Polyline
+                          testID="route-polyline"
+                          coordinates={safeRouteCoords}
+                          strokeWidth={5}
+                          strokeColor="#2563eb"
+                        />
+                      );
+                    })()}
                   </>
                 )}
               </>
-            )
-          )}
+            ))}
         </MapView>
-
 
         {/* Bottom sheet */}
         {selectedBuilding && (
@@ -1227,7 +1171,11 @@ export default function MapScreen() {
 
                           <View style={styles.amenityRow}>
                             <View style={styles.amenityLeft}>
-                              <MaterialIcons name="wc" size={16} color={MAROON} />
+                              <MaterialIcons
+                                name="wc"
+                                size={16}
+                                color={MAROON}
+                              />
                               <Text style={styles.amenityLabel}>Bathrooms</Text>
                             </View>
                             <Text style={styles.amenityValue}>
@@ -1237,8 +1185,14 @@ export default function MapScreen() {
 
                           <View style={styles.amenityRow}>
                             <View style={styles.amenityLeft}>
-                              <MaterialIcons name="water-drop" size={16} color={MAROON} />
-                              <Text style={styles.amenityLabel}>Water fountains</Text>
+                              <MaterialIcons
+                                name="water-drop"
+                                size={16}
+                                color={MAROON}
+                              />
+                              <Text style={styles.amenityLabel}>
+                                Water fountains
+                              </Text>
                             </View>
                             <Text style={styles.amenityValue}>
                               {a.waterFountains ? "Available" : "Not available"}
@@ -1247,8 +1201,14 @@ export default function MapScreen() {
 
                           <View style={styles.amenityRow}>
                             <View style={styles.amenityLeft}>
-                              <MaterialIcons name="wc" size={16} color={MAROON} />
-                              <Text style={styles.amenityLabel}>Gender-neutral bathrooms</Text>
+                              <MaterialIcons
+                                name="wc"
+                                size={16}
+                                color={MAROON}
+                              />
+                              <Text style={styles.amenityLabel}>
+                                Gender-neutral bathrooms
+                              </Text>
                             </View>
                             <Text style={styles.amenityValue}>
                               {a.genderNeutralBathrooms ? "Yes" : "No"}
@@ -1256,8 +1216,14 @@ export default function MapScreen() {
                           </View>
                           <View style={styles.amenityRow}>
                             <View style={styles.amenityLeft}>
-                              <MaterialIcons name="accessible" size={16} color={MAROON} />
-                              <Text style={styles.amenityLabel}>Wheelchair accessible</Text>
+                              <MaterialIcons
+                                name="accessible"
+                                size={16}
+                                color={MAROON}
+                              />
+                              <Text style={styles.amenityLabel}>
+                                Wheelchair accessible
+                              </Text>
                             </View>
                             <Text style={styles.amenityValue}>
                               {a.wheelchairAccessible ? "Yes" : "No"}
@@ -2021,24 +1987,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
-recenterBtn: {
-  position: 'absolute',
-  left: 16,      
-  bottom: 80,   
-  backgroundColor: '#fff',
-  width: 48,
-  height: 48,
-  borderRadius: 24,
-  justifyContent: 'center',
-  alignItems: 'center',
-  elevation: 2,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.25,
-  shadowRadius: 3.84,
-  borderWidth: 1,
-  borderColor: '#e0e0e0',
-},
+  recenterBtn: {
+    position: "absolute",
+    left: 16,
+    bottom: 80,
+    backgroundColor: "#fff",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
   directionsPanel: {
     backgroundColor: "#fff",
     borderRadius: 22,
