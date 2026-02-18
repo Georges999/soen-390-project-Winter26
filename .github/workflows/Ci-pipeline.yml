@@ -5,10 +5,12 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/Ci-pipeline.yml'
+      - '.github/scripts/**'
   pull_request:
     paths:
       - 'frontend/**'
       - '.github/workflows/Ci-pipeline.yml'
+      - '.github/scripts/**'
 
 jobs:
   test:
@@ -41,45 +43,7 @@ jobs:
 
       - name: Coverage report (pipeline)
         if: success()
-        run: |
-          LCOV=frontend/coverage/lcov.info
-          echo "## Frontend coverage" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ ! -f "$LCOV" ]; then
-            echo "No \`lcov.info\` found." >> $GITHUB_STEP_SUMMARY
-            exit 0
-          fi
-          total_lf=0
-          total_lh=0
-          file_lf=0
-          file_lh=0
-          current_file=""
-          echo "| File | Lines | Covered | % |" >> $GITHUB_STEP_SUMMARY
-          echo "|------|------:|--------:|--:|" >> $GITHUB_STEP_SUMMARY
-          while IFS= read -r line || [ -n "$line" ]; do
-            case "$line" in
-              SF:*) current_file="${line#SF:}"; file_lf=0; file_lh=0 ;;
-              LF:*) file_lf="${line#LF:}"; total_lf=$((total_lf + file_lf)) ;;
-              LH:*)
-                file_lh="${line#LH:}"
-                total_lh=$((total_lh + file_lh))
-                name=$(basename "$current_file")
-                if [ "$file_lf" -gt 0 ]; then
-                  pct=$((file_lh * 100 / file_lf))
-                else
-                  pct=100
-                fi
-                echo "| \`$name\` | $file_lf | $file_lh | ${pct}% |" >> $GITHUB_STEP_SUMMARY
-                ;;
-            esac
-          done < "$LCOV"
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "$total_lf" -gt 0 ]; then
-            pct=$((total_lh * 100 / total_lf))
-            echo "**Total: $total_lh / $total_lf lines ($pct%)**" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Full report is also sent to SonarCloud (see **SonarCloud report** job)." >> $GITHUB_STEP_SUMMARY
+        run: bash .github/scripts/coverage-to-summary.sh
 
   sonarcloud:
     name: SonarCloud report
