@@ -66,7 +66,7 @@ jobs:
         with:
           name: frontend-coverage
 
-      - name: Restore and fix coverage paths for SonarCloud
+      - name: Coverage Path
         run: |
           # Artifact may be at root (lcov.info) or preserved path (frontend/coverage/lcov.info)
           if [ -f frontend/coverage/lcov.info ]; then
