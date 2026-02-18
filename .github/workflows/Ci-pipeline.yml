@@ -98,7 +98,4 @@ jobs:
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
       - name: Report link
-        run: |
-          echo "## SonarCloud report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**[View report](https://sonarcloud.io/dashboard?id=campus-guide-frontend)**" >> $GITHUB_STEP_SUMMARY
+        run: bash .github/scripts/sonarcloud-report-link.sh
