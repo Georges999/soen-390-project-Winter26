@@ -42,7 +42,7 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
 
-      - name: Coverage report (pipeline)
+      - name: Coverage report
         if: success()
         run: bash .github/scripts/coverage-to-summary.sh
 

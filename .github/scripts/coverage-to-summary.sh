@@ -1,21 +1,16 @@
 #!/usr/bin/env bash
-# Writes frontend coverage from lcov.info to GITHUB_STEP_SUMMARY and to stdout.
+# Writes frontend coverage table to stdout (shows in the Coverage report step log).
 # Usage: LCOV_FILE=frontend/coverage/lcov.info bash coverage-to-summary.sh
 
 set -e
 LCOV="${LCOV_FILE:-frontend/coverage/lcov.info}"
-SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 
 # Fixed-width columns: File 36, Lines 8, Covered 8, % 6
 row() {
-  local line
-  line=$(printf "%-36s %8s %8s %6s" "$1" "$2" "$3" "$4")
-  echo "$line" >> "$SUMMARY"
-  echo "$line"
+  printf "%-36s %8s %8s %6s\n" "$1" "$2" "$3" "$4"
 }
 
 if [ ! -f "$LCOV" ]; then
-  echo "No lcov.info found at $LCOV" >> "$SUMMARY"
   echo "No lcov.info found at $LCOV"
   exit 0
 fi
@@ -52,13 +47,9 @@ while IFS= read -r line || [ -n "$line" ]; do
   esac
 done < "$LCOV"
 
-# Write aligned table to summary (in code block so it stays monospace) and stdout
-echo "## Frontend coverage" >> "$SUMMARY"
-echo "" >> "$SUMMARY"
-echo '```' >> "$SUMMARY"
-echo "## Frontend coverage"
+# Print table to stdout (visible in the Coverage report step — last step)
+echo "Frontend coverage"
 echo ""
-
 row "File" "Lines" "Covered" "%"
 row "------------------------------------" "--------" "--------" "------"
 
@@ -68,15 +59,6 @@ done
 
 if [ "$total_lf" -gt 0 ]; then
   pct=$((total_lh * 100 / total_lf))
-  total_line=$(printf "%-36s %8s %8s %6s" "Total" "$total_lf" "$total_lh" "${pct}%")
-  echo "" >> "$SUMMARY"
-  echo "$total_line" >> "$SUMMARY"
   echo ""
-  echo "$total_line"
+  row "Total" "$total_lf" "$total_lh" "${pct}%"
 fi
-
-echo '```' >> "$SUMMARY"
-echo "" >> "$SUMMARY"
-echo "Full report is also sent to SonarCloud (see **SonarCloud report** job)." >> "$SUMMARY"
-echo ""
-echo "Full report is also sent to SonarCloud (see SonarCloud report job)."
