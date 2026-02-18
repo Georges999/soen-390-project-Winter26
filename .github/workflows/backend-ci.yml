@@ -45,37 +45,3 @@ jobs:
       # - name: Check coverage threshold
       #   working-directory: backend
       #   run: npm test -- --coverage --coverageThreshold='{"global":{"lines":70,"statements":70,"functions":70,"branches":70}}'
-
-  sonarcloud:
-    name: SonarCloud report
-    runs-on: ubuntu-latest
-    needs: test
-    permissions:
-      contents: read
-      pull-requests: read
-      security-events: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: SonarCloud scan
-        run: |
-          docker run --rm \
-            -v "$PWD:/usr/src" -w /usr/src \
-            -e SONAR_TOKEN="$SONAR_TOKEN" \
-            sonarsource/sonar-scanner-cli:latest \
-            -Dproject.settings=backend/sonar-project.properties \
-            -Dsonar.branch.name="$BRANCH_NAME"
-        env:
-          SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-
-      - name: Report link
-        run: |
-          echo "## SonarCloud report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**[View report](https://sonarcloud.io/dashboard?id=campus-guide-backend)**" >> $GITHUB_STEP_SUMMARY
-
