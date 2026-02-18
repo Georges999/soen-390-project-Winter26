@@ -1,4 +1,4 @@
-name: Frontend CI
+name:  Tests and scans CI
 
 on:
   push:
@@ -76,7 +76,7 @@ jobs:
             -Dproject.settings=frontend/sonar-project.properties \
             -Dsonar.branch.name="$BRANCH_NAME"
         env:
-          SONAR_TOKEN: "168229df2eaaf40cb711332d16cff07d71d2ee96"
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
       - name: Report link
