@@ -4,16 +4,17 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  TextInput,
   Keyboard,
-  Image,
-  Modal,
 } from "react-native";
 import MapView, { Polygon, Polyline, Marker, Circle } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
 import CampusToggle from "../components/CampusToggle";
+import SearchBox from "../components/SearchBox";
+import BuildingBottomSheet from "../components/BuildingBottomSheet";
+import DirectionsPanel from "../components/DirectionsPanel";
+import ShuttleModal from "../components/ShuttleModal";
 import campuses from "../data/campuses.json";
 import shuttleSchedule from "../data/shuttleSchedule.json";
 
@@ -785,112 +786,50 @@ export default function MapScreen() {
 
       <View style={{ flex: 1 }}>
         {/* red input box */}
-        <View style={styles.redBox}>
-          <View style={styles.inputRow}>
-            <Image
-              source={require("../../assets/magnifier.png")}
-              style={styles.searchIcon}
-              resizeMode="contain"
-            />
-            <TextInput
-              testID="start-input"
-              value={startText}
-              onChangeText={(t) => {
-                setHasInteracted(true);
-                setStartText(t);
-                // If they type random text, it no longer matches a known coordinate
-                if (t !== "My location") setStartCoord(null);
-                if (!t) setStartCampusId(null);
-                if (!t) setShowDirectionsPanel(false);
-              }}
-              placeholder="Search or click on a building..."
-              placeholderTextColor="#EED7DE"
-              style={[styles.input, !startText && styles.inputPlaceholder]}
-              onFocus={() => {
-                setHasInteracted(true);
-                setActiveField("start");
-              }}
-            />
-            {startText.length > 0 && (
-              <Pressable
-                onPress={() => {
-                  setStartText("");
-                  setStartCoord(null);
-                }}
-                hitSlop={10}
-                style={styles.clearBtn}
-              >
-                <Text style={styles.clearBtnText}>✕</Text>
-              </Pressable>
-            )}
-          </View>
-
-          <View style={[styles.inputRow, { marginBottom: 0 }]}>
-            <Image
-              source={require("../../assets/magnifier.png")}
-              style={styles.searchIcon}
-              resizeMode="contain"
-            />
-            <TextInput
-              testID="dest-input"
-              value={destText}
-              onChangeText={(t) => {
-                setHasInteracted(true);
-                setDestText(t);
-                setDestCoord(null);
-                if (!t) setDestCampusId(null);
-                if (!t) setShowDirectionsPanel(false);
-              }}
-              placeholder="Search or click on a building..."
-              placeholderTextColor="#EED7DE"
-              style={[styles.input, !destText && styles.inputPlaceholder]}
-              onFocus={() => {
-                setHasInteracted(true);
-                setActiveField("dest");
-              }}
-            />
-            {destText.length > 0 && (
-              <Pressable
-                onPress={() => {
-                  setDestText("");
-                  setDestCoord(null);
-                }}
-                hitSlop={10}
-                style={styles.clearBtn}
-              >
-                <Text style={styles.clearBtnText}>✕</Text>
-              </Pressable>
-            )}
-          </View>
-
-          <Pressable style={styles.swapBtn} onPress={handleSwapStartDest}>
-            <MaterialIcons name="swap-vert" size={18} color="#95223D" />
-          </Pressable>
-
-          {(shouldShowMyLocationOption || searchResults.length > 0) && (
-            <View style={styles.searchResults}>
-              {shouldShowMyLocationOption && (
-                <Pressable
-                  onPress={() => selectMyLocationForField(activeField)}
-                  style={styles.searchResultRow}
-                >
-                  <Text style={styles.searchResultText}>My location</Text>
-                </Pressable>
-              )}
-              {searchResults.map((building) => (
-                <Pressable
-                  key={getBuildingKey(building.__campusId, building)}
-                  onPress={() => selectBuildingForField(building, activeField)}
-                  style={styles.searchResultRow}
-                >
-                  <Text style={styles.searchResultText}>
-                    {getBuildingName(building)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </View>
+        <SearchBox
+          styles={styles}
+          startText={startText}
+          destText={destText}
+          activeField={activeField}
+          searchResults={searchResults}
+          shouldShowMyLocationOption={shouldShowMyLocationOption}
+          getBuildingKey={getBuildingKey}
+          getBuildingName={getBuildingName}
+          onStartChange={(t) => {
+            setHasInteracted(true);
+            setStartText(t);
+            // If they type random text, it no longer matches a known coordinate
+            if (t !== "My location") setStartCoord(null);
+            if (!t) setStartCampusId(null);
+            if (!t) setShowDirectionsPanel(false);
+          }}
+          onDestChange={(t) => {
+            setHasInteracted(true);
+            setDestText(t);
+            setDestCoord(null);
+            if (!t) setDestCampusId(null);
+            if (!t) setShowDirectionsPanel(false);
+          }}
+          onStartFocus={() => {
+            setHasInteracted(true);
+            setActiveField("start");
+          }}
+          onDestFocus={() => {
+            setHasInteracted(true);
+            setActiveField("dest");
+          }}
+          onClearStart={() => {
+            setStartText("");
+            setStartCoord(null);
+          }}
+          onClearDest={() => {
+            setDestText("");
+            setDestCoord(null);
+          }}
+          onSwap={handleSwapStartDest}
+          onSelectMyLocation={selectMyLocationForField}
+          onSelectBuilding={selectBuildingForField}
+        />
 
         {/* Map */}
         <MapView
@@ -1133,606 +1072,52 @@ export default function MapScreen() {
         </MapView>
 
         {/* Bottom sheet */}
-        {selectedBuilding && (
-          <View style={styles.sheetWrap} pointerEvents="box-none">
-            <View style={styles.sheet}>
-              <View style={styles.sheetHandle} />
-
-              <View style={styles.sheetHeaderRow}>
-                <View style={styles.sheetHeaderLeft}>
-                  <View style={styles.buildingIcon}>
-                    <Image
-                      source={require("../../assets/Clogo.png")}
-                      style={styles.buildingIconImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.buildingTitle} numberOfLines={1}>
-                      {getBuildingName(selectedBuilding).toUpperCase()}
-                    </Text>
-
-                    {selectedBuilding.address ? (
-                      <Text style={styles.buildingSub} numberOfLines={2}>
-                        {selectedBuilding.address}
-                      </Text>
-                    ) : (
-                      <Text style={styles.buildingSub} numberOfLines={2}>
-                        No address available
-                      </Text>
-                    )}
-
-                    {(() => {
-                      const a = getAmenities(selectedBuilding);
-                      return (
-                        <View style={styles.amenitiesWrap}>
-                          <Text style={styles.amenitiesTitle}>Amenities</Text>
-
-                          <View style={styles.amenityRow}>
-                            <View style={styles.amenityLeft}>
-                              <MaterialIcons
-                                name="wc"
-                                size={16}
-                                color={MAROON}
-                              />
-                              <Text style={styles.amenityLabel}>Bathrooms</Text>
-                            </View>
-                            <Text style={styles.amenityValue}>
-                              {a.bathrooms ? "Available" : "Not available"}
-                            </Text>
-                          </View>
-
-                          <View style={styles.amenityRow}>
-                            <View style={styles.amenityLeft}>
-                              <MaterialIcons
-                                name="water-drop"
-                                size={16}
-                                color={MAROON}
-                              />
-                              <Text style={styles.amenityLabel}>
-                                Water fountains
-                              </Text>
-                            </View>
-                            <Text style={styles.amenityValue}>
-                              {a.waterFountains ? "Available" : "Not available"}
-                            </Text>
-                          </View>
-
-                          <View style={styles.amenityRow}>
-                            <View style={styles.amenityLeft}>
-                              <MaterialIcons
-                                name="wc"
-                                size={16}
-                                color={MAROON}
-                              />
-                              <Text style={styles.amenityLabel}>
-                                Gender-neutral bathrooms
-                              </Text>
-                            </View>
-                            <Text style={styles.amenityValue}>
-                              {a.genderNeutralBathrooms ? "Yes" : "No"}
-                            </Text>
-                          </View>
-                          <View style={styles.amenityRow}>
-                            <View style={styles.amenityLeft}>
-                              <MaterialIcons
-                                name="accessible"
-                                size={16}
-                                color={MAROON}
-                              />
-                              <Text style={styles.amenityLabel}>
-                                Wheelchair accessible
-                              </Text>
-                            </View>
-                            <Text style={styles.amenityValue}>
-                              {a.wheelchairAccessible ? "Yes" : "No"}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })()}
-                  </View>
-                </View>
-
-                <Pressable
-                  onPress={() => setSelectedBuilding(null)}
-                  hitSlop={12}
-                  style={styles.closeBtn}
-                >
-                  <Text style={styles.closeBtnText}>✕</Text>
-                </Pressable>
-              </View>
-
-              {/* Directions button */}
-              <Pressable
-                style={styles.directionsBtn}
-                onPress={setDestinationToSelectedBuilding}
-              >
-                <Image
-                  source={require("../../assets/directionsLogo.png")}
-                  style={styles.directionsBtnIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.directionsBtnText}>Directions</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
+        <BuildingBottomSheet
+          styles={styles}
+          maroon={MAROON}
+          selectedBuilding={selectedBuilding}
+          getBuildingName={getBuildingName}
+          getAmenities={getAmenities}
+          onClose={() => setSelectedBuilding(null)}
+          onDirections={setDestinationToSelectedBuilding}
+        />
 
         {canShowDirectionsPanel && (
-          <View style={styles.directionsWrap} pointerEvents="box-none">
-            <View style={styles.directionsPanel}>
-              <View style={styles.modeRow}>
-                <Pressable
-                  style={[
-                    styles.modeBtn,
-                    travelMode === "driving" && styles.modeBtnActive,
-                  ]}
-                  onPress={() => setTravelMode("driving")}
-                >
-                  <MaterialIcons
-                    name="directions-car"
-                    size={18}
-                    color={travelMode === "driving" ? MAROON : "#111"}
-                  />
-                  <Text
-                    style={[
-                      styles.modeBtnLabel,
-                      travelMode === "driving" && styles.modeBtnTextActive,
-                    ]}
-                  >
-                    Car
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  style={[
-                    styles.modeBtn,
-                    travelMode === "walking" && styles.modeBtnActive,
-                  ]}
-                  onPress={() => setTravelMode("walking")}
-                >
-                  <MaterialIcons
-                    name="directions-walk"
-                    size={18}
-                    color={travelMode === "walking" ? MAROON : "#111"}
-                  />
-                  <Text
-                    style={[
-                      styles.modeBtnLabel,
-                      travelMode === "walking" && styles.modeBtnTextActive,
-                    ]}
-                  >
-                    Walk
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  style={[
-                    styles.modeBtn,
-                    travelMode === "bicycling" && styles.modeBtnActive,
-                  ]}
-                  onPress={() => setTravelMode("bicycling")}
-                >
-                  <MaterialIcons
-                    name="directions-bike"
-                    size={18}
-                    color={travelMode === "bicycling" ? MAROON : "#111"}
-                  />
-                  <Text
-                    style={[
-                      styles.modeBtnLabel,
-                      travelMode === "bicycling" && styles.modeBtnTextActive,
-                    ]}
-                  >
-                    Bike
-                  </Text>
-                </Pressable>
-
-                {isCrossCampusTrip && (
-                  <Pressable
-                    style={[
-                      styles.modeBtn,
-                      travelMode === "transit" && styles.modeBtnActive,
-                    ]}
-                    onPress={() => setTravelMode("transit")}
-                  >
-                    <MaterialIcons
-                      name="directions-transit"
-                      size={18}
-                      color={travelMode === "transit" ? MAROON : "#111"}
-                    />
-                    <Text
-                      style={[
-                        styles.modeBtnLabel,
-                        travelMode === "transit" && styles.modeBtnTextActive,
-                      ]}
-                    >
-                      Transit
-                    </Text>
-                  </Pressable>
-                )}
-              </View>
-
-              {travelMode === "transit" && isCrossCampusTrip && (
-                <View style={styles.shuttlePanel}>
-                  <View style={styles.transitSubRow}>
-                    <Pressable
-                      style={[
-                        styles.transitSubBtn,
-                        transitSubMode === "shuttle" &&
-                          styles.transitSubBtnActive,
-                      ]}
-                      onPress={() => {
-                        setTransitSubMode("shuttle");
-                        setIsShuttleModalOpen(true);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.transitSubText,
-                          transitSubMode === "shuttle" &&
-                            styles.transitSubTextActive,
-                        ]}
-                      >
-                        Shuttle
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={[
-                        styles.transitSubBtn,
-                        transitSubMode === "public" &&
-                          styles.transitSubBtnActive,
-                      ]}
-                      onPress={() => setTransitSubMode("public")}
-                    >
-                      <Text
-                        style={[
-                          styles.transitSubText,
-                          transitSubMode === "public" &&
-                            styles.transitSubTextActive,
-                        ]}
-                      >
-                        Public
-                      </Text>
-                    </Pressable>
-                  </View>
-
-                  {transitSubMode === "public" && (
-                    <>
-                      <View style={styles.transitHeaderRow}>
-                        <Text style={styles.shuttleNote}>
-                          Showing 3 shortest public transit routes.
-                        </Text>
-                        <Pressable
-                          onPress={() => setIsTransitCollapsed((prev) => !prev)}
-                          style={styles.collapseBtn}
-                        >
-                          <MaterialIcons
-                            name={
-                              isTransitCollapsed ? "expand-less" : "expand-more"
-                            }
-                            size={18}
-                            color={MAROON}
-                          />
-                        </Pressable>
-                      </View>
-
-                      {!isTransitCollapsed && (
-                        <View style={styles.transitList}>
-                          {routeOptions.length === 0 ? (
-                            <Text style={styles.transitEmpty}>
-                              No public transit routes found.
-                            </Text>
-                          ) : (
-                            routeOptions.slice(0, 3).map((opt, idx) => {
-                              const isSelected = idx === transitRouteIndex;
-                              return (
-                                <Pressable
-                                  key={`route-${idx}`}
-                                  onPress={() => setTransitRouteIndex(idx)}
-                                  style={[
-                                    styles.transitRow,
-                                    isSelected && styles.transitRowActive,
-                                  ]}
-                                >
-                                  <View style={styles.transitSummaryRow}>
-                                    <View style={styles.transitSummaryLeft}>
-                                      {(opt.transitVehicles || [])
-                                        .slice(0, 3)
-                                        .map((vehicle, vIdx) => {
-                                          const icon =
-                                            vehicle === "SUBWAY"
-                                              ? "subway"
-                                              : "directions-bus";
-                                          const line =
-                                            opt.transitLines?.[vIdx] ||
-                                            "Transit";
-                                          return (
-                                            <View
-                                              key={`veh-${idx}-${vIdx}`}
-                                              style={styles.transitBadge}
-                                            >
-                                              <MaterialIcons
-                                                name={icon}
-                                                size={14}
-                                                color={
-                                                  isSelected ? MAROON : "#111"
-                                                }
-                                              />
-                                              <Text
-                                                style={[
-                                                  styles.transitBadgeText,
-                                                  isSelected &&
-                                                    styles.transitLineActive,
-                                                ]}
-                                              >
-                                                {line}
-                                              </Text>
-                                            </View>
-                                          );
-                                        })}
-                                    </View>
-                                    <Text style={styles.transitMeta}>
-                                      {opt.durationText || "--"}
-                                      {opt.durationValue &&
-                                      isFinite(opt.durationValue)
-                                        ? ` (ETA ${(() => {
-                                            const now = new Date();
-                                            const mins = Math.round(
-                                              opt.durationValue / 60,
-                                            );
-                                            const eta = new Date(
-                                              now.getTime() + mins * 60000,
-                                            );
-                                            const hh = eta
-                                              .getHours()
-                                              .toString()
-                                              .padStart(2, "0");
-                                            const mm = eta
-                                              .getMinutes()
-                                              .toString()
-                                              .padStart(2, "0");
-                                            return `${hh}:${mm}`;
-                                          })()})`
-                                        : ""}
-                                    </Text>
-                                  </View>
-                                  <Text style={styles.transitStops}>
-                                    Tap to view details
-                                  </Text>
-                                  {isSelected &&
-                                    routeInfo?.steps?.length > 0 && (
-                                      <View style={styles.transitSteps}>
-                                        {routeInfo.steps.map(
-                                          (step, stepIdx) => {
-                                            const mode = step.travelMode;
-                                            let icon = "directions-walk";
-                                            if (mode === "TRANSIT") {
-                                              const vehicle =
-                                                step.transitDetails
-                                                  ?.vehicleType || "";
-                                              icon =
-                                                vehicle === "SUBWAY"
-                                                  ? "subway"
-                                                  : "directions-bus";
-                                            }
-                                            return (
-                                              <View
-                                                key={`step-${stepIdx}`}
-                                                style={styles.transitStepRow}
-                                              >
-                                                <MaterialIcons
-                                                  name={icon}
-                                                  size={16}
-                                                  color="#111"
-                                                />
-                                                <Text
-                                                  style={styles.transitStepText}
-                                                >
-                                                  {step.transitDetails
-                                                    ?.lineShortName ||
-                                                    step.transitDetails
-                                                      ?.lineName ||
-                                                    stripHtml(
-                                                      step.instruction || "",
-                                                    )}
-                                                  {step.travelMode ===
-                                                    "TRANSIT" && (
-                                                    <>
-                                                      {step.transitDetails
-                                                        ?.arrivalStop && (
-                                                        <Text
-                                                          style={
-                                                            styles.transitStopName
-                                                          }
-                                                        >
-                                                          {" "}
-                                                          (
-                                                          {
-                                                            step.transitDetails
-                                                              .arrivalStop
-                                                          }
-                                                          )
-                                                        </Text>
-                                                      )}
-                                                      {step.transitDetails
-                                                        ?.numStops != null && (
-                                                        <Text
-                                                          style={
-                                                            styles.transitStopCount
-                                                          }
-                                                        >
-                                                          {" "}
-                                                          •{" "}
-                                                          {
-                                                            step.transitDetails
-                                                              .numStops
-                                                          }{" "}
-                                                          stops
-                                                        </Text>
-                                                      )}
-                                                    </>
-                                                  )}
-                                                </Text>
-                                              </View>
-                                            );
-                                          },
-                                        )}
-                                      </View>
-                                    )}
-                                </Pressable>
-                              );
-                            })
-                          )}
-                        </View>
-                      )}
-                    </>
-                  )}
-                </View>
-              )}
-
-              <View style={styles.routeInfoRow}>
-                <View>
-                  <Text style={styles.routeInfoTitle}>
-                    {routeInfo?.durationText ?? "--"}
-                  </Text>
-                  <Text style={styles.routeInfoSub}>
-                    {routeInfo?.distanceText ?? ""}
-                  </Text>
-                </View>
-
-                <View style={styles.routeInfoActions}>
-                  <Pressable
-                    style={[
-                      styles.muteBtn,
-                      !speechEnabled && styles.muteBtnActive,
-                    ]}
-                    onPress={() => {
-                      setSpeechEnabled((prev) => !prev);
-                      Speech.stop();
-                    }}
-                  >
-                    <MaterialIcons
-                      name={speechEnabled ? "volume-up" : "volume-off"}
-                      size={18}
-                      color={speechEnabled ? "#111" : MAROON}
-                    />
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.simBtn, isSimulating && styles.simBtnActive]}
-                    onPress={handleSimulatePress}
-                  >
-                    <Text
-                      style={[
-                        styles.simBtnText,
-                        isSimulating && styles.simBtnTextActive,
-                      ]}
-                    >
-                      {isSimulating ? "Stop" : "Simulate"}
-                    </Text>
-                  </Pressable>
-
-                  <Pressable style={styles.goBtn} onPress={handleGoPress}>
-                    <Text style={styles.goBtnText}>GO</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-          </View>
+          <DirectionsPanel
+            styles={styles}
+            maroon={MAROON}
+            travelMode={travelMode}
+            setTravelMode={setTravelMode}
+            isCrossCampusTrip={Boolean(isCrossCampusTrip)}
+            transitSubMode={transitSubMode}
+            setTransitSubMode={setTransitSubMode}
+            setIsShuttleModalOpen={setIsShuttleModalOpen}
+            isTransitCollapsed={isTransitCollapsed}
+            setIsTransitCollapsed={setIsTransitCollapsed}
+            routeOptions={routeOptions}
+            transitRouteIndex={transitRouteIndex}
+            setTransitRouteIndex={setTransitRouteIndex}
+            routeInfo={routeInfo}
+            stripHtml={stripHtml}
+            speechEnabled={speechEnabled}
+            onToggleSpeech={() => {
+              setSpeechEnabled((prev) => !prev);
+              Speech.stop();
+            }}
+            isSimulating={isSimulating}
+            onSimulate={handleSimulatePress}
+            onGo={handleGoPress}
+          />
         )}
       </View>
 
-      <Modal
-        visible={isShuttleModalOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setIsShuttleModalOpen(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Concordia Shuttle</Text>
-              <Pressable
-                onPress={() => setIsShuttleModalOpen(false)}
-                hitSlop={10}
-                style={styles.modalClose}
-              >
-                <Text style={styles.modalCloseText}>X</Text>
-              </Pressable>
-            </View>
-
-            {filteredShuttleSchedules.map((schedule) => {
-              const { active, times } = getShuttleDepartures(
-                new Date(),
-                schedule,
-              );
-              return (
-                <View key={schedule.id} style={styles.modalSection}>
-                  <Text style={styles.modalSubtitle}>
-                    {schedule.campus} - {schedule.stop}
-                  </Text>
-                  <Text style={styles.modalAddress}>{schedule.address}</Text>
-
-                  <View style={styles.modalSchedule}>
-                    <Text style={styles.modalScheduleTitle}>Schedule</Text>
-                    <Text style={styles.modalScheduleText}>
-                      Monday to Thursday: every {schedule.weekday.intervalMin}{" "}
-                      minutes ({schedule.weekday.start}–{schedule.weekday.end})
-                    </Text>
-                    <Text style={styles.modalScheduleText}>
-                      Friday: every {schedule.friday.intervalMin} minutes (
-                      {schedule.friday.start}–{schedule.friday.end})
-                    </Text>
-                  </View>
-
-                  <View style={styles.modalDepartures}>
-                    <Text style={styles.modalScheduleTitle}>
-                      Next departures
-                    </Text>
-                    {!active || times.length === 0 ? (
-                      <Text style={styles.modalEmpty}>
-                        No more departures today.
-                      </Text>
-                    ) : (
-                      times.map((t) => (
-                        <View
-                          key={`${schedule.id}-${t}`}
-                          style={styles.departureRow}
-                        >
-                          <Image
-                            source={require("../../assets/Clogo.png")}
-                            style={styles.departureIcon}
-                            resizeMode="contain"
-                          />
-                          <Text style={styles.departureTime}>{t}</Text>
-                          <Text style={styles.departureEta}>
-                            ETA{" "}
-                            {(() => {
-                              const [h, m] = t
-                                .split(":")
-                                .map((v) => parseInt(v, 10));
-                              const mins =
-                                h * 60 + m + (schedule.estimatedTravelMin || 0);
-                              const eh = Math.floor(mins / 60) % 24;
-                              const em = mins % 60;
-                              return `${eh.toString().padStart(2, "0")}:${em
-                                .toString()
-                                .padStart(2, "0")}`;
-                            })()}
-                          </Text>
-                        </View>
-                      ))
-                    )}
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      </Modal>
+      <ShuttleModal
+        styles={styles}
+        isOpen={isShuttleModalOpen}
+        onClose={() => setIsShuttleModalOpen(false)}
+        filteredShuttleSchedules={filteredShuttleSchedules}
+        getShuttleDepartures={getShuttleDepartures}
+      />
     </View>
   );
 }
