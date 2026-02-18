@@ -99,3 +99,7 @@ jobs:
 
       - name: Report link
         run: bash .github/scripts/sonarcloud-report-link.sh
+
+      - name: Coverage table in summary
+        if: success()
+        run: bash .github/scripts/coverage-to-summary.sh

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Writes frontend coverage table to stdout (shows in the Coverage report step log).
+# Writes frontend coverage table to stdout (and to GITHUB_STEP_SUMMARY when set).
 # Usage: LCOV_FILE=frontend/coverage/lcov.info bash coverage-to-summary.sh
 
 set -e
 LCOV="${LCOV_FILE:-frontend/coverage/lcov.info}"
+SUMMARY="${GITHUB_STEP_SUMMARY:-}"
 
 # Fixed-width columns: File 36, Lines 8, Covered 8, % 6
 row() {
@@ -61,4 +62,25 @@ if [ "$total_lf" -gt 0 ]; then
   pct=$((total_lh * 100 / total_lf))
   echo ""
   row "Total" "$total_lf" "$total_lh" "${pct}%"
+fi
+
+# When running in a job that has GITHUB_STEP_SUMMARY, append the same table there
+if [ -n "$SUMMARY" ]; then
+  {
+    echo ""
+    echo "## Frontend coverage"
+    echo ""
+    echo '```'
+    row "File" "Lines" "Covered" "%"
+    row "------------------------------------" "--------" "--------" "------"
+    for i in "${!names[@]}"; do
+      row "${names[$i]}" "${lfs[$i]}" "${lhs[$i]}" "${pcts[$i]}%"
+    done
+    if [ "$total_lf" -gt 0 ]; then
+      pct=$((total_lh * 100 / total_lf))
+      echo ""
+      row "Total" "$total_lf" "$total_lh" "${pct}%"
+    fi
+    echo '```'
+  } >> "$SUMMARY"
 fi
