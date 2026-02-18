@@ -10,7 +10,7 @@ jest.mock('expo-speech', () => ({
   speak: jest.fn(),
   stop: jest.fn(),
 }));
-
+jest.mock('../src/services/locationService');
 global.fetch = jest.fn();
 
 describe('MapScreen', () => {
