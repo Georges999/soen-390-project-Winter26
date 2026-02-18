@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import MapView, { Polygon, Polyline, Marker, Circle } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
 import CampusToggle from "../components/CampusToggle";
