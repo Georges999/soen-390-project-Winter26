@@ -12,6 +12,7 @@ import * as Speech from "expo-speech";
 
 import CampusToggle from "../components/CampusToggle";
 import CalendarButton from "../components/CalendarButton";
+import NextClassCard from "../components/NextClassCard";
 import SearchBox from "../components/SearchBox";
 import BuildingBottomSheet from "../components/BuildingBottomSheet";
 import DirectionsPanel from "../components/DirectionsPanel";
@@ -21,6 +22,7 @@ import shuttleSchedule from "../data/shuttleSchedule.json";
 
 import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
 import { useDirectionsRoute } from "../hooks/useDirectionsRoute";
+import { useNextClass } from "../hooks/useNextClass";
 import { findBuildingUserIsIn } from "../utils/geo";
 import {
   buildDotCoords,
@@ -95,6 +97,8 @@ export default function MapScreen() {
   const simActiveRef = useRef(false);
 
   const mapRef = useRef(null);
+
+  const { nextClass, buildingCode } = useNextClass();
 
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
@@ -171,6 +175,22 @@ export default function MapScreen() {
     }
 
     openBuilding(building);
+  };
+
+  const handleNavigateToNextClass = () => {
+    if (!buildingCode) return;
+
+    const building = allBuildings.find(
+      (b) => b.label?.toUpperCase() === buildingCode.toUpperCase()
+    );
+
+    if (building) {
+      setDestText(getBuildingName(building));
+      const center = getPolygonCenter(building.coordinates);
+      if (center) setDestCoord(center);
+      setDestCampusId(building.__campusId ?? selectedCampus?.id ?? null);
+      setHasInteracted(true);
+    }
   };
 
   //read array from json
@@ -792,6 +812,14 @@ export default function MapScreen() {
           }
         }} />
       </View>
+
+      {nextClass && (
+        <NextClassCard
+          nextClass={nextClass}
+          buildingCode={buildingCode}
+          onNavigate={handleNavigateToNextClass}
+        />
+      )}
 
       <View style={{ flex: 1 }}>
         {/* red input box */}
