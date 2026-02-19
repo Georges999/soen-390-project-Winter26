@@ -11,6 +11,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
 import CampusToggle from "../components/CampusToggle";
+import CalendarButton from "../components/CalendarButton";
 import SearchBox from "../components/SearchBox";
 import BuildingBottomSheet from "../components/BuildingBottomSheet";
 import DirectionsPanel from "../components/DirectionsPanel";
@@ -784,6 +785,14 @@ export default function MapScreen() {
         }}
       />
 
+      <View style={styles.calendarButtonContainer}>
+        <CalendarButton onConnectionChange={(connected) => {
+          if (connected) {
+            setHasInteracted(true);
+          }
+        }} />
+      </View>
+
       <View style={{ flex: 1 }}>
         {/* red input box */}
         <SearchBox
@@ -1129,6 +1138,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
     backgroundColor: "#fff",
+  },
+  calendarButtonContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   title: { fontSize: 26, fontWeight: "700", color: MAROON },
   subtitle: { marginTop: 4, fontSize: 15, color: "#666" },
