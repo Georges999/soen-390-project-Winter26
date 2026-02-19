@@ -31,11 +31,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure python is available
+        run: |
+          python3 --version
+
       - name: Generate burndown snapshot + chart
         env:
           SPRINT_NAME: ${{ inputs.sprint_name }}
         run: |
           set -e
+
+          # ---- Basic sanity check (won't print token) ----
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "ERROR: GH_TOKEN is empty. Check secrets.BURNDOWN_TOKEN value."
+            exit 1
+          fi
 
           # Run only every 2 weeks (even ISO week numbers)
           WEEK=$(date -u +%V)
@@ -49,26 +59,74 @@ jobs:
           CSV_FILE="data/burndown_${SPRINT_NAME}.csv"
           PNG_FILE="docs/burndown_${SPRINT_NAME}.png"
 
-          # 1) Get Project v2 ID (user-owned project)
-          PROJECT_ID=$(curl -s \
+          # -----------------------------
+          # 1) Get Project v2 ID
+          # -----------------------------
+          REQ='{"query":"query{ user(login:\"'"$OWNER"'\"){ projectV2(number:'"$PROJECT_NUMBER"'){ id }}}"}'
+
+          echo "Querying ProjectV2 id for owner=$OWNER project=$PROJECT_NUMBER"
+
+          RAW=$(curl -sS \
             -H "Authorization: bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"query\":\"query{ user(login:\\\"$OWNER\\\"){ projectV2(number:$PROJECT_NUMBER){ id }}}\"}" \
-            https://api.github.com/graphql \
-            | python -c "import sys,json; print(json.load(sys.stdin)['data']['user']['projectV2']['id'])")
+            -d "$REQ" \
+            https://api.github.com/graphql || true)
 
-          # 2) Fetch items + field values (first 200 items)
-          RESP=$(curl -s \
+          echo "Raw response (first 500 chars):"
+          echo "$RAW" | head -c 500
+          echo ""
+
+          PROJECT_ID=$(echo "$RAW" | python3 - <<'PY'
+          import sys, json
+          txt = sys.stdin.read().strip()
+          if not txt:
+              raise SystemExit("ERROR: Empty response from GitHub GraphQL (token missing/invalid, secret not injected, or request blocked).")
+          j = json.loads(txt)
+          if "errors" in j:
+              raise SystemExit("ERRORS from GraphQL: " + json.dumps(j["errors"], indent=2))
+          u = j.get("data", {}).get("user")
+          if not u:
+              raise SystemExit("ERROR: data.user is null (wrong OWNER or project is org-owned). If org-owned, use organization(login:...).")
+          p = u.get("projectV2")
+          if not p:
+              raise SystemExit("ERROR: projectV2 is null (wrong PROJECT_NUMBER or token lacks access).")
+          print(p["id"])
+          PY
+          )
+
+          echo "PROJECT_ID: $PROJECT_ID"
+
+          # -----------------------------
+          # 2) Fetch items + field values
+          # -----------------------------
+          ITEMS_REQ='{"query":"query{ node(id:\"'"$PROJECT_ID"'\"){ ... on ProjectV2 { items(first:200){ nodes{ fieldValues(first:50){ nodes{ ... on ProjectV2ItemFieldNumberValue{ number field{... on ProjectV2FieldCommon{ name }} } ... on ProjectV2ItemFieldSingleSelectValue{ name field{... on ProjectV2FieldCommon{ name }} } }}}}}}}"}'
+
+          RESP=$(curl -sS \
             -H "Authorization: bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"query\":\"query{ node(id:\\\"$PROJECT_ID\\\"){ ... on ProjectV2 { items(first:200){ nodes{ fieldValues(first:50){ nodes{ ... on ProjectV2ItemFieldNumberValue{ number field{... on ProjectV2FieldCommon{ name }} } ... on ProjectV2ItemFieldSingleSelectValue{ name field{... on ProjectV2FieldCommon{ name }} } }}}}}}}\"}" \
-            https://api.github.com/graphql)
+            -d "$ITEMS_REQ" \
+            https://api.github.com/graphql || true)
 
+          echo "Items query response (first 500 chars):"
+          echo "$RESP" | head -c 500
+          echo ""
+
+          # -----------------------------
           # 3) Sum remaining points where Status != Done
-          REMAINING=$(echo "$RESP" | python - <<'PY'
+          # -----------------------------
+          REMAINING=$(echo "$RESP" | python3 - <<'PY'
           import os, sys, json
-          j=json.load(sys.stdin)
-          items=j["data"]["node"]["items"]["nodes"]
+
+          txt=sys.stdin.read().strip()
+          if not txt:
+              raise SystemExit("ERROR: Empty items response from GraphQL.")
+          j=json.loads(txt)
+
+          if "errors" in j:
+              raise SystemExit("ERRORS from GraphQL (items query): " + json.dumps(j["errors"], indent=2))
+
+          node=j.get("data",{}).get("node",{})
+          items=node.get("items",{}).get("nodes",[]) or []
 
           POINTS_FIELD=os.environ["POINTS_FIELD_NAME"]
           STATUS_FIELD=os.environ["STATUS_FIELD_NAME"]
@@ -78,8 +136,8 @@ jobs:
           for it in items:
               points=0.0
               status=None
-              for fv in it.get("fieldValues",{}).get("nodes",[]):
-                  field=fv.get("field",{}).get("name")
+              for fv in (it.get("fieldValues",{}) or {}).get("nodes",[]) or []:
+                  field=(fv.get("field") or {}).get("name")
                   if field == POINTS_FIELD and fv.get("number") is not None:
                       points=float(fv["number"])
                   if field == STATUS_FIELD and fv.get("name") is not None:
@@ -87,7 +145,11 @@ jobs:
               if status != DONE:
                   remaining += points
 
-          print(int(remaining) if abs(remaining-round(remaining))<1e-9 else remaining)
+          # print as int when it's effectively an integer
+          if abs(remaining-round(remaining)) < 1e-9:
+              print(int(round(remaining)))
+          else:
+              print(remaining)
           PY
           )
 
@@ -95,7 +157,9 @@ jobs:
 
           TODAY=$(date -u +%F)
 
+          # -----------------------------
           # 4) Append/update CSV (one row per date)
+          # -----------------------------
           if [ ! -f "$CSV_FILE" ]; then
             echo "date,remaining_points" > "$CSV_FILE"
           fi
@@ -103,8 +167,10 @@ jobs:
           mv data/tmp.csv "$CSV_FILE"
           echo "$TODAY,$REMAINING" >> "$CSV_FILE"
 
+          # -----------------------------
           # 5) Generate chart PNG using QuickChart
-          python - <<'PY'
+          # -----------------------------
+          python3 - <<'PY'
           import os, csv, json, urllib.parse
           from pathlib import Path
 
@@ -125,7 +191,7 @@ jobs:
           Path("docs/burndown_url.txt").write_text(url)
           PY
 
-          curl -s "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
+          curl -sS "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
 
       - name: Commit updated burndown files
         env:
