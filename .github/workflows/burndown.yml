@@ -31,19 +31,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ensure python is available
-        run: |
-          python3 --version
-
       - name: Generate burndown snapshot + chart
         env:
           SPRINT_NAME: ${{ inputs.sprint_name }}
         run: |
           set -e
 
-          # ---- Basic sanity check (won't print token) ----
+          # Sanity check: token present (won't print it)
           if [ -z "${GH_TOKEN:-}" ]; then
-            echo "ERROR: GH_TOKEN is empty. Check secrets.BURNDOWN_TOKEN value."
+            echo "ERROR: GH_TOKEN is empty. Set secrets.BURNDOWN_TOKEN to a valid PAT."
             exit 1
           fi
 
@@ -60,17 +56,15 @@ jobs:
           PNG_FILE="docs/burndown_${SPRINT_NAME}.png"
 
           # -----------------------------
-          # 1) Get Project v2 ID
+          # 1) Get Project v2 ID (user-owned project)
           # -----------------------------
-          REQ='{"query":"query{ user(login:\"'"$OWNER"'\"){ projectV2(number:'"$PROJECT_NUMBER"'){ id }}}"}'
-
           echo "Querying ProjectV2 id for owner=$OWNER project=$PROJECT_NUMBER"
 
           RAW=$(curl -sS \
             -H "Authorization: bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "$REQ" \
-            https://api.github.com/graphql || true)
+            -d "{\"query\":\"query{ user(login:\\\"$OWNER\\\"){ projectV2(number:$PROJECT_NUMBER){ id }}}\"}" \
+            https://api.github.com/graphql)
 
           echo "Raw response (first 500 chars):"
           echo "$RAW" | head -c 500
@@ -80,32 +74,82 @@ jobs:
           import sys, json
           txt = sys.stdin.read().strip()
           if not txt:
-              raise SystemExit("ERROR: Empty response from GitHub GraphQL (token missing/invalid, secret not injected, or request blocked).")
+              raise SystemExit("ERROR: Empty response from GraphQL (Project ID query).")
           j = json.loads(txt)
           if "errors" in j:
-              raise SystemExit("ERRORS from GraphQL: " + json.dumps(j["errors"], indent=2))
+              raise SystemExit("ERRORS from GraphQL (Project ID query): " + json.dumps(j["errors"], indent=2))
           u = j.get("data", {}).get("user")
           if not u:
-              raise SystemExit("ERROR: data.user is null (wrong OWNER or project is org-owned). If org-owned, use organization(login:...).")
+              raise SystemExit("ERROR: data.user is null (wrong OWNER or project is org-owned).")
           p = u.get("projectV2")
           if not p:
-              raise SystemExit("ERROR: projectV2 is null (wrong PROJECT_NUMBER or token lacks access).")
+              raise SystemExit("ERROR: projectV2 is null (wrong PROJECT_NUMBER or no access).")
           print(p["id"])
           PY
           )
 
           echo "PROJECT_ID: $PROJECT_ID"
+          export PROJECT_ID="$PROJECT_ID"
 
           # -----------------------------
-          # 2) Fetch items + field values
+          # 2) Fetch items + field values (SAFE payload construction)
           # -----------------------------
-          ITEMS_REQ='{"query":"query{ node(id:\"'"$PROJECT_ID"'\"){ ... on ProjectV2 { items(first:200){ nodes{ fieldValues(first:50){ nodes{ ... on ProjectV2ItemFieldNumberValue{ number field{... on ProjectV2FieldCommon{ name }} } ... on ProjectV2ItemFieldSingleSelectValue{ name field{... on ProjectV2FieldCommon{ name }} } }}}}}}}"}'
+          RESP=$(python3 - <<'PY'
+          import os, json, subprocess, sys
 
-          RESP=$(curl -sS \
-            -H "Authorization: bearer $GH_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$ITEMS_REQ" \
-            https://api.github.com/graphql || true)
+          token = os.environ["GH_TOKEN"]
+          project_id = os.environ["PROJECT_ID"]
+
+          query = """
+          query($id: ID!) {
+            node(id: $id) {
+              ... on ProjectV2 {
+                items(first: 200) {
+                  nodes {
+                    fieldValues(first: 50) {
+                      nodes {
+                        ... on ProjectV2ItemFieldNumberValue {
+                          number
+                          field { ... on ProjectV2FieldCommon { name } }
+                        }
+                        ... on ProjectV2ItemFieldSingleSelectValue {
+                          name
+                          field { ... on ProjectV2FieldCommon { name } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          """
+
+          payload = {"query": query, "variables": {"id": project_id}}
+          payload_str = json.dumps(payload)
+
+          cmd = [
+            "curl","-sS",
+            "-H", f"Authorization: bearer {token}",
+            "-H", "Content-Type: application/json",
+            "-d", payload_str,
+            "https://api.github.com/graphql"
+          ]
+
+          p = subprocess.run(cmd, capture_output=True, text=True)
+          out = (p.stdout or "").strip()
+
+          if not out:
+            err = (p.stderr or "").strip()
+            print("ERROR: Empty response from GraphQL (items query).", file=sys.stderr)
+            if err:
+              print("curl stderr:", err, file=sys.stderr)
+            sys.exit(1)
+
+          # Echo JSON to bash
+          print(out)
+          PY
+          )
 
           echo "Items query response (first 500 chars):"
           echo "$RESP" | head -c 500
@@ -117,36 +161,33 @@ jobs:
           REMAINING=$(echo "$RESP" | python3 - <<'PY'
           import os, sys, json
 
-          txt=sys.stdin.read().strip()
-          if not txt:
-              raise SystemExit("ERROR: Empty items response from GraphQL.")
-          j=json.loads(txt)
+          txt = sys.stdin.read().strip()
+          j = json.loads(txt)
 
           if "errors" in j:
               raise SystemExit("ERRORS from GraphQL (items query): " + json.dumps(j["errors"], indent=2))
 
-          node=j.get("data",{}).get("node",{})
-          items=node.get("items",{}).get("nodes",[]) or []
+          node = j.get("data", {}).get("node", {}) or {}
+          items = (node.get("items", {}) or {}).get("nodes", []) or []
 
-          POINTS_FIELD=os.environ["POINTS_FIELD_NAME"]
-          STATUS_FIELD=os.environ["STATUS_FIELD_NAME"]
-          DONE=os.environ["DONE_STATUS_NAME"]
+          POINTS_FIELD = os.environ["POINTS_FIELD_NAME"]
+          STATUS_FIELD = os.environ["STATUS_FIELD_NAME"]
+          DONE = os.environ["DONE_STATUS_NAME"]
 
-          remaining=0.0
+          remaining = 0.0
           for it in items:
-              points=0.0
-              status=None
-              for fv in (it.get("fieldValues",{}) or {}).get("nodes",[]) or []:
-                  field=(fv.get("field") or {}).get("name")
+              points = 0.0
+              status = None
+              for fv in ((it.get("fieldValues", {}) or {}).get("nodes", []) or []):
+                  field = ((fv.get("field") or {}).get("name"))
                   if field == POINTS_FIELD and fv.get("number") is not None:
-                      points=float(fv["number"])
+                      points = float(fv["number"])
                   if field == STATUS_FIELD and fv.get("name") is not None:
-                      status=fv["name"]
+                      status = fv["name"]
               if status != DONE:
                   remaining += points
 
-          # print as int when it's effectively an integer
-          if abs(remaining-round(remaining)) < 1e-9:
+          if abs(remaining - round(remaining)) < 1e-9:
               print(int(round(remaining)))
           else:
               print(remaining)
@@ -174,20 +215,20 @@ jobs:
           import os, csv, json, urllib.parse
           from pathlib import Path
 
-          sprint=os.environ["SPRINT_NAME"]
-          csv_path=f"data/burndown_{sprint}.csv"
-          rows=list(csv.DictReader(open(csv_path)))
+          sprint = os.environ["SPRINT_NAME"]
+          csv_path = f"data/burndown_{sprint}.csv"
+          rows = list(csv.DictReader(open(csv_path)))
 
-          labels=[r["date"] for r in rows]
-          data=[float(r["remaining_points"]) for r in rows]
+          labels = [r["date"] for r in rows]
+          data = [float(r["remaining_points"]) for r in rows]
 
-          config={
-            "type":"line",
-            "data":{"labels":labels,"datasets":[{"label":"Remaining Story Points","data":data}]},
-            "options":{"scales":{"y":{"beginAtZero":True}}}
+          config = {
+            "type": "line",
+            "data": {"labels": labels, "datasets": [{"label": "Remaining Story Points", "data": data}]},
+            "options": {"scales": {"y": {"beginAtZero": True}}}
           }
 
-          url="https://quickchart.io/chart?c="+urllib.parse.quote(json.dumps(config))
+          url = "https://quickchart.io/chart?c=" + urllib.parse.quote(json.dumps(config))
           Path("docs/burndown_url.txt").write_text(url)
           PY
 
