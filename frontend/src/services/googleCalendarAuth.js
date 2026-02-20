@@ -6,14 +6,18 @@ import { Platform } from 'react-native';
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_OAUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
-const REDIRECT_URI = AuthSession.makeRedirectUri({
-  scheme: 'campusguide',
-  preferLocalhost: true,
-});
-
 const TOKEN_KEY = 'google_calendar_tokens';
 
+// DEV MODE: Bypass OAuth for testing
+const USE_MOCK_AUTH = __DEV__ && true; // Set to false to test real OAuth
+
 function getClientId() {
+  // For Expo Go development, always use Web client
+  if (__DEV__) {
+    return process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID;
+  }
+  
+  // For production builds
   if (Platform.OS === 'ios') {
     return process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID;
   } else if (Platform.OS === 'android') {
@@ -29,13 +33,34 @@ const discovery = {
 };
 
 export async function authenticateWithGoogle() {
+  // DEV MODE: Mock authentication
+  if (USE_MOCK_AUTH) {
+    console.log('[Auth] Using mock authentication (DEV MODE)');
+    const mockTokens = {
+      accessToken: 'mock_access_token_' + Date.now(),
+      refreshToken: 'mock_refresh_token',
+      expiresIn: 3600,
+      issuedAt: Date.now(),
+    };
+    await saveTokens(mockTokens);
+    return {
+      success: true,
+      accessToken: mockTokens.accessToken,
+    };
+  }
+
   try {
+    console.log('[Auth] Starting authentication...');
     const clientId = getClientId();
+    console.log('[Auth] Client ID:', clientId?.substring(0, 20) + '...');
+    
+    const redirectUri = 'https://auth.expo.io/@anonymous/campus-guide-frontend';
+    console.log('[Auth] Redirect URI:', redirectUri);
     
     const authRequest = new AuthSession.AuthRequest({
       clientId,
       scopes: GOOGLE_OAUTH_SCOPES,
-      redirectUri: REDIRECT_URI,
+      redirectUri,
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
       extraParams: {
@@ -44,26 +69,32 @@ export async function authenticateWithGoogle() {
       },
     });
 
-    await authRequest.makeAuthUrlAsync(discovery);
+    const codeVerifier = authRequest.codeVerifier;
     
-    const result = await authRequest.promptAsync(discovery, {
-      useProxy: true,
-    });
+    console.log('[Auth] Opening browser...');
+    
+    const authPromise = authRequest.promptAsync(discovery);
+    const result = await authPromise;
+
+    console.log('[Auth] Result type:', result.type);
 
     if (result.type === 'success') {
       const { code } = result.params;
+      console.log('[Auth] Got authorization code, exchanging for token...');
       
       const tokenResult = await AuthSession.exchangeCodeAsync(
         {
           clientId,
           code,
-          redirectUri: REDIRECT_URI,
+          redirectUri,
           extraParams: {
-            code_verifier: authRequest.codeVerifier,
+            code_verifier: codeVerifier,
           },
         },
         discovery
       );
+
+      console.log('[Auth] Token exchange successful');
 
       await saveTokens({
         accessToken: tokenResult.accessToken,
@@ -72,23 +103,27 @@ export async function authenticateWithGoogle() {
         issuedAt: Date.now(),
       });
 
+      console.log('[Auth] Tokens saved');
+
       return {
         success: true,
         accessToken: tokenResult.accessToken,
       };
     } else if (result.type === 'cancel') {
+      console.log('[Auth] User cancelled');
       return {
         success: false,
         error: 'User cancelled authentication',
       };
     } else {
+      console.log('[Auth] Unknown result type:', result.type);
       return {
         success: false,
         error: 'Authentication failed',
       };
     }
   } catch (error) {
-    console.error('OAuth error:', error);
+    console.error('[Auth] Exception:', error);
     return {
       success: false,
       error: error.message || 'Authentication failed',
