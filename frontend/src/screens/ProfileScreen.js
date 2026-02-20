@@ -51,7 +51,7 @@ export default function ProfileScreen({ navigation }) {
   }
 
   function handleViewCalendar() {
-    navigation.navigate('Calendar');
+    navigation.navigate('Calendar', { calendars });
   }
 
   return (
