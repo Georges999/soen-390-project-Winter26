@@ -58,7 +58,10 @@ export default function NextClassScreen({ navigation }) {
   }
 
   function handleGetDirections() {
-    navigation.navigate('Map');
+    navigation.navigate('Map', {
+      nextClassLocation: nextClass?.location,
+      nextClassSummary: nextClass?.summary,
+    });
   }
 
   function handleGoToNextClass() {

@@ -11,8 +11,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
 import CampusToggle from "../components/CampusToggle";
-import CalendarButton from "../components/CalendarButton";
-import NextClassCard from "../components/NextClassCard";
 import SearchBox from "../components/SearchBox";
 import BuildingBottomSheet from "../components/BuildingBottomSheet";
 import DirectionsPanel from "../components/DirectionsPanel";
@@ -22,7 +20,6 @@ import shuttleSchedule from "../data/shuttleSchedule.json";
 
 import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
 import { useDirectionsRoute } from "../hooks/useDirectionsRoute";
-import { useNextClass } from "../hooks/useNextClass";
 import { findBuildingUserIsIn } from "../utils/geo";
 import {
   buildDotCoords,
@@ -56,7 +53,7 @@ const getAmenities = (building) => {
   };
 };
 
-export default function MapScreen() {
+export default function MapScreen({ route }) {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -90,7 +87,6 @@ export default function MapScreen() {
   const [mapRegion, setMapRegion] = useState(
     campuses.sgw?.region ?? campusList[0]?.region ?? null,
   );
-  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
 
   //Unlike state, changing a ref's value does not trigger a re-render of the component -> efficient for storing transient data
   const simTimerRef = useRef(null);
@@ -99,7 +95,17 @@ export default function MapScreen() {
 
   const mapRef = useRef(null);
 
-  const { nextClass, buildingCode } = useNextClass(isCalendarConnected);
+  // Pre-fill destination from Next Class tab
+  useEffect(() => {
+    const location = route?.params?.nextClassLocation;
+    const summary = route?.params?.nextClassSummary;
+    if (!location || !summary) return;
+
+    setDestText(summary);
+    setStartText('My location');
+    if (userCoord) setStartCoord(userCoord);
+    setHasInteracted(true);
+  }, [route?.params]);
 
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
@@ -176,29 +182,6 @@ export default function MapScreen() {
     }
 
     openBuilding(building);
-  };
-
-  const handleNavigateToNextClass = () => {
-    if (!buildingCode) return;
-
-    const building = allBuildings.find(
-      (b) => b.label?.toUpperCase() === buildingCode.toUpperCase()
-    );
-
-    if (building) {
-      // Set start to "My location"
-      setStartText('My location');
-      if (userCoord) {
-        setStartCoord(userCoord);
-      }
-      
-      // Set destination to class building
-      setDestText(getBuildingName(building));
-      const center = getPolygonCenter(building.coordinates);
-      if (center) setDestCoord(center);
-      setDestCampusId(building.__campusId ?? selectedCampus?.id ?? null);
-      setHasInteracted(true);
-    }
   };
 
   //read array from json
@@ -813,23 +796,6 @@ export default function MapScreen() {
         }}
       />
 
-      <View style={styles.calendarButtonContainer}>
-        <CalendarButton onConnectionChange={(connected) => {
-          setIsCalendarConnected(connected);
-          if (connected) {
-            setHasInteracted(true);
-          }
-        }} />
-      </View>
-
-      {isCalendarConnected && nextClass && (
-        <NextClassCard
-          nextClass={nextClass}
-          buildingCode={buildingCode}
-          onNavigate={handleNavigateToNextClass}
-        />
-      )}
-
       <View style={{ flex: 1 }}>
         {/* red input box */}
         <SearchBox
@@ -1175,11 +1141,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
     backgroundColor: "#fff",
-  },
-  calendarButtonContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 4,
   },
   title: { fontSize: 26, fontWeight: "700", color: MAROON },
   subtitle: { marginTop: 4, fontSize: 15, color: "#666" },
