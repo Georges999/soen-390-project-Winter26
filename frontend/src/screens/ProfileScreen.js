@@ -62,10 +62,7 @@ export default function ProfileScreen({ navigation }) {
       <ScrollView style={styles.content}>
         <Text style={styles.sectionTitle}>My Schedule</Text>
 
-        <Pressable
-          style={styles.connectCard}
-          onPress={isConnected ? handleDisconnect : handleConnect}
-        >
+        <View style={styles.connectCard}>
           <View style={styles.connectIcon}>
             <MaterialIcons name="event" size={32} color="#FFF" />
             <View style={styles.dateBox}>
@@ -80,12 +77,15 @@ export default function ProfileScreen({ navigation }) {
               {isConnected ? 'Syncing Your Class' : 'Sync Your Class'}
             </Text>
           </View>
-          <Pressable style={styles.connectButton}>
+          <Pressable
+            style={styles.connectButton}
+            onPress={isConnected ? handleDisconnect : handleConnect}
+          >
             <Text style={styles.connectButtonText}>
               {isConnected ? 'Disconnect' : 'Connect'}
             </Text>
           </Pressable>
-        </Pressable>
+        </View>
 
         {isConnected && (
           <>

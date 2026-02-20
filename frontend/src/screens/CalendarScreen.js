@@ -10,7 +10,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import mockCalendars from '../data/mockCalendars.json';
 
 const MAROON = '#95223D';
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function getByDay(recurrenceString) {
   const match = recurrenceString.match(/BYDAY=([A-Z,]+)/);
@@ -18,8 +17,21 @@ function getByDay(recurrenceString) {
   return match[1].split(',');
 }
 
+function getWeekDays(referenceDate) {
+  const day = referenceDate.getDay();
+  const monday = new Date(referenceDate);
+  monday.setDate(referenceDate.getDate() - (day === 0 ? 6 : day - 1));
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
 export default function CalendarScreen({ navigation, route }) {
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 1, 4));
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const weekDays = getWeekDays(selectedDate);
 
   // Accept calendars from ProfileScreen or fall back to JSON
   const calendarState = route?.params?.calendars || mockCalendars.calendars;
@@ -61,8 +73,11 @@ export default function CalendarScreen({ navigation, route }) {
     navigation.goBack();
   }
 
-  function handleGetDirections(location) {
-    navigation.navigate('Map');
+  function handleGetDirections(event) {
+    navigation.navigate('Map', {
+      nextClassLocation: event.location,
+      nextClassSummary: event.summary,
+    });
   }
 
   return (
@@ -84,20 +99,21 @@ export default function CalendarScreen({ navigation, route }) {
       </View>
 
       <View style={styles.weekDays}>
-        {DAYS.map((day, index) => {
-          const dayNum = index + 2;
-          const isSelected = dayNum === selectedDate.getDate();
+        {weekDays.map((date) => {
+          const dayIdx = date.getDay();
+          const dayLabel = ['Mon','Tue','Wed','Thu','Fri','Sat'][(dayIdx === 0 ? 7 : dayIdx) - 1];
+          const isSelected = date.toDateString() === selectedDate.toDateString();
           return (
             <Pressable
-              key={day}
+              key={date.toISOString()}
               style={[styles.weekDay, isSelected && styles.weekDaySelected]}
-              onPress={() => setSelectedDate(new Date(2026, 1, dayNum))}
+              onPress={() => setSelectedDate(new Date(date))}
             >
               <Text style={[styles.weekDayText, isSelected && styles.weekDayTextSelected]}>
-                {day}
+                {dayLabel}
               </Text>
               <Text style={[styles.weekDayNum, isSelected && styles.weekDayNumSelected]}>
-                {dayNum}
+                {date.getDate()}
               </Text>
             </Pressable>
           );
@@ -140,7 +156,7 @@ export default function CalendarScreen({ navigation, route }) {
                 </View>
                 <Pressable 
                   style={styles.directionsButton}
-                  onPress={() => handleGetDirections(event.location)}
+                  onPress={() => handleGetDirections(event)}
                 >
                   <Text style={styles.directionsText}>Get Directions</Text>
                 </Pressable>

@@ -101,7 +101,7 @@ export default function MapScreen({ route }) {
     const summary = route?.params?.nextClassSummary;
     if (!location || !summary) return;
 
-    setDestText(summary);
+    setDestText(location);
     setStartText('My location');
     if (userCoord) setStartCoord(userCoord);
     setHasInteracted(true);

@@ -50,11 +50,15 @@ export default function NextClassScreen({ navigation }) {
   const [showDetected, setShowDetected] = useState(false);
   const nextClass = getNextClass(calendars);
 
+  // Reset detected state if no next class
+  const shouldShowDetected = showDetected && nextClass !== null;
+
   function getMinutesUntil(event) {
     const eventDate = new Date(event.start.dateTime);
     const classTime = new Date();
     classTime.setHours(eventDate.getHours(), eventDate.getMinutes(), 0, 0);
-    return Math.floor((classTime - new Date()) / 1000 / 60);
+    const mins = Math.floor((classTime - new Date()) / 1000 / 60);
+    return Math.max(0, mins);
   }
 
   function handleGetDirections() {
@@ -104,7 +108,7 @@ export default function NextClassScreen({ navigation }) {
               <Text style={styles.profileButtonText}>View Schedule</Text>
             </Pressable>
           </View>
-        ) : !showDetected ? (
+        ) : !shouldShowDetected ? (
           <Pressable style={styles.goToClassCard} onPress={handleGoToNextClass}>
             <MaterialIcons name="event-note" size={32} color={MAROON} />
             <View style={styles.goToClassText}>
