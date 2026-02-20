@@ -38,9 +38,10 @@ export default function MainNavigator() {
         }}
       />
       <Tab.Screen
-        name="Next Class"
+        name="NextClass"
         component={MapScreen}
         options={{
+          tabBarLabel: 'Next Class',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="event" size={size} color={color} />
           ),

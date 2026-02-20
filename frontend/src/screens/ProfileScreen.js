@@ -17,7 +17,7 @@ import mockCalendars from '../data/mockCalendars.json';
 
 const MAROON = '#95223D';
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen() {
   const [isConnected, setIsConnected] = useState(false);
   const [calendars, setCalendars] = useState(mockCalendars.calendars);
 
@@ -51,7 +51,8 @@ export default function ProfileScreen({ navigation }) {
   }
 
   function handleViewCalendar() {
-    navigation.navigate('Calendar');
+    // TODO: Navigate to calendar screen
+    console.log('View Calendar pressed');
   }
 
   return (
