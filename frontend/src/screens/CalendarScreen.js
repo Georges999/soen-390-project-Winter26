@@ -40,6 +40,16 @@ export default function CalendarScreen({ navigation }) {
     });
   }
 
+  function formatDayOfWeek() {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[selectedDate.getDay()];
+  }
+
+  function formatMonth() {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
+  }
+
   function goBack() {
     navigation.goBack();
   }
@@ -59,17 +69,17 @@ export default function CalendarScreen({ navigation }) {
       </View>
 
       <View style={styles.dateHeader}>
-        <Text style={styles.dateNumber}>4</Text>
+        <Text style={styles.dateNumber}>{selectedDate.getDate()}</Text>
         <View>
-          <Text style={styles.dateDayOfWeek}>Wed</Text>
-          <Text style={styles.dateMonth}>Feb 2026</Text>
+          <Text style={styles.dateDayOfWeek}>{formatDayOfWeek()}</Text>
+          <Text style={styles.dateMonth}>{formatMonth()}</Text>
         </View>
       </View>
 
       <View style={styles.weekDays}>
         {DAYS.map((day, index) => {
           const dayNum = index + 2;
-          const isSelected = dayNum === 4;
+          const isSelected = dayNum === selectedDate.getDate();
           return (
             <Pressable
               key={day}
