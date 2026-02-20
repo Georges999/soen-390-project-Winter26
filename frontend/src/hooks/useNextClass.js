@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react';
 import { getNextClassEvent, parseBuildingFromLocation } from '../services/googleCalendarService';
 
-export function useNextClass() {
+export function useNextClass(isConnected = false) {
   const [nextClass, setNextClass] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!isConnected) {
+      setNextClass(null);
+      return;
+    }
+
     fetchNextClass();
     const interval = setInterval(fetchNextClass, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isConnected]);
 
   async function fetchNextClass() {
     setIsLoading(true);

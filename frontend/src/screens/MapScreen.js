@@ -90,6 +90,7 @@ export default function MapScreen() {
   const [mapRegion, setMapRegion] = useState(
     campuses.sgw?.region ?? campusList[0]?.region ?? null,
   );
+  const [isCalendarConnected, setIsCalendarConnected] = useState(false);
 
   //Unlike state, changing a ref's value does not trigger a re-render of the component -> efficient for storing transient data
   const simTimerRef = useRef(null);
@@ -98,7 +99,7 @@ export default function MapScreen() {
 
   const mapRef = useRef(null);
 
-  const { nextClass, buildingCode } = useNextClass();
+  const { nextClass, buildingCode } = useNextClass(isCalendarConnected);
 
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
@@ -185,6 +186,13 @@ export default function MapScreen() {
     );
 
     if (building) {
+      // Set start to "My location"
+      setStartText('My location');
+      if (userCoord) {
+        setStartCoord(userCoord);
+      }
+      
+      // Set destination to class building
       setDestText(getBuildingName(building));
       const center = getPolygonCenter(building.coordinates);
       if (center) setDestCoord(center);
@@ -807,13 +815,14 @@ export default function MapScreen() {
 
       <View style={styles.calendarButtonContainer}>
         <CalendarButton onConnectionChange={(connected) => {
+          setIsCalendarConnected(connected);
           if (connected) {
             setHasInteracted(true);
           }
         }} />
       </View>
 
-      {nextClass && (
+      {isCalendarConnected && nextClass && (
         <NextClassCard
           nextClass={nextClass}
           buildingCode={buildingCode}
