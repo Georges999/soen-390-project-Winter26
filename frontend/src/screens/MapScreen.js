@@ -20,10 +20,12 @@ import shuttleSchedule from "../data/shuttleSchedule.json";
 
 import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
 import { useDirectionsRoute } from "../hooks/useDirectionsRoute";
-import { findBuildingUserIsIn } from "../utils/geo";
+import { useCurrentBuilding } from "../hooks/useCurrentBuilding";
+import { useNavigationSteps } from "../hooks/useNavigationSteps";
+import { useSimulation } from "../hooks/useSimulation";
+import { useUserLocation } from "../hooks/useUserLocation";
 import {
   buildDotCoords,
-  distanceMeters,
   getPolygonCenter,
 } from "../utils/geoUtils";
 import { normalizeText, stripHtml } from "../utils/textUtils";
@@ -31,7 +33,7 @@ import {
   getShuttleDepartures,
   mapShuttleSchedules,
 } from "../utils/shuttleUtils";
-import { getUserCoords, watchUserCoords } from "../services/locationService";
+import { getUserCoords } from "../services/locationService";
 
 //array of campuses with default as SGW + .? optional chaining to avoid crash if null -> undefined instead
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
@@ -59,7 +61,6 @@ export default function MapScreen({ route }) {
 
   // Building info bottom sheet
   const [selectedBuilding, setSelectedBuilding] = useState(null);
-  const [currentBuilding, setCurrentBuilding] = useState(null);
 
   // Start/Destination inputs
   const [activeField, setActiveField] = useState(null);
@@ -72,13 +73,10 @@ export default function MapScreen({ route }) {
   // coords for directions
   const [startCoord, setStartCoord] = useState(null);
   const [destCoord, setDestCoord] = useState(null);
-  const [userCoord, setUserCoord] = useState(null);
   const [travelMode, setTravelMode] = useState("walking");
   const [showDirectionsPanel, setShowDirectionsPanel] = useState(false);
   const [followUser, setFollowUser] = useState(false);
   const [navActive, setNavActive] = useState(false);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0); //step i'm currently on for voice
-  const [isSimulating, setIsSimulating] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [transitSubMode, setTransitSubMode] = useState("shuttle"); // shuttle | public
   const [isShuttleModalOpen, setIsShuttleModalOpen] = useState(false);
@@ -87,11 +85,6 @@ export default function MapScreen({ route }) {
   const [mapRegion, setMapRegion] = useState(
     campuses.sgw?.region ?? campusList[0]?.region ?? null,
   );
-
-  //Unlike state, changing a ref's value does not trigger a re-render of the component -> efficient for storing transient data
-  const simTimerRef = useRef(null);
-  const simIndexRef = useRef(0);
-  const simActiveRef = useRef(false);
 
   const mapRef = useRef(null);
 
@@ -208,14 +201,6 @@ export default function MapScreen({ route }) {
       ),
     [filteredShuttleSchedules],
   );
-
-  const stopSimulation = () => {
-    if (simTimerRef.current) {
-      clearInterval(simTimerRef.current);
-      simTimerRef.current = null;
-    }
-    setIsSimulating(false);
-  };
 
   //picking a building from search results
   const selectBuildingForField = (building, field) => {
@@ -334,27 +319,7 @@ export default function MapScreen({ route }) {
   };
 
   const handleSimulatePress = () => {
-    if (isSimulating) {
-      stopSimulation();
-      return;
-    }
-
-    if (!routeCoords.length) return;
-    setIsSimulating(true);
-    setFollowUser(true);
-    setHasLocationPerm(true);
-    simIndexRef.current = 0;
-    setUserCoord(routeCoords[0]); //Put simulated user at first route point
-
-    //move to next route point every sec
-    simTimerRef.current = setInterval(() => {
-      simIndexRef.current += 1;
-      if (simIndexRef.current >= routeCoords.length) {
-        stopSimulation();
-        return;
-      }
-      setUserCoord(routeCoords[simIndexRef.current]);
-    }, 1000);
+    toggleSim();
   };
 
   const isCrossCampusTrip =
@@ -428,58 +393,8 @@ export default function MapScreen({ route }) {
     }
   }, [selectedCampus]);
 
-  //Track user location for "current building" highlight + blue dot continuously
-  useEffect(() => {
-    let cancelled = false;
-    let subscription = null; //holds location watcher object
-
-    //Call watchUserCoords to subscribe to position updates
-    (async () => {
-      try {
-        const sub = await watchUserCoords((coords) => {
-          if (cancelled) return;
-          if (simActiveRef.current) return; //ignored if simulation is running
-          setHasLocationPerm(true);
-          setUserCoord(coords);
-        });
-
-        if (cancelled) return;
-        subscription = sub;
-        if (!sub) setHasLocationPerm(false);
-      } catch (err) {
-        if (!cancelled) setHasLocationPerm(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      subscription?.remove?.();
-    };
-  }, []);
-
-  //when is sumlating is tiggered location updates don’t override it
-  useEffect(() => {
-    simActiveRef.current = isSimulating;
-  }, [isSimulating]);
-
-  //whenever user loc changes
-  useEffect(() => {
-    if (!userCoord) {
-      setCurrentBuilding(null);
-      return;
-    }
-
-    const found = findBuildingUserIsIn(userCoord, allBuildings);
-    setCurrentBuilding(found ?? null);
-  }, [userCoord, allBuildings]);
-
-  //detect campus when start is my location
-  useEffect(() => {
-    if (startText !== "My location") return;
-    if (currentBuilding?.__campusId) {
-      setStartCampusId(currentBuilding.__campusId);
-    }
-  }, [startText, currentBuilding]);
+  // Track user location for "current building" highlight + blue dot continuously
+  const { userCoord: liveUserCoord } = useUserLocation({ setHasLocationPerm });
 
   //Default Start = current location (only if Start is empty)
   useDefaultStartMyLocation({
@@ -645,6 +560,37 @@ export default function MapScreen({ route }) {
   const routeInfo = isActiveShuttleTrip ? shuttleRideInfo : baseRouteInfo;
   const safeRouteCoords = Array.isArray(routeCoords) ? routeCoords : [];
 
+  const { isSimulating, simulatedCoord, stopSim, toggleSim } = useSimulation({
+    routeCoords: safeRouteCoords,
+    onStart: () => {
+      setFollowUser(true);
+      setHasLocationPerm(true);
+    },
+  });
+
+  const userCoord = isSimulating && simulatedCoord ? simulatedCoord : liveUserCoord;
+
+  // Resolve the building currently containing the effective user coordinate
+  const { currentBuilding } = useCurrentBuilding({
+    userCoord,
+    allBuildings,
+  });
+
+  //detect campus when start is my location
+  useEffect(() => {
+    if (startText !== "My location") return;
+    if (currentBuilding?.__campusId) {
+      setStartCampusId(currentBuilding.__campusId);
+    }
+  }, [startText, currentBuilding]);
+
+  const { currentStepIndex, setCurrentStepIndex } = useNavigationSteps({
+    navActive,
+    userCoord,
+    routeInfo,
+    speechEnabled,
+  });
+
   //auto-zoom map to the full shuttle route when shuttle route becomes available
   useEffect(() => {
     if (!isActiveShuttleTrip || safeRouteCoords.length < 2) return;
@@ -702,12 +648,12 @@ export default function MapScreen({ route }) {
       setNavActive(false);
       setFollowUser(false);
       setCurrentStepIndex(0);
-      stopSimulation();
+      stopSim();
       return;
     }
 
     setShowDirectionsPanel(true);
-  }, [startCoord, destCoord]);
+  }, [startCoord, destCoord, stopSim, setCurrentStepIndex]);
 
   //when user starts simulation, transit details auto-hide to free map space
   useEffect(() => {
@@ -731,36 +677,6 @@ export default function MapScreen({ route }) {
       500,
     );
   }, [followUser, userCoord]);
-
-  //advance turn-by-turn guidance to the next step when user gets close enough to current step endpoint
-  useEffect(() => {
-    if (!navActive || !userCoord || !routeInfo?.steps?.length) return;
-    const currentStep = routeInfo.steps[currentStepIndex];
-    if (!currentStep?.endLocation) return;
-
-    const meters = distanceMeters(userCoord, currentStep.endLocation);
-    if (meters > 25) return; //if user is farther than 25m from end of current step stay on same step
-
-    const nextIndex = Math.min(
-      currentStepIndex + 1,
-      routeInfo.steps.length - 1,
-    );
-
-    if (nextIndex !== currentStepIndex) {
-      setCurrentStepIndex(nextIndex);
-      const nextInstruction = routeInfo.steps[nextIndex]?.instruction;
-      if (nextInstruction && speechEnabled) {
-        Speech.stop();
-        Speech.speak(stripHtml(nextInstruction));
-      }
-    }
-  }, [navActive, userCoord, routeInfo, currentStepIndex, speechEnabled]);
-
-  useEffect(() => {
-    return () => {
-      stopSimulation();
-    };
-  }, []);
 
   if (!selectedCampus) {
     return (
