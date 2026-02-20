@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import MapScreen from '../screens/MapScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import CalendarScreen from '../screens/CalendarScreen';
+import NextClassScreen from '../screens/NextClassScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -51,7 +52,7 @@ export default function MainNavigator() {
       />
       <Tab.Screen
         name="NextClass"
-        component={MapScreen}
+        component={NextClassScreen}
         options={{
           tabBarLabel: 'Next Class',
           tabBarIcon: ({ color, size }) => (
