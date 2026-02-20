@@ -1,0 +1,93 @@
+appId: host.exp.Exponent
+---
+- launchApp
+- waitForAnimationToEnd
+
+# Open app from Expo client
+- extendedWaitUntil:
+    visible: "campus-guide-frontend"
+    timeout: 30000
+- tapOn: "campus-guide-frontend"
+
+# Ensure we're on SGW tab
+- extendedWaitUntil:
+    visible: "SGW"
+    timeout: 30000
+- tapOn: "SGW"
+- waitForAnimationToEnd
+
+# =========
+# A) Select start + destination by typing building name
+# =========
+
+# START: type partial, then tap suggestion (no hideKeyboard before tap)
+- tapOn: { id: "start-input" }
+- eraseText
+- inputText: "Hall"
+- extendedWaitUntil:
+    visible: "Henry F. Hall Building"
+    timeout: 5000
+- tapOn: "Henry F. Hall Building"
+- waitForAnimationToEnd
+
+# DEST: type partial, then tap suggestion
+- tapOn: { id: "dest-input" }
+- eraseText
+- inputText: "McConnell"
+- extendedWaitUntil:
+    visible: "J.W. McConnell Building"
+    timeout: 5000
+- tapOn: "J.W. McConnell Building"
+- waitForAnimationToEnd
+
+# Route is rendered as a Polyline with testID route-polyline
+- extendedWaitUntil:
+    visible:
+      id: "route-polyline"
+    timeout: 20000
+- assertVisible:
+    id: "route-polyline"
+
+# =========
+# B) Use current location as start
+# =========
+- tapOn: { id: "start-input" }
+- eraseText
+- inputText: "EV"
+- extendedWaitUntil:
+    visible: "Engineering, Computer Science and Visual Arts Integrated Complex"
+    timeout: 5000
+- tapOn: "Engineering, Computer Science and Visual Arts Integrated Complex"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "route-polyline"
+    timeout: 20000
+- assertVisible:
+    id: "route-polyline"
+
+# =========
+# D) Support SGW -> Loyola (example: Hall -> Loyola Admin)
+# =========
+# - tapOn: { id: "start-input" }
+# - eraseText
+# - inputText: "Hall"
+# - extendedWaitUntil: { visible: "Henry F. Hall Building", timeout: 5000 }
+# - tapOn: "Henry F. Hall Building"
+# - waitForAnimationToEnd
+
+- tapOn: { id: "dest-input" }
+- eraseText
+- inputText: "Administration"
+- extendedWaitUntil: { visible: "Administration Building", timeout: 5000 }
+- tapOn: "Administration Building"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "route-polyline"
+    timeout: 20000
+- assertVisible:
+    id: "route-polyline"
+
