@@ -18,6 +18,7 @@ export default function CalendarButton({ onConnectionChange }) {
   async function checkAuthStatus() {
     const authenticated = await isAuthenticated();
     setIsConnected(authenticated);
+    onConnectionChange?.(authenticated);
   }
 
   async function handleConnect() {
