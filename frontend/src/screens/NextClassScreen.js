@@ -47,6 +47,7 @@ function getNextClass(calendars) {
 
 export default function NextClassScreen({ navigation }) {
   const [calendars] = useState(mockCalendars.calendars);
+  const [showDetected, setShowDetected] = useState(false);
   const nextClass = getNextClass(calendars);
 
   function getMinutesUntil(event) {
@@ -57,7 +58,14 @@ export default function NextClassScreen({ navigation }) {
   }
 
   function handleGetDirections() {
-    navigation.navigate('Map');
+    navigation.navigate('Map', {
+      nextClassLocation: nextClass?.location,
+      nextClassSummary: nextClass?.summary,
+    });
+  }
+
+  function handleGoToNextClass() {
+    setShowDetected(true);
   }
 
   return (
@@ -65,8 +73,8 @@ export default function NextClassScreen({ navigation }) {
       <MapView
         style={styles.map}
         initialRegion={campuses.sgw?.region}
-        scrollEnabled={false}
-        zoomEnabled={false}
+        scrollEnabled={true}
+        zoomEnabled={true}
       >
         {campusList.map(campus =>
           campus.buildings.map(building => (
@@ -96,6 +104,15 @@ export default function NextClassScreen({ navigation }) {
               <Text style={styles.profileButtonText}>View Schedule</Text>
             </Pressable>
           </View>
+        ) : !showDetected ? (
+          <Pressable style={styles.goToClassCard} onPress={handleGoToNextClass}>
+            <MaterialIcons name="event-note" size={32} color={MAROON} />
+            <View style={styles.goToClassText}>
+              <Text style={styles.goToClassTitle}>Go to My Next Class</Text>
+              <Text style={styles.goToClassSubtitle}>Based on your schedule</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={28} color={MAROON} />
+          </Pressable>
         ) : (
           <View style={styles.nextClassCard}>
             <View style={styles.detectedRow}>
@@ -155,6 +172,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+  },
+  goToClassCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  goToClassText: {
+    flex: 1,
+  },
+  goToClassTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+  },
+  goToClassSubtitle: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
   },
   noClassTitle: {
     fontSize: 16,
