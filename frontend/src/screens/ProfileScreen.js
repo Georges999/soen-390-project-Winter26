@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  Switch,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import {
@@ -93,15 +92,18 @@ export default function ProfileScreen({ navigation }) {
             <Text style={styles.sectionTitle}>Connected Calendars</Text>
 
             {calendars.map((calendar) => (
-              <View key={calendar.id} style={styles.calendarItem}>
-                <Switch
-                  value={calendar.selected}
-                  onValueChange={() => toggleCalendar(calendar.id)}
-                  trackColor={{ false: '#E0E0E0', true: MAROON }}
-                  thumbColor="#FFF"
-                />
+              <Pressable
+                key={calendar.id}
+                style={styles.calendarItem}
+                onPress={() => toggleCalendar(calendar.id)}
+              >
+                <View style={[styles.checkbox, calendar.selected && styles.checkboxSelected]}>
+                  {calendar.selected && (
+                    <MaterialIcons name="check" size={16} color="#FFF" />
+                  )}
+                </View>
                 <Text style={styles.calendarName}>{calendar.name}</Text>
-              </View>
+              </Pressable>
             ))}
 
             <Pressable style={styles.viewCalendarButton} onPress={handleViewCalendar}>
@@ -206,6 +208,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#CCC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF',
+  },
+  checkboxSelected: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
   },
   calendarName: {
     fontSize: 15,
