@@ -100,13 +100,14 @@ export default function CalendarScreen({ navigation, route }) {
 
       <View style={styles.weekDays}>
         {weekDays.map((date) => {
-          const dayLabel = ['Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay() === 0 ? 6 : date.getDay() - 1];
+          const dayIdx = date.getDay();
+          const dayLabel = ['Mon','Tue','Wed','Thu','Fri','Sat'][(dayIdx === 0 ? 7 : dayIdx) - 1];
           const isSelected = date.toDateString() === selectedDate.toDateString();
           return (
             <Pressable
               key={date.toISOString()}
               style={[styles.weekDay, isSelected && styles.weekDaySelected]}
-              onPress={() => setSelectedDate(date)}
+              onPress={() => setSelectedDate(new Date(date))}
             >
               <Text style={[styles.weekDayText, isSelected && styles.weekDayTextSelected]}>
                 {dayLabel}
