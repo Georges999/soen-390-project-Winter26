@@ -24,10 +24,8 @@ import { useCurrentBuilding } from "../hooks/useCurrentBuilding";
 import { useNavigationSteps } from "../hooks/useNavigationSteps";
 import { useSimulation } from "../hooks/useSimulation";
 import { useUserLocation } from "../hooks/useUserLocation";
-import {
-  buildDotCoords,
-  getPolygonCenter,
-} from "../utils/geoUtils";
+import { getPolygonCenter } from "../utils/geoUtils";
+import { getRoute, getRoutingStrategy } from "../routing/routeStrategy";
 import { normalizeText, stripHtml } from "../utils/textUtils";
 import {
   getShuttleDepartures,
@@ -472,93 +470,59 @@ export default function MapScreen({ route }) {
     fitToRoute: false,
   });
 
-  //connecting 3 shuttle segments together
-  const snappedShuttleSegments = useMemo(() => {
-    if (!isActiveShuttleTrip) {
-      return {
-        walkTo: Array.isArray(walkToShuttleCoords) ? walkToShuttleCoords : [],
-        ride: Array.isArray(shuttleRideCoords) ? shuttleRideCoords : [],
-        walkFrom: Array.isArray(walkFromShuttleCoords)
-          ? walkFromShuttleCoords
-          : [],
-      };
-    }
+  const routingStrategy = useMemo(
+    () =>
+      getRoutingStrategy({
+        travelMode,
+        transitSubMode,
+        isCrossCampusTrip,
+      }),
+    [travelMode, transitSubMode, isCrossCampusTrip],
+  );
 
-    const walkTo = Array.isArray(walkToShuttleCoords)
-      ? [...walkToShuttleCoords]
-      : [];
-    const ride = Array.isArray(shuttleRideCoords) ? [...shuttleRideCoords] : [];
-    const walkFrom = Array.isArray(walkFromShuttleCoords)
-      ? [...walkFromShuttleCoords]
-      : [];
+  const routingResult = useMemo(
+    () =>
+      getRoute({
+        strategy: routingStrategy,
+        travelMode,
+        transitSubMode,
+        isCrossCampusTrip,
+        isActiveShuttleTrip,
+        baseRouteCoords,
+        baseRouteInfo,
+        routeOptions,
+        shuttleRideInfo,
+        walkToShuttleCoords,
+        shuttleRideCoords,
+        walkFromShuttleCoords,
+      }),
+    [
+      routingStrategy,
+      travelMode,
+      transitSubMode,
+      isCrossCampusTrip,
+      isActiveShuttleTrip,
+      baseRouteCoords,
+      baseRouteInfo,
+      routeOptions,
+      shuttleRideInfo,
+      walkToShuttleCoords,
+      shuttleRideCoords,
+      walkFromShuttleCoords,
+    ],
+  );
 
-    //boundaries -> End of walk-to is forced to equal start of ride & Start of walk-from is forced to equal end of ride
-    if (walkTo.length > 0 && ride.length > 0) {
-      walkTo[walkTo.length - 1] = ride[0];
-    }
-    if (walkFrom.length > 0 && ride.length > 0) {
-      walkFrom[0] = ride[ride.length - 1];
-    }
-
-    return { walkTo, ride, walkFrom };
-  }, [
-    isActiveShuttleTrip,
-    walkToShuttleCoords,
-    shuttleRideCoords,
-    walkFromShuttleCoords,
-  ]);
-
-  //one final shuttle route polyline by combining 3 segments
-  const shuttleCompositeCoords = useMemo(() => {
-    if (!isActiveShuttleTrip) return [];
-    const chunks = [
-      snappedShuttleSegments.walkTo,
-      snappedShuttleSegments.ride,
-      snappedShuttleSegments.walkFrom,
-    ].filter((c) => Array.isArray(c) && c.length > 0);
-    if (chunks.length === 0) return [];
-
-    const merged = [];
-    chunks.forEach((chunk) => {
-      chunk.forEach((point) => {
-        const prev = merged[merged.length - 1];
-        //Skip duplicate boundary points -> If new point equals last added point, skip it
-        if (
-          prev &&
-          prev.latitude === point.latitude &&
-          prev.longitude === point.longitude
-        ) {
-          return;
-        }
-        merged.push(point);
-      });
-    });
-    return merged;
-  }, [isActiveShuttleTrip, snappedShuttleSegments]);
-
-  //creates many small points every ~3 meters along that segment
-  const shuttleWalkDotCoords = useMemo(() => {
-    if (!isActiveShuttleTrip) return [];
-    return [
-      ...buildDotCoords(snappedShuttleSegments.walkTo, 3),
-      ...buildDotCoords(snappedShuttleSegments.walkFrom, 3),
-    ];
-  }, [isActiveShuttleTrip, snappedShuttleSegments]);
-
-  //prepare shuttle ride data in the format expected by render code
-  const shuttleRideSegments = useMemo(() => {
-    if (!isActiveShuttleTrip) return [];
-    return Array.isArray(snappedShuttleSegments.ride) &&
-      snappedShuttleSegments.ride.length > 1
-      ? [snappedShuttleSegments.ride] //wrap it in another array if valid
-      : [];
-  }, [isActiveShuttleTrip, snappedShuttleSegments]);
-
-  const routeCoords = isActiveShuttleTrip
-    ? shuttleCompositeCoords
-    : baseRouteCoords;
-  const routeInfo = isActiveShuttleTrip ? shuttleRideInfo : baseRouteInfo;
+  const routeCoords = routingResult.routeCoords;
+  const routeInfo = routingResult.routeInfo;
+  const strategyRouteOptions = routingResult.routeOptions;
   const safeRouteCoords = Array.isArray(routeCoords) ? routeCoords : [];
+  const routeRenderMode = routingResult.render?.mode ?? "solid";
+  const routeRideSegments = Array.isArray(routingResult.render?.rideSegments)
+    ? routingResult.render.rideSegments
+    : [];
+  const routeWalkDotCoords = Array.isArray(routingResult.render?.walkDotCoords)
+    ? routingResult.render.walkDotCoords
+    : [];
 
   const { isSimulating, simulatedCoord, stopSim, toggleSim } = useSimulation({
     routeCoords: safeRouteCoords,
@@ -599,39 +563,6 @@ export default function MapScreen({ route }) {
       animated: true,
     });
   }, [isActiveShuttleTrip, safeRouteCoords]);
-
-  const walkingDotCoords = useMemo(() => {
-    if (travelMode !== "walking") return [];
-    return buildDotCoords(safeRouteCoords, 3);
-  }, [travelMode, safeRouteCoords]);
-
-  const transitWalkingDotCoords = useMemo(() => {
-    if (travelMode !== "transit") return [];
-    const steps = Array.isArray(routeInfo?.steps) ? routeInfo.steps : [];
-
-    return steps
-      .filter(
-        (step) =>
-          String(step?.travelMode || "").toUpperCase() === "WALKING" &&
-          Array.isArray(step?.coords) &&
-          step.coords.length > 1,
-      )
-      .flatMap((step) => buildDotCoords(step.coords, 3)); //For each walking step -> generate dot points every 3m
-  }, [travelMode, routeInfo]);
-
-  const transitRideSegments = useMemo(() => {
-    if (travelMode !== "transit") return [];
-    const steps = Array.isArray(routeInfo?.steps) ? routeInfo.steps : [];
-
-    return steps
-      .filter(
-        (step) =>
-          String(step?.travelMode || "").toUpperCase() !== "WALKING" &&
-          Array.isArray(step?.coords) &&
-          step.coords.length > 1,
-      )
-      .map((step) => step.coords);
-  }, [travelMode, routeInfo]);
 
   const canShowDirectionsPanel = Boolean(
     showDirectionsPanel && startCoord && destCoord,
@@ -905,7 +836,7 @@ export default function MapScreen({ route }) {
 
           {/* Draw the path */}
           {safeRouteCoords.length > 0 &&
-            (travelMode === "walking" ? (
+            (routeRenderMode === "walking" ? (
               <>
                 <Polyline
                   testID="route-polyline"
@@ -913,7 +844,7 @@ export default function MapScreen({ route }) {
                   strokeWidth={6}
                   strokeColor="rgba(37, 99, 235, 0.15)"
                 />
-                {walkingDotCoords.map((dot, idx) => (
+                {routeWalkDotCoords.map((dot, idx) => (
                   <Circle
                     key={`walk-dot-${idx}`}
                     center={dot}
@@ -926,20 +857,20 @@ export default function MapScreen({ route }) {
               </>
             ) : (
               <>
-                {isActiveShuttleTrip ? (
+                {routeRenderMode === "mixed" ? (
                   <>
-                    {shuttleRideSegments.map((segment, idx) => (
+                    {routeRideSegments.map((segment, idx) => (
                       <Polyline
-                        key={`shuttle-ride-${idx}`}
+                        key={`route-ride-${idx}`}
                         testID={idx === 0 ? "route-polyline" : undefined}
                         coordinates={segment}
                         strokeWidth={5}
                         strokeColor="#2563eb"
                       />
                     ))}
-                    {shuttleWalkDotCoords.map((dot, idx) => (
+                    {routeWalkDotCoords.map((dot, idx) => (
                       <Circle
-                        key={`shuttle-walk-dot-${idx}`}
+                        key={`route-walk-dot-${idx}`}
                         center={dot}
                         radius={1}
                         fillColor="#2563eb"
@@ -949,51 +880,12 @@ export default function MapScreen({ route }) {
                     ))}
                   </>
                 ) : (
-                  <>
-                    {(() => {
-                      const isMixedMode = travelMode === "transit";
-                      const hasSegmentData =
-                        transitRideSegments.length > 0 ||
-                        transitWalkingDotCoords.length > 0;
-
-                      if (isMixedMode && hasSegmentData) {
-                        return (
-                          <>
-                            {transitRideSegments.map((segment, idx) => (
-                              <Polyline
-                                key={`transit-ride-${idx}`}
-                                testID={
-                                  idx === 0 ? "route-polyline" : undefined
-                                }
-                                coordinates={segment}
-                                strokeWidth={5}
-                                strokeColor="#2563eb"
-                              />
-                            ))}
-                            {transitWalkingDotCoords.map((dot, idx) => (
-                              <Circle
-                                key={`transit-walk-dot-${idx}`}
-                                center={dot}
-                                radius={1}
-                                fillColor="#2563eb"
-                                strokeColor="#2563eb"
-                                strokeWidth={1}
-                              />
-                            ))}
-                          </>
-                        );
-                      }
-
-                      return (
-                        <Polyline
-                          testID="route-polyline"
-                          coordinates={safeRouteCoords}
-                          strokeWidth={5}
-                          strokeColor="#2563eb"
-                        />
-                      );
-                    })()}
-                  </>
+                  <Polyline
+                    testID="route-polyline"
+                    coordinates={safeRouteCoords}
+                    strokeWidth={5}
+                    strokeColor="#2563eb"
+                  />
                 )}
               </>
             ))}
@@ -1022,7 +914,7 @@ export default function MapScreen({ route }) {
             setIsShuttleModalOpen={setIsShuttleModalOpen}
             isTransitCollapsed={isTransitCollapsed}
             setIsTransitCollapsed={setIsTransitCollapsed}
-            routeOptions={routeOptions}
+            routeOptions={strategyRouteOptions}
             transitRouteIndex={transitRouteIndex}
             setTransitRouteIndex={setTransitRouteIndex}
             routeInfo={routeInfo}
