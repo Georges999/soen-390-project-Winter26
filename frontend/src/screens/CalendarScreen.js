@@ -12,11 +12,19 @@ import mockCalendars from '../data/mockCalendars.json';
 const MAROON = '#95223D';
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function CalendarScreen({ navigation }) {
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 1, 4)); // Wed Feb 4, 2026
+function getByDay(recurrenceString) {
+  const match = recurrenceString.match(/BYDAY=([A-Z,]+)/);
+  if (!match) return [];
+  return match[1].split(',');
+}
 
-  const selectedCalendar = mockCalendars.calendars.find(cal => cal.selected);
-  const events = selectedCalendar?.events || [];
+export default function CalendarScreen({ navigation, route }) {
+  const [selectedDate, setSelectedDate] = useState(new Date(2026, 1, 4));
+
+  // Accept calendars from ProfileScreen or fall back to JSON
+  const calendarState = route?.params?.calendars || mockCalendars.calendars;
+  const selectedCalendars = calendarState.filter(cal => cal.selected);
+  const events = selectedCalendars.flatMap(cal => cal.events || []);
 
   const dayOfWeek = selectedDate.getDay();
   const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
@@ -24,12 +32,11 @@ export default function CalendarScreen({ navigation }) {
 
   const todaysClasses = events.filter(event => {
     const recurrence = event.recurrence?.[0] || '';
-    return recurrence.includes(selectedDayCode);
-  }).sort((a, b) => {
-    const timeA = new Date(a.start.dateTime).getTime();
-    const timeB = new Date(b.start.dateTime).getTime();
-    return timeA - timeB;
-  });
+    const byDays = getByDay(recurrence);
+    return byDays.includes(selectedDayCode);
+  }).sort((a, b) =>
+    new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime()
+  );
 
   function formatTime(dateString) {
     const date = new Date(dateString);
