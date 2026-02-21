@@ -284,7 +284,7 @@ export default function MapScreen({ route }) {
   useEffect(() => {
     const location = route?.params?.nextClassLocation;
     const summary = route?.params?.nextClassSummary;
-    if (!location || !summary) return;
+    if (!location) return;
 
     setDestText(location);
     setStartText("My location");
