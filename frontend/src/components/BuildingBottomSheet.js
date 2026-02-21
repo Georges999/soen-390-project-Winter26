@@ -71,7 +71,9 @@ export default function BuildingBottomSheet({
                 <View style={styles.amenityRow}>
                   <View style={styles.amenityLeft}>
                     <MaterialIcons name="wc" size={16} color={maroon} />
-                    <Text style={styles.amenityLabel}>Gender-neutral bathrooms</Text>
+                    <Text style={styles.amenityLabel}>
+                      Gender-neutral bathrooms
+                    </Text>
                   </View>
                   <Text style={styles.amenityValue}>
                     {a.genderNeutralBathrooms ? "Yes" : "No"}
@@ -80,7 +82,9 @@ export default function BuildingBottomSheet({
                 <View style={styles.amenityRow}>
                   <View style={styles.amenityLeft}>
                     <MaterialIcons name="accessible" size={16} color={maroon} />
-                    <Text style={styles.amenityLabel}>Wheelchair accessible</Text>
+                    <Text style={styles.amenityLabel}>
+                      Wheelchair accessible
+                    </Text>
                   </View>
                   <Text style={styles.amenityValue}>
                     {a.wheelchairAccessible ? "Yes" : "No"}
