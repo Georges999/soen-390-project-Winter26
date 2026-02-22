@@ -1,0 +1,38 @@
+appId: host.exp.Exponent
+---
+# open project -> Profile tab
+- launchApp
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "tab-profile"
+    timeout: 25000
+- tapOn:
+    id: "tab-profile"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Sync Your Class"
+    timeout: 12000
+- runFlow:
+    when:
+      visible: "Disconnect"
+    commands:
+      - tapOn: "Disconnect"
+      - waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Connect"
+    commands:
+      - tapOn: "Connect"
+      - waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Connected Calendars"
+    timeout: 15000
