@@ -5,9 +5,9 @@ appId: host.exp.Exponent
 
 # Open app from Expo client
 - extendedWaitUntil:
-    visible: "campus-guide"
+    visible: "Campus Guide"
     timeout: 30000
-- tapOn: "campus-guide"
+- tapOn: "Campus Guide"
 
 # Ensure we're on SGW tab
 - extendedWaitUntil:
@@ -67,6 +67,10 @@ appId: host.exp.Exponent
 - assertVisible:
     id: "route-polyline"
 
+- assertVisible: ", Car"
+- tapOn: ", Car"
+- waitForAnimationToEnd
+- assertVisible: { id: "route-polyline" }
 # =========
 # D) Support SGW -> Loyola (example: Hall -> Loyola Admin)
 # =========

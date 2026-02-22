@@ -7,9 +7,9 @@ appId: host.exp.Exponent
 - waitForAnimationToEnd
 
 - extendedWaitUntil:
-    visible: "campus-guide"
+    visible: "Campus Guide"
     timeout: 30000
-- tapOn: "campus-guide"
+- tapOn: "Campus Guide"
 - waitForAnimationToEnd
 
 # Ensure SGW tab

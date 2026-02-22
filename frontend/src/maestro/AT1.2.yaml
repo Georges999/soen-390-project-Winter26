@@ -21,17 +21,17 @@ appId: host.exp.Exponent
 
 - tapOn:
     id: "VKPointFeature"
-    index: 26
+    index: 24
 - waitForAnimationToEnd
 
-- runFlow:
-    when:
-      notVisible: "HENRY F. HALL BUILDING"
-    commands:
-      - tapOn:
-          id: "VKPointFeature"
-          index: 27
-      - waitForAnimationToEnd
+# - runFlow:
+#     when:
+#       notVisible: "HENRY F. HALL BUILDING"
+#     commands:
+#       - tapOn:
+#           id: "VKPointFeature"
+#           index: 20
+#       - waitForAnimationToEnd
 
 - extendedWaitUntil:
     visible: "HENRY F. HALL BUILDING"

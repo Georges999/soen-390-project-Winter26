@@ -5,9 +5,9 @@ appId: host.exp.Exponent
 
 # Open Expo project
 - extendedWaitUntil:
-    visible: "campus-guide"
+    visible: "Campus Guide"
     timeout: 30000
-- tapOn: "campus-guide"
+- tapOn: "Campus Guide"
 
 # AC1: SGW loads by default (toggle visible)
 - extendedWaitUntil:
@@ -20,18 +20,9 @@ appId: host.exp.Exponent
 # (Index can shift, so we try 2 likely candidates only)
 - tapOn:
     id: "VKPointFeature"
-    index: 26
+    index: 24
 - waitForAnimationToEnd
 
-- runFlow:
-    when:
-      notVisible: "HENRY F. HALL BUILDING"
-    commands:
-      - waitForAnimationToEnd
-      - tapOn:
-          id: "VKPointFeature"
-          index: 27
-      - waitForAnimationToEnd
 
 - extendedWaitUntil:
     visible: "HENRY F. HALL BUILDING"
