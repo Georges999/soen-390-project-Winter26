@@ -7,7 +7,9 @@ jest.mock('react-native-maps', () => {
   class MockMapView extends React.Component {
     // This allows the test to spy on the call
     static animateToRegion = jest.fn();
+    static fitToCoordinates = jest.fn();
     animateToRegion = (...args) => MockMapView.animateToRegion(...args);
+    fitToCoordinates = (...args) => MockMapView.fitToCoordinates(...args);
 
     render() {
       return <View {...this.props}>{this.props.children}</View>;
@@ -33,7 +35,7 @@ jest.mock('react-native-maps', () => {
 jest.mock('expo-speech', () => ({
   speak: jest.fn(),
   stop: jest.fn(),
-}));
+}), { virtual: true });
 
 
 // Mock expo-vector-icons virtually
@@ -41,9 +43,9 @@ jest.mock('@expo/vector-icons', () => {
   const React = require('react');
   const { Text } = require('react-native');
   return {
-    MaterialIcons: (props) => <Text {...props} />,
-    Ionicons: (props) => <Text {...props} />,
-    FontAwesome5: (props) => <Text {...props} />,
+    MaterialIcons: ({ name, ...rest }) => <Text {...rest}>{name}</Text>,
+    Ionicons: ({ name, ...rest }) => <Text {...rest}>{name}</Text>,
+    FontAwesome5: ({ name, ...rest }) => <Text {...rest}>{name}</Text>,
   };
 }, { virtual: true });
 
@@ -73,4 +75,32 @@ jest.mock('expo-location', () => ({
       },
     })
   ),
+  watchPositionAsync: jest.fn(() => Promise.resolve({ remove: jest.fn() })),
 }));
+
+jest.mock('expo-auth-session', () => ({
+  AuthRequest: jest.fn().mockImplementation(() => ({
+    codeVerifier: 'test_verifier',
+    promptAsync: jest.fn().mockResolvedValue({ type: 'success', params: { code: 'test_code' } }),
+  })),
+  ResponseType: { Code: 'code' },
+  exchangeCodeAsync: jest.fn().mockResolvedValue({
+    accessToken: 'test_access_token',
+    refreshToken: 'test_refresh_token',
+    expiresIn: 3600,
+  }),
+  refreshAsync: jest.fn().mockResolvedValue({
+    accessToken: 'refreshed_access_token',
+    expiresIn: 3600,
+  }),
+}), { virtual: true });
+
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+}), { virtual: true });
+
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn(() => Promise.resolve()),
+  getItemAsync: jest.fn(() => Promise.resolve(null)),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+}), { virtual: true });
