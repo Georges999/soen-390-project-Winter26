@@ -1,13 +1,13 @@
-appId: host.exp.Exponent
+appId: host.exp.exponent
 ---
 - launchApp
 - waitForAnimationToEnd
 
 # Open app from Expo client
 - extendedWaitUntil:
-    visible: "campus-guide-frontend"
+    visible: "campus-guide"
     timeout: 30000
-- tapOn: "campus-guide-frontend"
+- tapOn: "campus-guide"
 
 # Ensure we're on SGW tab
 - extendedWaitUntil:

@@ -1,4 +1,4 @@
-appId: host.exp.Exponent
+appId: host.exp.exponent
 ---
 # ----------------
 # Launch + open app
@@ -7,9 +7,9 @@ appId: host.exp.Exponent
 - waitForAnimationToEnd
 
 - extendedWaitUntil:
-    visible: "campus-guide-frontend"
+    visible: "campus-guide"
     timeout: 30000
-- tapOn: "campus-guide-frontend"
+- tapOn: "campus-guide"
 - waitForAnimationToEnd
 
 # Ensure SGW tab

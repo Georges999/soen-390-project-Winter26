@@ -1,4 +1,4 @@
-appId: host.exp.Exponent
+appId: host.exp.exponent
 ---
 # ============================================================
 # FINAL TRANSIT + SHUTTLE SYSTEM TEST (LOCKED SELECTORS)
@@ -10,9 +10,9 @@ appId: host.exp.Exponent
 - waitForAnimationToEnd
 
 - extendedWaitUntil:
-    visible: "campus-guide-frontend"
+    visible: "campus-guide"
     timeout: 30000
-- tapOn: "campus-guide-frontend"
+- tapOn: "campus-guide"
 - waitForAnimationToEnd
 
 - extendedWaitUntil:
