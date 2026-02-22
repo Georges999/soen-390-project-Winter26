@@ -11,7 +11,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
 import CampusToggle from "../components/CampusToggle";
-import CalendarButton from "../components/CalendarButton";
 import SearchBox from "../components/SearchBox";
 import BuildingBottomSheet from "../components/BuildingBottomSheet";
 import DirectionsPanel from "../components/DirectionsPanel";
@@ -54,7 +53,7 @@ const getAmenities = (building) => {
   };
 };
 
-export default function MapScreen() {
+export default function MapScreen({ route }) {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -95,6 +94,18 @@ export default function MapScreen() {
   const simActiveRef = useRef(false);
 
   const mapRef = useRef(null);
+
+  // Pre-fill destination from Next Class tab
+  useEffect(() => {
+    const location = route?.params?.nextClassLocation;
+    const summary = route?.params?.nextClassSummary;
+    if (!location || !summary) return;
+
+    setDestText(location);
+    setStartText('My location');
+    if (userCoord) setStartCoord(userCoord);
+    setHasInteracted(true);
+  }, [route?.params]);
 
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
@@ -785,14 +796,6 @@ export default function MapScreen() {
         }}
       />
 
-      <View style={styles.calendarButtonContainer}>
-        <CalendarButton onConnectionChange={(connected) => {
-          if (connected) {
-            setHasInteracted(true);
-          }
-        }} />
-      </View>
-
       <View style={{ flex: 1 }}>
         {/* red input box */}
         <SearchBox
@@ -1138,11 +1141,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
     backgroundColor: "#fff",
-  },
-  calendarButtonContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 4,
   },
   title: { fontSize: 26, fontWeight: "700", color: MAROON },
   subtitle: { marginTop: 4, fontSize: 15, color: "#666" },
