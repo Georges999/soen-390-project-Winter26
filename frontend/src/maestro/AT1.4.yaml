@@ -1,0 +1,52 @@
+appId: host.exp.Exponent
+---
+- launchApp
+- waitForAnimationToEnd
+
+# Open Expo project
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+
+# Wait for SGW tab
+- extendedWaitUntil:
+    visible: "SGW"
+    timeout: 30000
+- tapOn: "SGW"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Attempt 1: Tap Hall feature (index may vary on other devices)
+- tapOn:
+    id: "VKPointFeature"
+    index: 26
+- waitForAnimationToEnd
+
+- runFlow:
+    when:
+      notVisible: "HENRY F. HALL BUILDING"
+    commands:
+      - tapOn:
+          id: "VKPointFeature"
+          index: 27
+      - waitForAnimationToEnd
+
+# Wait for popup
+- extendedWaitUntil:
+    visible: "HENRY F. HALL BUILDING"
+    timeout: 15000
+
+# Assertions (exact strings from hierarchy)
+- assertVisible: "HENRY F. HALL BUILDING"
+- assertVisible: "1455 DeMaisonneuve W"
+- assertVisible: "Directions"
+
+# Close popup
+- assertVisible: "✕"
+- tapOn: "✕"
+- tapOn: "✕"
+
+
+# Verify closed
+- assertNotVisible: "HENRY F. HALL BUILDING"
