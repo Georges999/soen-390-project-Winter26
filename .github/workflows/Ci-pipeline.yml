@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Run tests with coverage
         working-directory: frontend
@@ -106,3 +106,4 @@ jobs:
 
       - name: Report link
         run: bash .github/scripts/sonarcloud-report-link.sh
+        
