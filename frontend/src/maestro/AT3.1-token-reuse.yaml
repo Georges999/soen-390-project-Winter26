@@ -1,0 +1,19 @@
+appId: host.exp.Exponent
+---
+# Token reuse after app restart
+- stopApp
+- launchApp
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+- tapOn:
+    id: "tab-profile"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Google Calendar Connected"
+    timeout: 8000
+- assertVisible: "Google Calendar Connected"
+- assertVisible: "Disconnect"

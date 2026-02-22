@@ -45,6 +45,8 @@ export default function MainNavigator() {
         name="Map"
         component={MapScreen}
         options={{
+          tabBarTestID: 'tab-map',
+          tabBarAccessibilityLabel: 'tab-map',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="map" size={size} color={color} />
           ),
@@ -64,6 +66,8 @@ export default function MainNavigator() {
         name="Profile"
         component={ProfileStack}
         options={{
+          tabBarTestID: 'tab-profile',
+          tabBarAccessibilityLabel: 'tab-profile',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="person" size={size} color={color} />
           ),

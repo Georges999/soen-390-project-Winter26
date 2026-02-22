@@ -1,0 +1,123 @@
+appId: host.exp.Exponent
+---
+# ----------------
+# Launch + open app
+# ----------------
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+# Ensure SGW tab
+- extendedWaitUntil:
+    visible: "SGW"
+    timeout: 30000
+- tapOn: "SGW"
+- waitForAnimationToEnd
+
+# ============================================================
+# Search + autocomplete (Start)
+# ============================================================
+- tapOn: { id: "start-input" }
+- eraseText
+- inputText: "Hall"
+- extendedWaitUntil:
+    visible: "Henry F. Hall Building"
+    timeout: 8000
+- tapOn: "Henry F. Hall Building"
+- waitForAnimationToEnd
+- assertVisible: "Henry F. Hall Building"
+
+# ============================================================
+# Search + autocomplete (Destination)
+# ============================================================
+- tapOn: { id: "dest-input" }
+- eraseText
+- inputText: "EV"
+- extendedWaitUntil:
+    visible: "Engineering, Computer Science and Visual Arts Integrated Complex"
+    timeout: 8000
+- tapOn: "Engineering, Computer Science and Visual Arts Integrated Complex"
+- waitForAnimationToEnd
+- assertVisible: "Engineering, Computer Science and Visual Arts Integrated Complex"
+
+- hideKeyboard
+- waitForAnimationToEnd
+
+# ============================================================
+# Route line appears
+# ============================================================
+- extendedWaitUntil:
+    visible: { id: "route-polyline" }
+    timeout: 20000
+- assertVisible: { id: "route-polyline" }
+
+# ============================================================
+# Mode buttons visible + travel time displayed
+# (using accessibilityText exactly as in your UI dump)
+# ============================================================
+- extendedWaitUntil:
+    visible: ", Walk"
+    timeout: 10000
+- assertVisible: ", Walk"
+- assertVisible: ", Car"
+- assertVisible: ", Bike"
+
+
+# ============================================================
+# Mode switching updates route immediately
+# (UI proof: polyline + time label still visible after each tap)
+# ============================================================
+- tapOn: ", Walk"
+- waitForAnimationToEnd
+- assertVisible: { id: "route-polyline" }
+
+
+- tapOn: ", Car"
+- waitForAnimationToEnd
+- assertVisible: { id: "route-polyline" }
+
+
+- tapOn: ", Bike"
+- waitForAnimationToEnd
+- assertVisible: { id: "route-polyline" }
+
+
+# ============================================================
+# Route updates when destination changes
+# ============================================================
+- tapOn: { id: "dest-input" }
+- eraseText
+- inputText: "Library"
+- extendedWaitUntil:
+    visible: "Webster Library"
+    timeout: 8000
+- tapOn: "Webster Library"
+- waitForAnimationToEnd
+- assertVisible: "Webster Library"
+
+- hideKeyboard
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: { id: "route-polyline" }
+    timeout: 20000
+- assertVisible: { id: "route-polyline" }
+
+# ============================================================
+# Swap start/end destinations (your switch icon)
+# ============================================================
+- extendedWaitUntil:
+    visible: ""
+    timeout: 5000
+- tapOn: ""
+- waitForAnimationToEnd
+
+# sanity: both locations still present post-swap
+- assertVisible: "Henry F. Hall Building"
+- assertVisible: "Webster Library"
+

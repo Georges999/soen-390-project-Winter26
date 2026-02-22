@@ -1,0 +1,91 @@
+appId: host.exp.Exponent
+---
+# ============================================================
+# FINAL TRANSIT + SHUTTLE SYSTEM TEST (LOCKED SELECTORS)
+# + Close Shuttle (✕) and Switch to Public
+# ============================================================
+
+# ---------------- Launch ----------------
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "SGW"
+    timeout: 30000
+- tapOn: "SGW"
+- waitForAnimationToEnd
+
+# ---------------- Setup Route ----------------
+- tapOn: { id: "start-input" }
+- eraseText
+- inputText: "Hall"
+- extendedWaitUntil:
+    visible: "Henry F. Hall Building"
+    timeout: 8000
+- tapOn: "Henry F. Hall Building"
+- waitForAnimationToEnd
+
+- tapOn: { id: "dest-input" }
+- eraseText
+- inputText: "Administration"
+- extendedWaitUntil:
+    visible: "Administration Building"
+    timeout: 8000
+- tapOn: "Administration Building"
+- waitForAnimationToEnd
+
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Route exists
+- extendedWaitUntil:
+    visible: { id: "route-polyline" }
+    timeout: 20000
+- assertVisible: { id: "route-polyline" }
+
+# ---------------- Select Transit ----------------
+- extendedWaitUntil:
+    visible: ", Transit"
+    timeout: 10000
+- assertVisible: ", Transit"
+- tapOn: ", Transit"
+- waitForAnimationToEnd
+
+# ---------------- Shuttle + Public options exist ----------------
+- extendedWaitUntil:
+    visible: "Shuttle"
+    timeout: 10000
+- assertVisible: "Shuttle"
+- assertVisible: "Public"
+
+# ---------------- Select Shuttle ----------------
+- tapOn: "Shuttle"
+- waitForAnimationToEnd
+
+
+# ============================================================
+# Close Shuttle (✕)
+# ============================================================
+- extendedWaitUntil:
+    visible: "X"
+    timeout: 5000
+- tapOn: "X"
+- waitForAnimationToEnd
+
+# ============================================================
+# Select Public
+# ============================================================
+- tapOn: "Public"
+- waitForAnimationToEnd
+
+# Route should still render under Public mode
+- extendedWaitUntil:
+    visible: { id: "route-polyline" }
+    timeout: 20000
+- assertVisible: { id: "route-polyline" }

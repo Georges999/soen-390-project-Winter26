@@ -1,0 +1,36 @@
+appId: host.exp.Exponent
+---
+# Connect to Google Calendar
+- launchApp
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "tab-profile"
+    timeout: 25000
+- tapOn:
+    id: "tab-profile"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Sync Your Class"
+    timeout: 12000
+- tapOn:
+    text: "Connect"
+- waitForAnimationToEnd
+- tapOn: "View Calendar"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Calendar"
+    timeout: 8000
+- assertVisible: "Calendar"
+- tapOn:
+    id: "tab-profile"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Google Calendar Connected"
+    timeout: 8000
+

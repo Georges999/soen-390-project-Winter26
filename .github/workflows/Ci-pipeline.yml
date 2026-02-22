@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
       - name: Run tests with coverage
         working-directory: frontend
@@ -96,6 +96,7 @@ jobs:
             -v "$PWD:/usr/src" -w /usr/src \
             -e SONAR_TOKEN="$SONAR_TOKEN" \
             sonarsource/sonar-scanner-cli:latest \
+            -Dproject.settings=frontend/sonar-project.properties \
             $EXTRA
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -106,3 +107,4 @@ jobs:
 
       - name: Report link
         run: bash .github/scripts/sonarcloud-report-link.sh
+        
