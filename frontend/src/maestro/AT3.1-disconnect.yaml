@@ -1,0 +1,9 @@
+appId: host.exp.Exponent
+---
+# Disconnect / revoke
+- tapOn: "Disconnect"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Connect Google Calendar"
+    timeout: 8000
+- assertVisible: "Connect"
