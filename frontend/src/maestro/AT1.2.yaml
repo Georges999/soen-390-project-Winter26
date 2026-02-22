@@ -5,9 +5,9 @@ appId: host.exp.Exponent
 
 # Open Expo project
 - extendedWaitUntil:
-    visible: "campus-guide"
+    visible: "Campus Guide"
     timeout: 30000
-- tapOn: "campus-guide"
+- tapOn: "Campus Guide"
 
 # Wait for SGW default
 - extendedWaitUntil:
