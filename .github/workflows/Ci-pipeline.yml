@@ -87,14 +87,22 @@ jobs:
 
       - name: SonarCloud scan
         run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            EXTRA="-Dsonar.pullrequest.key=$PR_NUMBER -Dsonar.pullrequest.branch=$PR_BRANCH -Dsonar.pullrequest.base=$PR_BASE"
+          else
+            EXTRA="-Dsonar.branch.name=$BRANCH_NAME"
+          fi
           docker run --rm \
             -v "$PWD:/usr/src" -w /usr/src \
             -e SONAR_TOKEN="$SONAR_TOKEN" \
             sonarsource/sonar-scanner-cli:latest \
-            -Dsonar.branch.name="$BRANCH_NAME"
+            $EXTRA
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.head_ref }}
+          PR_BASE: ${{ github.base_ref }}
 
       - name: Report link
         run: bash .github/scripts/sonarcloud-report-link.sh
