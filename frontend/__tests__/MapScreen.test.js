@@ -12,6 +12,10 @@ jest.mock('expo-speech', () => ({
 }));
 
 global.fetch = jest.fn();
+global.fetch = jest.fn();
+global.fetch = jest.fn();
+global.fetch = jest.fn();
+global.fetch = jest.fn();
 
 
 
