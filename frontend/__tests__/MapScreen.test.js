@@ -13,6 +13,7 @@ jest.mock('expo-speech', () => ({
 
 global.fetch = jest.fn();
 
+
 describe('MapScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
