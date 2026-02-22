@@ -86,18 +86,6 @@ export default function MapScreen({ route }) {
 
   const mapRef = useRef(null);
 
-  // Pre-fill destination from Next Class tab
-  useEffect(() => {
-    const location = route?.params?.nextClassLocation;
-    const summary = route?.params?.nextClassSummary;
-    if (!location || !summary) return;
-
-    setDestText(location);
-    setStartText('My location');
-    if (userCoord) setStartCoord(userCoord);
-    setHasInteracted(true);
-  }, [route?.params]);
-
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
     () => campusList.find((campus) => campus.id === selectedCampusId),
@@ -275,6 +263,31 @@ export default function MapScreen({ route }) {
   }, [activeField, startText, destText]);
 
   //building open and user selects “Directions”
+  // Pre-fill destination from Calendar/Next Class and resolve to coords so directions run
+  useEffect(() => {
+    const location = route?.params?.nextClassLocation;
+    const summary = route?.params?.nextClassSummary;
+    if (!location) return;
+
+    setDestText(location);
+    setStartText("My location");
+    setHasInteracted(true);
+    setShowDirectionsPanel(true);
+    if (userCoord) setStartCoord(userCoord);
+
+    const code = String(location).trim().split(/\s+/)[0];
+    if (code) {
+      const building = allBuildings.find(
+        (b) => (b.label || "").toUpperCase() === code.toUpperCase()
+      );
+      if (building) {
+        const center = getPolygonCenter(building.coordinates);
+        if (center) setDestCoord(center);
+        setDestCampusId(building.__campusId ?? null);
+      }
+    }
+  }, [route?.params, userCoord, allBuildings]);
+
   const setDestinationToSelectedBuilding = () => {
     if (!selectedBuilding) return;
 
