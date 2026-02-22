@@ -1,4 +1,4 @@
-appId: host.exp.exponent
+appId: host.exp.Exponent
 ---
 - launchApp
 - waitForAnimationToEnd
