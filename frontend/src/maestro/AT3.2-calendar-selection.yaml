@@ -1,0 +1,26 @@
+appId: host.exp.Exponent
+---
+# Turn Winter OFF, Fall ON
+- tapOn:
+    point: "10%,38%" # Winter checkbox
+- tapOn:
+    point: "10%,48%" # Fall checkbox
+
+- tapOn: "View Calendar"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Calendar"
+    timeout: 10000
+- assertVisible: "Calendar"
+
+# pick Monday
+- tapOn:
+    point: "12%,24%" # Mon
+- assertVisible: "COMP 352 - Lecture"
+- assertNotVisible: "SOEN 343 - Lecture"
+
+# invalid/empty selection for a day of the week where there are no classes scheduled
+- tapOn:
+    point: "88%,24%" # Sat
+- assertVisible: "Calendar"
+- assertVisible: "No classes scheduled for this day"

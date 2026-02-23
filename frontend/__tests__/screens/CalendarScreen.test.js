@@ -22,11 +22,13 @@ describe('CalendarScreen', () => {
   });
 
   it('should display current date number', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-02-23T12:00:00Z'));
     const today = new Date();
-    const { getByText } = render(
+    const { getAllByText } = render(
       <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
     );
-    expect(getByText(String(today.getDate()))).toBeTruthy();
+    expect(getAllByText(String(today.getDate())).length).toBeGreaterThan(0);
+    jest.useRealTimers();
   });
 
   it('should display Time and Course headers', () => {

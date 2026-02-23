@@ -1,0 +1,25 @@
+appId: host.exp.Exponent
+---
+#invalid/unmappable location should not crash the app
+- launchApp
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "dest-input"
+    timeout: 15000
+- tapOn:
+    id: "dest-input"
+- eraseText
+- inputText: "UNKNOWN ROOM ZZ-9999"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "start-input"
+- assertVisible:
+    id: "dest-input"
+- assertVisible: "SGW"
+- assertVisible: "Loyola"

@@ -1,0 +1,5 @@
+appId: host.exp.Exponent
+---
+- runFlow: AT3.2-open-profile.yaml
+- runFlow: AT3.2-calendar-selection.yaml
+- runFlow: AT3.2-next-class.yaml

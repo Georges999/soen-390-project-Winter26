@@ -1,0 +1,40 @@
+appId: host.exp.Exponent
+---
+- runFlow: AT3.2-open-profile.yaml
+
+# Winter selected by default in mock data
+- tapOn: "View Calendar"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Calendar"
+    timeout: 10000
+
+# tuesday
+- tapOn:
+    point: "27%,24%"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Get Directions"
+    timeout: 10000
+- tapOn:
+    text: "Get Directions"
+    index: 2
+
+- waitForAnimationToEnd
+
+# Outdoor route should be drawn and panel visible
+- extendedWaitUntil:
+    visible:
+      id: "route-polyline"
+    timeout: 20000
+- assertVisible:
+    id: "route-polyline"
+- assertVisible: "GO"
+
+#mock data only includes SGW classes for now so no public transit
+- assertVisible: ", Walk"
+- assertVisible: ", Car"
+- assertVisible: ", Bike"
+
+- tapOn: "Simulate"
+- waitForAnimationToEnd
