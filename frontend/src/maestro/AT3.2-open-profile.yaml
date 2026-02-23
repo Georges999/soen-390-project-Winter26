@@ -17,9 +17,6 @@ appId: host.exp.Exponent
     id: "tab-profile"
 - waitForAnimationToEnd
 
-- extendedWaitUntil:
-    visible: "Sync Your Class"
-    timeout: 12000
 - runFlow:
     when:
       visible: "Disconnect"
