@@ -28,7 +28,7 @@ jobs:
       OWNER: Georges999
       PROJECT_NUMBER: "2"
 
-      POINTS_FIELD_NAME: "Story point 1-->5"
+      POINTS_FIELD_NAME: "Story Point (1 --> 5)"
       STATUS_FIELD_NAME: "Status"
       DONE_STATUS_NAME: "Done"
 
