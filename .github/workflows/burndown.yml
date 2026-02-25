@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       sprint_name:
-        description: "Sprint name used in filenames (e.g., sprint3)"
+        description: "Sprint name used in filenames (e.g., sprint4)"
         required: true
-        default: "sprint3"
+        default: "sprint4"
       milestone_name:
         description: "Milestone title to filter issues/PRs (defaults to sprint_name)"
         required: false
@@ -38,8 +38,8 @@ jobs:
       - name: Generate burndown snapshot + chart
         id: generate
         env:
-          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint3' }}
-          MILESTONE_FILTER: ${{ inputs.milestone_name || inputs.sprint_name || 'sprint3' }}
+          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint4' }}
+          MILESTONE_FILTER: ${{ inputs.milestone_name || inputs.sprint_name || 'sprint4' }}
         run: |
           set -e
 
@@ -62,10 +62,10 @@ jobs:
             echo "Manual run (${EVENT_NAME}) — not applying biweekly skip."
           fi
 
-          mkdir -p data docs
+          mkdir -p data
 
           CSV_FILE="data/burndown_${SPRINT_NAME}.csv"
-          PNG_FILE="docs/burndown_${SPRINT_NAME}.png"
+          PNG_FILE="data/burndown_${SPRINT_NAME}.png"
 
           # -----------------------------
           # 1) Get Project v2 ID (user-owned project)
@@ -182,7 +182,6 @@ jobs:
             if not after:
               break
 
-          # Output with same shape as before
           print(json.dumps({
             "data": {
               "node": {
@@ -259,7 +258,7 @@ jobs:
           echo "$TODAY,$REMAINING" >> "$CSV_FILE"
 
           # -----------------------------
-          # 5) Generate chart PNG using QuickChart
+          # 5) Generate chart PNG using QuickChart (saved into data/)
           # -----------------------------
           python3 - <<'PY'
           import os, csv, json, urllib.parse
@@ -279,10 +278,10 @@ jobs:
           }
 
           url = "https://quickchart.io/chart?c=" + urllib.parse.quote(json.dumps(config))
-          Path("docs/burndown_url.txt").write_text(url)
+          Path("data/burndown_url.txt").write_text(url)
           PY
 
-          curl -fLsS "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
+          curl -fLsS "$(cat data/burndown_url.txt)" -o "$PNG_FILE"
 
           if [ -f "$CSV_FILE" ] || [ -f "$PNG_FILE" ]; then
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
@@ -293,7 +292,7 @@ jobs:
       - name: Commit updated burndown files
         if: steps.generate.outputs.should_commit == 'true'
         env:
-          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint3' }}
+          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint4' }}
         run: |
           set -e
 
@@ -301,12 +300,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           CSV="data/burndown_${SPRINT_NAME}.csv"
-          PNG="docs/burndown_${SPRINT_NAME}.png"
+          PNG="data/burndown_${SPRINT_NAME}.png"
 
           echo "Working directory: $(pwd)"
           echo "Checking expected artifacts:"
           ls -la data || true
-          ls -la docs || true
 
           TO_ADD=()
           [ -f "$CSV" ] && TO_ADD+=("$CSV") || echo "Missing: $CSV"
