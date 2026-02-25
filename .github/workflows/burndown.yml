@@ -49,12 +49,17 @@ jobs:
             exit 1
           fi
 
-          # Run only every 2 weeks (even ISO week numbers)
-          WEEK=$(date -u +%V)
-          if [ $((10#$WEEK % 2)) -ne 0 ]; then
-            echo "Skipping this week (biweekly schedule). ISO week: $WEEK"
-            echo "should_commit=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          # Run biweekly ONLY for scheduled runs (cron). Manual runs should always run.
+          EVENT_NAME="${GITHUB_EVENT_NAME:-}"
+          if [ "$EVENT_NAME" = "schedule" ]; then
+            WEEK=$(date -u +%V)
+            if [ $((10#$WEEK % 2)) -ne 0 ]; then
+              echo "Skipping this week (biweekly schedule). ISO week: $WEEK"
+              echo "should_commit=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            echo "Manual run (${EVENT_NAME}) — not applying biweekly skip."
           fi
 
           mkdir -p data docs
