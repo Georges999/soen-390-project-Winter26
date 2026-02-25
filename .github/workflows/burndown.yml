@@ -49,7 +49,7 @@ jobs:
             exit 1
           fi
 
-          echo "Scheduled run (${GITHUB_EVENT_NAME}) — running daily (no biweekly skip)."
+          echo "Scheduled run (${GITHUB_EVENT_NAME}) — running daily."
 
           mkdir -p data
 
@@ -248,9 +248,12 @@ jobs:
 
           # -----------------------------
           # 5) Generate chart PNG using QuickChart (saved into data/)
+          #    Adds BOTH:
+          #      - Actual Remaining
+          #      - Ideal Burndown (straight line from first point to 0)
           # -----------------------------
           python3 - <<'PY'
-          import os, csv, json, urllib.parse
+          import os, csv, json, urllib.parse, math
           from pathlib import Path
 
           sprint = os.environ["SPRINT_NAME"]
@@ -258,12 +261,27 @@ jobs:
           rows = list(csv.DictReader(open(csv_path)))
 
           labels = [r["date"] for r in rows]
-          data = [float(r["remaining_points"]) for r in rows]
+          actual = [float(r["remaining_points"]) for r in rows]
+
+          if len(actual) > 1:
+            start = actual[0]
+            steps = len(actual) - 1
+            ideal = [max(0.0, start - (start / steps) * i) for i in range(len(actual))]
+          else:
+            ideal = actual[:]  # single point -> same line
 
           config = {
             "type": "line",
-            "data": {"labels": labels, "datasets": [{"label": "Remaining Story Points", "data": data}]},
-            "options": {"scales": {"y": {"beginAtZero": True}}}
+            "data": {
+              "labels": labels,
+              "datasets": [
+                {"label": "Actual Remaining", "data": actual},
+                {"label": "Ideal Burndown", "data": ideal}
+              ]
+            },
+            "options": {
+              "scales": {"y": {"beginAtZero": True}}
+            }
           }
 
           url = "https://quickchart.io/chart?c=" + urllib.parse.quote(json.dumps(config))
