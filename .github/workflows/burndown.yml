@@ -28,7 +28,6 @@ jobs:
       OWNER: Georges999
       PROJECT_NUMBER: "2"
 
-      
       POINTS_FIELD_NAME: "Story point 1-->5"
       STATUS_FIELD_NAME: "Status"
       DONE_STATUS_NAME: "Done"
@@ -257,16 +256,51 @@ jobs:
           Path("docs/burndown_url.txt").write_text(url)
           PY
 
-          curl -sS "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
-          echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          # -f = fail on HTTP error; -L = follow redirects
+          curl -fLsS "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
+
+          # Only commit if artifacts exist
+          if [ -f "$CSV_FILE" ] || [ -f "$PNG_FILE" ]; then
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit updated burndown files
         if: steps.generate.outputs.should_commit == 'true'
         env:
           SPRINT_NAME: ${{ inputs.sprint_name || 'sprint3' }}
         run: |
+          set -e
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "data/burndown_${SPRINT_NAME}.csv" "docs/burndown_${SPRINT_NAME}.png"
-          git commit -m "Update burndown (${SPRINT_NAME})" || exit 0
+
+          CSV="data/burndown_${SPRINT_NAME}.csv"
+          PNG="docs/burndown_${SPRINT_NAME}.png"
+
+          echo "Working directory: $(pwd)"
+          echo "Checking expected artifacts:"
+          ls -la data || true
+          ls -la docs || true
+
+          # Only add files that actually exist (prevents pathspec errors)
+          TO_ADD=()
+          [ -f "$CSV" ] && TO_ADD+=("$CSV") || echo "Missing: $CSV"
+          [ -f "$PNG" ] && TO_ADD+=("$PNG") || echo "Missing: $PNG"
+
+          if [ ${#TO_ADD[@]} -eq 0 ]; then
+            echo "No burndown artifacts found to commit. Skipping."
+            exit 0
+          fi
+
+          git add "${TO_ADD[@]}"
+
+          # If nothing changed, don't fail the workflow
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update burndown (${SPRINT_NAME})"
           git push
