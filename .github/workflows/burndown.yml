@@ -104,7 +104,7 @@ jobs:
           export PROJECT_ID="$PROJECT_ID"
 
           # -----------------------------
-          # 2) Fetch items + field values + milestone
+          # 2) Fetch ALL items + field values + milestone (PAGINATED)
           # -----------------------------
           RESP=$(python3 - <<'PY'
           import os, json, subprocess, sys
@@ -113,18 +113,15 @@ jobs:
           project_id = os.environ["PROJECT_ID"]
 
           query = """
-          query($id: ID!) {
+          query($id: ID!, $after: String) {
             node(id: $id) {
               ... on ProjectV2 {
-                items(first: 200) {
+                items(first: 100, after: $after) {
+                  pageInfo { hasNextPage endCursor }
                   nodes {
                     content {
-                      ... on Issue {
-                        milestone { title }
-                      }
-                      ... on PullRequest {
-                        milestone { title }
-                      }
+                      ... on Issue { milestone { title } }
+                      ... on PullRequest { milestone { title } }
                     }
                     fieldValues(first: 50) {
                       nodes {
@@ -145,28 +142,56 @@ jobs:
           }
           """
 
-          payload = {"query": query, "variables": {"id": project_id}}
-          payload_str = json.dumps(payload)
+          def gql(after):
+            payload = {"query": query, "variables": {"id": project_id, "after": after}}
+            cmd = [
+              "curl","-sS",
+              "-H", f"Authorization: bearer {token}",
+              "-H", "Content-Type: application/json",
+              "-d", json.dumps(payload),
+              "https://api.github.com/graphql"
+            ]
+            p = subprocess.run(cmd, capture_output=True, text=True)
+            out = (p.stdout or "").strip()
+            if not out:
+              err = (p.stderr or "").strip()
+              print("ERROR: Empty response from GraphQL (items query).", file=sys.stderr)
+              if err:
+                print("curl stderr:", err, file=sys.stderr)
+              sys.exit(1)
+            j = json.loads(out)
+            if "errors" in j:
+              print("ERRORS from GraphQL (items query): " + json.dumps(j["errors"], indent=2), file=sys.stderr)
+              sys.exit(1)
+            return j
 
-          cmd = [
-            "curl","-sS",
-            "-H", f"Authorization: bearer {token}",
-            "-H", "Content-Type: application/json",
-            "-d", payload_str,
-            "https://api.github.com/graphql"
-          ]
+          all_nodes = []
+          after = None
 
-          p = subprocess.run(cmd, capture_output=True, text=True)
-          out = (p.stdout or "").strip()
+          while True:
+            j = gql(after)
+            node = (j.get("data") or {}).get("node") or {}
+            items = (node.get("items") or {})
+            nodes = items.get("nodes") or []
+            all_nodes.extend(nodes)
 
-          if not out:
-            err = (p.stderr or "").strip()
-            print("ERROR: Empty response from GraphQL (items query).", file=sys.stderr)
-            if err:
-              print("curl stderr:", err, file=sys.stderr)
-            sys.exit(1)
+            page = items.get("pageInfo") or {}
+            if not page.get("hasNextPage"):
+              break
+            after = page.get("endCursor")
+            if not after:
+              break
 
-          print(out)
+          # Output with same shape as before
+          print(json.dumps({
+            "data": {
+              "node": {
+                "items": {
+                  "nodes": all_nodes
+                }
+              }
+            }
+          }))
           PY
           )
 
@@ -175,16 +200,13 @@ jobs:
           echo ""
 
           # -----------------------------
-          # 3) Sum remaining points where Status != Done AND milestone == sprint3
+          # 3) Sum remaining points where Status != Done AND milestone == sprint
           # -----------------------------
           REMAINING=$(RESP_JSON="$RESP" python3 - <<'PY'
           import os, json
 
           txt = os.environ.get("RESP_JSON", "").strip()
           j = json.loads(txt)
-
-          if "errors" in j:
-              raise SystemExit("ERRORS from GraphQL (items query): " + json.dumps(j["errors"], indent=2))
 
           node = j.get("data", {}).get("node", {}) or {}
           items = (node.get("items", {}) or {}).get("nodes", []) or []
@@ -199,7 +221,6 @@ jobs:
               points = 0.0
               status = None
 
-              # milestone title from linked Issue/PR
               content = it.get("content") or {}
               ms = (content.get("milestone") or {}) if content else {}
               milestone_title = ms.get("title")
@@ -261,10 +282,8 @@ jobs:
           Path("docs/burndown_url.txt").write_text(url)
           PY
 
-          # -f = fail on HTTP error; -L = follow redirects
           curl -fLsS "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
 
-          # Only commit if artifacts exist
           if [ -f "$CSV_FILE" ] || [ -f "$PNG_FILE" ]; then
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
           else
@@ -289,7 +308,6 @@ jobs:
           ls -la data || true
           ls -la docs || true
 
-          # Only add files that actually exist (prevents pathspec errors)
           TO_ADD=()
           [ -f "$CSV" ] && TO_ADD+=("$CSV") || echo "Missing: $CSV"
           [ -f "$PNG" ] && TO_ADD+=("$PNG") || echo "Missing: $PNG"
@@ -301,7 +319,6 @@ jobs:
 
           git add "${TO_ADD[@]}"
 
-          # If nothing changed, don't fail the workflow
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
