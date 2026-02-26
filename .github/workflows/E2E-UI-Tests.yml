@@ -37,6 +37,13 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Ensure prebuild assets exist (CI only)
+        working-directory: frontend
+        run: |
+          for f in icon.png splash.png adaptive-icon.png favicon.png; do
+            [ -f "assets/$f" ] || cp assets/Clogo.png "assets/$f"
+          done
+
       - name: Generate native Android project
         working-directory: frontend
         run: npx expo prebuild --platform android --no-install
