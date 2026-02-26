@@ -4,14 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       sprint_name:
-        description: "Sprint name used in filenames (e.g., sprint3)"
+        description: "Sprint name used in filenames (e.g., sprint4)"
         required: true
-        default: "sprint3"
+        default: "sprint4"
+      milestone_name:
+        description: "Milestone title to filter issues/PRs (defaults to sprint_name)"
+        required: false
+        default: ""
 
   # GitHub cron is UTC.
-  # Sunday 10:00 PM America/Montreal (EST, UTC-5) = Monday 03:00 UTC
+  # 03:00 UTC daily ≈ 10:00 PM America/Montreal (EST, UTC-5)
   schedule:
-    - cron: "0 3 * * 1"
+    - cron: "0 3 * * *"
 
 permissions:
   contents: write
@@ -32,8 +36,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate burndown snapshot + chart
+        id: generate
         env:
-          SPRINT_NAME: ${{ inputs.sprint_name }}
+          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint4' }}
+          MILESTONE_FILTER: ${{ inputs.milestone_name || inputs.sprint_name || 'sprint4' }}
         run: |
           set -e
 
@@ -43,17 +49,12 @@ jobs:
             exit 1
           fi
 
-          # Run only every 2 weeks (even ISO week numbers)
-          WEEK=$(date -u +%V)
-          if [ $((10#$WEEK % 2)) -ne 0 ]; then
-            echo "Skipping this week (biweekly schedule). ISO week: $WEEK"
-            exit 0
-          fi
+          echo "Scheduled run (${GITHUB_EVENT_NAME}) — running daily."
 
-          mkdir -p data docs
+          mkdir -p data
 
           CSV_FILE="data/burndown_${SPRINT_NAME}.csv"
-          PNG_FILE="docs/burndown_${SPRINT_NAME}.png"
+          PNG_FILE="data/burndown_${SPRINT_NAME}.png"
 
           # -----------------------------
           # 1) Get Project v2 ID (user-owned project)
@@ -70,9 +71,9 @@ jobs:
           echo "$RAW" | head -c 500
           echo ""
 
-          PROJECT_ID=$(echo "$RAW" | python3 - <<'PY'
-          import sys, json
-          txt = sys.stdin.read().strip()
+          PROJECT_ID=$(RAW_JSON="$RAW" python3 - <<'PY'
+          import os, json
+          txt = os.environ.get("RAW_JSON", "").strip()
           if not txt:
               raise SystemExit("ERROR: Empty response from GraphQL (Project ID query).")
           j = json.loads(txt)
@@ -92,7 +93,7 @@ jobs:
           export PROJECT_ID="$PROJECT_ID"
 
           # -----------------------------
-          # 2) Fetch items + field values (SAFE payload construction)
+          # 2) Fetch ALL items + field values + milestone (PAGINATED)
           # -----------------------------
           RESP=$(python3 - <<'PY'
           import os, json, subprocess, sys
@@ -101,11 +102,16 @@ jobs:
           project_id = os.environ["PROJECT_ID"]
 
           query = """
-          query($id: ID!) {
+          query($id: ID!, $after: String) {
             node(id: $id) {
               ... on ProjectV2 {
-                items(first: 200) {
+                items(first: 100, after: $after) {
+                  pageInfo { hasNextPage endCursor }
                   nodes {
+                    content {
+                      ... on Issue { milestone { title } }
+                      ... on PullRequest { milestone { title } }
+                    }
                     fieldValues(first: 50) {
                       nodes {
                         ... on ProjectV2ItemFieldNumberValue {
@@ -125,29 +131,55 @@ jobs:
           }
           """
 
-          payload = {"query": query, "variables": {"id": project_id}}
-          payload_str = json.dumps(payload)
+          def gql(after):
+            payload = {"query": query, "variables": {"id": project_id, "after": after}}
+            cmd = [
+              "curl","-sS",
+              "-H", f"Authorization: bearer {token}",
+              "-H", "Content-Type: application/json",
+              "-d", json.dumps(payload),
+              "https://api.github.com/graphql"
+            ]
+            p = subprocess.run(cmd, capture_output=True, text=True)
+            out = (p.stdout or "").strip()
+            if not out:
+              err = (p.stderr or "").strip()
+              print("ERROR: Empty response from GraphQL (items query).", file=sys.stderr)
+              if err:
+                print("curl stderr:", err, file=sys.stderr)
+              sys.exit(1)
+            j = json.loads(out)
+            if "errors" in j:
+              print("ERRORS from GraphQL (items query): " + json.dumps(j["errors"], indent=2), file=sys.stderr)
+              sys.exit(1)
+            return j
 
-          cmd = [
-            "curl","-sS",
-            "-H", f"Authorization: bearer {token}",
-            "-H", "Content-Type: application/json",
-            "-d", payload_str,
-            "https://api.github.com/graphql"
-          ]
+          all_nodes = []
+          after = None
 
-          p = subprocess.run(cmd, capture_output=True, text=True)
-          out = (p.stdout or "").strip()
+          while True:
+            j = gql(after)
+            node = (j.get("data") or {}).get("node") or {}
+            items = (node.get("items") or {})
+            nodes = items.get("nodes") or []
+            all_nodes.extend(nodes)
 
-          if not out:
-            err = (p.stderr or "").strip()
-            print("ERROR: Empty response from GraphQL (items query).", file=sys.stderr)
-            if err:
-              print("curl stderr:", err, file=sys.stderr)
-            sys.exit(1)
+            page = items.get("pageInfo") or {}
+            if not page.get("hasNextPage"):
+              break
+            after = page.get("endCursor")
+            if not after:
+              break
 
-          # Echo JSON to bash
-          print(out)
+          print(json.dumps({
+            "data": {
+              "node": {
+                "items": {
+                  "nodes": all_nodes
+                }
+              }
+            }
+          }))
           PY
           )
 
@@ -156,16 +188,13 @@ jobs:
           echo ""
 
           # -----------------------------
-          # 3) Sum remaining points where Status != Done
+          # 3) Sum remaining points where Status != Done AND milestone == sprint
           # -----------------------------
-          REMAINING=$(echo "$RESP" | python3 - <<'PY'
-          import os, sys, json
+          REMAINING=$(RESP_JSON="$RESP" python3 - <<'PY'
+          import os, json
 
-          txt = sys.stdin.read().strip()
+          txt = os.environ.get("RESP_JSON", "").strip()
           j = json.loads(txt)
-
-          if "errors" in j:
-              raise SystemExit("ERRORS from GraphQL (items query): " + json.dumps(j["errors"], indent=2))
 
           node = j.get("data", {}).get("node", {}) or {}
           items = (node.get("items", {}) or {}).get("nodes", []) or []
@@ -173,18 +202,27 @@ jobs:
           POINTS_FIELD = os.environ["POINTS_FIELD_NAME"]
           STATUS_FIELD = os.environ["STATUS_FIELD_NAME"]
           DONE = os.environ["DONE_STATUS_NAME"]
+          MILESTONE_FILTER = os.environ["MILESTONE_FILTER"]
 
           remaining = 0.0
           for it in items:
               points = 0.0
               status = None
+
+              content = it.get("content") or {}
+              ms = (content.get("milestone") or {}) if content else {}
+              milestone_title = ms.get("title")
+
+              in_sprint = (milestone_title == MILESTONE_FILTER)
+
               for fv in ((it.get("fieldValues", {}) or {}).get("nodes", []) or []):
                   field = ((fv.get("field") or {}).get("name"))
                   if field == POINTS_FIELD and fv.get("number") is not None:
                       points = float(fv["number"])
                   if field == STATUS_FIELD and fv.get("name") is not None:
                       status = fv["name"]
-              if status != DONE:
+
+              if in_sprint and status != DONE:
                   remaining += points
 
           if abs(remaining - round(remaining)) < 1e-9:
@@ -194,7 +232,7 @@ jobs:
           PY
           )
 
-          echo "Remaining points for ${SPRINT_NAME}: $REMAINING"
+          echo "Remaining points for ${SPRINT_NAME} (milestone=${MILESTONE_FILTER}): $REMAINING"
 
           TODAY=$(date -u +%F)
 
@@ -209,10 +247,13 @@ jobs:
           echo "$TODAY,$REMAINING" >> "$CSV_FILE"
 
           # -----------------------------
-          # 5) Generate chart PNG using QuickChart
+          # 5) Generate chart PNG using QuickChart (saved into data/)
+          #    Adds BOTH:
+          #      - Actual Remaining
+          #      - Ideal Burndown (straight line from first point to 0)
           # -----------------------------
           python3 - <<'PY'
-          import os, csv, json, urllib.parse
+          import os, csv, json, urllib.parse, math
           from pathlib import Path
 
           sprint = os.environ["SPRINT_NAME"]
@@ -220,26 +261,73 @@ jobs:
           rows = list(csv.DictReader(open(csv_path)))
 
           labels = [r["date"] for r in rows]
-          data = [float(r["remaining_points"]) for r in rows]
+          actual = [float(r["remaining_points"]) for r in rows]
+
+          if len(actual) > 1:
+            start = actual[0]
+            steps = len(actual) - 1
+            ideal = [max(0.0, start - (start / steps) * i) for i in range(len(actual))]
+          else:
+            ideal = actual[:]  # single point -> same line
 
           config = {
             "type": "line",
-            "data": {"labels": labels, "datasets": [{"label": "Remaining Story Points", "data": data}]},
-            "options": {"scales": {"y": {"beginAtZero": True}}}
+            "data": {
+              "labels": labels,
+              "datasets": [
+                {"label": "Actual Remaining", "data": actual},
+                {"label": "Ideal Burndown", "data": ideal}
+              ]
+            },
+            "options": {
+              "scales": {"y": {"beginAtZero": True}}
+            }
           }
 
           url = "https://quickchart.io/chart?c=" + urllib.parse.quote(json.dumps(config))
-          Path("docs/burndown_url.txt").write_text(url)
+          Path("data/burndown_url.txt").write_text(url)
           PY
 
-          curl -sS "$(cat docs/burndown_url.txt)" -o "$PNG_FILE"
+          curl -fLsS "$(cat data/burndown_url.txt)" -o "$PNG_FILE"
+
+          if [ -f "$CSV_FILE" ] || [ -f "$PNG_FILE" ]; then
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit updated burndown files
+        if: steps.generate.outputs.should_commit == 'true'
         env:
-          SPRINT_NAME: ${{ inputs.sprint_name }}
+          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint4' }}
         run: |
+          set -e
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "data/burndown_${SPRINT_NAME}.csv" "docs/burndown_${SPRINT_NAME}.png"
-          git commit -m "Update burndown (${SPRINT_NAME})" || exit 0
+
+          CSV="data/burndown_${SPRINT_NAME}.csv"
+          PNG="data/burndown_${SPRINT_NAME}.png"
+
+          echo "Working directory: $(pwd)"
+          echo "Checking expected artifacts:"
+          ls -la data || true
+
+          TO_ADD=()
+          [ -f "$CSV" ] && TO_ADD+=("$CSV") || echo "Missing: $CSV"
+          [ -f "$PNG" ] && TO_ADD+=("$PNG") || echo "Missing: $PNG"
+
+          if [ ${#TO_ADD[@]} -eq 0 ]; then
+            echo "No burndown artifacts found to commit. Skipping."
+            exit 0
+          fi
+
+          git add "${TO_ADD[@]}"
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update burndown (${SPRINT_NAME})"
           git push
