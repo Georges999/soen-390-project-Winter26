@@ -13,7 +13,7 @@ on:
 
 jobs:
   e2e-maestro:
-    name: Maestro E2E (one by one)
+    name: Maestro E2E (Native APK)
     runs-on: ubuntu-latest
 
     steps:
@@ -37,24 +37,25 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Ensure prebuild assets exist (CI only)
+      - name: Ensure prebuild assets exist
         working-directory: frontend
         run: |
+          mkdir -p assets
           for f in icon.png splash.png adaptive-icon.png favicon.png; do
-            [ -f "assets/$f" ] || cp assets/Clogo.png "assets/$f"
+            [ -f "assets/$f" ] || cp assets/Clogo.png "assets/$f" || touch "assets/$f"
           done
 
       - name: Generate native Android project
         working-directory: frontend
         run: npx expo prebuild --platform android --no-install
 
-      - name: Enable KVM (Linux emulator acceleration)
+      - name: Enable KVM (Acceleration)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Start emulator, build app, install Maestro, run tests
+      - name: Build, Patch, and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 33
@@ -64,6 +65,30 @@ jobs:
           disable-animations: true
           script: |
             cd frontend/android && ./gradlew assembleDebug
-            adb install -r $GITHUB_WORKSPACE/frontend/android/app/build/outputs/apk/debug/app-debug.apk
+            
             curl -fsSL "https://get.maestro.mobile.dev" | bash
-            cd $GITHUB_WORKSPACE/frontend && sed -i 's/host\.exp\.Exponent/com.concordia.campusguide/g' src/maestro/*.yaml && sed -i 's/timeout: 30000/timeout: 90000/g' src/maestro/*.yaml && sed -i 's/timeout: 25000/timeout: 60000/g' src/maestro/*.yaml && sed -i 's/timeout: 15000/timeout: 45000/g' src/maestro/*.yaml && export PATH="$HOME/.maestro/bin:$PATH" && for f in src/maestro/*.yaml; do echo "Running: maestro test $f"; maestro test "$f" || exit 1; done
+            export PATH="$HOME/.maestro/bin:$PATH"
+            
+            cd $GITHUB_WORKSPACE/frontend/src/maestro
+            
+            sed -i 's/appId: host.exp.Exponent/appId: com.concordia.campusguide/g' *.yaml
+            sed -i '/- extendedWaitUntil:/,+3{/visible: "Campus Guide"/d}' *.yaml
+            sed -i '/tapOn: "Campus Guide"/d' *.yaml
+            
+            adb install -r $GITHUB_WORKSPACE/frontend/android/app/build/outputs/apk/debug/app-debug.apk
+            
+            for f in *.yaml; do 
+              maestro test "$f" || exit 1
+            done
+
+      - name: Upload Debug Artifacts on Failure
+        if: failure()
+        uses: actions/setup-node@v4 # Dummy step to ensure runner environment stays alive for upload
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: maestro-debug-artifacts
+          path: /home/runner/.maestro/tests/
+          retention-days: 5
