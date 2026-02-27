@@ -65,9 +65,4 @@ jobs:
             cd frontend/android && ./gradlew assembleDebug
             adb install -r $GITHUB_WORKSPACE/frontend/android/app/build/outputs/apk/debug/app-debug.apk
             curl -fsSL "https://get.maestro.mobile.dev" | bash
-            export PATH="$HOME/.maestro/bin:$PATH"
-            cd $GITHUB_WORKSPACE/frontend
-            for f in src/maestro/*.yaml; do
-              echo "Running: maestro test $f"
-              maestro test "$f" || exit 1
-            done
+            cd $GITHUB_WORKSPACE/frontend && export PATH="$HOME/.maestro/bin:$PATH" && for f in src/maestro/*.yaml; do echo "Running: maestro test $f"; maestro test "$f" || exit 1; done
