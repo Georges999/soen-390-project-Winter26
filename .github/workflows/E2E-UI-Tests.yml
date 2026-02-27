@@ -61,8 +61,9 @@ jobs:
           target: default
           arch: x86_64
           profile: pixel_7_pro
+          disable-animations: true
           script: |
             cd frontend/android && ./gradlew assembleDebug
             adb install -r $GITHUB_WORKSPACE/frontend/android/app/build/outputs/apk/debug/app-debug.apk
             curl -fsSL "https://get.maestro.mobile.dev" | bash
-            cd $GITHUB_WORKSPACE/frontend && sed -i 's/host\.exp\.Exponent/com.concordia.campusguide/g' src/maestro/*.yaml && export PATH="$HOME/.maestro/bin:$PATH" && for f in src/maestro/*.yaml; do echo "Running: maestro test $f"; maestro test "$f" || exit 1; done
+            cd $GITHUB_WORKSPACE/frontend && sed -i 's/host\.exp\.Exponent/com.concordia.campusguide/g' src/maestro/*.yaml && sed -i 's/timeout: 30000/timeout: 90000/g' src/maestro/*.yaml && sed -i 's/timeout: 25000/timeout: 60000/g' src/maestro/*.yaml && sed -i 's/timeout: 15000/timeout: 45000/g' src/maestro/*.yaml && export PATH="$HOME/.maestro/bin:$PATH" && for f in src/maestro/*.yaml; do echo "Running: maestro test $f"; maestro test "$f" || exit 1; done

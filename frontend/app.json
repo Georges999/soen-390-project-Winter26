@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "scheme": "campusguide",
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -27,7 +27,7 @@
       "package": "com.concordia.campusguide"
     },
     "web": {
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/favicon.png"
     }
   }
 }
