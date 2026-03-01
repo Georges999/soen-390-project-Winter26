@@ -16,6 +16,9 @@ jobs:
   test:
     name: Tests + Coverage
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -45,6 +48,31 @@ jobs:
       - name: Coverage report
         if: success()
         run: bash .github/scripts/coverage-to-summary.sh
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true
+          files: frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: true
+
+      - name: Codecov report link
+        if: success()
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            URL="https://app.codecov.io/gh/${GITHUB_REPOSITORY}/pull/${PR_NUMBER}"
+          else
+            URL="https://app.codecov.io/gh/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
+          fi
+          {
+            echo "## Codecov report"
+            echo ""
+            echo "**[View report](${URL})**"
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
 
   sonarcloud:
     name: SonarCloud report
