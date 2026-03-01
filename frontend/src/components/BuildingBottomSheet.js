@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import PropTypes from "prop-types";
 
 export default function BuildingBottomSheet({
   styles,
@@ -111,3 +112,36 @@ export default function BuildingBottomSheet({
     </View>
   );
 }
+
+BuildingBottomSheet.propTypes = {
+  styles: PropTypes.shape({
+    sheetWrap: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    sheet: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    sheetHandle: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    sheetHeaderRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    sheetHeaderLeft: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    buildingIcon: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    buildingIconImage: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    buildingTitle: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    buildingSub: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    amenitiesWrap: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    amenitiesTitle: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    amenityRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    amenityLeft: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    amenityLabel: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    amenityValue: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    closeBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    closeBtnText: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    directionsBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    directionsBtnIcon: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+    directionsBtnText: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+  }).isRequired,
+  maroon: PropTypes.string.isRequired,
+  selectedBuilding: PropTypes.shape({
+    address: PropTypes.string,
+  }),
+  getBuildingName: PropTypes.func.isRequired,
+  getAmenities: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onDirections: PropTypes.func.isRequired,
+};
