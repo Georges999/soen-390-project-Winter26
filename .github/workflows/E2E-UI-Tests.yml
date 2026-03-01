@@ -80,6 +80,9 @@ jobs:
             sed -i "/tapOn: \"Campus Guide\"/d" "$FLOW_DIR"/AT*.yaml
 
             adb install -r "$APK_PATH"
+            # Prevent native location permission prompt from blocking Maestro selectors.
+            adb shell pm grant com.concordia.campusguide android.permission.ACCESS_FINE_LOCATION || true
+            adb shell pm grant com.concordia.campusguide android.permission.ACCESS_COARSE_LOCATION || true
 
             # Run only acceptance test flows that start with AT.
             "$HOME/.maestro/bin/maestro" test "$FLOW_DIR"/AT*.yaml
