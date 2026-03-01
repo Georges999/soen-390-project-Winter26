@@ -18,7 +18,6 @@ jobs:
     env:
       FLOW_DIR: ${{ github.workspace }}/frontend/src/maestro
       APK_PATH: ${{ github.workspace }}/frontend/android/app/build/outputs/apk/debug/app-debug.apk
-      MAESTRO_RESULTS_DIR: ${{ github.workspace }}/maestro-results
 
     steps:
       - name: Checkout code
@@ -68,13 +67,9 @@ jobs:
           profile: pixel_7_pro
           disable-animations: true
           script: |
-            set -eu
-
             curl -fsSL "https://get.maestro.mobile.dev" | bash
 
-            bash "$GITHUB_WORKSPACE/frontend/android/gradlew" assembleDebug
-
-            mkdir -p "$MAESTRO_RESULTS_DIR"
+            bash "$GITHUB_WORKSPACE/frontend/android/gradlew" --project-dir "$GITHUB_WORKSPACE/frontend/android" assembleDebug
 
             # Fail fast with a clear error if no AT flows are present.
             ls "$FLOW_DIR"/AT*.yaml >/dev/null 2>&1 || { echo "::error::No Maestro flow files found at $FLOW_DIR matching AT*.yaml"; exit 1; }
@@ -86,24 +81,14 @@ jobs:
 
             adb install -r "$APK_PATH"
 
-            # Run only acceptance test flows that start with AT and emit JUnit for PR visibility.
-            "$HOME/.maestro/bin/maestro" test "$FLOW_DIR"/AT*.yaml --format junit --output "$MAESTRO_RESULTS_DIR/maestro-junit.xml"
+            # Run only acceptance test flows that start with AT.
+            "$HOME/.maestro/bin/maestro" test "$FLOW_DIR"/AT*.yaml
 
       - name: Upload Maestro Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: maestro-debug-artifacts
-          path: |
-            /home/runner/.maestro/tests
-            ${{ github.workspace }}/maestro-results
+          path: /home/runner/.maestro/tests
           if-no-files-found: warn
           retention-days: 5
-
-      - name: Publish Maestro Test Report
-        if: always()
-        uses: mikepenz/action-junit-report@v4
-        with:
-          report_paths: '${{ github.workspace }}/maestro-results/maestro-junit.xml'
-          detailed_summary: true
-          fail_on_failure: true
