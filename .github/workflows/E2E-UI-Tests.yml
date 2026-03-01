@@ -88,8 +88,8 @@ jobs:
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_COARSE_LOCATION || true
 
             # Run only top-level acceptance flows (helper subflows run via runFlow).
-            # Keep CI non-blocking for currently unstable assertions.
-            sh -c 'failed=0; for f in "$FLOW_DIR/AT1.1.yaml" "$FLOW_DIR/AT1.2.yaml" "$FLOW_DIR/AT1.4.yaml" "$FLOW_DIR/AT2.1.yaml" "$FLOW_DIR/AT2.2.yaml" "$FLOW_DIR/AT2.3.yaml" "$FLOW_DIR/AT2.4-2.5.yaml" "$FLOW_DIR/AT3.1.yaml" "$FLOW_DIR/AT3.2.yaml" "$FLOW_DIR/AT3.3.yaml"; do "$HOME/.maestro/bin/maestro" test "$f" || failed=1; done; if [ "$failed" -ne 0 ]; then echo "::warning::One or more Maestro flows failed (non-blocking mode enabled). See uploaded artifacts for details."; fi; exit 0'
+            # Keep CI non-blocking for currently unstable assertions and print a clean summary.
+            sh -c 'failed=0; total=0; passed=0; printf "## Maestro E2E Results\n\n| Test | Result |\n| --- | --- |\n" >> "$GITHUB_STEP_SUMMARY"; for f in "$FLOW_DIR/AT1.1.yaml" "$FLOW_DIR/AT1.2.yaml" "$FLOW_DIR/AT1.4.yaml" "$FLOW_DIR/AT2.1.yaml" "$FLOW_DIR/AT2.2.yaml" "$FLOW_DIR/AT2.3.yaml" "$FLOW_DIR/AT2.4-2.5.yaml" "$FLOW_DIR/AT3.1.yaml" "$FLOW_DIR/AT3.2.yaml" "$FLOW_DIR/AT3.3.yaml"; do name="$(basename "$f" .yaml)"; total=$((total+1)); if "$HOME/.maestro/bin/maestro" test "$f" >/dev/null 2>&1; then passed=$((passed+1)); echo "Run $name... COMPLETED"; printf "| %s | PASS |\n" "$name" >> "$GITHUB_STEP_SUMMARY"; else failed=1; echo "Run $name... COMPLETED"; printf "| %s | FAIL |\n" "$name" >> "$GITHUB_STEP_SUMMARY"; fi; done; printf "\n**Passed:** %s/%s\n" "$passed" "$total" >> "$GITHUB_STEP_SUMMARY"; if [ "$failed" -ne 0 ]; then echo "::warning::One or more Maestro flows failed (non-blocking mode enabled). See uploaded artifacts for details."; fi; exit 0'
 
       - name: Upload Maestro Artifacts
         if: always()
