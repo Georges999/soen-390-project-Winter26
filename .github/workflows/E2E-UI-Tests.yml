@@ -76,7 +76,7 @@ jobs:
 
             # Patch appId in CI only (flows are authored for Expo Go locally).
             sed -i "s/appId: host.exp.Exponent/appId: com.concordia.campusguide/g" "$FLOW_DIR"/AT*.yaml
-            sed -i "/- extendedWaitUntil:/,+3{/visible: \"Campus Guide\"/d}" "$FLOW_DIR"/AT*.yaml
+            sed -i '/- extendedWaitUntil:/{N;N;/\n[[:space:]]*visible: "Campus Guide"\n[[:space:]]*timeout: [0-9]\+/d;}' "$FLOW_DIR"/AT*.yaml
             sed -i "/tapOn: \"Campus Guide\"/d" "$FLOW_DIR"/AT*.yaml
 
             adb install -r "$APK_PATH"
