@@ -1,14 +1,21 @@
 appId: host.exp.Exponent
 ---
-# we assume that AT3.2-open-profile + calendar selection ran first
-
 - tapOn:
     id: "tab-next-class"
-- assertVisible: "No upcoming classes today"
-- assertVisible: "View Schedule"
+# NextClass can be empty or have upcoming classes depending current day/time.
+- runFlow:
+    when:
+      visible: "No upcoming classes today"
+    commands:
+      - assertVisible: "View Schedule"
+      - tapOn: "View Schedule"
+      - waitForAnimationToEnd
+      - extendedWaitUntil:
+          visible: "My Schedule"
+          timeout: 10000
 
-- tapOn: "View Schedule"
-- waitForAnimationToEnd
-- extendedWaitUntil:
-    visible: "Calendar"
-    timeout: 10000
+- runFlow:
+    when:
+      visible: "Go to My Next Class"
+    commands:
+      - assertVisible: "Go to My Next Class"

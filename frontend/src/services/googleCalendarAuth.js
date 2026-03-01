@@ -8,8 +8,9 @@ WebBrowser.maybeCompleteAuthSession();
 const GOOGLE_OAUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 const TOKEN_KEY = 'google_calendar_tokens';
 
-// DEV MODE: Bypass OAuth for testing
-const USE_MOCK_AUTH = __DEV__ && true; // Set to false to test real OAuth
+// Allow CI/release builds to force mock auth for deterministic E2E.
+const USE_MOCK_AUTH =
+  process.env.EXPO_PUBLIC_USE_MOCK_AUTH === 'true' || __DEV__;
 
 function getClientId() {
   // For Expo Go development, always use Web client
