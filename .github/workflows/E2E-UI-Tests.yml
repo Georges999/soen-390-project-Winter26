@@ -86,9 +86,7 @@ jobs:
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_COARSE_LOCATION || true
 
             # Run acceptance flows sequentially on a single emulator.
-            for f in "$FLOW_DIR"/AT*.yaml; do
-              "$HOME/.maestro/bin/maestro" test "$f" || exit 1
-            done
+            ls "$FLOW_DIR"/AT*.yaml | sort | xargs -I{} sh -c '"$HOME/.maestro/bin/maestro" test "$1"' _ "{}"
 
       - name: Upload Maestro Artifacts
         if: always()
