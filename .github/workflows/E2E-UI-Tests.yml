@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FLOW_DIR: ${{ github.workspace }}/frontend/src/maestro
-      APK_PATH: ${{ github.workspace }}/frontend/android/app/build/outputs/apk/debug/app-debug.apk
+      APK_PATH: ${{ github.workspace }}/frontend/android/app/build/outputs/apk/release/app-release.apk
 
     steps:
       - name: Checkout code
@@ -69,7 +69,8 @@ jobs:
           script: |
             curl -fsSL "https://get.maestro.mobile.dev" | bash
 
-            bash "$GITHUB_WORKSPACE/frontend/android/gradlew" --project-dir "$GITHUB_WORKSPACE/frontend/android" assembleDebug
+            # Use release APK so JS bundle is packaged in-app (no Metro/dev-server dependency in CI).
+            bash "$GITHUB_WORKSPACE/frontend/android/gradlew" --project-dir "$GITHUB_WORKSPACE/frontend/android" assembleRelease
 
             # Fail fast with a clear error if no AT flows are present.
             ls "$FLOW_DIR"/AT*.yaml >/dev/null 2>&1 || { echo "::error::No Maestro flow files found at $FLOW_DIR matching AT*.yaml"; exit 1; }
@@ -84,8 +85,10 @@ jobs:
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_FINE_LOCATION || true
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_COARSE_LOCATION || true
 
-            # Run only acceptance test flows that start with AT.
-            "$HOME/.maestro/bin/maestro" test "$FLOW_DIR"/AT*.yaml
+            # Run acceptance flows sequentially on a single emulator.
+            for f in "$FLOW_DIR"/AT*.yaml; do
+              "$HOME/.maestro/bin/maestro" test "$f" || exit 1
+            done
 
       - name: Upload Maestro Artifacts
         if: always()
