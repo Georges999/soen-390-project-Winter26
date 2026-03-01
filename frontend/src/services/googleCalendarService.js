@@ -2,8 +2,9 @@ import { getValidAccessToken } from './googleCalendarAuth';
 
 const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
 
-// DEV MODE: Mock calendar data
-const USE_MOCK_DATA = __DEV__ && true;
+// Allow CI/release builds to force mock calendar data for deterministic E2E.
+const USE_MOCK_DATA =
+  process.env.EXPO_PUBLIC_USE_MOCK_CALENDAR === 'true' || __DEV__;
 
 const MOCK_EVENTS = [
   {
