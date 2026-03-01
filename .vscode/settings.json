@@ -1,5 +1,16 @@
 {
     "liveServer.settings.multiRootWorkspaceName": "soen-390-project-Winter26",
     "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-    "javascript.tsserver.experimental.enableProjectDiagnostics": false
+    "javascript.tsserver.experimental.enableProjectDiagnostics": false,
+    "typescript.validate.enable": true,
+    "javascript.validate.enable": true,
+    "files.exclude": {
+        "**/node_modules/**/tsconfig.json": true
+    },
+    "search.exclude": {
+        "**/node_modules": true
+    },
+    "files.watcherExclude": {
+        "**/node_modules/**": true
+    }
 }
