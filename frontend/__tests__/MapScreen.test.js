@@ -1,7 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import MapScreen from '../src/screens/MapScreen';
-import campuses from '../src/data/campuses.json';
 import * as locationService from '../src/services/locationService';
 
 // Mock dependencies

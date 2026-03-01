@@ -6,7 +6,7 @@ import * as Speech from 'expo-speech';
 
 jest.mock('../../src/services/locationService');
 
-global.fetch = jest.fn(() =>
+globalThis.fetch = jest.fn(() =>
   Promise.resolve({
     json: () =>
       Promise.resolve({

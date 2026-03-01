@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 
-// Mock bottom-tabs (not installed) with virtual: true
+// Mock bottom-tabs with virtual: true
 jest.mock('@react-navigation/bottom-tabs', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
