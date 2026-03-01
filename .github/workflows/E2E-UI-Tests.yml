@@ -70,20 +70,14 @@ jobs:
           script: |
             set -eu
 
-            cd "$GITHUB_WORKSPACE/frontend/android"
-            ./gradlew assembleDebug
-
             curl -fsSL "https://get.maestro.mobile.dev" | bash
-            export PATH="$HOME/.maestro/bin:$PATH"
+
+            bash "$GITHUB_WORKSPACE/frontend/android/gradlew" assembleDebug
 
             mkdir -p "$MAESTRO_RESULTS_DIR"
 
             # Fail fast with a clear error if no AT flows are present.
-            flow_count="$(ls "$FLOW_DIR"/AT*.yaml 2>/dev/null | wc -l)"
-            if [ "$flow_count" -eq 0 ]; then
-              echo "::error::No Maestro flow files found at $FLOW_DIR matching AT*.yaml"
-              exit 1
-            fi
+            ls "$FLOW_DIR"/AT*.yaml >/dev/null 2>&1 || { echo "::error::No Maestro flow files found at $FLOW_DIR matching AT*.yaml"; exit 1; }
 
             # Patch appId in CI only (flows are authored for Expo Go locally).
             sed -i "s/appId: host.exp.Exponent/appId: com.concordia.campusguide/g" "$FLOW_DIR"/AT*.yaml
@@ -93,7 +87,7 @@ jobs:
             adb install -r "$APK_PATH"
 
             # Run only acceptance test flows that start with AT and emit JUnit for PR visibility.
-            maestro test "$FLOW_DIR"/AT*.yaml --format junit --output "$MAESTRO_RESULTS_DIR/maestro-junit.xml"
+            "$HOME/.maestro/bin/maestro" test "$FLOW_DIR"/AT*.yaml --format junit --output "$MAESTRO_RESULTS_DIR/maestro-junit.xml"
 
       - name: Upload Maestro Artifacts
         if: always()
