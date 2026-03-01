@@ -22,6 +22,10 @@ jest.mock('expo-web-browser', () => ({
   maybeCompleteAuthSession: jest.fn(),
 }), { virtual: true });
 
+const ORIGINAL_USE_MOCK_GOOGLE_AUTH = process.env.EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH;
+process.env.EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH = 'true';
+global.__DEV__ = true;
+
 // Import after mocks
 const {
   saveTokens,
@@ -36,6 +40,14 @@ const {
 } = require('../../src/services/googleCalendarAuth');
 
 describe('googleCalendarAuth', () => {
+  afterAll(() => {
+    if (ORIGINAL_USE_MOCK_GOOGLE_AUTH === undefined) {
+      delete process.env.EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH;
+    } else {
+      process.env.EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH = ORIGINAL_USE_MOCK_GOOGLE_AUTH;
+    }
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn().mockResolvedValue({ ok: true });

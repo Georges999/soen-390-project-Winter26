@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import {
@@ -12,6 +13,7 @@ import {
   disconnectCalendar,
   isAuthenticated,
 } from '../services/googleCalendarAuth';
+import { exportEventsToGoogleCalendar } from '../services/googleCalendarService';
 import mockCalendars from '../data/mockCalendars.json';
 
 const MAROON = '#95223D';
@@ -32,6 +34,21 @@ export default function ProfileScreen({ navigation }) {
   async function handleConnect() {
     const result = await authenticateWithGoogle();
     if (result.success) {
+      const eventsToExport = calendars
+        .filter((calendar) => calendar.selected)
+        .flatMap((calendar) => calendar.events || []);
+
+      const exportResult = await exportEventsToGoogleCalendar(eventsToExport);
+
+      if (!exportResult.success) {
+        Alert.alert('Export Failed', exportResult.error || 'Could not export events');
+      } else {
+        Alert.alert(
+          'Calendar Synced',
+          `${exportResult.exportedCount} event(s) exported to Google Calendar`
+        );
+      }
+
       setIsConnected(true);
     }
   }
