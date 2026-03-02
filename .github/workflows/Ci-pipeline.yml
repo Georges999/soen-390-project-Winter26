@@ -1,4 +1,4 @@
-name:  Tests and scans CI
+name: Tests and scans CI
 
 on:
   push:
