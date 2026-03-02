@@ -802,31 +802,6 @@ export default function MapScreen({ route }) {
             }),
           )}
 
-          {/* Recenter Button - recenter on route start */}
-          {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
-            <Pressable
-              style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
-              onPress={() => {
-                // Use first point of route if available, otherwise user location
-                const targetCoord =
-                  routeCoords.length > 0 ? routeCoords[0] : userCoord;
-                if (targetCoord) {
-                  mapRef.current?.animateToRegion(
-                    {
-                      latitude: targetCoord.latitude,
-                      longitude: targetCoord.longitude,
-                      latitudeDelta: 0.003,
-                      longitudeDelta: 0.003,
-                    },
-                    500,
-                  );
-                }
-              }}
-            >
-              <MaterialIcons name="my-location" size={24} color={MAROON} />
-            </Pressable>
-          )}
-
           {showCampusLabels &&
             campusList.map((campus) => (
               <Marker
@@ -903,6 +878,30 @@ export default function MapScreen({ route }) {
               </>
             ))}
         </MapView>
+
+        {/* Recenter Button - recenter on route start */}
+        {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
+          <Pressable
+            style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
+            onPress={() => {
+              const targetCoord =
+                routeCoords.length > 0 ? routeCoords[0] : userCoord;
+              if (targetCoord) {
+                mapRef.current?.animateToRegion(
+                  {
+                    latitude: targetCoord.latitude,
+                    longitude: targetCoord.longitude,
+                    latitudeDelta: 0.003,
+                    longitudeDelta: 0.003,
+                  },
+                  500,
+                );
+              }
+            }}
+          >
+            <MaterialIcons name="my-location" size={24} color={MAROON} />
+          </Pressable>
+        )}
 
         {/* Bottom sheet */}
         <BuildingBottomSheet
