@@ -143,6 +143,91 @@ export async function getNextClassEvent() {
   }
 }
 
+function normalizeEventForGoogle(event) {
+  const startDateTime = event?.start?.dateTime || event?.startTime;
+  const endDateTime = event?.end?.dateTime || event?.endTime;
+  const startTimeZone = event?.start?.timeZone;
+  const endTimeZone = event?.end?.timeZone;
+
+  if (!startDateTime || !endDateTime) {
+    return null;
+  }
+
+  return {
+    summary: event.summary || event.title || 'Campus Guide Event',
+    location: event.location || undefined,
+    description: event.description || undefined,
+    recurrence: event.recurrence || undefined,
+    start: {
+      dateTime: startDateTime,
+      ...(startTimeZone ? { timeZone: startTimeZone } : {}),
+    },
+    end: {
+      dateTime: endDateTime,
+      ...(endTimeZone ? { timeZone: endTimeZone } : {}),
+    },
+  };
+}
+
+export async function exportEventsToGoogleCalendar(events = [], calendarId = 'primary') {
+  try {
+    const accessToken = await getValidAccessToken();
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Not authenticated. Please connect your calendar.',
+      };
+    }
+
+    const validEvents = events
+      .map(normalizeEventForGoogle)
+      .filter(Boolean);
+
+    if (validEvents.length === 0) {
+      return {
+        success: false,
+        error: 'No valid events to export.',
+      };
+    }
+
+    const createdEvents = [];
+
+    for (const event of validEvents) {
+      const response = await fetch(
+        `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(event),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Export failed with status ${response.status}`);
+      }
+
+      const createdEvent = await response.json();
+      createdEvents.push(createdEvent);
+    }
+
+    return {
+      success: true,
+      exportedCount: createdEvents.length,
+      events: createdEvents,
+    };
+  } catch (error) {
+    console.error('Failed to export events:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to export events',
+    };
+  }
+}
+
 export function parseBuildingFromLocation(location) {
   if (!location) return null;
 

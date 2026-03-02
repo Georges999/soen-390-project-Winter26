@@ -1,11 +1,10 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render,  waitFor } from '@testing-library/react-native';
 import MapScreen from '../src/screens/MapScreen';
 import * as useDirectionsRouteModule from '../src/hooks/useDirectionsRoute';
 
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {
-  const React = require('react');
   const { View, TouchableOpacity } = require('react-native');
  
   const MockMarker = ({ children, testID, onPress }) => (

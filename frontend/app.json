@@ -2,13 +2,14 @@
   "expo": {
     "name": "Campus Guide",
     "slug": "campus-guide",
+    "owner": "boudy7168",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Clogo.png",
     "userInterfaceStyle": "light",
     "scheme": "campusguide",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/directionsLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,13 +22,13 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/Clogo.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.concordia.campusguide"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/Clogo.png"
     }
   }
 }

@@ -36,7 +36,7 @@ const mockRouteResponse = (overrides = {}) => ({
 describe('useDirectionsRoute', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    global.fetch = jest.fn();
+    globalThis.fetch = jest.fn();
   });
 
   it('should return empty when no startCoord', () => {
