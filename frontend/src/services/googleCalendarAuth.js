@@ -1,6 +1,7 @@
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -9,7 +10,34 @@ const GOOGLE_OAUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'
 const TOKEN_KEY = 'google_calendar_tokens';
 
 // DEV MODE: Bypass OAuth for testing
-const USE_MOCK_AUTH = __DEV__ && true; // Set to false to test real OAuth
+const USE_MOCK_AUTH =
+  __DEV__ && process.env.EXPO_PUBLIC_USE_MOCK_AUTH !== 'false'; // Set EXPO_PUBLIC_USE_MOCK_AUTH=false to test real OAuth
+
+function getProjectIdentityForProxy() {
+  const owner =
+    Constants.expoConfig?.owner ||
+    process.env.EXPO_PUBLIC_EXPO_OWNER ||
+    'anonymous';
+  const slug =
+    Constants.expoConfig?.slug ||
+    process.env.EXPO_PUBLIC_EXPO_SLUG ||
+    'campus-guide';
+
+  return `@${owner}/${slug}`;
+}
+
+function getRedirectUri() {
+  if (__DEV__) {
+    return AuthSession.makeRedirectUri({
+      useProxy: true,
+      projectNameForProxy: getProjectIdentityForProxy(),
+    });
+  }
+
+  return AuthSession.makeRedirectUri({
+    scheme: 'campusguide',
+  });
+}
 
 function getClientId() {
   // For Expo Go development, always use Web client
@@ -54,7 +82,7 @@ export async function authenticateWithGoogle() {
     const clientId = getClientId();
     console.log('[Auth] Client ID:', clientId?.substring(0, 20) + '...');
     
-    const redirectUri = 'https://auth.expo.io/@anonymous/campus-guide-frontend';
+    const redirectUri = getRedirectUri();
     console.log('[Auth] Redirect URI:', redirectUri);
     
     const authRequest = new AuthSession.AuthRequest({

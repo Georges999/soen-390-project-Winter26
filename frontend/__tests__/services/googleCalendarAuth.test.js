@@ -14,8 +14,16 @@ jest.mock('expo-auth-session', () => ({
     promptAsync: jest.fn(),
   })),
   ResponseType: { Code: 'code' },
+  makeRedirectUri: jest.fn().mockReturnValue('https://auth.expo.io/@anonymous/campus-guide'),
   exchangeCodeAsync: jest.fn(),
   refreshAsync: jest.fn(),
+}), { virtual: true });
+
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    owner: 'anonymous',
+    slug: 'campus-guide',
+  },
 }), { virtual: true });
 
 jest.mock('expo-web-browser', () => ({
