@@ -147,4 +147,66 @@ describe('googleCalendarService', () => {
       expect(parseBuildingFromLocation('ev building')).toBe('EV');
     });
   });
+
+  describe('normalizeEventForGoogle and exportEventsToGoogleCalendar', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('normalizeEventForGoogle returns null for missing dates', () => {
+      const evt = { title: 'test' };
+      const { normalizeEventForGoogle } = require('../../src/services/googleCalendarService');
+      expect(normalizeEventForGoogle(evt)).toBeNull();
+    });
+
+    it('normalizeEventForGoogle uses title fallback', () => {
+      const evt = { startTime: '2021-01-01T00:00:00Z', endTime: '2021-01-01T01:00:00Z' };
+      const { normalizeEventForGoogle } = require('../../src/services/googleCalendarService');
+      const norm = normalizeEventForGoogle(evt);
+      expect(norm.summary).toBe('Campus Guide Event');
+    });
+
+    it('exportEventsToGoogleCalendar fails when not authenticated', async () => {
+      getValidAccessToken.mockResolvedValue(null);
+      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
+      const result = await exportEventsToGoogleCalendar([{ title: 'test', startTime: 'a', endTime: 'b' }]);
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Not authenticated/);
+    });
+
+    it('exportEventsToGoogleCalendar fails with invalid events', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
+      const result = await exportEventsToGoogleCalendar([{}]);
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/No valid events/);
+    });
+
+    it('exportEventsToGoogleCalendar posts events and returns count', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch = jest
+        .fn()
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: '1' }) })
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: '2' }) });
+      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
+      const events = [
+        { startTime: '2021-01-01T00:00:00Z', endTime: '2021-01-01T01:00:00Z' },
+        { startTime: '2021-01-02T00:00:00Z', endTime: '2021-01-02T01:00:00Z' },
+      ];
+      const result = await exportEventsToGoogleCalendar(events, 'primary');
+      expect(result.success).toBe(true);
+      expect(result.exportedCount).toBe(2);
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('exportEventsToGoogleCalendar returns error when fetch fails', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
+      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
+      const events = [{ startTime: '2021-01-01', endTime: '2021-01-02' }];
+      const result = await exportEventsToGoogleCalendar(events);
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Export failed/);
+    });
+  });
 });

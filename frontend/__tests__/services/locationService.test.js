@@ -92,7 +92,35 @@ describe('locationService', () => {
     });
   });
 
-  // watchUserCoords tests removed - Complex async subscription mechanism
-  // that's difficult to mock properly. The function is tested indirectly
-  // through component/integration tests.
+  describe('watchUserCoords', () => {
+    it('should return null and not subscribe when permission denied', async () => {
+      Location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
+      const result = await watchUserCoords(() => {});
+      expect(result).toBeNull();
+      expect(Location.watchPositionAsync).not.toHaveBeenCalled();
+    });
+
+    it('should subscribe and call callback with coordinates', async () => {
+      Location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+      const fakeSubscription = { remove: jest.fn() };
+      Location.watchPositionAsync.mockImplementation(async (opts, cb) => {
+        // immediately invoke callback for test
+        cb({ coords: { latitude: 1, longitude: 2 } });
+        return fakeSubscription;
+      });
+      const cb = jest.fn();
+
+      const result = await watchUserCoords(cb);
+      expect(Location.watchPositionAsync).toHaveBeenCalledWith(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000,
+          distanceInterval: 10,
+        },
+        expect.any(Function)
+      );
+      expect(cb).toHaveBeenCalledWith({ latitude: 1, longitude: 2 });
+      expect(result).toBe(fakeSubscription);
+    });
+  });
 });

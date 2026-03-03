@@ -142,7 +142,7 @@ export async function getNextClassEvent() {
   }
 }
 
-function normalizeEventForGoogle(event) {
+export function normalizeEventForGoogle(event) {
   const startDateTime = event?.start?.dateTime || event?.startTime;
   const endDateTime = event?.end?.dateTime || event?.endTime;
   const startTimeZone = event?.start?.timeZone;

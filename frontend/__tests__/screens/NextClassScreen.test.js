@@ -16,7 +16,10 @@ describe('NextClassScreen', () => {
 
   it('should show "Go to My Next Class" button', () => {
     const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    // The component shows either no class, goToClass, or detected card
+    // The component shows either:
+    // no class
+    // goToClass
+    // detected card
     // With mock data, it should show the "Go to My Next Class" card if there's a next class
     try {
       expect(getByText('Go to My Next Class')).toBeTruthy();
