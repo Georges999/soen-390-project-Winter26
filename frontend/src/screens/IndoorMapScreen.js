@@ -286,12 +286,12 @@ export default function IndoorMapScreen({ navigation }) {
           <View style={styles.selectedRoomBar}>
             <View style={styles.selectedRoomInfo}>
               <Text style={styles.selectedRoomCheck}>✓</Text>
-              <Text style={styles.selectedRoomText}>
-                Room Selected{"\n"}
+              <View>
+                <Text style={styles.selectedRoomText}>Room Selected</Text>
                 <Text style={styles.selectedRoomDetail}>
                   {selectedRoom.label} · Floor {currentFloor?.label} · {currentBuilding?.name}
                 </Text>
-              </Text>
+              </View>
             </View>
             <Pressable style={styles.getDirectionsButton} onPress={handleGetDirections}>
               <Text style={styles.getDirectionsText}>Get Directions</Text>
