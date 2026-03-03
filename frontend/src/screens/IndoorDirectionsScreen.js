@@ -281,7 +281,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                     </View>
                     <View style={styles.stepTextContainer}>
                       <Text style={styles.stepText}>{step.text}</Text>
-                      {step.distance && (
+                      {step.distance != null && (
                         <Text style={styles.stepDistance}>{step.distance}</Text>
                       )}
                     </View>
