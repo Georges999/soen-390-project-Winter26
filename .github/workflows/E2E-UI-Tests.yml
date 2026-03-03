@@ -71,6 +71,7 @@ jobs:
           script: |
             curl -fsSL "https://get.maestro.mobile.dev" | bash
 
+            # TODO: need to refactor this code once PRs for sprint 4 are done
             bash "$GITHUB_WORKSPACE/frontend/android/gradlew" --project-dir "$GITHUB_WORKSPACE/frontend/android" assembleRelease
             ls "$FLOW_DIR"/AT*.yaml >/dev/null 2>&1 || { echo "::error::No Maestro flow files found at $FLOW_DIR matching AT*.yaml"; exit 1; }
             sed -i "s/appId: host.exp.Exponent/appId: com.concordia.campusguide/g" "$FLOW_DIR"/AT*.yaml
