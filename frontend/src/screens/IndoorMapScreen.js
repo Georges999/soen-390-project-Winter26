@@ -266,9 +266,9 @@ export default function IndoorMapScreen({ navigation }) {
 
         {/* POI Legend */}
         <View style={styles.poiLegend}>
-          {Object.entries(POI_ICONS).map(([key, { emoji, label }]) => (
+          {Object.entries(POI_ICONS).map(([key, { icon, label }]) => (
             <View key={key} style={styles.poiLegendItem}>
-              <Text style={styles.poiEmoji}>{emoji}</Text>
+              <MaterialIcons name={icon} size={18} color={MAROON} />
               <Text style={styles.poiLabel}>{label}</Text>
             </View>
           ))}
@@ -521,9 +521,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-  },
-  poiEmoji: {
-    fontSize: 14,
   },
   poiLabel: {
     fontSize: 12,

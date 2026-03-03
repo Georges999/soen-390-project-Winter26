@@ -177,25 +177,25 @@ describe('indoorFloorData', () => {
   });
 
   it('should have washroom POI', () => {
-    expect(POI_ICONS.washroom).toEqual({ emoji: '🚻', label: 'Washroom' });
+    expect(POI_ICONS.washroom).toEqual({ icon: 'wc', label: 'Washroom' });
   });
 
   it('should have water POI', () => {
-    expect(POI_ICONS.water).toEqual({ emoji: '💧', label: 'Water' });
+    expect(POI_ICONS.water).toEqual({ icon: 'water-drop', label: 'Water' });
   });
 
   it('should have stairs POI', () => {
-    expect(POI_ICONS.stairs).toEqual({ emoji: '🪜', label: 'Stairs' });
+    expect(POI_ICONS.stairs).toEqual({ icon: 'stairs', label: 'Stairs' });
   });
 
   it('should have elevator POI', () => {
-    expect(POI_ICONS.elevator).toEqual({ emoji: '🛗', label: 'Elevator' });
+    expect(POI_ICONS.elevator).toEqual({ icon: 'elevator', label: 'Elevator' });
   });
 
-  it('should have emoji and label for every POI type', () => {
+  it('should have icon and label for every POI type', () => {
     Object.values(POI_ICONS).forEach((poi) => {
-      expect(poi.emoji).toBeDefined();
-      expect(typeof poi.emoji).toBe('string');
+      expect(poi.icon).toBeDefined();
+      expect(typeof poi.icon).toBe('string');
       expect(poi.label).toBeDefined();
       expect(typeof poi.label).toBe('string');
     });

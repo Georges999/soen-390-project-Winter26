@@ -52,12 +52,13 @@ describe('IndoorMapScreen', () => {
     expect(getByText('Elevator')).toBeTruthy();
   });
 
-  it('should render POI emoji icons', () => {
+  it('should render POI vector icons', () => {
     const { getByText } = render(<IndoorMapScreen navigation={mockNavigation} />);
-    expect(getByText('🚻')).toBeTruthy();
-    expect(getByText('💧')).toBeTruthy();
-    expect(getByText('🪜')).toBeTruthy();
-    expect(getByText('🛗')).toBeTruthy();
+    // Vector icons render as text with the icon name in the mock
+    expect(getByText('wc')).toBeTruthy();
+    expect(getByText('water-drop')).toBeTruthy();
+    expect(getByText('stairs')).toBeTruthy();
+    expect(getByText('elevator')).toBeTruthy();
   });
 
   it('should render floor selector buttons', () => {

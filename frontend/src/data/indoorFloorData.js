@@ -96,12 +96,12 @@ const buildings = {
   ],
 };
 
-/** POI types and their emoji icons for floor plan legend */
+/** POI types and their vector icons for floor plan legend */
 const POI_ICONS = {
-  washroom: { emoji: "🚻", label: "Washroom" },
-  water: { emoji: "💧", label: "Water" },
-  stairs: { emoji: "🪜", label: "Stairs" },
-  elevator: { emoji: "🛗", label: "Elevator" },
+  washroom: { icon: "wc", label: "Washroom" },
+  water: { icon: "water-drop", label: "Water" },
+  stairs: { icon: "stairs", label: "Stairs" },
+  elevator: { icon: "elevator", label: "Elevator" },
 };
 
 export { buildings, floorImages, POI_ICONS };
