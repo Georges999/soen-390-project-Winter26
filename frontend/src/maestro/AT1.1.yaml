@@ -17,10 +17,8 @@ appId: host.exp.Exponent
 - assertVisible: "Loyola"
 
 # AC4: SGW buildings visible (verify one SGW building popup)
-# (Index can shift, so we try 2 likely candidates only)
 - tapOn:
-    id: "VKPointFeature"
-    index: 24
+    id: "building-sgw-h"
 - waitForAnimationToEnd
 
 
@@ -38,8 +36,7 @@ appId: host.exp.Exponent
 - waitForAnimationToEnd
 
 - tapOn:
-    id: "VKPointFeature"
-    index: 23
+    id: "building-loyola-cj"
 - waitForAnimationToEnd
 
 
@@ -58,6 +55,5 @@ appId: host.exp.Exponent
 
 # Optional: quick sanity check that a SGW building can still be opened
 - tapOn:
-    id: "VKPointFeature"
-    index: 27
+    id: "building-sgw-h"
 - waitForAnimationToEnd

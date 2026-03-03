@@ -19,18 +19,8 @@ appId: host.exp.Exponent
 
 # Attempt 1: Tap Hall feature (index may vary on other devices)
 - tapOn:
-    id: "VKPointFeature"
-    index: 26
+    id: "building-sgw-h"
 - waitForAnimationToEnd
-
-- runFlow:
-    when:
-      notVisible: "HENRY F. HALL BUILDING"
-    commands:
-      - tapOn:
-          id: "VKPointFeature"
-          index: 27
-      - waitForAnimationToEnd
 
 # Wait for popup
 - extendedWaitUntil:
