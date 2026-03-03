@@ -52,6 +52,16 @@ jest.mock('../../src/screens/NextClassScreen', () => {
   return function MockNextClassScreen() { return <Text>NextClassScreen</Text>; };
 });
 
+jest.mock('../../src/screens/IndoorMapScreen', () => {
+  const { Text } = require('react-native');
+  return function MockIndoorMapScreen() { return <Text>IndoorMapScreen</Text>; };
+});
+
+jest.mock('../../src/screens/IndoorDirectionsScreen', () => {
+  const { Text } = require('react-native');
+  return function MockIndoorDirectionsScreen() { return <Text>IndoorDirectionsScreen</Text>; };
+});
+
 import MainNavigator from '../../src/navigation/MainNavigator';
 
 describe('MainNavigator', () => {
