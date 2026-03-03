@@ -15,7 +15,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { buildings, POI_ICONS } from "../data/indoorFloorData";
 
 const MAROON = "#912338";
-const LIGHT_MAROON = "rgba(145, 35, 56, 0.15)";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function IndoorMapScreen({ navigation }) {
@@ -41,12 +40,6 @@ export default function IndoorMapScreen({ navigation }) {
 
   // Current floor
   const currentFloor = currentBuilding?.floors?.[selectedFloorIdx] || currentBuilding?.floors?.[0];
-
-  // Rooms on current floor
-  const currentRooms = useMemo(() => {
-    if (!currentBuilding || !currentFloor) return [];
-    return currentBuilding.rooms.filter((r) => r.floor === currentFloor.id);
-  }, [currentBuilding, currentFloor]);
 
   // All rooms for search
   const allRooms = useMemo(() => {

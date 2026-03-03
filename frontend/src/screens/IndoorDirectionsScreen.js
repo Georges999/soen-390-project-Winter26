@@ -25,15 +25,6 @@ const PLACEHOLDER_STEPS = [
   { step: 3, text: "Destination is on your left", distance: null },
 ];
 
-// Cross-floor steps placeholder (reserved for future pathfinding integration)
-// const PLACEHOLDER_CROSS_FLOOR_STEPS = [
-//   { step: 1, text: "Exit the room into the main corridor", distance: null },
-//   { step: 2, text: "Turn left until you reach the corridor", distance: null },
-//   { step: 3, text: "Take the elevator to the destination floor", distance: null },
-//   { step: 4, text: "Turn left until the corridor", distance: null },
-//   { step: 5, text: "Walk straight for 20m", distance: "20m" },
-// ];
-
 export default function IndoorDirectionsScreen({ route, navigation }) {
   const params = route?.params || {};
 
