@@ -57,11 +57,13 @@ export default function IndoorMapScreen({ navigation }) {
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
+    const normalizedQuery = searchQuery.toUpperCase().replace(/[^A-Z0-9]/g, "");
     return allRooms.filter(
       (r) =>
         r.label.toLowerCase().includes(q) ||
         r.id.toLowerCase().includes(q) ||
-        r.buildingName.toLowerCase().includes(q)
+        r.buildingName.toLowerCase().includes(q) ||
+        (r.searchKeys || []).some((key) => key.includes(normalizedQuery))
     );
   }, [searchQuery, allRooms]);
 
