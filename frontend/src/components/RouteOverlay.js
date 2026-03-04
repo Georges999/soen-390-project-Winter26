@@ -1,5 +1,14 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { Polyline, Circle } from "react-native-maps";
+
+const coordKey = (coord) => `${coord.latitude},${coord.longitude}`;
+const segmentKey = (segment) => {
+  const first = segment[0];
+  const last = segment[segment.length - 1];
+  if (!first || !last) return `segment-${segment.length}`;
+  return `${coordKey(first)}-${coordKey(last)}-${segment.length}`;
+};
 
 export default function RouteOverlay({
   safeRouteCoords,
@@ -20,9 +29,9 @@ export default function RouteOverlay({
           strokeWidth={6}
           strokeColor="rgba(37, 99, 235, 0.15)"
         />
-        {routeWalkDotCoords.map((dot, idx) => (
+        {routeWalkDotCoords.map((dot) => (
           <Circle
-            key={`walk-dot-${idx}`}
+            key={`walk-dot-${coordKey(dot)}`}
             center={dot}
             radius={1}
             fillColor="#2563eb"
@@ -39,16 +48,16 @@ export default function RouteOverlay({
       <>
         {routeRideSegments.map((segment, idx) => (
           <Polyline
-            key={`route-ride-${idx}`}
+            key={`route-ride-${segmentKey(segment)}`}
             testID={idx === 0 ? "route-polyline" : undefined}
             coordinates={segment}
             strokeWidth={5}
             strokeColor="#2563eb"
           />
         ))}
-        {routeWalkDotCoords.map((dot, idx) => (
+        {routeWalkDotCoords.map((dot) => (
           <Circle
-            key={`route-walk-dot-${idx}`}
+            key={`route-walk-dot-${coordKey(dot)}`}
             center={dot}
             radius={1}
             fillColor="#2563eb"
@@ -69,3 +78,21 @@ export default function RouteOverlay({
     />
   );
 }
+
+const coordPropType = PropTypes.shape({
+  latitude: PropTypes.number.isRequired,
+  longitude: PropTypes.number.isRequired,
+});
+
+RouteOverlay.propTypes = {
+  safeRouteCoords: PropTypes.arrayOf(coordPropType).isRequired,
+  routeRenderMode: PropTypes.string,
+  routeRideSegments: PropTypes.arrayOf(PropTypes.arrayOf(coordPropType)),
+  routeWalkDotCoords: PropTypes.arrayOf(coordPropType),
+};
+
+RouteOverlay.defaultProps = {
+  routeRenderMode: "solid",
+  routeRideSegments: [],
+  routeWalkDotCoords: [],
+};
