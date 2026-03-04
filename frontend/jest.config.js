@@ -8,6 +8,7 @@ module.exports = {
     'app.config.js',
     '!**/__tests__/**',
     '!**/node_modules/**',
+    '!src/utils/pathfinding/testPathfinding.js',
   ],
   coverageDirectory: 'coverage',
   coverageThreshold: {

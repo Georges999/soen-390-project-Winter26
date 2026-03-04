@@ -137,19 +137,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       });
     }
 
-    console.log('Pathfinding input:', {
-      startNodeId: startRoom.id,
-      endNodeId: destRoom.id,
-      floorsData
-    });
-
     const result = findShortestPath({
       floorsData,
       startNodeId: startRoom.id,
       endNodeId: destRoom.id
     });
 
-    console.log('Pathfinding result:', result);
     return result;
   }, [startRoom, destRoom, selectedBuilding]);
 
@@ -292,8 +285,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const tapX = locationX * scaleX;
     const tapY = locationY * scaleY;
 
-    console.log('Map tap:', { locationX, locationY, tapX, tapY });
-
     // Find nearest room from the current floor's rooms
     let nearestRoom = null;
     let nearestDistance = Infinity;
@@ -308,8 +299,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       }
     });
 
-    console.log('Nearest room:', nearestRoom, 'Distance:', nearestDistance);
-
     // Use a larger threshold for selection (150 units)
     if (nearestRoom && nearestDistance < 150) {
       const floorLabel = selectedFloor?.label || nearestRoom.floor?.split("-")[1];
@@ -321,8 +310,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         setDestText(nearestRoom.label + ", Floor " + floorLabel);
       }
       setSelectionMode(null);
-    } else {
-      console.log('No room found within threshold');
     }
   }, [selectionMode, selectedBuilding, selectedFloor, currentFloorData, floorDimensions]);
 

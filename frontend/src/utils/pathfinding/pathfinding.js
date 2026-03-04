@@ -283,17 +283,20 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
   }
 
   // Build path coordinates for drawing on map
-  const pathCoords = result.pathNodeIds.map((nodeId) => {
-    const node = nodes.get(nodeId);
-    return {
-      id: node.id,
-      x: node.x,
-      y: node.y,
-      floor: node.floor,
-      label: node.label,
-      type: node.type
-    };
-  });
+  const pathCoords = result.pathNodeIds
+    .map((nodeId) => {
+      const node = nodes.get(nodeId);
+      if (!node) return null;
+      return {
+        id: node.id,
+        x: node.x,
+        y: node.y,
+        floor: node.floor,
+        label: node.label,
+        type: node.type
+      };
+    })
+    .filter(Boolean);
 
   return {
     ok: true,
