@@ -6,6 +6,8 @@ import MapScreen from "../screens/MapScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import CalendarScreen from "../screens/CalendarScreen";
 import NextClassScreen from "../screens/NextClassScreen";
+import IndoorMapScreen from "../screens/IndoorMapScreen";
+import IndoorDirectionsScreen from "../screens/IndoorDirectionsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -17,6 +19,15 @@ function ProfileStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function IndoorStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="IndoorMap" component={IndoorMapScreen} />
+      <Stack.Screen name="IndoorDirections" component={IndoorDirectionsScreen} />
     </Stack.Navigator>
   );
 }
@@ -60,6 +71,18 @@ export default function MainNavigator() {
           tabBarLabel: "Next Class",
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="event" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Indoor"
+        component={IndoorStack}
+        options={{
+          tabBarTestID: "tab-indoor",
+          tabBarAccessibilityLabel: "tab-indoor",
+          tabBarLabel: "Indoor",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="domain" size={size} color={color} />
           ),
         }}
       />
