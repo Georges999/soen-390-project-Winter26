@@ -46,6 +46,35 @@ describe("RouteOverlay", () => {
     expect(getByTestId("route-polyline")).toBeTruthy();
   });
 
+  it("handles empty ride segment key fallback path", () => {
+    const { getByTestId } = render(
+      <RouteOverlay
+        safeRouteCoords={[coordA, coordB]}
+        routeRenderMode="mixed"
+        routeRideSegments={[[]]}
+        routeWalkDotCoords={[]}
+      />,
+    );
+
+    expect(getByTestId("route-polyline")).toBeTruthy();
+  });
+
+  it("applies route-polyline testID only to first mixed segment", () => {
+    const { queryAllByTestId } = render(
+      <RouteOverlay
+        safeRouteCoords={[coordA, coordB]}
+        routeRenderMode="mixed"
+        routeRideSegments={[
+          [coordA, coordB],
+          [coordB, coordA],
+        ]}
+        routeWalkDotCoords={[]}
+      />,
+    );
+
+    expect(queryAllByTestId("route-polyline")).toHaveLength(1);
+  });
+
   it("renders default solid polyline for non-walking non-mixed mode", () => {
     const { getByTestId } = render(
       <RouteOverlay
