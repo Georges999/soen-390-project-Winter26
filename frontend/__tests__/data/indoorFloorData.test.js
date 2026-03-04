@@ -7,7 +7,7 @@ jest.mock('../../assets/floor-maps/VE-2-F.png', () => 've2img', { virtual: true 
 jest.mock('../../assets/floor-maps/VL-1-F.png', () => 'vl1img', { virtual: true });
 jest.mock('../../assets/floor-maps/VL-2-F.png', () => 'vl2img', { virtual: true });
 
-import { buildings, floorImages, POI_ICONS } from '../../src/data/indoorFloorData';
+import { buildings, floorImages, POI_ICONS, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor } from '../../src/data/indoorFloorData';
 
 describe('indoorFloorData', () => {
   // --- Exports ---
@@ -172,8 +172,8 @@ describe('indoorFloorData', () => {
 
   // --- POI Icons ---
 
-  it('should have 4 POI types', () => {
-    expect(Object.keys(POI_ICONS)).toHaveLength(4);
+  it('should have 6 POI types', () => {
+    expect(Object.keys(POI_ICONS)).toHaveLength(6);
   });
 
   it('should have washroom POI', () => {
@@ -192,6 +192,14 @@ describe('indoorFloorData', () => {
     expect(POI_ICONS.elevator).toEqual({ icon: 'elevator', label: 'Elevator' });
   });
 
+  it('should have escalator POI', () => {
+    expect(POI_ICONS.escalator).toEqual({ icon: 'escalator', label: 'Escalator' });
+  });
+
+  it('should have metro POI', () => {
+    expect(POI_ICONS.metro).toEqual({ icon: 'subway', label: 'Metro' });
+  });
+
   it('should have icon and label for every POI type', () => {
     Object.values(POI_ICONS).forEach((poi) => {
       expect(poi.icon).toBeDefined();
@@ -206,5 +214,81 @@ describe('indoorFloorData', () => {
   it('should have default export equal to buildings', () => {
     const defaultExport = require('../../src/data/indoorFloorData').default;
     expect(defaultExport).toEqual(buildings);
+  });
+
+  // --- New exports ---
+
+  it('should export getFloorGraphData function', () => {
+    expect(typeof getFloorGraphData).toBe('function');
+  });
+
+  it('should export getRoomsForFloor function', () => {
+    expect(typeof getRoomsForFloor).toBe('function');
+  });
+
+  it('should export getAllNodesForFloor function', () => {
+    expect(typeof getAllNodesForFloor).toBe('function');
+  });
+
+  it('should return floor graph data for a valid building and floor', () => {
+    const data = getFloorGraphData('hall', 'Hall-8');
+    expect(data).toBeDefined();
+    expect(Array.isArray(data.nodes)).toBe(true);
+    expect(Array.isArray(data.rooms)).toBe(true);
+    expect(Array.isArray(data.pois)).toBe(true);
+    expect(Array.isArray(data.edges)).toBe(true);
+  });
+
+  it('should return empty data for invalid building', () => {
+    const data = getFloorGraphData('nonexistent', 'Hall-8');
+    expect(data.nodes).toEqual([]);
+    expect(data.rooms).toEqual([]);
+  });
+
+  it('should return rooms for a valid floor', () => {
+    const rooms = getRoomsForFloor('Hall-8');
+    expect(rooms.length).toBeGreaterThan(0);
+    rooms.forEach((room) => {
+      expect(room.buildingId).toBeDefined();
+      expect(room.buildingName).toBeDefined();
+    });
+  });
+
+  it('should return empty array for invalid floor', () => {
+    const rooms = getRoomsForFloor('Nonexistent-1');
+    expect(rooms).toEqual([]);
+  });
+
+  it('should return all nodes for a valid floor', () => {
+    const nodes = getAllNodesForFloor('Hall-8');
+    expect(nodes.length).toBeGreaterThan(0);
+  });
+
+  it('should return empty array for invalid floor in getAllNodesForFloor', () => {
+    const nodes = getAllNodesForFloor('Nonexistent-1');
+    expect(nodes).toEqual([]);
+  });
+
+  // --- Floor graph data structure ---
+
+  it('should include width and height in floor data', () => {
+    const hall = buildings.sgw.find((b) => b.id === 'hall');
+    expect(hall.floors[0].width).toBeDefined();
+    expect(hall.floors[0].height).toBeDefined();
+  });
+
+  it('should include nodes in floor data', () => {
+    const hall = buildings.sgw.find((b) => b.id === 'hall');
+    expect(Array.isArray(hall.floors[0].nodes)).toBe(true);
+  });
+
+  it('should include edges in floor data', () => {
+    const hall = buildings.sgw.find((b) => b.id === 'hall');
+    expect(Array.isArray(hall.floors[0].edges)).toBe(true);
+  });
+
+  it('should include pois in floor data', () => {
+    const hall = buildings.sgw.find((b) => b.id === 'hall');
+    expect(Array.isArray(hall.floors[0].pois)).toBe(true);
   });
 });
