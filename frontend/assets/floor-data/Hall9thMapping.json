@@ -1,0 +1,2558 @@
+{
+  "version": 2,
+  "exportedAt": "2026-03-03T19:54:23.044Z",
+  "floors": {
+    "Hall-8": {
+      "label": "Hall – Floor 8",
+      "image": "Hall-8.png",
+      "width": 1000,
+      "height": 1000,
+      "nodes": [
+        {
+          "id": "Hall8_hallway_001",
+          "x": 462.98,
+          "y": 199.56,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_002",
+          "x": 333.48,
+          "y": 197.98,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_003",
+          "x": 192.91,
+          "y": 196.4,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_004",
+          "x": 169.22,
+          "y": 327.49,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_005",
+          "x": 175.54,
+          "y": 491.74,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_006",
+          "x": 178.7,
+          "y": 611.77,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_007",
+          "x": 172.38,
+          "y": 788.66,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_008",
+          "x": 281.36,
+          "y": 812.35,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_009",
+          "x": 461.41,
+          "y": 812.35,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_010",
+          "x": 614.38,
+          "y": 812.5,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_011",
+          "x": 820.73,
+          "y": 806.4,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_012",
+          "x": 826.83,
+          "y": 669.17,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_013",
+          "x": 457.84,
+          "y": 679.33,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_014",
+          "x": 592.02,
+          "y": 610.21,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_015",
+          "x": 739.41,
+          "y": 614.28,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_016",
+          "x": 823.78,
+          "y": 554.31,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_017",
+          "x": 821.75,
+          "y": 435.38,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_018",
+          "x": 823.89,
+          "y": 362.51,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_019",
+          "x": 817.37,
+          "y": 209.96,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_020",
+          "x": 733.81,
+          "y": 197.21,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_021",
+          "x": 602.8,
+          "y": 196.51,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_022",
+          "x": 454.8,
+          "y": 294.23,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_023",
+          "x": 455.51,
+          "y": 473.39,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall8_hallway_024",
+          "x": 462.17,
+          "y": 605.31,
+          "type": "hallway"
+        }
+      ],
+      "edges": [
+        {
+          "from": "Hall8_hallway_002",
+          "to": "Hall8_classroom_002",
+          "weight": 56.08
+        },
+        {
+          "from": "Hall8_classroom_003",
+          "to": "Hall8_hallway_002",
+          "weight": 69.58
+        },
+        {
+          "from": "Hall8_hallway_002",
+          "to": "Hall8_hallway_001",
+          "weight": 129.51
+        },
+        {
+          "from": "Hall8_hallway_002",
+          "to": "Hall8_hallway_003",
+          "weight": 140.58
+        },
+        {
+          "from": "Hall8_hallway_003",
+          "to": "Hall8_classroom_004",
+          "weight": 39.78
+        },
+        {
+          "from": "Hall8_hallway_003",
+          "to": "Hall8_classroom_005",
+          "weight": 93.67
+        },
+        {
+          "from": "Hall8_hallway_003",
+          "to": "Hall8_classroom_008",
+          "weight": 84.65
+        },
+        {
+          "from": "Hall8_hallway_003",
+          "to": "Hall8_hallway_004",
+          "weight": 133.21
+        },
+        {
+          "from": "Hall8_hallway_004",
+          "to": "Hall8_classroom_009",
+          "weight": 88.13
+        },
+        {
+          "from": "Hall8_hallway_004",
+          "to": "Hall8_classroom_010",
+          "weight": 76.58
+        },
+        {
+          "from": "Hall8_hallway_004",
+          "to": "Hall8_hallway_005",
+          "weight": 164.37
+        },
+        {
+          "from": "Hall8_hallway_005",
+          "to": "Hall8_classroom_011",
+          "weight": 53.3
+        },
+        {
+          "from": "Hall8_hallway_005",
+          "to": "Hall8_classroom_012",
+          "weight": 76.41
+        },
+        {
+          "from": "Hall8_hallway_005",
+          "to": "Hall8_hallway_006",
+          "weight": 120.07
+        },
+        {
+          "from": "Hall8_hallway_006",
+          "to": "Hall8_classroom_013",
+          "weight": 50.07
+        },
+        {
+          "from": "Hall8_hallway_006",
+          "to": "Hall8_classroom_014",
+          "weight": 59.41
+        },
+        {
+          "from": "Hall8_hallway_006",
+          "to": "Hall8_classroom_015",
+          "weight": 94.25
+        },
+        {
+          "from": "Hall8_hallway_006",
+          "to": "Hall8_hallway_007",
+          "weight": 177
+        },
+        {
+          "from": "Hall8_hallway_007",
+          "to": "Hall8_classroom_016",
+          "weight": 43.97
+        },
+        {
+          "from": "Hall8_hallway_007",
+          "to": "Hall8_classroom_017",
+          "weight": 89.6
+        },
+        {
+          "from": "Hall8_hallway_007",
+          "to": "Hall8_classroom_018",
+          "weight": 69.34
+        },
+        {
+          "from": "Hall8_hallway_007",
+          "to": "Hall8_hallway_008",
+          "weight": 111.53
+        },
+        {
+          "from": "Hall8_hallway_008",
+          "to": "Hall8_classroom_019",
+          "weight": 38.01
+        },
+        {
+          "from": "Hall8_hallway_008",
+          "to": "Hall8_classroom_020",
+          "weight": 99.75
+        },
+        {
+          "from": "Hall8_hallway_008",
+          "to": "Hall8_hallway_009",
+          "weight": 180.05
+        },
+        {
+          "from": "Hall8_hallway_008",
+          "to": "Hall8_stairs_001",
+          "weight": 77.64
+        },
+        {
+          "from": "Hall8_hallway_008",
+          "to": "Hall8_water_001",
+          "weight": 68.09
+        },
+        {
+          "from": "Hall8_hallway_008",
+          "to": "Hall8_washroom_001",
+          "weight": 121.84
+        },
+        {
+          "from": "Hall8_hallway_009",
+          "to": "Hall8_classroom_021",
+          "weight": 96.9
+        },
+        {
+          "from": "Hall8_hallway_009",
+          "to": "Hall8_classroom_031",
+          "weight": 81.53
+        },
+        {
+          "from": "Hall8_hallway_009",
+          "to": "Hall8_hallway_013",
+          "weight": 133.07
+        },
+        {
+          "from": "Hall8_hallway_013",
+          "to": "Hall8_classroom_029",
+          "weight": 54.06
+        },
+        {
+          "from": "Hall8_hallway_013",
+          "to": "Hall8_classroom_028",
+          "weight": 70.83
+        },
+        {
+          "from": "Hall8_hallway_013",
+          "to": "Hall8_hallway_024",
+          "weight": 74.15
+        },
+        {
+          "from": "Hall8_hallway_024",
+          "to": "Hall8_hallway_023",
+          "weight": 132.09
+        },
+        {
+          "from": "Hall8_hallway_023",
+          "to": "Hall8_hallway_022",
+          "weight": 179.16
+        },
+        {
+          "from": "Hall8_hallway_002",
+          "to": "Hall8_stairs_004",
+          "weight": 88.41
+        },
+        {
+          "from": "Hall8_hallway_022",
+          "to": "Hall8_classroom_042",
+          "weight": 52.65
+        },
+        {
+          "from": "Hall8_hallway_022",
+          "to": "Hall8_hallway_001",
+          "weight": 95.02
+        },
+        {
+          "from": "Hall8_hallway_001",
+          "to": "Hall8_classroom_041",
+          "weight": 66.14
+        },
+        {
+          "from": "Hall8_hallway_001",
+          "to": "Hall8_classroom_056",
+          "weight": 85.49
+        },
+        {
+          "from": "Hall8_hallway_001",
+          "to": "Hall8_hallway_021",
+          "weight": 139.85
+        },
+        {
+          "from": "Hall8_hallway_021",
+          "to": "Hall8_classroom_057",
+          "weight": 48.78
+        },
+        {
+          "from": "Hall8_hallway_021",
+          "to": "Hall8_classroom_055",
+          "weight": 59.86
+        },
+        {
+          "from": "Hall8_hallway_021",
+          "to": "Hall8_classroom_061",
+          "weight": 144.99
+        },
+        {
+          "from": "Hall8_hallway_021",
+          "to": "Hall8_hallway_020",
+          "weight": 131.01
+        },
+        {
+          "from": "Hall8_hallway_020",
+          "to": "Hall8_classroom_058",
+          "weight": 50.59
+        },
+        {
+          "from": "Hall8_hallway_019",
+          "to": "Hall8_classroom_059",
+          "weight": 62.29
+        },
+        {
+          "from": "Hall8_hallway_020",
+          "to": "Hall8_hallway_019",
+          "weight": 84.53
+        },
+        {
+          "from": "Hall8_hallway_019",
+          "to": "Hall8_classroom_060",
+          "weight": 92.21
+        },
+        {
+          "from": "Hall8_hallway_019",
+          "to": "Hall8_classroom_054",
+          "weight": 113.72
+        },
+        {
+          "from": "Hall8_hallway_019",
+          "to": "Hall8_classroom_053",
+          "weight": 103.88
+        },
+        {
+          "from": "Hall8_hallway_019",
+          "to": "Hall8_classroom_052",
+          "weight": 51.99
+        },
+        {
+          "from": "Hall8_hallway_020",
+          "to": "Hall8_stairs_003",
+          "weight": 79.72
+        },
+        {
+          "from": "Hall8_hallway_019",
+          "to": "Hall8_hallway_018",
+          "weight": 152.69
+        },
+        {
+          "from": "Hall8_hallway_018",
+          "to": "Hall8_classroom_040",
+          "weight": 67.38
+        },
+        {
+          "from": "Hall8_hallway_018",
+          "to": "Hall8_classroom_050",
+          "weight": 53.72
+        },
+        {
+          "from": "Hall8_classroom_050",
+          "to": "Hall8_classroom_051",
+          "weight": 75.16
+        },
+        {
+          "from": "Hall8_hallway_018",
+          "to": "Hall8_hallway_017",
+          "weight": 72.9
+        },
+        {
+          "from": "Hall8_hallway_017",
+          "to": "Hall8_classroom_039",
+          "weight": 51.87
+        },
+        {
+          "from": "Hall8_hallway_017",
+          "to": "Hall8_classroom_062",
+          "weight": 51.52
+        },
+        {
+          "from": "Hall8_hallway_017",
+          "to": "Hall8_hallway_016",
+          "weight": 118.95
+        },
+        {
+          "from": "Hall8_hallway_016",
+          "to": "Hall8_classroom_038",
+          "weight": 71.82
+        },
+        {
+          "from": "Hall8_hallway_016",
+          "to": "Hall8_classroom_037",
+          "weight": 62.73
+        },
+        {
+          "from": "Hall8_hallway_016",
+          "to": "Hall8_hallway_012",
+          "weight": 114.9
+        },
+        {
+          "from": "Hall8_hallway_015",
+          "to": "Hall8_hallway_012",
+          "weight": 103.22
+        },
+        {
+          "from": "Hall8_hallway_015",
+          "to": "Hall8_hallway_016",
+          "weight": 103.51
+        },
+        {
+          "from": "Hall8_hallway_015",
+          "to": "Hall8_classroom_046",
+          "weight": 45.24
+        },
+        {
+          "from": "Hall8_hallway_015",
+          "to": "Hall8_classroom_047",
+          "weight": 72.3
+        },
+        {
+          "from": "Hall8_hallway_015",
+          "to": "Hall8_classroom_045",
+          "weight": 89.09
+        },
+        {
+          "from": "Hall8_hallway_015",
+          "to": "Hall8_classroom_048",
+          "weight": 135.07
+        },
+        {
+          "from": "Hall8_hallway_014",
+          "to": "Hall8_hallway_015",
+          "weight": 147.45
+        },
+        {
+          "from": "Hall8_hallway_014",
+          "to": "Hall8_classroom_044",
+          "weight": 48.17
+        },
+        {
+          "from": "Hall8_hallway_014",
+          "to": "Hall8_elevator_001",
+          "weight": 77.76
+        },
+        {
+          "from": "Hall8_hallway_024",
+          "to": "Hall8_hallway_014",
+          "weight": 129.94
+        },
+        {
+          "from": "Hall8_hallway_009",
+          "to": "Hall8_hallway_010",
+          "weight": 152.97
+        },
+        {
+          "from": "Hall8_hallway_010",
+          "to": "Hall8_classroom_026",
+          "weight": 41.83
+        },
+        {
+          "from": "Hall8_hallway_010",
+          "to": "Hall8_washroom_004",
+          "weight": 59.33
+        },
+        {
+          "from": "Hall8_hallway_010",
+          "to": "Hall8_water_002",
+          "weight": 92.52
+        },
+        {
+          "from": "Hall8_hallway_010",
+          "to": "Hall8_classroom_022",
+          "weight": 36.89
+        },
+        {
+          "from": "Hall8_hallway_010",
+          "to": "Hall8_hallway_011",
+          "weight": 206.44
+        },
+        {
+          "from": "Hall8_hallway_011",
+          "to": "Hall8_classroom_032",
+          "weight": 50.94
+        },
+        {
+          "from": "Hall8_hallway_011",
+          "to": "Hall8_hallway_012",
+          "weight": 137.37
+        },
+        {
+          "from": "Hall8_hallway_012",
+          "to": "Hall8_classroom_036",
+          "weight": 46.68
+        },
+        {
+          "from": "Hall8_hallway_012",
+          "to": "Hall8_stairs_002",
+          "weight": 81.79
+        },
+        {
+          "from": "Hall8_hallway_011",
+          "to": "Hall8_classroom_033",
+          "weight": 109.94
+        },
+        {
+          "from": "Hall8_hallway_011",
+          "to": "Hall8_classroom_034",
+          "weight": 93.96
+        },
+        {
+          "from": "Hall8_hallway_011",
+          "to": "Hall8_classroom_035",
+          "weight": 56.51
+        },
+        {
+          "from": "Hall8_hallway_011",
+          "to": "Hall8_classroom_025",
+          "weight": 110.07
+        },
+        {
+          "from": "Hall8_hallway_010",
+          "to": "Hall8_classroom_023",
+          "weight": 83.95
+        },
+        {
+          "from": "Hall8_hallway_010",
+          "to": "Hall8_classroom_024",
+          "weight": 129.85
+        },
+        {
+          "from": "Hall8_hallway_002",
+          "to": "Hall8_classroom_064",
+          "weight": 80.33
+        },
+        {
+          "from": "Hall8_hallway_002",
+          "to": "Hall8_classroom_065",
+          "weight": 104.72
+        },
+        {
+          "from": "Hall8_hallway_002",
+          "to": "Hall8_classroom_066",
+          "weight": 145.35
+        },
+        {
+          "from": "Hall8_hallway_014",
+          "to": "Hall8_classroom_043",
+          "weight": 49.11
+        },
+        {
+          "from": "Hall8_hallway_023",
+          "to": "Hall8_stairs_005",
+          "weight": 67.38
+        },
+        {
+          "from": "Hall8_hallway_015",
+          "to": "Hall8_classroom_049",
+          "weight": 142.12
+        }
+      ],
+      "rooms": [
+        {
+          "id": "Hall8_classroom_002",
+          "label": "H-837",
+          "x": 369.29,
+          "y": 154.82
+        },
+        {
+          "id": "Hall8_classroom_003",
+          "label": "H-835",
+          "x": 277.92,
+          "y": 156.09
+        },
+        {
+          "id": "Hall8_classroom_004",
+          "label": "H-833",
+          "x": 185.28,
+          "y": 157.36
+        },
+        {
+          "id": "Hall8_classroom_005",
+          "label": "H-831",
+          "x": 111.68,
+          "y": 149.75
+        },
+        {
+          "id": "Hall8_classroom_008",
+          "label": "H-829",
+          "x": 135.79,
+          "y": 258.88
+        },
+        {
+          "id": "Hall8_classroom_009",
+          "label": "H-827",
+          "x": 131.98,
+          "y": 407.36
+        },
+        {
+          "id": "Hall8_classroom_010",
+          "label": "H-822",
+          "x": 215.74,
+          "y": 388.32
+        },
+        {
+          "id": "Hall8_classroom_011",
+          "label": "H-825",
+          "x": 123.1,
+          "y": 501.27
+        },
+        {
+          "id": "Hall8_classroom_012",
+          "label": "H-820",
+          "x": 220.81,
+          "y": 553.3
+        },
+        {
+          "id": "Hall8_classroom_013",
+          "label": "H-823",
+          "x": 129.44,
+          "y": 602.79
+        },
+        {
+          "id": "Hall8_classroom_014",
+          "label": "H-886",
+          "x": 218.27,
+          "y": 656.09
+        },
+        {
+          "id": "Hall8_classroom_015",
+          "label": "H-821",
+          "x": 130.71,
+          "y": 692.89
+        },
+        {
+          "id": "Hall8_classroom_016",
+          "label": "H-819",
+          "x": 129.44,
+          "y": 779.19
+        },
+        {
+          "id": "Hall8_classroom_017",
+          "label": "H-817",
+          "x": 115.48,
+          "y": 857.87
+        },
+        {
+          "id": "Hall8_classroom_018",
+          "label": "H-815",
+          "x": 195.43,
+          "y": 854.06
+        },
+        {
+          "id": "Hall8_classroom_019",
+          "label": "H-813",
+          "x": 284.26,
+          "y": 850.25
+        },
+        {
+          "id": "Hall8_classroom_020",
+          "label": "H-811",
+          "x": 373.1,
+          "y": 851.52
+        },
+        {
+          "id": "Hall8_classroom_021",
+          "label": "H-807",
+          "x": 546.95,
+          "y": 857.87
+        },
+        {
+          "id": "Hall8_classroom_022",
+          "label": "H-805.01",
+          "x": 621.08,
+          "y": 848.78
+        },
+        {
+          "id": "Hall8_classroom_023",
+          "label": "H-805.02",
+          "x": 620.55,
+          "y": 896.22
+        },
+        {
+          "id": "Hall8_classroom_024",
+          "label": "H-805.03",
+          "x": 650.39,
+          "y": 937.26
+        },
+        {
+          "id": "Hall8_classroom_025",
+          "label": "H-803",
+          "x": 719.15,
+          "y": 848.78
+        },
+        {
+          "id": "Hall8_classroom_026",
+          "label": "H-802",
+          "x": 609.35,
+          "y": 770.97
+        },
+        {
+          "id": "Hall8_classroom_027",
+          "label": "H-892",
+          "x": 583.77,
+          "y": 653.71
+        },
+        {
+          "id": "Hall8_classroom_028",
+          "label": "H-806.03",
+          "x": 523.01,
+          "y": 651.58
+        },
+        {
+          "id": "Hall8_classroom_029",
+          "label": "H-806.02",
+          "x": 509.15,
+          "y": 696.35
+        },
+        {
+          "id": "Hall8_classroom_031",
+          "label": "H-806.01",
+          "x": 517.15,
+          "y": 752.85
+        },
+        {
+          "id": "Hall8_classroom_032",
+          "label": "H-801",
+          "x": 799.12,
+          "y": 852.53
+        },
+        {
+          "id": "Hall8_classroom_033",
+          "label": "H-867",
+          "x": 885.56,
+          "y": 895.19
+        },
+        {
+          "id": "Hall8_classroom_034",
+          "label": "H-865",
+          "x": 901.28,
+          "y": 854.78
+        },
+        {
+          "id": "Hall8_classroom_035",
+          "label": "H-863",
+          "x": 869.84,
+          "y": 778.44
+        },
+        {
+          "id": "Hall8_classroom_036",
+          "label": "H-861",
+          "x": 868.72,
+          "y": 689.76
+        },
+        {
+          "id": "Hall8_classroom_037",
+          "label": "H-859",
+          "x": 872.09,
+          "y": 594.33
+        },
+        {
+          "id": "Hall8_classroom_038",
+          "label": "H-857",
+          "x": 872.09,
+          "y": 501.16
+        },
+        {
+          "id": "Hall8_classroom_039",
+          "label": "H-855",
+          "x": 866.48,
+          "y": 409.11
+        },
+        {
+          "id": "Hall8_classroom_040",
+          "label": "H-853",
+          "x": 870.56,
+          "y": 313.91
+        },
+        {
+          "id": "Hall8_classroom_041",
+          "label": "H-838",
+          "x": 514.8,
+          "y": 240.66
+        },
+        {
+          "id": "Hall8_classroom_042",
+          "label": "H-838.01",
+          "x": 505.29,
+          "y": 309.15
+        },
+        {
+          "id": "Hall8_classroom_043",
+          "label": "H-840",
+          "x": 567.12,
+          "y": 567.88
+        },
+        {
+          "id": "Hall8_classroom_044",
+          "label": "H-862",
+          "x": 628.95,
+          "y": 579.29
+        },
+        {
+          "id": "Hall8_classroom_045",
+          "label": "H-860.03",
+          "x": 751.65,
+          "y": 526.03
+        },
+        {
+          "id": "Hall8_classroom_046",
+          "label": "H-860.01",
+          "x": 751.65,
+          "y": 570.73
+        },
+        {
+          "id": "Hall8_classroom_047",
+          "label": "H-860.04",
+          "x": 710.75,
+          "y": 547.9
+        },
+        {
+          "id": "Hall8_classroom_048",
+          "label": "H-860.06",
+          "x": 703.14,
+          "y": 484.17
+        },
+        {
+          "id": "Hall8_classroom_049",
+          "label": "H-860.05",
+          "x": 774.48,
+          "y": 476.56
+        },
+        {
+          "id": "Hall8_classroom_050",
+          "label": "H-852",
+          "x": 771.63,
+          "y": 350.05
+        },
+        {
+          "id": "Hall8_classroom_051",
+          "label": "H-877",
+          "x": 696.48,
+          "y": 349.1
+        },
+        {
+          "id": "Hall8_classroom_052",
+          "label": "H-851.01",
+          "x": 862.95,
+          "y": 234.96
+        },
+        {
+          "id": "Hall8_classroom_053",
+          "label": "H-861.02",
+          "x": 919.07,
+          "y": 231.15
+        },
+        {
+          "id": "Hall8_classroom_054",
+          "label": "H-851.03",
+          "x": 929.53,
+          "y": 191.2
+        },
+        {
+          "id": "Hall8_classroom_055",
+          "label": "H-881",
+          "x": 643.22,
+          "y": 240.66
+        },
+        {
+          "id": "Hall8_classroom_056",
+          "label": "H-841",
+          "x": 534.78,
+          "y": 153.15
+        },
+        {
+          "id": "Hall8_classroom_057",
+          "label": "H-843",
+          "x": 625.14,
+          "y": 153.15
+        },
+        {
+          "id": "Hall8_classroom_058",
+          "label": "H-845",
+          "x": 717.41,
+          "y": 149.35
+        },
+        {
+          "id": "Hall8_classroom_059",
+          "label": "H-847",
+          "x": 803.02,
+          "y": 149.35
+        },
+        {
+          "id": "Hall8_classroom_060",
+          "label": "H-849",
+          "x": 887.68,
+          "y": 150.3
+        },
+        {
+          "id": "Hall8_classroom_061",
+          "label": "H-842",
+          "x": 601.36,
+          "y": 341.49
+        },
+        {
+          "id": "Hall8_classroom_062",
+          "label": "H-854",
+          "x": 775.43,
+          "y": 412.83
+        },
+        {
+          "id": "Hall8_classroom_064",
+          "label": "H-832.01",
+          "x": 396.85,
+          "y": 247.34
+        },
+        {
+          "id": "Hall8_classroom_065",
+          "label": "H-832.03",
+          "x": 399.29,
+          "y": 279.44
+        },
+        {
+          "id": "Hall8_classroom_066",
+          "label": "H-832.05",
+          "x": 397.25,
+          "y": 328.59
+        }
+      ],
+      "pois": [
+        {
+          "id": "Hall8_water_001",
+          "type": "water",
+          "x": 340.1,
+          "y": 777.92
+        },
+        {
+          "id": "Hall8_washroom_001",
+          "type": "washroom",
+          "x": 381.98,
+          "y": 743.65
+        },
+        {
+          "id": "Hall8_stairs_001",
+          "type": "stairs",
+          "x": 295.69,
+          "y": 736.04
+        },
+        {
+          "id": "Hall8_elevator_001",
+          "type": "elevator",
+          "x": 645.94,
+          "y": 666.24
+        },
+        {
+          "id": "Hall8_washroom_004",
+          "type": "washroom",
+          "x": 656.09,
+          "y": 770.3
+        },
+        {
+          "id": "Hall8_water_002",
+          "type": "water",
+          "x": 697.97,
+          "y": 772.84
+        },
+        {
+          "id": "Hall8_stairs_002",
+          "type": "stairs",
+          "x": 761.42,
+          "y": 718.27
+        },
+        {
+          "id": "Hall8_stairs_003",
+          "type": "stairs",
+          "x": 699.24,
+          "y": 269.04
+        },
+        {
+          "id": "Hall8_stairs_004",
+          "type": "stairs",
+          "x": 293.15,
+          "y": 276.65
+        },
+        {
+          "id": "Hall8_stairs_005",
+          "type": "stairs",
+          "x": 522.84,
+          "y": 475.89
+        }
+      ],
+      "annotations": []
+    },
+    "Hall-9": {
+      "label": "Hall – Floor 9",
+      "image": "Hall-9.png",
+      "width": 1000,
+      "height": 1000,
+      "nodes": [
+        {
+          "id": "Hall9_hallway_001",
+          "x": 365.88,
+          "y": 372.51,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_002",
+          "x": 253.8,
+          "y": 373.52,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_003",
+          "x": 193.21,
+          "y": 311.93,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_004",
+          "x": 198.26,
+          "y": 172.58,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_005",
+          "x": 308.32,
+          "y": 183.69,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_006",
+          "x": 352.75,
+          "y": 267.5,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_007",
+          "x": 447.99,
+          "y": 369.4,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_008",
+          "x": 539.93,
+          "y": 344.08,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_009",
+          "x": 602.55,
+          "y": 297.44,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_010",
+          "x": 606.55,
+          "y": 202.84,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_011",
+          "x": 622.54,
+          "y": 129.55,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_012",
+          "x": 727.81,
+          "y": 118.89,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_013",
+          "x": 835.74,
+          "y": 121.55,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_014",
+          "x": 923.69,
+          "y": 137.54,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_015",
+          "x": 921.02,
+          "y": 197.51,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_016",
+          "x": 918.36,
+          "y": 261.46,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_017",
+          "x": 918.36,
+          "y": 332.09,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_018",
+          "x": 919.69,
+          "y": 393.38,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_019",
+          "x": 921.02,
+          "y": 456.01,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_020",
+          "x": 917.02,
+          "y": 494.65,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_021",
+          "x": 857.06,
+          "y": 354.74,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_022",
+          "x": 770.45,
+          "y": 346.74,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_023",
+          "x": 695.83,
+          "y": 346.74,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_024",
+          "x": 505.28,
+          "y": 404.04,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_025",
+          "x": 503.95,
+          "y": 481.33,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_026",
+          "x": 497.29,
+          "y": 549.28,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_028",
+          "x": 481.3,
+          "y": 663.88,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_029",
+          "x": 481.3,
+          "y": 737.16,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_030",
+          "x": 420,
+          "y": 785.13,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_031",
+          "x": 571.91,
+          "y": 781.14,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_032",
+          "x": 733.14,
+          "y": 782.47,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_033",
+          "x": 829.08,
+          "y": 790.46,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_034",
+          "x": 829.08,
+          "y": 689.19,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_035",
+          "x": 806.43,
+          "y": 602.58,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_036",
+          "x": 689.17,
+          "y": 603.92,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_037",
+          "x": 549.25,
+          "y": 601.25,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_038",
+          "x": 337.39,
+          "y": 785.13,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_039",
+          "x": 232.12,
+          "y": 782.47,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_040",
+          "x": 168.16,
+          "y": 782.47,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_041",
+          "x": 174.82,
+          "y": 679.87,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_042",
+          "x": 178.82,
+          "y": 567.94,
+          "type": "hallway"
+        },
+        {
+          "id": "Hall9_hallway_043",
+          "x": 193.48,
+          "y": 454.68,
+          "type": "hallway"
+        }
+      ],
+      "edges": [
+        {
+          "from": "Hall9_hallway_003",
+          "to": "Hall9_hallway_004",
+          "weight": 139.44
+        },
+        {
+          "from": "Hall9_hallway_003",
+          "to": "Hall9_classroom_011",
+          "weight": 44.38
+        },
+        {
+          "from": "Hall9_hallway_004",
+          "to": "Hall9_classroom_021",
+          "weight": 29.29
+        },
+        {
+          "from": "Hall9_hallway_004",
+          "to": "Hall9_classroom_022",
+          "weight": 27.92
+        },
+        {
+          "from": "Hall9_hallway_004",
+          "to": "Hall9_classroom_024",
+          "weight": 40.37
+        },
+        {
+          "from": "Hall9_hallway_004",
+          "to": "Hall9_hallway_005",
+          "weight": 110.62
+        },
+        {
+          "from": "Hall9_hallway_005",
+          "to": "Hall9_classroom_023",
+          "weight": 58.61
+        },
+        {
+          "from": "Hall9_classroom_023",
+          "to": "Hall9_classroom_027",
+          "weight": 73.94
+        },
+        {
+          "from": "Hall9_classroom_027",
+          "to": "Hall9_classroom_028",
+          "weight": 66.3
+        },
+        {
+          "from": "Hall9_classroom_027",
+          "to": "Hall9_classroom_029",
+          "weight": 53.53
+        },
+        {
+          "from": "Hall9_classroom_029",
+          "to": "Hall9_classroom_030",
+          "weight": 102.58
+        },
+        {
+          "from": "Hall9_hallway_005",
+          "to": "Hall9_classroom_025",
+          "weight": 44.04
+        },
+        {
+          "from": "Hall9_hallway_005",
+          "to": "Hall9_hallway_006",
+          "weight": 94.86
+        },
+        {
+          "from": "Hall9_hallway_006",
+          "to": "Hall9_classroom_026",
+          "weight": 37
+        },
+        {
+          "from": "Hall9_hallway_006",
+          "to": "Hall9_hallway_001",
+          "weight": 105.83
+        },
+        {
+          "from": "Hall9_hallway_001",
+          "to": "Hall9_hallway_002",
+          "weight": 112.08
+        },
+        {
+          "from": "Hall9_hallway_002",
+          "to": "Hall9_stairs_001",
+          "weight": 76.05
+        },
+        {
+          "from": "Hall9_hallway_002",
+          "to": "Hall9_water_001",
+          "weight": 41.73
+        },
+        {
+          "from": "Hall9_hallway_002",
+          "to": "Hall9_hallway_003",
+          "weight": 86.4
+        },
+        {
+          "from": "Hall9_hallway_002",
+          "to": "Hall9_classroom_010",
+          "weight": 86.53
+        },
+        {
+          "from": "Hall9_hallway_002",
+          "to": "Hall9_hallway_043",
+          "weight": 101.12
+        },
+        {
+          "from": "Hall9_hallway_043",
+          "to": "Hall9_classroom_007",
+          "weight": 62.29
+        },
+        {
+          "from": "Hall9_hallway_043",
+          "to": "Hall9_classroom_006",
+          "weight": 65.39
+        },
+        {
+          "from": "Hall9_hallway_043",
+          "to": "Hall9_hallway_042",
+          "weight": 114.2
+        },
+        {
+          "from": "Hall9_hallway_042",
+          "to": "Hall9_classroom_019",
+          "weight": 82.51
+        },
+        {
+          "from": "Hall9_hallway_042",
+          "to": "Hall9_classroom_004",
+          "weight": 58.21
+        },
+        {
+          "from": "Hall9_hallway_043",
+          "to": "Hall9_classroom_005",
+          "weight": 127.59
+        },
+        {
+          "from": "Hall9_hallway_042",
+          "to": "Hall9_classroom_018",
+          "weight": 88.35
+        },
+        {
+          "from": "Hall9_hallway_042",
+          "to": "Hall9_hallway_041",
+          "weight": 112
+        },
+        {
+          "from": "Hall9_hallway_041",
+          "to": "Hall9_classroom_003",
+          "weight": 54.22
+        },
+        {
+          "from": "Hall9_hallway_041",
+          "to": "Hall9_hallway_040",
+          "weight": 102.82
+        },
+        {
+          "from": "Hall9_hallway_040",
+          "to": "Hall9_classroom_002",
+          "weight": 49.14
+        },
+        {
+          "from": "Hall9_hallway_040",
+          "to": "Hall9_classroom_001",
+          "weight": 61.44
+        },
+        {
+          "from": "Hall9_hallway_040",
+          "to": "Hall9_classroom_012",
+          "weight": 51.82
+        },
+        {
+          "from": "Hall9_hallway_040",
+          "to": "Hall9_hallway_039",
+          "weight": 63.96
+        },
+        {
+          "from": "Hall9_hallway_039",
+          "to": "Hall9_classroom_013",
+          "weight": 63.56
+        },
+        {
+          "from": "Hall9_hallway_039",
+          "to": "Hall9_hallway_038",
+          "weight": 105.3
+        },
+        {
+          "from": "Hall9_hallway_038",
+          "to": "Hall9_stairs_002",
+          "weight": 58.92
+        },
+        {
+          "from": "Hall9_hallway_038",
+          "to": "Hall9_water_002",
+          "weight": 35.23
+        },
+        {
+          "from": "Hall9_hallway_038",
+          "to": "Hall9_washroom_001",
+          "weight": 76.91
+        },
+        {
+          "from": "Hall9_hallway_038",
+          "to": "Hall9_classroom_014",
+          "weight": 55.53
+        },
+        {
+          "from": "Hall9_hallway_038",
+          "to": "Hall9_hallway_030",
+          "weight": 82.61
+        },
+        {
+          "from": "Hall9_hallway_030",
+          "to": "Hall9_classroom_015",
+          "weight": 60.3
+        },
+        {
+          "from": "Hall9_hallway_030",
+          "to": "Hall9_hallway_029",
+          "weight": 77.84
+        },
+        {
+          "from": "Hall9_hallway_030",
+          "to": "Hall9_hallway_031",
+          "weight": 151.96
+        },
+        {
+          "from": "Hall9_hallway_031",
+          "to": "Hall9_classroom_038",
+          "weight": 55.17
+        },
+        {
+          "from": "Hall9_hallway_031",
+          "to": "Hall9_classroom_016",
+          "weight": 34.19
+        },
+        {
+          "from": "Hall9_hallway_031",
+          "to": "Hall9_classroom_040",
+          "weight": 58.28
+        },
+        {
+          "from": "Hall9_hallway_031",
+          "to": "Hall9_hallway_032",
+          "weight": 161.24
+        },
+        {
+          "from": "Hall9_hallway_032",
+          "to": "Hall9_classroom_017",
+          "weight": 73.55
+        },
+        {
+          "from": "Hall9_hallway_032",
+          "to": "Hall9_washroom_002",
+          "weight": 85.54
+        },
+        {
+          "from": "Hall9_hallway_032",
+          "to": "Hall9_hallway_033",
+          "weight": 96.27
+        },
+        {
+          "from": "Hall9_hallway_033",
+          "to": "Hall9_classroom_042",
+          "weight": 77.41
+        },
+        {
+          "from": "Hall9_hallway_033",
+          "to": "Hall9_classroom_043",
+          "weight": 42.94
+        },
+        {
+          "from": "Hall9_hallway_033",
+          "to": "Hall9_hallway_034",
+          "weight": 101.27
+        },
+        {
+          "from": "Hall9_hallway_034",
+          "to": "Hall9_classroom_044",
+          "weight": 45.17
+        },
+        {
+          "from": "Hall9_hallway_034",
+          "to": "Hall9_water_003",
+          "weight": 46.02
+        },
+        {
+          "from": "Hall9_hallway_034",
+          "to": "Hall9_hallway_035",
+          "weight": 89.52
+        },
+        {
+          "from": "Hall9_hallway_035",
+          "to": "Hall9_classroom_059",
+          "weight": 40.85
+        },
+        {
+          "from": "Hall9_hallway_035",
+          "to": "Hall9_classroom_055",
+          "weight": 40.77
+        },
+        {
+          "from": "Hall9_hallway_035",
+          "to": "Hall9_hallway_036",
+          "weight": 117.27
+        },
+        {
+          "from": "Hall9_hallway_036",
+          "to": "Hall9_classroom_053",
+          "weight": 49.93
+        },
+        {
+          "from": "Hall9_hallway_036",
+          "to": "Hall9_classroom_052",
+          "weight": 71.59
+        },
+        {
+          "from": "Hall9_hallway_036",
+          "to": "Hall9_hallway_037",
+          "weight": 139.95
+        },
+        {
+          "from": "Hall9_hallway_036",
+          "to": "Hall9_elevator_001",
+          "weight": 62.08
+        },
+        {
+          "from": "Hall9_hallway_037",
+          "to": "Hall9_hallway_026",
+          "weight": 73.49
+        },
+        {
+          "from": "Hall9_classroom_045",
+          "to": "Hall9_hallway_037",
+          "weight": 64.47
+        },
+        {
+          "from": "Hall9_hallway_026",
+          "to": "Hall9_stairs_004",
+          "weight": 53.85
+        },
+        {
+          "from": "Hall9_hallway_026",
+          "to": "Hall9_hallway_025",
+          "weight": 68.28
+        },
+        {
+          "from": "Hall9_classroom_052",
+          "to": "Hall9_classroom_046",
+          "weight": 103.7
+        },
+        {
+          "from": "Hall9_hallway_025",
+          "to": "Hall9_hallway_024",
+          "weight": 77.3
+        },
+        {
+          "from": "Hall9_hallway_007",
+          "to": "Hall9_hallway_024",
+          "weight": 66.95
+        },
+        {
+          "from": "Hall9_hallway_007",
+          "to": "Hall9_hallway_001",
+          "weight": 82.17
+        },
+        {
+          "from": "Hall9_hallway_007",
+          "to": "Hall9_hallway_008",
+          "weight": 95.36
+        },
+        {
+          "from": "Hall9_hallway_008",
+          "to": "Hall9_hallway_009",
+          "weight": 78.08
+        },
+        {
+          "from": "Hall9_hallway_009",
+          "to": "Hall9_classroom_032",
+          "weight": 47.19
+        },
+        {
+          "from": "Hall9_hallway_009",
+          "to": "Hall9_hallway_010",
+          "weight": 94.68
+        },
+        {
+          "from": "Hall9_hallway_010",
+          "to": "Hall9_hallway_011",
+          "weight": 75.01
+        },
+        {
+          "from": "Hall9_hallway_011",
+          "to": "Hall9_classroom_034",
+          "weight": 29.48
+        },
+        {
+          "from": "Hall9_hallway_011",
+          "to": "Hall9_classroom_031",
+          "weight": 43.17
+        },
+        {
+          "from": "Hall9_hallway_011",
+          "to": "Hall9_hallway_012",
+          "weight": 105.81
+        },
+        {
+          "from": "Hall9_hallway_011",
+          "to": "Hall9_classroom_083",
+          "weight": 50.13
+        },
+        {
+          "from": "Hall9_hallway_012",
+          "to": "Hall9_classroom_082",
+          "weight": 36.17
+        },
+        {
+          "from": "Hall9_hallway_012",
+          "to": "Hall9_classroom_084",
+          "weight": 27.79
+        },
+        {
+          "from": "Hall9_hallway_012",
+          "to": "Hall9_hallway_013",
+          "weight": 107.96
+        },
+        {
+          "from": "Hall9_hallway_012",
+          "to": "Hall9_classroom_081",
+          "weight": 30.27
+        },
+        {
+          "from": "Hall9_hallway_013",
+          "to": "Hall9_classroom_080",
+          "weight": 56.19
+        },
+        {
+          "from": "Hall9_hallway_013",
+          "to": "Hall9_classroom_085",
+          "weight": 64.93
+        },
+        {
+          "from": "Hall9_hallway_013",
+          "to": "Hall9_classroom_079",
+          "weight": 34.33
+        },
+        {
+          "from": "Hall9_hallway_013",
+          "to": "Hall9_classroom_078",
+          "weight": 52.13
+        },
+        {
+          "from": "Hall9_hallway_013",
+          "to": "Hall9_classroom_074",
+          "weight": 57.22
+        },
+        {
+          "from": "Hall9_hallway_013",
+          "to": "Hall9_hallway_014",
+          "weight": 89.39
+        },
+        {
+          "from": "Hall9_hallway_014",
+          "to": "Hall9_classroom_077",
+          "weight": 52.49
+        },
+        {
+          "from": "Hall9_hallway_014",
+          "to": "Hall9_classroom_076",
+          "weight": 70.99
+        },
+        {
+          "from": "Hall9_hallway_014",
+          "to": "Hall9_classroom_075",
+          "weight": 43.22
+        },
+        {
+          "from": "Hall9_hallway_014",
+          "to": "Hall9_hallway_015",
+          "weight": 60.03
+        },
+        {
+          "from": "Hall9_hallway_015",
+          "to": "Hall9_classroom_073",
+          "weight": 44.02
+        },
+        {
+          "from": "Hall9_hallway_015",
+          "to": "Hall9_classroom_071",
+          "weight": 45.74
+        },
+        {
+          "from": "Hall9_hallway_015",
+          "to": "Hall9_hallway_016",
+          "weight": 64.01
+        },
+        {
+          "from": "Hall9_hallway_016",
+          "to": "Hall9_classroom_070",
+          "weight": 43.94
+        },
+        {
+          "from": "Hall9_hallway_016",
+          "to": "Hall9_classroom_068",
+          "weight": 48.32
+        },
+        {
+          "from": "Hall9_hallway_016",
+          "to": "Hall9_hallway_017",
+          "weight": 70.63
+        },
+        {
+          "from": "Hall9_hallway_017",
+          "to": "Hall9_classroom_069",
+          "weight": 39.99
+        },
+        {
+          "from": "Hall9_hallway_017",
+          "to": "Hall9_classroom_066",
+          "weight": 33.75
+        },
+        {
+          "from": "Hall9_hallway_017",
+          "to": "Hall9_hallway_018",
+          "weight": 61.3
+        },
+        {
+          "from": "Hall9_hallway_018",
+          "to": "Hall9_classroom_065",
+          "weight": 53.48
+        },
+        {
+          "from": "Hall9_hallway_018",
+          "to": "Hall9_classroom_064",
+          "weight": 43.15
+        },
+        {
+          "from": "Hall9_hallway_018",
+          "to": "Hall9_hallway_019",
+          "weight": 62.64
+        },
+        {
+          "from": "Hall9_hallway_019",
+          "to": "Hall9_classroom_063",
+          "weight": 36.88
+        },
+        {
+          "from": "Hall9_hallway_019",
+          "to": "Hall9_classroom_062",
+          "weight": 38.78
+        },
+        {
+          "from": "Hall9_hallway_019",
+          "to": "Hall9_hallway_020",
+          "weight": 38.85
+        },
+        {
+          "from": "Hall9_hallway_020",
+          "to": "Hall9_classroom_060",
+          "weight": 40.21
+        },
+        {
+          "from": "Hall9_hallway_020",
+          "to": "Hall9_classroom_061",
+          "weight": 50.75
+        },
+        {
+          "from": "Hall9_classroom_055",
+          "to": "Hall9_classroom_056",
+          "weight": 44.46
+        },
+        {
+          "from": "Hall9_classroom_056",
+          "to": "Hall9_classroom_057",
+          "weight": 51.98
+        },
+        {
+          "from": "Hall9_hallway_017",
+          "to": "Hall9_hallway_021",
+          "weight": 65.35
+        },
+        {
+          "from": "Hall9_hallway_018",
+          "to": "Hall9_hallway_021",
+          "weight": 73.59
+        },
+        {
+          "from": "Hall9_hallway_021",
+          "to": "Hall9_hallway_022",
+          "weight": 86.98
+        },
+        {
+          "from": "Hall9_hallway_023",
+          "to": "Hall9_hallway_022",
+          "weight": 74.62
+        },
+        {
+          "from": "Hall9_hallway_023",
+          "to": "Hall9_hallway_008",
+          "weight": 155.92
+        },
+        {
+          "from": "Hall9_hallway_023",
+          "to": "Hall9_stairs_005",
+          "weight": 31.05
+        },
+        {
+          "from": "Hall9_hallway_023",
+          "to": "Hall9_classroom_049",
+          "weight": 75.46
+        },
+        {
+          "from": "Hall9_classroom_049",
+          "to": "Hall9_classroom_048",
+          "weight": 80.29
+        },
+        {
+          "from": "Hall9_classroom_049",
+          "to": "Hall9_classroom_047",
+          "weight": 85.39
+        },
+        {
+          "from": "Hall9_hallway_037",
+          "to": "Hall9_classroom_041",
+          "weight": 50.76
+        },
+        {
+          "from": "Hall9_hallway_028",
+          "to": "Hall9_classroom_039",
+          "weight": 32.55
+        },
+        {
+          "from": "Hall9_hallway_028",
+          "to": "Hall9_hallway_037",
+          "weight": 92.41
+        },
+        {
+          "from": "Hall9_hallway_028",
+          "to": "Hall9_hallway_026",
+          "weight": 115.71
+        },
+        {
+          "from": "Hall9_hallway_028",
+          "to": "Hall9_hallway_029",
+          "weight": 73.28
+        },
+        {
+          "from": "Hall9_hallway_022",
+          "to": "Hall9_classroom_050",
+          "weight": 38.51
+        },
+        {
+          "from": "Hall9_hallway_001",
+          "to": "Hall9_classroom_020",
+          "weight": 54.45
+        },
+        {
+          "from": "Hall9_classroom_007",
+          "to": "Hall9_classroom_005",
+          "weight": 98.5
+        },
+        {
+          "from": "Hall9_classroom_005",
+          "to": "Hall9_classroom_008",
+          "weight": 121.65
+        },
+        {
+          "from": "Hall9_classroom_008",
+          "to": "Hall9_classroom_009",
+          "weight": 48.6
+        },
+        {
+          "from": "Hall9_classroom_009",
+          "to": "Hall9_classroom_007",
+          "weight": 130.32
+        }
+      ],
+      "rooms": [
+        {
+          "id": "Hall9_classroom_001",
+          "label": "H-917",
+          "x": 128.37,
+          "y": 829.28
+        },
+        {
+          "id": "Hall9_classroom_002",
+          "label": "H-919",
+          "x": 124.96,
+          "y": 759.04
+        },
+        {
+          "id": "Hall9_classroom_003",
+          "label": "H-921",
+          "x": 120.87,
+          "y": 674.49
+        },
+        {
+          "id": "Hall9_classroom_004",
+          "label": "H-923",
+          "x": 121.55,
+          "y": 578.34
+        },
+        {
+          "id": "Hall9_classroom_005",
+          "label": "H-925-2",
+          "x": 77.12,
+          "y": 507.03
+        },
+        {
+          "id": "Hall9_classroom_006",
+          "label": "H-925-1",
+          "x": 135.25,
+          "y": 484.42
+        },
+        {
+          "id": "Hall9_classroom_007",
+          "label": "H-925-3",
+          "x": 136.86,
+          "y": 428.72
+        },
+        {
+          "id": "Hall9_classroom_008",
+          "label": "H-925-3",
+          "x": 44.03,
+          "y": 389.97
+        },
+        {
+          "id": "Hall9_classroom_009",
+          "label": "H-925-1",
+          "x": 39.99,
+          "y": 341.54
+        },
+        {
+          "id": "Hall9_classroom_010",
+          "label": "H-927-4",
+          "x": 167.54,
+          "y": 380.29
+        },
+        {
+          "id": "Hall9_classroom_011",
+          "label": "H-927",
+          "x": 164.79,
+          "y": 277.84
+        },
+        {
+          "id": "Hall9_classroom_012",
+          "label": "H-915",
+          "x": 195.81,
+          "y": 826.3
+        },
+        {
+          "id": "Hall9_classroom_013",
+          "label": "H-913",
+          "x": 281.43,
+          "y": 822.58
+        },
+        {
+          "id": "Hall9_classroom_014",
+          "label": "H-911",
+          "x": 368.29,
+          "y": 831.27
+        },
+        {
+          "id": "Hall9_classroom_015",
+          "label": "H-909",
+          "x": 453.91,
+          "y": 834.99
+        },
+        {
+          "id": "Hall9_classroom_016",
+          "label": "H-907",
+          "x": 575.52,
+          "y": 815.14
+        },
+        {
+          "id": "Hall9_classroom_017",
+          "label": "H-903",
+          "x": 672.31,
+          "y": 823.82
+        },
+        {
+          "id": "Hall9_classroom_018",
+          "label": "H-986",
+          "x": 233.04,
+          "y": 637.69
+        },
+        {
+          "id": "Hall9_classroom_019",
+          "label": "H-920",
+          "x": 255.38,
+          "y": 537.18
+        },
+        {
+          "id": "Hall9_classroom_020",
+          "label": "H-980",
+          "x": 370.78,
+          "y": 426.74
+        },
+        {
+          "id": "Hall9_classroom_021",
+          "label": "H-931",
+          "x": 172.24,
+          "y": 186.02
+        },
+        {
+          "id": "Hall9_classroom_022",
+          "label": "H-929",
+          "x": 185.89,
+          "y": 147.55
+        },
+        {
+          "id": "Hall9_classroom_023",
+          "label": "H-933",
+          "x": 260.34,
+          "y": 150.03
+        },
+        {
+          "id": "Hall9_classroom_024",
+          "label": "H-928",
+          "x": 224.35,
+          "y": 203.39
+        },
+        {
+          "id": "Hall9_classroom_025",
+          "label": "H-932",
+          "x": 270.27,
+          "y": 205.87
+        },
+        {
+          "id": "Hall9_classroom_026",
+          "label": "H-937",
+          "x": 388.15,
+          "y": 256.74
+        },
+        {
+          "id": "Hall9_classroom_027",
+          "label": "H-933-1",
+          "x": 321.14,
+          "y": 107.95
+        },
+        {
+          "id": "Hall9_classroom_028",
+          "label": "H-933-2",
+          "x": 371.91,
+          "y": 65.31
+        },
+        {
+          "id": "Hall9_classroom_029",
+          "label": "H-933-11",
+          "x": 366.49,
+          "y": 136.39
+        },
+        {
+          "id": "Hall9_classroom_030",
+          "label": "H-929-25",
+          "x": 464.65,
+          "y": 106.6
+        },
+        {
+          "id": "Hall9_classroom_031",
+          "label": "H-941",
+          "x": 580.41,
+          "y": 120.14
+        },
+        {
+          "id": "Hall9_classroom_032",
+          "label": "H-981",
+          "x": 631.68,
+          "y": 260.32
+        },
+        {
+          "id": "Hall9_classroom_033",
+          "label": "H-945",
+          "x": 693.96,
+          "y": 213.07
+        },
+        {
+          "id": "Hall9_classroom_034",
+          "label": "H-943",
+          "x": 642.41,
+          "y": 151.33
+        },
+        {
+          "id": "Hall9_classroom_038",
+          "label": "H-906",
+          "x": 528.87,
+          "y": 746.62
+        },
+        {
+          "id": "Hall9_classroom_039",
+          "label": "H-914",
+          "x": 512.98,
+          "y": 656.39
+        },
+        {
+          "id": "Hall9_classroom_040",
+          "label": "H-902.1",
+          "x": 612.6,
+          "y": 739.41
+        },
+        {
+          "id": "Hall9_classroom_041",
+          "label": "H-992",
+          "x": 582.28,
+          "y": 639.79
+        },
+        {
+          "id": "Hall9_classroom_042",
+          "label": "H-901",
+          "x": 808.23,
+          "y": 865.01
+        },
+        {
+          "id": "Hall9_classroom_043",
+          "label": "H-967",
+          "x": 869.59,
+          "y": 776.22
+        },
+        {
+          "id": "Hall9_classroom_044",
+          "label": "H-965",
+          "x": 873.2,
+          "y": 679.49
+        },
+        {
+          "id": "Hall9_classroom_045",
+          "label": "H-960",
+          "x": 568.46,
+          "y": 539.71
+        },
+        {
+          "id": "Hall9_classroom_046",
+          "label": "H-962.1",
+          "x": 569.21,
+          "y": 479.1
+        },
+        {
+          "id": "Hall9_classroom_047",
+          "label": "H-966.2",
+          "x": 564.85,
+          "y": 429.76
+        },
+        {
+          "id": "Hall9_classroom_048",
+          "label": "H-966.1",
+          "x": 568.04,
+          "y": 384.69
+        },
+        {
+          "id": "Hall9_classroom_049",
+          "label": "H-966",
+          "x": 646.1,
+          "y": 403.5
+        },
+        {
+          "id": "Hall9_classroom_050",
+          "label": "H-958",
+          "x": 769.77,
+          "y": 385.24
+        },
+        {
+          "id": "Hall9_classroom_052",
+          "label": "H-962",
+          "x": 630.72,
+          "y": 562.59
+        },
+        {
+          "id": "Hall9_classroom_053",
+          "label": "H-964",
+          "x": 717.18,
+          "y": 562.59
+        },
+        {
+          "id": "Hall9_classroom_055",
+          "label": "H-964.1",
+          "x": 787.58,
+          "y": 566.43
+        },
+        {
+          "id": "Hall9_classroom_056",
+          "label": "H-964.2",
+          "x": 788.02,
+          "y": 521.97
+        },
+        {
+          "id": "Hall9_classroom_057",
+          "label": "H-964.3",
+          "x": 806.95,
+          "y": 473.56
+        },
+        {
+          "id": "Hall9_classroom_059",
+          "label": "H-963",
+          "x": 846.96,
+          "y": 597.48
+        },
+        {
+          "id": "Hall9_classroom_060",
+          "label": "H-961.2",
+          "x": 877.89,
+          "y": 503.89
+        },
+        {
+          "id": "Hall9_classroom_061",
+          "label": "H-961.1",
+          "x": 967.28,
+          "y": 501.71
+        },
+        {
+          "id": "Hall9_classroom_062",
+          "label": "H-961.4",
+          "x": 882.25,
+          "y": 455.19
+        },
+        {
+          "id": "Hall9_classroom_063",
+          "label": "H-961.3",
+          "x": 953.47,
+          "y": 438.48
+        },
+        {
+          "id": "Hall9_classroom_064",
+          "label": "H-961.5",
+          "x": 879.34,
+          "y": 408.68
+        },
+        {
+          "id": "Hall9_classroom_065",
+          "label": "H-961.7",
+          "x": 961.47,
+          "y": 359.99
+        },
+        {
+          "id": "Hall9_classroom_066",
+          "label": "H-961.10",
+          "x": 885.88,
+          "y": 322.92
+        },
+        {
+          "id": "Hall9_classroom_067",
+          "label": "H-961.8",
+          "x": 827.01,
+          "y": 302.57
+        },
+        {
+          "id": "Hall9_classroom_068",
+          "label": "H-961.12",
+          "x": 880.07,
+          "y": 290.94
+        },
+        {
+          "id": "Hall9_classroom_069",
+          "label": "H-961.9",
+          "x": 957.11,
+          "y": 322.19
+        },
+        {
+          "id": "Hall9_classroom_070",
+          "label": "H-961.11",
+          "x": 957.83,
+          "y": 280.77
+        },
+        {
+          "id": "Hall9_classroom_071",
+          "label": "H-961.14",
+          "x": 890.24,
+          "y": 231.35
+        },
+        {
+          "id": "Hall9_classroom_072",
+          "label": "H-961.13",
+          "x": 963.65,
+          "y": 227.71
+        },
+        {
+          "id": "Hall9_classroom_073",
+          "label": "H-961.15",
+          "x": 964.28,
+          "y": 189.38
+        },
+        {
+          "id": "Hall9_classroom_074",
+          "label": "H-961.26",
+          "x": 881.5,
+          "y": 155.9
+        },
+        {
+          "id": "Hall9_classroom_075",
+          "label": "H-961.17",
+          "x": 966.14,
+          "y": 145.67
+        },
+        {
+          "id": "Hall9_classroom_076",
+          "label": "H-961.19",
+          "x": 972.65,
+          "y": 86.14
+        },
+        {
+          "id": "Hall9_classroom_077",
+          "label": "H-961.21",
+          "x": 919.63,
+          "y": 85.21
+        },
+        {
+          "id": "Hall9_classroom_078",
+          "label": "H-961.23",
+          "x": 873.12,
+          "y": 85.21
+        },
+        {
+          "id": "Hall9_classroom_079",
+          "label": "H-961.25",
+          "x": 828.48,
+          "y": 88
+        },
+        {
+          "id": "Hall9_classroom_080",
+          "label": "H-961.27",
+          "x": 787.55,
+          "y": 92.65
+        },
+        {
+          "id": "Hall9_classroom_081",
+          "label": "H-961.29",
+          "x": 742.9,
+          "y": 92.65
+        },
+        {
+          "id": "Hall9_classroom_082",
+          "label": "H-961.31",
+          "x": 702.91,
+          "y": 92.65
+        },
+        {
+          "id": "Hall9_classroom_083",
+          "label": "H-961.33",
+          "x": 660.12,
+          "y": 96.37
+        },
+        {
+          "id": "Hall9_classroom_084",
+          "label": "H-961.30",
+          "x": 740.11,
+          "y": 143.81
+        },
+        {
+          "id": "Hall9_classroom_085",
+          "label": "H-961.28",
+          "x": 783.83,
+          "y": 160.55
+        }
+      ],
+      "pois": [
+        {
+          "id": "Hall9_water_001",
+          "type": "water",
+          "x": 241.12,
+          "y": 333.76
+        },
+        {
+          "id": "Hall9_stairs_001",
+          "type": "stairs",
+          "x": 302.03,
+          "y": 314.72
+        },
+        {
+          "id": "Hall9_stairs_002",
+          "type": "stairs",
+          "x": 298.22,
+          "y": 741.12
+        },
+        {
+          "id": "Hall9_water_002",
+          "type": "water",
+          "x": 340.1,
+          "y": 750
+        },
+        {
+          "id": "Hall9_washroom_001",
+          "type": "washroom",
+          "x": 370.56,
+          "y": 715.74
+        },
+        {
+          "id": "Hall9_washroom_002",
+          "type": "washroom",
+          "x": 671.32,
+          "y": 723.35
+        },
+        {
+          "id": "Hall9_stairs_003",
+          "type": "stairs",
+          "x": 734.77,
+          "y": 649.75
+        },
+        {
+          "id": "Hall9_elevator_001",
+          "type": "elevator",
+          "x": 644.67,
+          "y": 647.21
+        },
+        {
+          "id": "Hall9_water_003",
+          "type": "water",
+          "x": 852.79,
+          "y": 649.75
+        },
+        {
+          "id": "Hall9_stairs_004",
+          "type": "stairs",
+          "x": 536.8,
+          "y": 512.69
+        },
+        {
+          "id": "Hall9_stairs_005",
+          "type": "stairs",
+          "x": 705.58,
+          "y": 317.26
+        }
+      ],
+      "annotations": []
+    }
+  }
+}
