@@ -5,7 +5,7 @@ import {
   Pressable,
   Keyboard,
 } from "react-native";
-import MapView, { Polygon, Polyline, Marker, Circle } from "react-native-maps";
+import MapView, { Polygon, Marker } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 
@@ -14,6 +14,7 @@ import SearchBox from "../components/SearchBox";
 import BuildingBottomSheet from "../components/BuildingBottomSheet";
 import DirectionsPanel from "../components/DirectionsPanel";
 import ShuttleModal from "../components/ShuttleModal";
+import RouteOverlay from "../components/RouteOverlay";
 import campuses from "../data/campuses.json";
 import shuttleSchedule from "../data/shuttleSchedule.json";
 
@@ -822,61 +823,12 @@ export default function MapScreen({ route }) {
               </Marker>
             ))}
 
-          {/* Draw the path */}
-          {safeRouteCoords.length > 0 &&
-            (routeRenderMode === "walking" ? (
-              <>
-                <Polyline
-                  testID="route-polyline"
-                  coordinates={safeRouteCoords}
-                  strokeWidth={6}
-                  strokeColor="rgba(37, 99, 235, 0.15)"
-                />
-                {routeWalkDotCoords.map((dot, idx) => (
-                  <Circle
-                    key={`walk-dot-${idx}`}
-                    center={dot}
-                    radius={1}
-                    fillColor="#2563eb"
-                    strokeColor="#2563eb"
-                    strokeWidth={1}
-                  />
-                ))}
-              </>
-            ) : (
-              <>
-                {routeRenderMode === "mixed" ? (
-                  <>
-                    {routeRideSegments.map((segment, idx) => (
-                      <Polyline
-                        key={`route-ride-${idx}`}
-                        testID={idx === 0 ? "route-polyline" : undefined}
-                        coordinates={segment}
-                        strokeWidth={5}
-                        strokeColor="#2563eb"
-                      />
-                    ))}
-                    {routeWalkDotCoords.map((dot, idx) => (
-                      <Circle
-                        key={`route-walk-dot-${idx}`}
-                        center={dot}
-                        radius={1}
-                        fillColor="#2563eb"
-                        strokeColor="#2563eb"
-                        strokeWidth={1}
-                      />
-                    ))}
-                  </>
-                ) : (
-                  <Polyline
-                    testID="route-polyline"
-                    coordinates={safeRouteCoords}
-                    strokeWidth={5}
-                    strokeColor="#2563eb"
-                  />
-                )}
-              </>
-            ))}
+          <RouteOverlay
+            safeRouteCoords={safeRouteCoords}
+            routeRenderMode={routeRenderMode}
+            routeRideSegments={routeRideSegments}
+            routeWalkDotCoords={routeWalkDotCoords}
+          />
         </MapView>
 
         {/* Recenter Button - recenter on route start */}
