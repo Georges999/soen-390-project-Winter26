@@ -1,0 +1,576 @@
+{
+  "version": 2,
+  "exportedAt": "2026-03-03T21:15:14.825Z",
+  "floors": {
+    "VE-2-annotated": {
+      "label": "VE - Floor 2 (Annotated)",
+      "image": "VE-2-annotated.png",
+      "width": 1000,
+      "height": 1000,
+      "nodes": [
+        {
+          "id": "VE2annotated_hallway_001",
+          "type": "hallway",
+          "x": 764.64,
+          "y": 145.54,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_hallway_002",
+          "type": "hallway",
+          "x": 733.26,
+          "y": 146.59,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_hallway_003",
+          "type": "hallway",
+          "x": 620.29,
+          "y": 143.45,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_hallway_004",
+          "type": "hallway",
+          "x": 488.49,
+          "y": 145.54,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_hallway_005",
+          "type": "hallway",
+          "x": 388.08,
+          "y": 149.73,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_hallway_006",
+          "type": "hallway",
+          "x": 293.93,
+          "y": 145.54,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_hallway_007",
+          "type": "hallway",
+          "x": 292.89,
+          "y": 212.49,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        }
+      ],
+      "edges": [
+        {
+          "from": "VE2annotated_stairs_002",
+          "to": "VE2annotated_hallway_001",
+          "weight": 44.48
+        },
+        {
+          "from": "VE2annotated_classroom_031",
+          "to": "VE2annotated_hallway_001",
+          "weight": 32.49
+        },
+        {
+          "from": "VE2annotated_classroom_030",
+          "to": "VE2annotated_hallway_002",
+          "weight": 57.14
+        },
+        {
+          "from": "VE2annotated_hallway_002",
+          "to": "VE2annotated_washroom_001",
+          "weight": 106.71
+        },
+        {
+          "from": "VE2annotated_hallway_002",
+          "to": "VE2annotated_hallway_003",
+          "weight": 113.01
+        },
+        {
+          "from": "VE2annotated_hallway_003",
+          "to": "VE2annotated_classroom_024",
+          "weight": 18.86
+        },
+        {
+          "from": "VE2annotated_classroom_024",
+          "to": "VE2annotated_classroom_025",
+          "weight": 34.83
+        },
+        {
+          "from": "VE2annotated_classroom_024",
+          "to": "VE2annotated_classroom_027",
+          "weight": 33.54
+        },
+        {
+          "from": "VE2annotated_classroom_025",
+          "to": "VE2annotated_classroom_026",
+          "weight": 44.69
+        },
+        {
+          "from": "VE2annotated_classroom_027",
+          "to": "VE2annotated_classroom_028",
+          "weight": 63.63
+        },
+        {
+          "from": "VE2annotated_classroom_028",
+          "to": "VE2annotated_classroom_029",
+          "weight": 61.96
+        },
+        {
+          "from": "VE2annotated_hallway_003",
+          "to": "VE2annotated_hallway_004",
+          "weight": 131.82
+        },
+        {
+          "from": "VE2annotated_hallway_004",
+          "to": "VE2annotated_classroom_019",
+          "weight": 20.84
+        },
+        {
+          "from": "VE2annotated_classroom_019",
+          "to": "VE2annotated_classroom_020",
+          "weight": 31.1
+        },
+        {
+          "from": "VE2annotated_classroom_019",
+          "to": "VE2annotated_classroom_021",
+          "weight": 35.08
+        },
+        {
+          "from": "VE2annotated_classroom_019",
+          "to": "VE2annotated_classroom_022",
+          "weight": 36.73
+        },
+        {
+          "from": "VE2annotated_classroom_019",
+          "to": "VE2annotated_classroom_023",
+          "weight": 34.2
+        },
+        {
+          "from": "VE2annotated_classroom_013",
+          "to": "VE2annotated_hallway_004",
+          "weight": 57.16
+        },
+        {
+          "from": "VE2annotated_classroom_013",
+          "to": "VE2annotated_hallway_005",
+          "weight": 60.35
+        },
+        {
+          "from": "VE2annotated_hallway_004",
+          "to": "VE2annotated_hallway_005",
+          "weight": 100.5
+        },
+        {
+          "from": "VE2annotated_classroom_012",
+          "to": "VE2annotated_hallway_005",
+          "weight": 29.31
+        },
+        {
+          "from": "VE2annotated_hallway_005",
+          "to": "VE2annotated_classroom_014",
+          "weight": 26.67
+        },
+        {
+          "from": "VE2annotated_classroom_014",
+          "to": "VE2annotated_classroom_015",
+          "weight": 37.14
+        },
+        {
+          "from": "VE2annotated_classroom_014",
+          "to": "VE2annotated_classroom_016",
+          "weight": 53.39
+        },
+        {
+          "from": "VE2annotated_classroom_014",
+          "to": "VE2annotated_classroom_017",
+          "weight": 42.73
+        },
+        {
+          "from": "VE2annotated_classroom_014",
+          "to": "VE2annotated_classroom_018",
+          "weight": 26.68
+        },
+        {
+          "from": "VE2annotated_hallway_005",
+          "to": "VE2annotated_hallway_006",
+          "weight": 94.24
+        },
+        {
+          "from": "VE2annotated_hallway_006",
+          "to": "VE2annotated_classroom_007",
+          "weight": 21.99
+        },
+        {
+          "from": "VE2annotated_classroom_007",
+          "to": "VE2annotated_classroom_008",
+          "weight": 29.59
+        },
+        {
+          "from": "VE2annotated_classroom_007",
+          "to": "VE2annotated_classroom_009",
+          "weight": 35.52
+        },
+        {
+          "from": "VE2annotated_classroom_007",
+          "to": "VE2annotated_classroom_010",
+          "weight": 35.39
+        },
+        {
+          "from": "VE2annotated_classroom_007",
+          "to": "VE2annotated_classroom_011",
+          "weight": 30.34
+        },
+        {
+          "from": "VE2annotated_hallway_006",
+          "to": "VE2annotated_classroom_001",
+          "weight": 48.97
+        },
+        {
+          "from": "VE2annotated_hallway_006",
+          "to": "VE2annotated_classroom_002",
+          "weight": 24.09
+        },
+        {
+          "from": "VE2annotated_hallway_006",
+          "to": "VE2annotated_hallway_007",
+          "weight": 66.96
+        },
+        {
+          "from": "VE2annotated_hallway_007",
+          "to": "VE2annotated_classroom_006",
+          "weight": 18
+        },
+        {
+          "from": "VE2annotated_hallway_007",
+          "to": "VE2annotated_classroom_003",
+          "weight": 13.64
+        },
+        {
+          "from": "VE2annotated_hallway_007",
+          "to": "VE2annotated_classroom_004",
+          "weight": 39.05
+        },
+        {
+          "from": "VE2annotated_hallway_007",
+          "to": "VE2annotated_classroom_005",
+          "weight": 64.86
+        }
+      ],
+      "rooms": [
+        {
+          "id": "VE2annotated_classroom_001",
+          "type": "classroom",
+          "x": 247.91,
+          "y": 162.28,
+          "label": "VE230",
+          "nodeSize": 5,
+          "labelSize": 7
+        },
+        {
+          "id": "VE2annotated_classroom_002",
+          "type": "classroom",
+          "x": 307.53,
+          "y": 165.42,
+          "label": "VE228-1",
+          "nodeSize": 5,
+          "labelSize": 7
+        },
+        {
+          "id": "VE2annotated_classroom_003",
+          "type": "classroom",
+          "x": 306.49,
+          "y": 211.44,
+          "label": "VE228-2",
+          "nodeSize": 5,
+          "labelSize": 7
+        },
+        {
+          "id": "VE2annotated_classroom_004",
+          "type": "classroom",
+          "x": 306.49,
+          "y": 249.1,
+          "label": "VE228-3",
+          "nodeSize": 5,
+          "labelSize": 7
+        },
+        {
+          "id": "VE2annotated_classroom_005",
+          "type": "classroom",
+          "x": 291.84,
+          "y": 277.34,
+          "label": "VE228-4",
+          "nodeSize": 5,
+          "labelSize": 7
+        },
+        {
+          "id": "VE2annotated_classroom_006",
+          "type": "classroom",
+          "x": 278.24,
+          "y": 222.95,
+          "label": "VE228-7",
+          "nodeSize": 5,
+          "labelSize": 7
+        },
+        {
+          "id": "VE2annotated_classroom_007",
+          "type": "classroom",
+          "x": 284.52,
+          "y": 125.67,
+          "label": "VE229",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_008",
+          "type": "classroom",
+          "x": 305.44,
+          "y": 104.75,
+          "label": "VE229-1",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_009",
+          "type": "classroom",
+          "x": 292.89,
+          "y": 91.15,
+          "label": "VE229-2",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_010",
+          "type": "classroom",
+          "x": 273.01,
+          "y": 92.2,
+          "label": "VE229-3",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_011",
+          "type": "classroom",
+          "x": 262.55,
+          "y": 104.75,
+          "label": "VE229-4",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_012",
+          "type": "classroom",
+          "x": 389.12,
+          "y": 179.02,
+          "label": "VE226-1",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_013",
+          "type": "classroom",
+          "x": 441.42,
+          "y": 177.97,
+          "label": "VE226-3",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_014",
+          "type": "classroom",
+          "x": 393.31,
+          "y": 123.58,
+          "label": "VE227",
+          "nodeSize": 5,
+          "labelSize": 9
+        },
+        {
+          "id": "VE2annotated_classroom_015",
+          "type": "classroom",
+          "x": 413.18,
+          "y": 92.2,
+          "label": "VE227-1",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_016",
+          "type": "classroom",
+          "x": 391.21,
+          "y": 70.23,
+          "label": "VE227-2",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_017",
+          "type": "classroom",
+          "x": 377.62,
+          "y": 83.83,
+          "label": "VE227-3",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_018",
+          "type": "classroom",
+          "x": 373.43,
+          "y": 105.79,
+          "label": "VE227-4",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_019",
+          "type": "classroom",
+          "x": 482.22,
+          "y": 125.67,
+          "label": "VE225",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_020",
+          "type": "classroom",
+          "x": 503.14,
+          "y": 102.66,
+          "label": "VE225-1",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_021",
+          "type": "classroom",
+          "x": 488.49,
+          "y": 91.15,
+          "label": "VE225-2",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_022",
+          "type": "classroom",
+          "x": 469.67,
+          "y": 91.15,
+          "label": "VE225-3",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_023",
+          "type": "classroom",
+          "x": 450.84,
+          "y": 112.07,
+          "label": "VE225-4",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_024",
+          "type": "classroom",
+          "x": 619.25,
+          "y": 124.62,
+          "label": "VE223",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_025",
+          "type": "classroom",
+          "x": 593.1,
+          "y": 101.61,
+          "label": "VE223-6",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_026",
+          "type": "classroom",
+          "x": 550.21,
+          "y": 89.06,
+          "label": "VE223-5",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_027",
+          "type": "classroom",
+          "x": 617.15,
+          "y": 91.15,
+          "label": "VE223-4",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_028",
+          "type": "classroom",
+          "x": 673.64,
+          "y": 61.86,
+          "label": "VE223-3",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_029",
+          "type": "classroom",
+          "x": 731.17,
+          "y": 84.87,
+          "label": "VE223-2",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_030",
+          "type": "classroom",
+          "x": 680.96,
+          "y": 123.58,
+          "label": "VE221",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_classroom_031",
+          "type": "classroom",
+          "x": 746.86,
+          "y": 118.35,
+          "label": "VE221-1",
+          "nodeSize": 5,
+          "labelSize": 8
+        }
+      ],
+      "pois": [
+        {
+          "id": "VE2annotated_washroom_001",
+          "type": "washroom",
+          "x": 735.36,
+          "y": 253.28,
+          "label": "",
+          "nodeSize": 5,
+          "labelSize": 8
+        },
+        {
+          "id": "VE2annotated_stairs_002",
+          "type": "stairs",
+          "x": 798.12,
+          "y": 116.25,
+          "label": "VE_Stairs",
+          "nodeSize": 5,
+          "labelSize": 8
+        }
+      ],
+      "annotations": []
+    }
+  }
+}
