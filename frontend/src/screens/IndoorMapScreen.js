@@ -261,6 +261,7 @@ export default function IndoorMapScreen({ navigation }) {
                   />
                   {selectedRoomHighlight ? (
                     <View
+                      key={selectedRoom?.id ?? selectedRoom?.label}
                       testID="selected-room-highlight"
                       style={[
                         styles.roomHighlight,

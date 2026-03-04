@@ -209,6 +209,21 @@ describe('IndoorMapScreen', () => {
     expect(getByTestId('selected-room-highlight')).toBeTruthy();
   });
 
+  it('should keep only one highlight when selecting a different room', () => {
+    const { getByPlaceholderText, getByText, getAllByTestId } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
+
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H861');
+    fireEvent.press(getByText(/H861/));
+
+    expect(getAllByTestId('selected-room-highlight')).toHaveLength(1);
+    expect(getByText(/H861/)).toBeTruthy();
+  });
+
   it('should show the checkmark when a room is selected', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
