@@ -17,6 +17,7 @@
           "nodeSize": 8,
           "labelSize": 9
         },
+
         {
           "id": "MB1annotated_hallway_005",
           "type": "hallway",
