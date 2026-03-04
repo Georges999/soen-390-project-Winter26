@@ -65,9 +65,27 @@ export default function IndoorMapScreen({ navigation }) {
     );
   }, [searchQuery, allRooms]);
 
+  const selectedRoomContext = useMemo(() => {
+    if (!selectedRoom) return null;
+
+    const building = campusBuildings.find((candidate) =>
+      candidate.rooms.some((room) => room.id === selectedRoom.id)
+    );
+    if (!building) return null;
+
+    const floor = building.floors.find(
+      (candidate) => candidate.id === selectedRoom.floor
+    );
+
+    return { building, floor };
+  }, [campusBuildings, selectedRoom]);
+
   const selectedRoomHighlight = useMemo(
-    () => getRoomHighlightPoint(currentFloor?.id, selectedRoom?.label),
-    [currentFloor?.id, selectedRoom?.label]
+    () =>
+      selectedRoomContext?.floor?.id === currentFloor?.id
+        ? getRoomHighlightPoint(currentFloor?.id, selectedRoom?.label)
+        : null,
+    [currentFloor?.id, selectedRoom?.label, selectedRoomContext]
   );
 
   const handleCampusToggle = (campus) => {
@@ -86,7 +104,6 @@ export default function IndoorMapScreen({ navigation }) {
 
   const handleFloorSelect = (idx) => {
     setSelectedFloorIdx(idx);
-    setSelectedRoom(null);
   };
 
   const handleRoomSelect = (room) => {
@@ -106,11 +123,11 @@ export default function IndoorMapScreen({ navigation }) {
   };
 
   const handleGetDirections = () => {
-    if (selectedRoom) {
+    if (selectedRoom && selectedRoomContext) {
       navigation.navigate("IndoorDirections", {
         destinationRoom: selectedRoom,
-        building: currentBuilding,
-        floor: currentFloor,
+        building: selectedRoomContext.building,
+        floor: selectedRoomContext.floor,
       });
     }
   };
