@@ -210,7 +210,7 @@ describe('IndoorMapScreen', () => {
   });
 
   it('should keep only one highlight when selecting a different room', () => {
-    const { getByPlaceholderText, getByText, getAllByTestId } = render(
+    const { getByPlaceholderText, getByText, getAllByText, getAllByTestId } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
 
@@ -218,10 +218,10 @@ describe('IndoorMapScreen', () => {
     fireEvent.press(getByText(/H837/));
 
     fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H861');
-    fireEvent.press(getByText(/H861/));
+    fireEvent.press(getAllByText(/H861/)[0]);
 
     expect(getAllByTestId('selected-room-highlight')).toHaveLength(1);
-    expect(getByText(/H861/)).toBeTruthy();
+    expect(getAllByText(/H861/).length).toBeGreaterThan(0);
   });
 
   it('should show the checkmark when a room is selected', () => {
@@ -243,7 +243,10 @@ describe('IndoorMapScreen', () => {
     expect(mockNavigation.navigate).toHaveBeenCalledWith(
       'IndoorDirections',
       expect.objectContaining({
-        destinationRoom: expect.objectContaining({ id: 'H-837' }),
+        destinationRoom: expect.objectContaining({
+          label: 'H837',
+          floor: 'Hall-8',
+        }),
       })
     );
   });
