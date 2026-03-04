@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { buildings, POI_ICONS } from "../data/indoorFloorData";
+import { getRoomHighlightPoint } from "../data/indoorRoomHighlightData";
 
 const MAROON = "#912338";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -63,6 +64,11 @@ export default function IndoorMapScreen({ navigation }) {
         r.buildingName.toLowerCase().includes(q)
     );
   }, [searchQuery, allRooms]);
+
+  const selectedRoomHighlight = useMemo(
+    () => getRoomHighlightPoint(currentFloor?.id, selectedRoom?.label),
+    [currentFloor?.id, selectedRoom?.label]
+  );
 
   const handleCampusToggle = (campus) => {
     setSelectedCampus(campus);
@@ -247,11 +253,25 @@ export default function IndoorMapScreen({ navigation }) {
                 contentContainerStyle={styles.floorPlanScrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                <Image
-                  source={currentFloor.image}
-                  style={styles.floorPlanImage}
-                  resizeMode="contain"
-                />
+                <View style={styles.floorPlanCanvas}>
+                  <Image
+                    source={currentFloor.image}
+                    style={styles.floorPlanImage}
+                    resizeMode="contain"
+                  />
+                  {selectedRoomHighlight ? (
+                    <View
+                      testID="selected-room-highlight"
+                      style={[
+                        styles.roomHighlight,
+                        {
+                          left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
+                          top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
+                        },
+                      ]}
+                    />
+                  ) : null}
+                </View>
               </ScrollView>
             </ScrollView>
           ) : (
@@ -498,6 +518,20 @@ const styles = StyleSheet.create({
   floorPlanImage: {
     width: SCREEN_WIDTH - 32,
     height: SCREEN_WIDTH - 32,
+  },
+  floorPlanCanvas: {
+    position: "relative",
+  },
+  roomHighlight: {
+    position: "absolute",
+    width: 18,
+    height: 18,
+    marginLeft: -9,
+    marginTop: -9,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: "#2563eb",
+    backgroundColor: "rgba(37, 99, 235, 0.22)",
   },
   noFloorPlan: {
     flex: 1,

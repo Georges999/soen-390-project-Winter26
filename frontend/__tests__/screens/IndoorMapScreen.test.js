@@ -200,6 +200,15 @@ describe('IndoorMapScreen', () => {
     expect(getByText('Get Directions')).toBeTruthy();
   });
 
+  it('should render a highlight marker when a mapped room is selected', () => {
+    const { getByPlaceholderText, getByText, getByTestId } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
+    expect(getByTestId('selected-room-highlight')).toBeTruthy();
+  });
+
   it('should show the checkmark when a room is selected', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
