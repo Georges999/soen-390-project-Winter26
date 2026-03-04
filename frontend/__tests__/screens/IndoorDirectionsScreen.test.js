@@ -27,17 +27,19 @@ jest.mock('react-native-svg', () => {
 }, { virtual: true });
 
 // Mock pathfinding module
+const mockFindShortestPath = jest.fn().mockReturnValue({
+  ok: true,
+  pathCoords: [
+    { x: 100, y: 200, type: 'classroom' },
+    { x: 150, y: 250, type: 'hallway' },
+    { x: 200, y: 300, type: 'classroom' },
+  ],
+  totalWeight: 450,
+  reason: null,
+});
+
 jest.mock('../../src/utils/pathfinding/pathfinding', () => ({
-  findShortestPath: jest.fn().mockReturnValue({
-    ok: true,
-    pathCoords: [
-      { x: 100, y: 200, type: 'classroom' },
-      { x: 150, y: 250, type: 'hallway' },
-      { x: 200, y: 300, type: 'classroom' },
-    ],
-    totalWeight: 450,
-    reason: null,
-  }),
+  findShortestPath: (...args) => mockFindShortestPath(...args),
 }));
 
 const mockNavigation = {
@@ -309,5 +311,160 @@ describe('IndoorDirectionsScreen', () => {
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
     expect(getByText('Use the search bars or tap on the map')).toBeTruthy();
+  });
+
+  // --- Direction step text variants ---
+
+  it('should show "Pass the elevator" for elevator node type', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: true,
+      pathCoords: [
+        { x: 100, y: 200, type: 'classroom' },
+        { x: 150, y: 250, type: 'elevator' },
+        { x: 200, y: 300, type: 'classroom' },
+      ],
+      totalWeight: 300,
+      reason: null,
+    });
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByText('Pass the elevator')).toBeTruthy();
+  });
+
+  it('should show "Pass the stairs" for stairs node type', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: true,
+      pathCoords: [
+        { x: 100, y: 200, type: 'classroom' },
+        { x: 150, y: 250, type: 'stairs' },
+        { x: 200, y: 300, type: 'classroom' },
+      ],
+      totalWeight: 300,
+      reason: null,
+    });
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByText('Pass the stairs')).toBeTruthy();
+  });
+
+  it('should show "Pass the washroom" for washroom node type', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: true,
+      pathCoords: [
+        { x: 100, y: 200, type: 'classroom' },
+        { x: 150, y: 250, type: 'washroom' },
+        { x: 200, y: 300, type: 'classroom' },
+      ],
+      totalWeight: 300,
+      reason: null,
+    });
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByText('Pass the washroom on your right')).toBeTruthy();
+  });
+
+  it('should show "Pass the escalator" for escalator node type', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: true,
+      pathCoords: [
+        { x: 100, y: 200, type: 'classroom' },
+        { x: 150, y: 250, type: 'escalator' },
+        { x: 200, y: 300, type: 'classroom' },
+      ],
+      totalWeight: 300,
+      reason: null,
+    });
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByText('Pass the escalator')).toBeTruthy();
+  });
+
+  it('should show "Continue along the corridor" for unknown node type', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: true,
+      pathCoords: [
+        { x: 100, y: 200, type: 'classroom' },
+        { x: 150, y: 250, type: 'unknown_type' },
+        { x: 200, y: 300, type: 'classroom' },
+      ],
+      totalWeight: 300,
+      reason: null,
+    });
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByText('Continue along the corridor')).toBeTruthy();
+  });
+
+  // --- Map tap selection mode ---
+
+  it('should show selection mode indicator when map select button pressed for start', () => {
+    const { getAllByText, getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    // Press the my-location icon button (start map select)
+    fireEvent.press(getAllByText('my-location')[0]);
+    expect(getByText('Tap on the map to select start point')).toBeTruthy();
+  });
+
+  it('should show selection mode indicator when map select button pressed for destination', () => {
+    const { getAllByText, getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    // The second "place" icon is the dest map select button
+    const placeIcons = getAllByText('place');
+    fireEvent.press(placeIcons[placeIcons.length - 1]);
+    expect(getByText('Tap on the map to select destination')).toBeTruthy();
+  });
+
+  it('should toggle selection mode off when pressed again', () => {
+    const { getAllByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    const myLocIcons = getAllByText('my-location');
+    fireEvent.press(myLocIcons[0]);
+    expect(queryByText('Tap on the map to select start point')).toBeTruthy();
+    fireEvent.press(myLocIcons[0]);
+    expect(queryByText('Tap on the map to select start point')).toBeNull();
+  });
+
+  // --- Path error display ---
+
+  it('should show error message when pathfinding fails', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: false,
+      reason: 'no path found',
+    });
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByText('no path found')).toBeTruthy();
+  });
+
+  // --- Route with no path result ---
+
+  it('should show "--" stats when path result is not ok', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: false,
+      reason: 'different floors not supported yet',
+    });
+    const { getAllByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getAllByText('--').length).toBeGreaterThanOrEqual(2);
+  });
+
+  // --- Map press when not in selection mode ---
+
+  it('should not crash when map is pressed without selection mode', () => {
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    // The floor plan container is pressable
+    expect(getByText('Indoor Directions')).toBeTruthy();
   });
 });

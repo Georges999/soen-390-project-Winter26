@@ -100,7 +100,7 @@ function buildGraph(floorData) {
       }
 
       // Create unique edge key to handle duplicates
-      const edgeKey = [from, to].sort().join('->');
+      const edgeKey = [from, to].sort((a, b) => a.localeCompare(b)).join('->');
       if (processedEdges.has(edgeKey)) {
         return; // Skip duplicate edge
       }
