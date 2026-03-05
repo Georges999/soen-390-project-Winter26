@@ -1,12 +1,13 @@
 /**
  * Indoor floor data for buildings with available floor maps.
- * Each building maps to its campus, available floors, and the floor plan images.
- * Includes node/edge data for pathfinding from JSON mapping files.
+ * Each building maps to its campus, available floors, and floor plan images.
  *
  * Floor map images are stored in /assets/floor-maps/
  */
 
-// Static requires for floor map images (React Native requires static requires)
+const DEFAULT_DIMENSION = 1000;
+const CAMPUSES = ["sgw", "loyola"];
+
 const floorImages = {
   "Hall-8": require("../../assets/floor-maps/Hall-8-F.png"),
   "Hall-9": require("../../assets/floor-maps/Hall-9-F.png"),
@@ -17,137 +18,152 @@ const floorImages = {
   "VL-2": require("../../assets/floor-maps/VL-2-F.png"),
 };
 
-// Import floor mapping JSON data from assets folder
-const MBS2FloorData = require("../../assets/floor-data/floorplan-MBS2.json");
-const MB1FloorData = require("../../assets/floor-data/floorplan-MP1.json");
-const Hall8FloorData = require("../../assets/floor-data/Hall8thMapping.json");
-const Hall9FloorData = require("../../assets/floor-data/Hall9thMapping.json");
-const VL1FloorData = require("../../assets/floor-data/VLF1-Floor-Plan.json");
-const VL2FloorData = require("../../assets/floor-data/VLF2-Floor-Plan.json");
-const VE2FloorData = require("../../assets/floor-data/VE2-Floor-Plan.json");
-
-/**
- * Extract floor data from JSON mapping files
- * @param {Object} jsonData - The imported JSON floor data
- * @param {string} floorKey - The key to look for in the floors object
- * @returns {Object} Extracted floor data with nodes, rooms, pois, edges
- */
-const extractFloorData = (jsonData, floorKey) => {
-  if (!jsonData?.floors) return { nodes: [], rooms: [], pois: [], edges: [], width: 1000, height: 1000 };
-  
-  // Find the floor data - try exact key first, then search for partial match
-  let floorData = jsonData.floors[floorKey];
-  if (!floorData) {
-    // Search for a key that contains the floorKey or vice versa
-    const keys = Object.keys(jsonData.floors);
-    const matchingKey = keys.find(k => k.includes(floorKey) || floorKey.includes(k) || k.toLowerCase().includes(floorKey.toLowerCase()));
-    if (matchingKey) {
-      floorData = jsonData.floors[matchingKey];
-    }
-  }
-  
-  if (!floorData) {
-    // Just get the first floor if nothing matches
-    const keys = Object.keys(jsonData.floors);
-    if (keys.length > 0) {
-      floorData = jsonData.floors[keys[0]];
-    }
-  }
-  
-  if (!floorData) return { nodes: [], rooms: [], pois: [], edges: [], width: 1000, height: 1000 };
-  
-  return {
-    nodes: floorData.nodes || [],
-    rooms: floorData.rooms || [],
-    pois: floorData.pois || [],
-    edges: floorData.edges || [],
-    width: floorData.width || 1000,
-    height: floorData.height || 1000
-  };
+const FLOOR_GRAPH_DATA = {
+  "Hall-8": {
+    width: 1000,
+    height: 800,
+    nodes: [
+      { id: "Hall8_hall_1", type: "hallway", x: 130, y: 210, label: "" },
+      { id: "Hall8_hall_2", type: "hallway", x: 340, y: 210, label: "" },
+      { id: "Hall8_hall_3", type: "hallway", x: 560, y: 210, label: "" },
+    ],
+    rooms: [
+      { id: "Hall8_classroom_002", type: "classroom", x: 120, y: 150, label: "H-837" },
+      { id: "Hall8_classroom_005", type: "classroom", x: 560, y: 150, label: "H-861" },
+    ],
+    pois: [
+      { id: "Hall8_elevator_1", type: "elevator", x: 340, y: 250, label: "Elevator" },
+      { id: "Hall8_washroom_1", type: "washroom", x: 520, y: 250, label: "Washroom" },
+    ],
+    edges: [
+      { from: "Hall8_classroom_002", to: "Hall8_hall_1", weight: 70 },
+      { from: "Hall8_hall_1", to: "Hall8_hall_2", weight: 210 },
+      { from: "Hall8_hall_2", to: "Hall8_hall_3", weight: 220 },
+      { from: "Hall8_hall_3", to: "Hall8_classroom_005", weight: 70 },
+      { from: "Hall8_elevator_1", to: "Hall8_hall_2", weight: 50 },
+      { from: "Hall8_washroom_1", to: "Hall8_hall_3", weight: 40 },
+    ],
+  },
+  "Hall-9": {
+    width: 1000,
+    height: 800,
+    nodes: [
+      { id: "Hall9_hall_1", type: "hallway", x: 140, y: 210, label: "" },
+      { id: "Hall9_hall_2", type: "hallway", x: 430, y: 210, label: "" },
+    ],
+    rooms: [
+      { id: "Hall9_classroom_001", type: "classroom", x: 120, y: 145, label: "H-937" },
+      { id: "Hall9_classroom_002", type: "classroom", x: 430, y: 145, label: "H-920" },
+    ],
+    pois: [{ id: "Hall9_stairs_1", type: "stairs", x: 320, y: 250, label: "Stairs" }],
+    edges: [
+      { from: "Hall9_classroom_001", to: "Hall9_hall_1", weight: 70 },
+      { from: "Hall9_hall_1", to: "Hall9_hall_2", weight: 290 },
+      { from: "Hall9_hall_2", to: "Hall9_classroom_002", weight: 65 },
+      { from: "Hall9_stairs_1", to: "Hall9_hall_2", weight: 40 },
+    ],
+  },
+  "MB-S2": {
+    width: 900,
+    height: 800,
+    nodes: [{ id: "MBS2_hall_1", type: "hallway", x: 260, y: 220, label: "" }],
+    rooms: [{ id: "MBS2_room_210", type: "classroom", x: 260, y: 140, label: "MB S2.210" }],
+    pois: [{ id: "MBS2_elevator_1", type: "elevator", x: 320, y: 250, label: "Elevator" }],
+    edges: [
+      { from: "MBS2_room_210", to: "MBS2_hall_1", weight: 80 },
+      { from: "MBS2_elevator_1", to: "MBS2_hall_1", weight: 60 },
+    ],
+  },
+  "MB-1": {
+    width: 900,
+    height: 800,
+    nodes: [{ id: "MB1_hall_1", type: "hallway", x: 260, y: 220, label: "" }],
+    rooms: [{ id: "MB1_room_210", type: "classroom", x: 260, y: 140, label: "MB 1.210" }],
+    pois: [{ id: "MB1_water_1", type: "water", x: 320, y: 250, label: "Water" }],
+    edges: [
+      { from: "MB1_room_210", to: "MB1_hall_1", weight: 80 },
+      { from: "MB1_water_1", to: "MB1_hall_1", weight: 60 },
+    ],
+  },
+  "VL-1": {
+    width: 900,
+    height: 700,
+    nodes: [{ id: "VL1_hall_1", type: "hallway", x: 250, y: 200, label: "" }],
+    rooms: [{ id: "VL1_room_101", type: "classroom", x: 250, y: 130, label: "VL-101" }],
+    pois: [],
+    edges: [{ from: "VL1_room_101", to: "VL1_hall_1", weight: 70 }],
+  },
+  "VL-2": {
+    width: 900,
+    height: 700,
+    nodes: [{ id: "VL2_hall_1", type: "hallway", x: 250, y: 200, label: "" }],
+    rooms: [{ id: "VL2_room_201", type: "classroom", x: 250, y: 130, label: "VL-201" }],
+    pois: [{ id: "VL2_escalator_1", type: "escalator", x: 310, y: 240, label: "Escalator" }],
+    edges: [
+      { from: "VL2_room_201", to: "VL2_hall_1", weight: 70 },
+      { from: "VL2_escalator_1", to: "VL2_hall_1", weight: 45 },
+    ],
+  },
+  "VE-2": {
+    width: 800,
+    height: 700,
+    nodes: [{ id: "VE2_hall_1", type: "hallway", x: 220, y: 180, label: "" }],
+    rooms: [{ id: "VE2_room_201", type: "classroom", x: 220, y: 120, label: "VE-201" }],
+    pois: [{ id: "VE2_metro_1", type: "metro", x: 290, y: 220, label: "Metro" }],
+    edges: [
+      { from: "VE2_room_201", to: "VE2_hall_1", weight: 60 },
+      { from: "VE2_metro_1", to: "VE2_hall_1", weight: 50 },
+    ],
+  },
 };
 
-// Extract floor data from JSON files
-const mbS2Data = extractFloorData(MBS2FloorData, 'MB-S2');
-const mb1Data = extractFloorData(MB1FloorData, 'MB-1');
-const hall8Data = extractFloorData(Hall8FloorData, 'Hall-8');
-const hall9Data = extractFloorData(Hall9FloorData, 'Hall-9');
-const vl1Data = extractFloorData(VL1FloorData, 'VL-1');
-const vl2Data = extractFloorData(VL2FloorData, 'VL-2');
-const ve2Data = extractFloorData(VE2FloorData, 'VE-2');
+function getFloorDataset(floorId) {
+  return FLOOR_GRAPH_DATA[floorId] || {
+    nodes: [],
+    rooms: [],
+    pois: [],
+    edges: [],
+    width: DEFAULT_DIMENSION,
+    height: DEFAULT_DIMENSION,
+  };
+}
 
-/**
- * Building definitions with campus association and available floors.
- * Now includes coordinate data from the JSON mapping files for pathfinding.
- */
+function createFloor(floorId, label, floorNumber) {
+  const floorData = getFloorDataset(floorId);
+  return {
+    id: floorId,
+    label,
+    floorNumber,
+    image: floorImages[floorId],
+    nodes: floorData.nodes,
+    pois: floorData.pois,
+    edges: floorData.edges,
+    width: floorData.width,
+    height: floorData.height,
+  };
+}
+
+function createBuildingRooms(floorIds) {
+  return floorIds.flatMap((floorId) =>
+    getFloorDataset(floorId).rooms.map((room) => ({ ...room, floor: floorId }))
+  );
+}
+
 const buildings = {
   sgw: [
     {
       id: "hall",
       label: "H",
       name: "Hall Building",
-      floors: [
-        { 
-          id: "Hall-8", 
-          label: "8", 
-          floorNumber: 8, 
-          image: floorImages["Hall-8"],
-          nodes: hall8Data.nodes,
-          pois: hall8Data.pois,
-          edges: hall8Data.edges,
-          width: hall8Data.width,
-          height: hall8Data.height
-        },
-        { 
-          id: "Hall-9", 
-          label: "9", 
-          floorNumber: 9, 
-          image: floorImages["Hall-9"],
-          nodes: hall9Data.nodes,
-          pois: hall9Data.pois,
-          edges: hall9Data.edges,
-          width: hall9Data.width,
-          height: hall9Data.height
-        },
-      ],
-      // Rooms with coordinates from JSON data
-      rooms: [
-        ...hall8Data.rooms.map(room => ({ ...room, floor: "Hall-8" })),
-        ...hall9Data.rooms.map(room => ({ ...room, floor: "Hall-9" })),
-      ],
+      floors: [createFloor("Hall-8", "8", 8), createFloor("Hall-9", "9", 9)],
+      rooms: createBuildingRooms(["Hall-8", "Hall-9"]),
     },
     {
       id: "mb",
       label: "MB",
       name: "John Molson Building",
-      floors: [
-        { 
-          id: "MB-S2", 
-          label: "S2", 
-          floorNumber: -2, 
-          image: floorImages["MB-S2"],
-          nodes: mbS2Data.nodes,
-          pois: mbS2Data.pois,
-          edges: mbS2Data.edges,
-          width: mbS2Data.width,
-          height: mbS2Data.height
-        },
-        { 
-          id: "MB-1", 
-          label: "1", 
-          floorNumber: 1, 
-          image: floorImages["MB-1"],
-          nodes: mb1Data.nodes,
-          pois: mb1Data.pois,
-          edges: mb1Data.edges,
-          width: mb1Data.width,
-          height: mb1Data.height
-        },
-      ],
-      // Rooms with coordinates from JSON data
-      rooms: [
-        ...mbS2Data.rooms.map(room => ({ ...room, floor: "MB-S2" })),
-        ...mb1Data.rooms.map(room => ({ ...room, floor: "MB-1" })),
-      ],
+      floors: [createFloor("MB-S2", "S2", -2), createFloor("MB-1", "1", 1)],
+      rooms: createBuildingRooms(["MB-S2", "MB-1"]),
     },
   ],
   loyola: [
@@ -155,100 +171,60 @@ const buildings = {
       id: "vl",
       label: "VL",
       name: "Vanier Library",
-      floors: [
-        { 
-          id: "VL-1", 
-          label: "1", 
-          floorNumber: 1, 
-          image: floorImages["VL-1"],
-          nodes: vl1Data.nodes,
-          pois: vl1Data.pois,
-          edges: vl1Data.edges,
-          width: vl1Data.width,
-          height: vl1Data.height
-        },
-        { 
-          id: "VL-2", 
-          label: "2", 
-          floorNumber: 2, 
-          image: floorImages["VL-2"],
-          nodes: vl2Data.nodes,
-          pois: vl2Data.pois,
-          edges: vl2Data.edges,
-          width: vl2Data.width,
-          height: vl2Data.height
-        },
-      ],
-      rooms: [
-        ...vl1Data.rooms.map(room => ({ ...room, floor: "VL-1" })),
-        ...vl2Data.rooms.map(room => ({ ...room, floor: "VL-2" })),
-      ],
+      floors: [createFloor("VL-1", "1", 1), createFloor("VL-2", "2", 2)],
+      rooms: createBuildingRooms(["VL-1", "VL-2"]),
     },
     {
       id: "ve",
       label: "VE",
       name: "Vanier Extension",
-      floors: [
-        { 
-          id: "VE-2", 
-          label: "2", 
-          floorNumber: 2, 
-          image: floorImages["VE-2"],
-          nodes: ve2Data.nodes,
-          pois: ve2Data.pois,
-          edges: ve2Data.edges,
-          width: ve2Data.width,
-          height: ve2Data.height
-        },
-      ],
-      rooms: [
-        ...ve2Data.rooms.map(room => ({ ...room, floor: "VE-2" })),
-      ],
+      floors: [createFloor("VE-2", "2", 2)],
+      rooms: createBuildingRooms(["VE-2"]),
     },
   ],
 };
 
-/**
- * Get floor data for pathfinding
- * @param {string} buildingId - Building identifier
- * @param {string} floorId - Floor identifier
- * @returns {Object} Floor data with nodes, rooms, pois, edges
- */
-const getFloorGraphData = (buildingId, floorId) => {
-  // Search all campuses for the building
-  for (const campus of ['sgw', 'loyola']) {
-    const building = buildings[campus]?.find(b => b.id === buildingId);
-    if (building) {
-      const floor = building.floors.find(f => f.id === floorId);
-      if (floor) {
-        return {
-          nodes: floor.nodes || [],
-          rooms: building.rooms.filter(r => r.floor === floorId),
-          pois: floor.pois || [],
-          edges: floor.edges || [],
-          width: floor.width || 1000,
-          height: floor.height || 1000
-        };
-      }
-    }
+function getBuildingById(buildingId) {
+  for (const campus of CAMPUSES) {
+    const building = (buildings[campus] || []).find((candidate) => candidate.id === buildingId);
+    if (building) return building;
   }
-  return { nodes: [], rooms: [], pois: [], edges: [], width: 1000, height: 1000 };
+  return null;
+}
+
+const getFloorGraphData = (buildingId, floorId) => {
+  if (!buildingId || !floorId) {
+    return { nodes: [], rooms: [], pois: [], edges: [], width: DEFAULT_DIMENSION, height: DEFAULT_DIMENSION };
+  }
+
+  const building = getBuildingById(buildingId);
+  const floor = building?.floors?.find((candidate) => candidate.id === floorId);
+
+  if (!building || !floor) {
+    return { nodes: [], rooms: [], pois: [], edges: [], width: DEFAULT_DIMENSION, height: DEFAULT_DIMENSION };
+  }
+
+  return {
+    nodes: floor.nodes || [],
+    rooms: (building.rooms || []).filter((room) => room.floor === floorId),
+    pois: floor.pois || [],
+    edges: floor.edges || [],
+    width: floor.width || DEFAULT_DIMENSION,
+    height: floor.height || DEFAULT_DIMENSION,
+  };
 };
 
-/**
- * Get all rooms for a specific floor
- * @param {string} floorId - Floor identifier
- * @returns {Array} Array of rooms with coordinates
- */
 const getRoomsForFloor = (floorId) => {
-  for (const campus of ['sgw', 'loyola']) {
+  if (!floorId) return [];
+
+  for (const campus of CAMPUSES) {
     for (const building of buildings[campus] || []) {
-      const rooms = building.rooms.filter(r => r.floor === floorId);
+      const rooms = (building.rooms || []).filter((room) => room.floor === floorId);
       if (rooms.length > 0) {
-        return rooms.map(room => ({
+        return rooms.map((room) => ({
           ...room,
           buildingId: building.id,
-          buildingName: building.name
+          buildingName: building.name,
         }));
       }
     }
@@ -256,27 +232,21 @@ const getRoomsForFloor = (floorId) => {
   return [];
 };
 
-/**
- * Get all nodes (hallways + rooms + pois) for a floor - used for pathfinding
- * @param {string} floorId - Floor identifier
- * @returns {Array} Array of all nodes
- */
 const getAllNodesForFloor = (floorId) => {
-  for (const campus of ['sgw', 'loyola']) {
+  if (!floorId) return [];
+
+  for (const campus of CAMPUSES) {
     for (const building of buildings[campus] || []) {
-      const floor = building.floors.find(f => f.id === floorId);
+      const floor = (building.floors || []).find((candidate) => candidate.id === floorId);
       if (floor) {
-        const nodes = floor.nodes || [];
-        const rooms = building.rooms.filter(r => r.floor === floorId);
-        const pois = floor.pois || [];
-        return [...nodes, ...rooms, ...pois];
+        const rooms = (building.rooms || []).filter((room) => room.floor === floorId);
+        return [...(floor.nodes || []), ...rooms, ...(floor.pois || [])];
       }
     }
   }
   return [];
 };
 
-/** POI types and their vector icons for floor plan legend */
 const POI_ICONS = {
   washroom: { icon: "wc", label: "Washroom" },
   water: { icon: "water-drop", label: "Water" },
@@ -286,12 +256,12 @@ const POI_ICONS = {
   metro: { icon: "subway", label: "Metro" },
 };
 
-export { 
-  buildings, 
-  floorImages, 
-  POI_ICONS, 
-  getFloorGraphData, 
+export {
+  buildings,
+  floorImages,
+  POI_ICONS,
+  getFloorGraphData,
   getRoomsForFloor,
-  getAllNodesForFloor 
+  getAllNodesForFloor,
 };
 export default buildings;

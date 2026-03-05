@@ -38,9 +38,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const [activeField, setActiveField] = useState(null); // "start" or "dest"
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Selected campus for room lookup
-  const [selectedCampus] = useState("sgw");
-
   // Selection mode for map clicks
   const [selectionMode, setSelectionMode] = useState(null); // "start" or "dest"
 
