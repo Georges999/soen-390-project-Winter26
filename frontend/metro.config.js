@@ -4,6 +4,9 @@ const { getDefaultConfig } = require("expo/metro-config");
 const config = getDefaultConfig(__dirname);
 const mapShimPath = path.resolve(__dirname, "src/shims/react-native-maps-web.js");
 const originalResolveRequest = config.resolver.resolveRequest;
+const repoRoot = path.resolve(__dirname, "..");
+
+config.watchFolders = [...(config.watchFolders || []), repoRoot];
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (
