@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { buildings, POI_ICONS } from "../data/indoorFloorData";
+import { getRoomHighlightPoint } from "../data/indoorRoomHighlightData";
 
 const MAROON = "#912338";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -56,13 +57,38 @@ export default function IndoorMapScreen({ navigation }) {
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
+    const normalizedQuery = searchQuery.toUpperCase().replace(/[^A-Z0-9]/g, "");
     return allRooms.filter(
       (r) =>
         r.label.toLowerCase().includes(q) ||
         r.id.toLowerCase().includes(q) ||
-        r.buildingName.toLowerCase().includes(q)
+        r.buildingName.toLowerCase().includes(q) ||
+        (r.searchKeys || []).some((key) => key.includes(normalizedQuery))
     );
   }, [searchQuery, allRooms]);
+
+  const selectedRoomContext = useMemo(() => {
+    if (!selectedRoom) return null;
+
+    const building = campusBuildings.find((candidate) =>
+      candidate.rooms.some((room) => room.id === selectedRoom.id)
+    );
+    if (!building) return null;
+
+    const floor = building.floors.find(
+      (candidate) => candidate.id === selectedRoom.floor
+    );
+
+    return { building, floor };
+  }, [campusBuildings, selectedRoom]);
+
+  const selectedRoomHighlight = useMemo(
+    () =>
+      selectedRoomContext?.floor?.id === currentFloor?.id
+        ? getRoomHighlightPoint(currentFloor?.id, selectedRoom?.label)
+        : null,
+    [currentFloor?.id, selectedRoom?.label, selectedRoomContext]
+  );
 
   const handleCampusToggle = (campus) => {
     setSelectedCampus(campus);
@@ -80,7 +106,6 @@ export default function IndoorMapScreen({ navigation }) {
 
   const handleFloorSelect = (idx) => {
     setSelectedFloorIdx(idx);
-    setSelectedRoom(null);
   };
 
   const handleRoomSelect = (room) => {
@@ -100,11 +125,11 @@ export default function IndoorMapScreen({ navigation }) {
   };
 
   const handleGetDirections = () => {
-    if (selectedRoom) {
+    if (selectedRoom && selectedRoomContext) {
       navigation.navigate("IndoorDirections", {
         destinationRoom: selectedRoom,
-        building: currentBuilding,
-        floor: currentFloor,
+        building: selectedRoomContext.building,
+        floor: selectedRoomContext.floor,
       });
     }
   };
@@ -247,11 +272,26 @@ export default function IndoorMapScreen({ navigation }) {
                 contentContainerStyle={styles.floorPlanScrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                <Image
-                  source={currentFloor.image}
-                  style={styles.floorPlanImage}
-                  resizeMode="contain"
-                />
+                <View style={styles.floorPlanCanvas}>
+                  <Image
+                    source={currentFloor.image}
+                    style={styles.floorPlanImage}
+                    resizeMode="contain"
+                  />
+                  {selectedRoomHighlight ? (
+                    <View
+                      key={selectedRoom?.id ?? selectedRoom?.label}
+                      testID="selected-room-highlight"
+                      style={[
+                        styles.roomHighlight,
+                        {
+                          left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
+                          top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
+                        },
+                      ]}
+                    />
+                  ) : null}
+                </View>
               </ScrollView>
             </ScrollView>
           ) : (
@@ -498,6 +538,20 @@ const styles = StyleSheet.create({
   floorPlanImage: {
     width: SCREEN_WIDTH - 32,
     height: SCREEN_WIDTH - 32,
+  },
+  floorPlanCanvas: {
+    position: "relative",
+  },
+  roomHighlight: {
+    position: "absolute",
+    width: 18,
+    height: 18,
+    marginLeft: -9,
+    marginTop: -9,
+    borderRadius: 9,
+    borderWidth: 3,
+    borderColor: "#2563eb",
+    backgroundColor: "rgba(37, 99, 235, 0.22)",
   },
   noFloorPlan: {
     flex: 1,

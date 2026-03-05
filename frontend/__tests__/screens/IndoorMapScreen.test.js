@@ -200,6 +200,30 @@ describe('IndoorMapScreen', () => {
     expect(getByText('Get Directions')).toBeTruthy();
   });
 
+  it('should render a highlight marker when a mapped room is selected', () => {
+    const { getByPlaceholderText, getByText, getByTestId } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
+    expect(getByTestId('selected-room-highlight')).toBeTruthy();
+  });
+
+  it('should keep only one highlight when selecting a different room', () => {
+    const { getByPlaceholderText, getByText, getAllByText, getAllByTestId } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
+
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H861');
+    fireEvent.press(getAllByText(/H861/)[0]);
+
+    expect(getAllByTestId('selected-room-highlight')).toHaveLength(1);
+    expect(getAllByText(/H861/).length).toBeGreaterThan(0);
+  });
+
   it('should show the checkmark when a room is selected', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
@@ -219,7 +243,10 @@ describe('IndoorMapScreen', () => {
     expect(mockNavigation.navigate).toHaveBeenCalledWith(
       'IndoorDirections',
       expect.objectContaining({
-        destinationRoom: expect.objectContaining({ id: 'H-837' }),
+        destinationRoom: expect.objectContaining({
+          label: 'H837',
+          floor: 'Hall-8',
+        }),
       })
     );
   });
@@ -240,16 +267,25 @@ describe('IndoorMapScreen', () => {
     expect(getByText('Floor 1')).toBeTruthy();
   });
 
-  it('should clear selection when switching floors', () => {
-    const { getByPlaceholderText, getByText, queryByText } = render(
+  it('should preserve selection when switching floors and restore the highlight on return', () => {
+    const {
+      getByPlaceholderText,
+      getByText,
+      getByTestId,
+      queryByTestId,
+    } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
     fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
     fireEvent.press(getByText(/H837/));
-    expect(getByText('Room Selected')).toBeTruthy();
-    // Switch floor
+    expect(getByTestId('selected-room-highlight')).toBeTruthy();
+
     fireEvent.press(getByText('9'));
-    expect(queryByText('Room Selected')).toBeNull();
+    expect(getByText('Room Selected')).toBeTruthy();
+    expect(queryByTestId('selected-room-highlight')).toBeNull();
+
+    fireEvent.press(getByText('8'));
+    expect(getByTestId('selected-room-highlight')).toBeTruthy();
   });
 
   it('should clear selection when switching buildings', () => {

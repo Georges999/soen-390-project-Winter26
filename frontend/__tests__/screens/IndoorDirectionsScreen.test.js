@@ -211,13 +211,13 @@ describe('IndoorDirectionsScreen', () => {
   });
 
   it('should show search results when typing in destination field', () => {
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, queryAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
     const destInput = getByPlaceholderText('Destination room');
     fireEvent(destInput, 'focus');
     fireEvent.changeText(destInput, 'H861');
-    expect(getByText(/H861.*Hall Building/)).toBeTruthy();
+    expect(queryAllByText(/H861.*Hall Building/).length).toBeGreaterThan(0);
   });
 
   it('should select a room from search results into start field', () => {
@@ -232,13 +232,13 @@ describe('IndoorDirectionsScreen', () => {
   });
 
   it('should select a room from search results into destination field', () => {
-    const { getByPlaceholderText, getByText, getByDisplayValue } = render(
+    const { getByPlaceholderText, queryAllByText, getByDisplayValue } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
     const destInput = getByPlaceholderText('Destination room');
     fireEvent(destInput, 'focus');
     fireEvent.changeText(destInput, 'H861');
-    fireEvent.press(getByText(/H861.*Hall Building/));
+    fireEvent.press(queryAllByText(/H861.*Hall Building/)[0]);
     expect(getByDisplayValue(/H861, Floor 8/)).toBeTruthy();
   });
 
@@ -301,12 +301,12 @@ describe('IndoorDirectionsScreen', () => {
   // --- Search finds rooms from both campuses ---
 
   it('should find Loyola rooms when searching', () => {
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, queryAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
     const startInput = getByPlaceholderText('Start room');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, 'VL101');
-    expect(getByText(/VL101.*Vanier Library/)).toBeTruthy();
+    expect(queryAllByText(/VL101.*Vanier Library/).length).toBeGreaterThan(0);
   });
 });
