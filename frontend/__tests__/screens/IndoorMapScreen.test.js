@@ -244,7 +244,7 @@ describe('IndoorMapScreen', () => {
     expect(getByText('Floor 1')).toBeTruthy();
   });
 
-  it('should clear selection when switching floors', () => {
+  it('should preserve selection when switching floors', () => {
     const { getByPlaceholderText, getByText, queryByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
@@ -253,7 +253,7 @@ describe('IndoorMapScreen', () => {
     expect(getByText('Room Selected')).toBeTruthy();
     // Switch floor
     fireEvent.press(getByText('9'));
-    expect(queryByText('Room Selected')).toBeNull();
+    expect(queryByText('Room Selected')).toBeTruthy();
   });
 
   it('should clear selection when switching buildings', () => {
