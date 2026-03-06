@@ -37,9 +37,7 @@ const snapShuttleSegments = ({
 
   //boundaries -> End of walk-to is forced to equal start of ride & Start of walk-from is forced to equal end of ride
   if (walkTo.length > 0 && ride.length > 0)
-    if (walkTo.length > 0 && ride.length > 0) {
-      walkTo[walkTo.length - 1] = ride[0];
-    }
+    walkTo[walkTo.length - 1] = ride[0];
   if (walkFrom.length > 0 && ride.length > 0) {
     walkFrom[0] = ride[ride.length - 1];
   }
