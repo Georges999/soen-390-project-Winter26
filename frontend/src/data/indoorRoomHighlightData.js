@@ -24,6 +24,12 @@ function normalizeRoomLabel(label = "") {
   return label.toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
+function extractNumericLabel(rawLabel = "") {
+  const parts = String(rawLabel).match(/\d+/g) || [];
+  if (!parts.length) return "";
+  return parts.join("-");
+}
+
 function formatRoomLabel(floorId, label = "") {
   const raw = String(label).trim();
 
@@ -41,8 +47,14 @@ function formatRoomLabel(floorId, label = "") {
 
   if (floorId.startsWith("VL-")) {
     const withoutPrefix = raw.replace(/^VLF\d-?/i, "");
-    const compact = withoutPrefix.replace(/-+/g, "-");
-    return compact ? `VL${compact}` : raw;
+    const numeric = extractNumericLabel(withoutPrefix);
+    return numeric || raw;
+  }
+
+  if (floorId.startsWith("VE-")) {
+    const withoutPrefix = raw.replace(/^VE-?/i, "");
+    const numeric = extractNumericLabel(withoutPrefix);
+    return numeric || raw;
   }
 
   return raw;
@@ -50,7 +62,8 @@ function formatRoomLabel(floorId, label = "") {
 
 function getRoomAliases(floorId, label) {
   const normalized = normalizeRoomLabel(label);
-  const aliases = [normalized];
+  const formatted = formatRoomLabel(floorId, label);
+  const aliases = [normalized, normalizeRoomLabel(formatted)];
 
   if (floorId.startsWith("MB-") && !normalized.startsWith("MB")) {
     aliases.push(`MB${normalized}`);
@@ -60,10 +73,19 @@ function getRoomAliases(floorId, label) {
     const vlMatch = String(label).toUpperCase().match(/^VLF\d[^0-9]*([0-9]{3,})/);
     if (vlMatch) {
       aliases.push(`VL${vlMatch[1]}`);
+      aliases.push(vlMatch[1]);
     }
   }
 
-  return aliases;
+  if (floorId.startsWith("VE-")) {
+    const veMatch = String(label).toUpperCase().match(/^VE[^0-9]*([0-9]{3,})/);
+    if (veMatch) {
+      aliases.push(`VE${veMatch[1]}`);
+      aliases.push(veMatch[1]);
+    }
+  }
+
+  return [...new Set(aliases.filter(Boolean))];
 }
 
 function getSearchKeys(floorId, rawLabel, displayLabel) {
