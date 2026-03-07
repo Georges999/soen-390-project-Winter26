@@ -1,0 +1,62 @@
+appId: host.exp.Exponent
+---
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+# Open indoor tab
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+# AT4.5-1: Floor map renders correctly for default building/floor (Hall Building, Floor 8)
+- extendedWaitUntil:
+    visible: "Indoor Map"
+    timeout: 10000
+- assertVisible: "SGW"
+- assertVisible: "Hall Building"
+- assertVisible: "Floor 8"
+
+# AT4.5-2: Coordinate transform – search a room and confirm highlight dot renders on map
+- tapOn:
+    text: "Search room or click on map"
+- inputText: "H-837"
+- waitForAnimationToEnd
+- assertVisible: "H-837 · Hall Building"
+- tapOn: "H-837 · Hall Building"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Highlight overlay must be present (coordinate mapped onto rendered image)
+- assertVisible:
+    id: "selected-room-highlight"
+- assertVisible: "Room Selected"
+
+# AT4.5-3: Switching floors clears stale overlay and updates rendered map
+- tapOn: "9"
+- waitForAnimationToEnd
+- assertVisible: "Floor 9"
+
+# Room was on Floor 8 – highlight must not appear on Floor 9
+- assertNotVisible:
+    id: "selected-room-highlight"
+
+# Switch back to Floor 8 – overlay reappears (coordinate still valid)
+- tapOn: "8"
+- waitForAnimationToEnd
+- assertVisible: "Floor 8"
+- assertVisible:
+    id: "selected-room-highlight"
+
+- assertVisible: "Get Directions"
+- assertVisible: "Hall Building"
+- assertVisible: "Floor 8"
