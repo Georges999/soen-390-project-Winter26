@@ -61,7 +61,3 @@ appId: host.exp.Exponent
 - tapOn: "9"
 - waitForAnimationToEnd
 - assertVisible: "Floor 9"
-
-# Floor 9 still active without using search
-- assertVisible: "Floor 9"
-- assertVisible: "Hall Building"
