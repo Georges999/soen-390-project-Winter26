@@ -142,6 +142,22 @@ describe("buildGraph", () => {
     expect(edge.weight).toBe(100);
   });
 
+  it("defaults edge accessibility to true when not provided", () => {
+    const { graph } = buildGraph(sampleFloorData);
+    const edge = graph.get("hall_001").find((e) => e.to === "hall_002");
+    expect(edge.accessible).toBe(true);
+  });
+
+  it("preserves explicit edge accessibility from floor data", () => {
+    const data = {
+      ...sampleFloorData,
+      edges: [{ from: "hall_001", to: "hall_002", weight: 100, accessible: false }],
+    };
+    const { graph } = buildGraph(data);
+    const edge = graph.get("hall_001").find((e) => e.to === "hall_002");
+    expect(edge.accessible).toBe(false);
+  });
+
   it("computes Euclidean weight when weight is not provided", () => {
     const { graph } = buildGraph(sampleFloorData);
     // elev_001 (150,150) to hall_001 (100,100) → distance ~70.71

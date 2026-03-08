@@ -349,6 +349,72 @@ describe("findShortestPath", () => {
     expect(result.reason).toMatch(/no path/i);
   });
 
+  it("uses accessible-only routing by avoiding inaccessible edges", () => {
+    const data = {
+      floors: {
+        F1: {
+          nodes: [
+            { id: "a", x: 0, y: 0, type: "hallway" },
+            { id: "b", x: 1, y: 0, type: "hallway" },
+            { id: "c", x: 2, y: 0, type: "hallway" },
+            { id: "d", x: 1, y: 1, type: "hallway" },
+          ],
+          rooms: [],
+          pois: [],
+          edges: [
+            { from: "a", to: "b", weight: 1, accessible: true },
+            { from: "b", to: "c", weight: 1, accessible: false },
+            { from: "a", to: "d", weight: 2, accessible: true },
+            { from: "d", to: "c", weight: 2, accessible: true },
+          ],
+        },
+      },
+    };
+
+    const normal = findShortestPath({
+      floorsData: data,
+      startNodeId: "a",
+      endNodeId: "c",
+    });
+    const accessible = findShortestPath({
+      floorsData: data,
+      startNodeId: "a",
+      endNodeId: "c",
+      accessibleOnly: true,
+    });
+
+    expect(normal.ok).toBe(true);
+    expect(normal.totalWeight).toBe(2);
+    expect(accessible.ok).toBe(true);
+    expect(accessible.totalWeight).toBe(4);
+  });
+
+  it("returns no path when all routes require inaccessible edges", () => {
+    const data = {
+      floors: {
+        F1: {
+          nodes: [
+            { id: "a", x: 0, y: 0, type: "hallway" },
+            { id: "b", x: 1, y: 0, type: "hallway" },
+          ],
+          rooms: [],
+          pois: [],
+          edges: [{ from: "a", to: "b", weight: 1, accessible: false }],
+        },
+      },
+    };
+
+    const result = findShortestPath({
+      floorsData: data,
+      startNodeId: "a",
+      endNodeId: "b",
+      accessibleOnly: true,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/no path/i);
+  });
+
   // ── Path between POIs ──
 
   it("finds path between POIs (elevator → washroom)", () => {

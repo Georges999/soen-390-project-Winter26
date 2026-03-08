@@ -137,11 +137,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const result = findShortestPath({
       floorsData,
       startNodeId: startRoom.id,
-      endNodeId: destRoom.id
+      endNodeId: destRoom.id,
+      accessibleOnly: accessibleRoute,
     });
 
     return result;
-  }, [startRoom, destRoom, selectedBuilding]);
+  }, [startRoom, destRoom, selectedBuilding, accessibleRoute]);
 
   // Generate step-by-step directions from path
   const directionSteps = useMemo(() => {
@@ -210,9 +211,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     return {
       duration: `${durationMinutes} min`,
       distance: `${distanceMeters}m`,
-      type: "walking"
+      type: accessibleRoute ? "accessible walking" : "walking",
     };
-  }, [pathResult]);
+  }, [pathResult, accessibleRoute]);
 
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
@@ -442,6 +443,19 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             <MaterialIcons name="directions-walk" size={18} color="#fff" />
             <Text style={[styles.transportChipText, styles.transportChipTextActive]}>Walking</Text>
           </View>
+          <Pressable
+            style={[
+              styles.transportChip,
+              styles.accessibilityChip,
+              accessibleRoute && styles.accessibilityChipActive,
+            ]}
+            onPress={() => setAccessibleRoute(!accessibleRoute)}
+          >
+            <Text style={[styles.accessButtonIcon, accessibleRoute && styles.accessibilityChipTextActive]}>♿</Text>
+            <Text style={[styles.transportChipText, accessibleRoute && styles.accessibilityChipTextActive]}>
+              Accessible
+            </Text>
+          </Pressable>
         </View>
 
         <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -556,18 +570,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                 <View style={styles.statItemRight}>
                   <Text style={styles.statValue}>{routeStats.type}</Text>
                   <Text style={styles.statLabel}>route</Text>
-                </View>
-                {/* Accessibility Button */}
-                <Pressable
-                  style={[
-                    styles.accessButton,
-                    accessibleRoute && styles.accessButtonActive,
-                  ]}
-                  onPress={() => setAccessibleRoute(!accessibleRoute)}
-                >
-                  <Text style={styles.accessButtonIcon}>♿</Text>
-                </Pressable>
-              </View>
+                </View>`r`n</View>
 
               {/* Path Error Message */}
               {pathResult && !pathResult.ok && (
@@ -750,6 +753,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     paddingVertical: 8,
+    gap: 8,
   },
   transportChip: {
     flexDirection: "row",
@@ -772,6 +776,16 @@ const styles = StyleSheet.create({
     color: "#555",
   },
   transportChipTextActive: {
+    color: "#fff",
+  },
+  accessibilityChip: {
+    backgroundColor: "#f0f0f0",
+  },
+  accessibilityChipActive: {
+    backgroundColor: BLUE,
+    borderColor: BLUE,
+  },
+  accessibilityChipTextActive: {
     color: "#fff",
   },
   scrollContent: {
@@ -939,3 +953,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
