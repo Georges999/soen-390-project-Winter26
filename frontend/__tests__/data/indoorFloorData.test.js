@@ -53,7 +53,7 @@ describe('indoorFloorData', () => {
     expect(Array.isArray(data.edges)).toBe(true);
     expect(data.width).toBeGreaterThan(0);
     expect(data.height).toBeGreaterThan(0);
-    expect(data.rooms.some((room) => room.label === 'H-837')).toBe(true);
+    expect(data.rooms.some((room) => room.label === 'H837')).toBe(true);
   });
 
   it('returns empty/default floor data for invalid building/floor ids', () => {
