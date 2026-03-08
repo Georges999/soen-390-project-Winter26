@@ -51,8 +51,8 @@ const mockRouteEmpty = { params: {} };
 
 const mockRouteWithRooms = {
   params: {
-    startRoom: { id: 'Hall8_classroom_002', label: 'H-837', floor: 'Hall-8', x: 100, y: 200, type: 'classroom' },
-    destinationRoom: { id: 'Hall8_classroom_005', label: 'H-861', floor: 'Hall-8', x: 300, y: 400, type: 'classroom' },
+    startRoom: { id: 'Hall8_classroom_002', label: 'H837', floor: 'Hall-8', x: 100, y: 200, type: 'classroom' },
+    destinationRoom: { id: 'Hall8_classroom_005', label: 'H861', floor: 'Hall-8', x: 300, y: 400, type: 'classroom' },
     building: {
       id: 'hall',
       label: 'H',
@@ -126,14 +126,14 @@ describe('IndoorDirectionsScreen', () => {
     const { getByDisplayValue } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    expect(getByDisplayValue('H-861')).toBeTruthy();
+    expect(getByDisplayValue('H861')).toBeTruthy();
   });
 
   it('should pre-fill start text from route params', () => {
     const { getByDisplayValue } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    expect(getByDisplayValue('H-837')).toBeTruthy();
+    expect(getByDisplayValue('H837')).toBeTruthy();
   });
 
   // --- Route Stats & Steps (when both rooms filled) ---
@@ -159,9 +159,9 @@ describe('IndoorDirectionsScreen', () => {
     const { getByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    expect(getByText('Start at H-837')).toBeTruthy();
+    expect(getByText('Start at H837')).toBeTruthy();
     expect(getByText('Continue through the hallway')).toBeTruthy();
-    expect(getByText('Arrive at H-861')).toBeTruthy();
+    expect(getByText('Arrive at H861')).toBeTruthy();
   });
 
   it('should show step numbers', () => {
@@ -200,8 +200,8 @@ describe('IndoorDirectionsScreen', () => {
     );
     const startInput = getByPlaceholderText('Tap map or search start');
     fireEvent(startInput, 'focus');
-    fireEvent.changeText(startInput, 'H-837');
-    expect(getAllByText(/H-837.*Hall Building/).length).toBeGreaterThan(0);
+    fireEvent.changeText(startInput, 'H837');
+    expect(getAllByText(/H837.*Hall Building/).length).toBeGreaterThan(0);
   });
 
   it('should show search results when typing in destination field', () => {
@@ -210,8 +210,8 @@ describe('IndoorDirectionsScreen', () => {
     );
     const destInput = getByPlaceholderText('Tap map or search destination');
     fireEvent(destInput, 'focus');
-    fireEvent.changeText(destInput, 'H-837');
-    expect(getAllByText(/H-837.*Hall Building/).length).toBeGreaterThan(0);
+    fireEvent.changeText(destInput, 'H837');
+    expect(getAllByText(/H837.*Hall Building/).length).toBeGreaterThan(0);
   });
 
   it('should select a room from search results into start field', () => {
@@ -220,9 +220,9 @@ describe('IndoorDirectionsScreen', () => {
     );
     const startInput = getByPlaceholderText('Tap map or search start');
     fireEvent(startInput, 'focus');
-    fireEvent.changeText(startInput, 'H-837');
-    fireEvent.press(getAllByText(/H-837.*Hall Building/)[0]);
-    expect(getByDisplayValue(/H-837, Floor 8/)).toBeTruthy();
+    fireEvent.changeText(startInput, 'H837');
+    fireEvent.press(getAllByText(/H837.*Hall Building/)[0]);
+    expect(getByDisplayValue(/H837, Floor 8/)).toBeTruthy();
   });
 
   it('should select a room from search results into destination field', () => {
@@ -231,9 +231,9 @@ describe('IndoorDirectionsScreen', () => {
     );
     const destInput = getByPlaceholderText('Tap map or search destination');
     fireEvent(destInput, 'focus');
-    fireEvent.changeText(destInput, 'H-837');
-    fireEvent.press(getAllByText(/H-837.*Hall Building/)[0]);
-    expect(getByDisplayValue(/H-837, Floor 8/)).toBeTruthy();
+    fireEvent.changeText(destInput, 'H837');
+    fireEvent.press(getAllByText(/H837.*Hall Building/)[0]);
+    expect(getByDisplayValue(/H837, Floor 8/)).toBeTruthy();
   });
 
   // --- Swap ---
@@ -242,14 +242,14 @@ describe('IndoorDirectionsScreen', () => {
     const { getByText, getByDisplayValue } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    // Initially start=H-837, dest=H-861
-    expect(getByDisplayValue('H-837')).toBeTruthy();
-    expect(getByDisplayValue('H-861')).toBeTruthy();
+    // Initially start=H837, dest=H861
+    expect(getByDisplayValue('H837')).toBeTruthy();
+    expect(getByDisplayValue('H861')).toBeTruthy();
     // Press swap
     fireEvent.press(getByText('swap-vert'));
-    // Now start=H-861, dest=H-837
-    expect(getByDisplayValue('H-861')).toBeTruthy();
-    expect(getByDisplayValue('H-837')).toBeTruthy();
+    // Now start=H861, dest=H837
+    expect(getByDisplayValue('H861')).toBeTruthy();
+    expect(getByDisplayValue('H837')).toBeTruthy();
   });
 
   // --- Clear inputs ---
@@ -258,22 +258,22 @@ describe('IndoorDirectionsScreen', () => {
     const { getByDisplayValue, getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    expect(getByDisplayValue('H-837')).toBeTruthy();
+    expect(getByDisplayValue('H837')).toBeTruthy();
     // Both inputs have a close icon — first one is for start
     const closeIcons = getAllByText('close');
     fireEvent.press(closeIcons[0]);
     // Start field should be cleared
-    expect(() => getByDisplayValue('H-837')).toThrow();
+    expect(() => getByDisplayValue('H837')).toThrow();
   });
 
   it('should clear destination text when clear button pressed', () => {
     const { getByDisplayValue, getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    expect(getByDisplayValue('H-861')).toBeTruthy();
+    expect(getByDisplayValue('H861')).toBeTruthy();
     const closeIcons = getAllByText('close');
     fireEvent.press(closeIcons[1]);
-    expect(() => getByDisplayValue('H-861')).toThrow();
+    expect(() => getByDisplayValue('H861')).toThrow();
   });
 
   // --- No route params ---
@@ -300,8 +300,8 @@ describe('IndoorDirectionsScreen', () => {
     );
     const startInput = getByPlaceholderText('Tap map or search start');
     fireEvent(startInput, 'focus');
-    fireEvent.changeText(startInput, 'VL');
-    expect(getAllByText(/VL.*Vanier/).length).toBeGreaterThan(0);
+    fireEvent.changeText(startInput, 'Vanier');
+    expect(getAllByText(/Vanier Library/).length).toBeGreaterThan(0);
   });
 
   // --- Empty prompt subtext ---
