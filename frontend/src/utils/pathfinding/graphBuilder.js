@@ -43,8 +43,9 @@ function buildGraph(floorData) {
       processedEdges.add(edgeKey);
 
       const weight = edge.weight ?? euclideanDistance(nodesMap.get(from), nodesMap.get(to));
-      graph.get(from).push({ to, weight });
-      graph.get(to).push({ to: from, weight });
+      const accessible = edge.accessible !== false;
+      graph.get(from).push({ to, weight, accessible });
+      graph.get(to).push({ to: from, weight, accessible });
     });
   }
   return { graph, nodes: nodesMap };

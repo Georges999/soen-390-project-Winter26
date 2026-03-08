@@ -99,11 +99,13 @@ function normalizeRoom(room, floorId) {
 function normalizeEdge(edge) {
   if (!edge?.from || !edge?.to) return null;
   const weight = typeof edge.weight === "number" && Number.isFinite(edge.weight) ? edge.weight : 1;
+  const accessible = typeof edge.accessible === "boolean" ? edge.accessible : true;
 
   return {
     from: String(edge.from),
     to: String(edge.to),
     weight,
+    accessible,
   };
 }
 

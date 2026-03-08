@@ -4,8 +4,9 @@
 import { MinHeap } from './priorityQueue.js';
 import { euclideanDistance, buildMultiFloorGraph, getNodeFloor } from './graphBuilder.js';
 
-function dijkstra(graph, _nodes, startId, endId) {
+function dijkstra(graph, _nodes, startId, endId, options = {}) {
   if (!graph.has(startId) || !graph.has(endId)) return null;
+  const accessibleOnly = options.accessibleOnly === true;
 
   const distances = new Map();
   const previous = new Map();
@@ -22,7 +23,8 @@ function dijkstra(graph, _nodes, startId, endId) {
     visited.add(currentId);
     if (currentId === endId) break;
 
-    for (const { to: neighborId, weight } of graph.get(currentId) || []) {
+    for (const { to: neighborId, weight, accessible } of graph.get(currentId) || []) {
+      if (accessibleOnly && accessible === false) continue;
       if (visited.has(neighborId)) continue;
       const newDistance = distances.get(currentId) + weight;
       if (newDistance < distances.get(neighborId)) {
@@ -44,8 +46,9 @@ function dijkstra(graph, _nodes, startId, endId) {
   return { pathNodeIds, totalWeight: distances.get(endId) };
 }
 
-function aStar(graph, nodes, startId, endId) {
+function aStar(graph, nodes, startId, endId, options = {}) {
   if (!graph.has(startId) || !nodes.has(startId) || !graph.has(endId) || !nodes.has(endId)) return null;
+  const accessibleOnly = options.accessibleOnly === true;
 
   const endNode = nodes.get(endId);
   const heuristic = (nodeId) => {
@@ -74,7 +77,8 @@ function aStar(graph, nodes, startId, endId) {
     visited.add(currentId);
     if (currentId === endId) break;
 
-    for (const { to: neighborId, weight } of graph.get(currentId) || []) {
+    for (const { to: neighborId, weight, accessible } of graph.get(currentId) || []) {
+      if (accessibleOnly && accessible === false) continue;
       if (visited.has(neighborId)) continue;
       const tentativeGScore = gScore.get(currentId) + weight;
       if (tentativeGScore < gScore.get(neighborId)) {
@@ -97,7 +101,7 @@ function aStar(graph, nodes, startId, endId) {
   return { pathNodeIds, totalWeight: gScore.get(endId) };
 }
 
-function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'astar' }) {
+function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'astar', accessibleOnly = false }) {
   if (!floorsData) return { ok: false, reason: 'floorsData is required' };
   if (!startNodeId) return { ok: false, reason: 'startNodeId is required' };
   if (!endNodeId) return { ok: false, reason: 'endNodeId is required' };
@@ -114,9 +118,10 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
 
   const normalizedAlgorithm = typeof algorithm === 'string' ? algorithm.toLowerCase() : '';
   const algorithmUsed = normalizedAlgorithm === 'dijkstra' ? 'dijkstra' : 'astar';
+  const routingOptions = { accessibleOnly };
   const result = algorithmUsed === 'dijkstra' 
-    ? dijkstra(graph, nodes, startNodeId, endNodeId) 
-    : aStar(graph, nodes, startNodeId, endNodeId);
+    ? dijkstra(graph, nodes, startNodeId, endNodeId, routingOptions) 
+    : aStar(graph, nodes, startNodeId, endNodeId, routingOptions);
 
   if (!result?.pathNodeIds?.length) return { ok: false, reason: 'no path found' };
 
