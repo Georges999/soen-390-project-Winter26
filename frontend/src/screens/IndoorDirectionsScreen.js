@@ -105,9 +105,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const q = searchQuery.toLowerCase();
     return allRooms.filter(
       (r) =>
-        r.label?.toLowerCase().includes(q) ||
-        r.id?.toLowerCase().includes(q) ||
-        r.buildingName?.toLowerCase().includes(q)
+        (r.label || "").toLowerCase().includes(q) ||
+        (r.id || "").toLowerCase().includes(q) ||
+        (r.buildingName || "").toLowerCase().includes(q)
     );
   }, [searchQuery, allRooms]);
 
@@ -420,23 +420,32 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         )}
 
         {/* Search Results Dropdown */}
-        {searchResults.length > 0 && activeField && (
+        {searchQuery.trim().length > 0 && activeField && (
           <View style={styles.searchResultsContainer}>
-            <FlatList
-              data={searchResults.slice(0, 6)}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.searchResultItem}
-                  onPress={() => handleSelectRoom(item)}
-                >
-                  <Text style={styles.searchResultText}>
-                    {item.label}, Floor {item.floor?.split("-")[1] || item.floor} · {item.buildingName}
-                  </Text>
-                </Pressable>
-              )}
-              keyboardShouldPersistTaps="handled"
-            />
+            {searchResults.length > 0 ? (
+              <FlatList
+                data={searchResults.slice(0, 6)}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={styles.searchResultItem}
+                    onPress={() => handleSelectRoom(item)}
+                  >
+                    <Text style={styles.searchResultText}>
+                      {item.label}, Floor {item.floor?.split("-")[1] || item.floor} · {item.buildingName}
+                    </Text>
+                  </Pressable>
+                )}
+                keyboardShouldPersistTaps="handled"
+              />
+            ) : (
+              <View style={styles.noResultsContainer}>
+                <MaterialIcons name="search-off" size={24} color="#999" />
+                <Text style={styles.noResultsText}>
+                  No rooms or buildings found. Please try again.
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -947,6 +956,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: "#bbb",
+    textAlign: "center",
+  },
+  noResultsContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  noResultsText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#999",
     textAlign: "center",
   },
 });

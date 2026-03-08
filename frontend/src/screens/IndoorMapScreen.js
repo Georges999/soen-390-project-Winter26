@@ -60,9 +60,9 @@ export default function IndoorMapScreen({ navigation }) {
     const normalizedQuery = searchQuery.toUpperCase().replace(/[^A-Z0-9]/g, "");
     return allRooms.filter(
       (r) =>
-        r.label.toLowerCase().includes(q) ||
-        r.id.toLowerCase().includes(q) ||
-        r.buildingName.toLowerCase().includes(q) ||
+        (r.label || "").toLowerCase().includes(q) ||
+        (r.id || "").toLowerCase().includes(q) ||
+        (r.buildingName || "").toLowerCase().includes(q) ||
         (r.searchKeys || []).some((key) => key.includes(normalizedQuery))
     );
   }, [searchQuery, allRooms]);
@@ -199,23 +199,32 @@ export default function IndoorMapScreen({ navigation }) {
         </View>
 
         {/* Search Results Dropdown */}
-        {searchResults.length > 0 && (
+        {searchQuery.trim().length > 0 && (
           <View style={styles.searchResultsContainer}>
-            <FlatList
-              data={searchResults.slice(0, 8)}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.searchResultItem}
-                  onPress={() => handleRoomSelect(item)}
-                >
-                  <Text style={styles.searchResultText}>
-                    {item.label} · {item.buildingName}
-                  </Text>
-                </Pressable>
-              )}
-              keyboardShouldPersistTaps="handled"
-            />
+            {searchResults.length > 0 ? (
+              <FlatList
+                data={searchResults.slice(0, 8)}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={styles.searchResultItem}
+                    onPress={() => handleRoomSelect(item)}
+                  >
+                    <Text style={styles.searchResultText}>
+                      {item.label} · {item.buildingName}
+                    </Text>
+                  </Pressable>
+                )}
+                keyboardShouldPersistTaps="handled"
+              />
+            ) : (
+              <View style={styles.noResultsContainer}>
+                <MaterialIcons name="search-off" size={24} color="#999" />
+                <Text style={styles.noResultsText}>
+                  No rooms or buildings found. Please try again.
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -322,7 +331,7 @@ export default function IndoorMapScreen({ navigation }) {
               <View>
                 <Text style={styles.selectedRoomText}>Room Selected</Text>
                 <Text style={styles.selectedRoomDetail}>
-                  {selectedRoom.label} · Floor {currentFloor?.label} · {currentBuilding?.name}
+                  {selectedRoom.label || "Unknown"} · Floor {currentFloor?.label || "?"} · {currentBuilding?.name || "Unknown"}
                 </Text>
               </View>
             </View>
@@ -562,6 +571,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     color: "#999",
+  },
+  noResultsContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  noResultsText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
   },
 
   // POI Legend
