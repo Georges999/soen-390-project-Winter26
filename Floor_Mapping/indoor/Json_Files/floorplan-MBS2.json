@@ -1,802 +1,860 @@
 {
-  "version": 2,
-  "exportedAt": "2026-03-04T01:06:53.629Z",
-  "floors": {
-    "MB-S2-copy": {
-      "label": "MB – Sub 2 (Copy)",
-      "image": "MB-S2-2 copy.png",
-      "width": 1000,
-      "height": 1000,
-      "nodes": [
-        {
-          
-          "id": "MBS2copy_hallway_001",
-          "type": "hallway",
-          "x": 861.38,
-          "y": 815.98,
-          "label": "",
-          "nodeSize": 5,
-          "labelSize": 7
-        },
-        {
-          "id": "MBS2copy_hallway_007",
-          "type": "hallway",
-          "x": 766.95,
-          "y": 814.77,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_008",
-          "type": "hallway",
-          "x": 673.73,
-          "y": 817.19,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_009",
-          "type": "hallway",
-          "x": 587.77,
-          "y": 815.98,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_010",
-          "type": "hallway",
-          "x": 576.88,
-          "y": 738.5,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_011",
-          "type": "hallway",
-          "x": 579.3,
-          "y": 671.91,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_012",
-          "type": "hallway",
-          "x": 578.09,
-          "y": 615.01,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_013",
-          "type": "hallway",
-          "x": 576.88,
-          "y": 583.54,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_014",
-          "type": "hallway",
-          "x": 632.57,
-          "y": 583.54,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_015",
-          "type": "hallway",
-          "x": 712.47,
-          "y": 583.54,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_016",
-          "type": "hallway",
-          "x": 798.43,
-          "y": 582.32,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_019",
-          "type": "hallway",
-          "x": 513.92,
-          "y": 483.05,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_020",
-          "type": "hallway",
-          "x": 510.29,
-          "y": 398.31,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_021",
-          "type": "hallway",
-          "x": 512.71,
-          "y": 296.61,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_022",
-          "type": "hallway",
-          "x": 509.08,
-          "y": 223.97,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_023",
-          "type": "hallway",
-          "x": 592.62,
-          "y": 211.86,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        },
-        {
-          "id": "MBS2copy_hallway_024",
-          "type": "hallway",
-          "x": 684.62,
-          "y": 197.34,
-          "label": "",
-          "nodeSize": 7,
-          "labelSize": 6
-        }
-      ],
-      "edges": [
-        {
-          "from": "MBS2copy_classroom_012",
-          "to": "MBS2copy_hallway_001",
-          "weight": 66.16
-        },
-        {
-          "from": "MBS2copy_classroom_011",
-          "to": "MBS2copy_hallway_001",
-          "weight": 75.36
-        },
-        {
-          "from": "MBS2copy_classroom_013",
-          "to": "MBS2copy_hallway_001",
-          "weight": 84.4
-        },
-        {
-          "from": "MBS2copy_hallway_001",
-          "to": "MBS2copy_hallway_007",
-          "weight": 94.44
-        },
-        {
-          "from": "MBS2copy_classroom_010",
-          "to": "MBS2copy_hallway_001",
-          "weight": 114.05
-        },
-        {
-          "from": "MBS2copy_classroom_009",
-          "to": "MBS2copy_hallway_007",
-          "weight": 31.57
-        },
-        {
-          "from": "MBS2copy_classroom_014",
-          "to": "MBS2copy_hallway_007",
-          "weight": 17.33
-        },
-        {
-          "from": "MBS2copy_hallway_007",
-          "to": "MBS2copy_hallway_008",
-          "weight": 93.25
-        },
-        {
-          "from": "MBS2copy_classroom_015",
-          "to": "MBS2copy_hallway_007",
-          "weight": 69.98
-        },
-        {
-          "from": "MBS2copy_washroom_002",
-          "to": "MBS2copy_hallway_008",
-          "weight": 47.09
-        },
-        {
-          "from": "MBS2copy_hallway_008",
-          "to": "MBS2copy_hallway_009",
-          "weight": 85.97
-        },
-        {
-          "from": "MBS2copy_classroom_008",
-          "to": "MBS2copy_hallway_008",
-          "weight": 45.04
-        },
-        {
-          "from": "MBS2copy_classroom_008",
-          "to": "MBS2copy_hallway_009",
-          "weight": 70.2
-        },
-        {
-          "from": "MBS2copy_classroom_007",
-          "to": "MBS2copy_hallway_009",
-          "weight": 118.4
-        },
-        {
-          "from": "MBS2copy_classroom_004",
-          "to": "MBS2copy_hallway_009",
-          "weight": 114.11
-        },
-        {
-          "from": "MBS2copy_classroom_005",
-          "to": "MBS2copy_hallway_010",
-          "weight": 107.99
-        },
-        {
-          "from": "MBS2copy_washroom_001",
-          "to": "MBS2copy_hallway_009",
-          "weight": 50.16
-        },
-        {
-          "from": "MBS2copy_washroom_001",
-          "to": "MBS2copy_hallway_010",
-          "weight": 41.13
-        },
-        {
-          "from": "MBS2copy_classroom_006",
-          "to": "MBS2copy_hallway_011",
-          "weight": 123.78
-        },
-        {
-          "from": "MBS2copy_hallway_010",
-          "to": "MBS2copy_hallway_011",
-          "weight": 66.63
-        },
-        {
-          "from": "MBS2copy_hallway_009",
-          "to": "MBS2copy_hallway_010",
-          "weight": 78.24
-        },
-        {
-          "from": "MBS2copy_classroom_016",
-          "to": "MBS2copy_hallway_011",
-          "weight": 58.68
-        },
-        {
-          "from": "MBS2copy_hallway_011",
-          "to": "MBS2copy_hallway_012",
-          "weight": 56.91
-        },
-        {
-          "from": "MBS2copy_elevator_001",
-          "to": "MBS2copy_hallway_012",
-          "weight": 22.61
-        },
-        {
-          "from": "MBS2copy_elevator_001",
-          "to": "MBS2copy_hallway_013",
-          "weight": 34.28
-        },
-        {
-          "from": "MBS2copy_hallway_014",
-          "to": "MBS2copy_hallway_013",
-          "weight": 55.69
-        },
-        {
-          "from": "MBS2copy_hallway_014",
-          "to": "MBS2copy_hallway_015",
-          "weight": 79.9
-        },
-        {
-          "from": "MBS2copy_hallway_015",
-          "to": "MBS2copy_hallway_016",
-          "weight": 85.97
-        },
-        {
-          "from": "MBS2copy_stairs_003",
-          "to": "MBS2copy_hallway_016",
-          "weight": 41.13
-        },
-        {
-          "from": "MBS2copy_elevator_003",
-          "to": "MBS2copy_hallway_015",
-          "weight": 32.57
-        },
-        {
-          "from": "MBS2copy_elevator_002",
-          "to": "MBS2copy_hallway_014",
-          "weight": 27.63
-        },
-        {
-          "from": "MBS2copy_elevator_006",
-          "to": "MBS2copy_hallway_015",
-          "weight": 25.75
-        },
-        {
-          "from": "MBS2copy_elevator_005",
-          "to": "MBS2copy_hallway_014",
-          "weight": 25.19
-        },
-        {
-          "from": "MBS2copy_elevator_004",
-          "to": "MBS2copy_hallway_013",
-          "weight": 34.42
-        },
-        {
-          "from": "MBS2copy_classroom_019",
-          "to": "MBS2copy_hallway_015",
-          "weight": 43.66
-        },
-        {
-          "from": "MBS2copy_classroom_018",
-          "to": "MBS2copy_hallway_016",
-          "weight": 29.97
-        },
-        {
-          "from": "MBS2copy_escalator_002",
-          "to": "MBS2copy_hallway_013",
-          "weight": 83.82
-        },
-        {
-          "from": "MBS2copy_classroom_020",
-          "to": "MBS2copy_hallway_019",
-          "weight": 106.3
-        },
-        {
-          "from": "MBS2copy_hallway_013",
-          "to": "MBS2copy_hallway_019",
-          "weight": 118.58
-        },
-        {
-          "from": "MBS2copy_hallway_019",
-          "to": "MBS2copy_hallway_020",
-          "weight": 84.82
-        },
-        {
-          "from": "MBS2copy_classroom_026",
-          "to": "MBS2copy_hallway_020",
-          "weight": 70.22
-        },
-        {
-          "from": "MBS2copy_escalator_001",
-          "to": "MBS2copy_hallway_020",
-          "weight": 101.21
-        },
-        {
-          "from": "MBS2copy_hallway_020",
-          "to": "MBS2copy_hallway_021",
-          "weight": 101.73
-        },
-        {
-          "from": "MBS2copy_hallway_021",
-          "to": "MBS2copy_hallway_022",
-          "weight": 72.73
-        },
-        {
-          "from": "MBS2copy_classroom_021",
-          "to": "MBS2copy_hallway_022",
-          "weight": 110.99
-        },
-        {
-          "from": "MBS2copy_stairs_004",
-          "to": "MBS2copy_hallway_022",
-          "weight": 59.57
-        },
-        {
-          "from": "MBS2copy_hallway_022",
-          "to": "MBS2copy_hallway_023",
-          "weight": 84.41
-        },
-        {
-          "from": "MBS2copy_hallway_023",
-          "to": "MBS2copy_hallway_024",
-          "weight": 93.14
-        },
-        {
-          "from": "MBS2copy_classroom_035",
-          "to": "MBS2copy_hallway_024",
-          "weight": 46.78
-        },
-        {
-          "from": "MBS2copy_classroom_034",
-          "to": "MBS2copy_hallway_024",
-          "weight": 55.44
-        },
-        {
-          "from": "MBS2copy_classroom_033",
-          "to": "MBS2copy_hallway_024",
-          "weight": 86.63
-        },
-        {
-          "from": "MBS2copy_classroom_028",
-          "to": "MBS2copy_hallway_024",
-          "weight": 78.14
-        },
-        {
-          "from": "MBS2copy_classroom_027",
-          "to": "MBS2copy_hallway_024",
-          "weight": 208.28
-        },
-        {
-          "from": "MBS2copy_classroom_017",
-          "to": "MBS2copy_hallway_015",
-          "weight": 91.4
-        },
-        {
-          "from": "MBS2copy_metro_001",
-          "to": "MBS2copy_escalator_001",
-          "weight": 116.22
-        },
-        {
-          "from": "MBS2copy_metro_001",
-          "to": "MBS2copy_escalator_002",
-          "weight": 205.97
-        },
-        {
-          "from": "MBS2copy_water_002",
-          "to": "MBS2copy_hallway_008",
-          "weight": 34.09
-        }
-      ],
-      "rooms": [
-        {
-          "id": "MBS2copy_classroom_004",
-          "type": "classroom",
-          "x": 478.81,
-          "y": 849.88,
-          "label": "S2.115",
-          "nodeSize": 8,
-          "labelSize": 12
-        },
-        {
-          "id": "MBS2copy_classroom_005",
-          "type": "classroom",
-          "x": 469.13,
-          "y": 731.23,
-          "label": "S2.135",
-          "nodeSize": 8,
-          "labelSize": 12
-        },
-        {
-          "id": "MBS2copy_classroom_006",
-          "type": "classroom",
-          "x": 455.81,
-          "y": 663.44,
-          "label": "S2.145",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_007",
-          "type": "classroom",
-          "x": 516.34,
-          "y": 910.41,
-          "label": "S2.015",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_008",
-          "type": "classroom",
-          "x": 647.09,
-          "y": 853.51,
-          "label": "S2.401",
-          "nodeSize": 6,
-          "labelSize": 10
-        },
-        {
-          "id": "MBS2copy_classroom_009",
-          "type": "classroom",
-          "x": 764.53,
-          "y": 846.25,
-          "label": "S2.470",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_010",
-          "type": "classroom",
-          "x": 792.37,
-          "y": 906.78,
-          "label": "S2.465",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_011",
-          "type": "classroom",
-          "x": 891.65,
-          "y": 884.99,
-          "label": "S2.455",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_012",
-          "type": "classroom",
-          "x": 915.86,
-          "y": 853.51,
-          "label": "S2.455",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_013",
-          "type": "classroom",
-          "x": 849.27,
-          "y": 732.45,
-          "label": "S2.435",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_014",
-          "type": "classroom",
-          "x": 774.21,
-          "y": 799.03,
-          "label": "S2.428",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_015",
-          "type": "classroom",
-          "x": 731.84,
-          "y": 754.24,
-          "label": "S2.437",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_016",
-          "type": "classroom",
-          "x": 633.78,
-          "y": 693.7,
-          "label": "S2.440",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_017",
-          "type": "classroom",
-          "x": 730.63,
-          "y": 673.12,
-          "label": "S2.438",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_018",
-          "type": "classroom",
-          "x": 777.85,
-          "y": 560.53,
-          "label": "S2.312",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_019",
-          "type": "classroom",
-          "x": 727,
-          "y": 542.37,
-          "label": "S2.230",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_020",
-          "type": "classroom",
-          "x": 616.83,
-          "y": 509.69,
-          "label": "S2.345",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_021",
-          "type": "classroom",
-          "x": 409.81,
-          "y": 174.33,
-          "label": "S2.245",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_classroom_026",
-          "type": "classroom",
-          "x": 580.51,
-          "y": 398.31,
-          "label": "S2.210",
-          "nodeSize": 7,
-          "labelSize": 13
-        },
-        {
-          "id": "MBS2copy_classroom_027",
-          "type": "classroom",
-          "x": 747.58,
-          "y": 395.88,
-          "label": "S2.330",
-          "nodeSize": 7,
-          "labelSize": 13
-        },
-        {
-          "id": "MBS2copy_classroom_028",
-          "type": "classroom",
-          "x": 760.9,
-          "y": 180.39,
-          "label": "S2.285",
-          "nodeSize": 6,
-          "labelSize": 11
-        },
-        {
-          "id": "MBS2copy_classroom_033",
-          "type": "classroom",
-          "x": 611.99,
-          "y": 150.12,
-          "label": "S2.273",
-          "nodeSize": 6,
-          "labelSize": 11
-        },
-        {
-          "id": "MBS2copy_classroom_034",
-          "type": "classroom",
-          "x": 655.57,
-          "y": 150.12,
-          "label": "S2.275",
-          "nodeSize": 6,
-          "labelSize": 11
-        },
-        {
-          "id": "MBS2copy_classroom_035",
-          "type": "classroom",
-          "x": 693.1,
-          "y": 151.33,
-          "label": "S2.279",
-          "nodeSize": 6,
-          "labelSize": 11
-        }
-      ],
-      "pois": [
-        {
-          "id": "MBS2copy_washroom_001",
-          "type": "washroom",
-          "x": 604.72,
-          "y": 768.77,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_washroom_002",
-          "type": "washroom",
-          "x": 706.42,
-          "y": 783.29,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_escalator_001",
-          "type": "escalator",
-          "x": 409.81,
-          "y": 386.2,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_escalator_002",
-          "type": "escalator",
-          "x": 494.55,
-          "y": 567.8,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_stairs_003",
-          "type": "stairs",
-          "x": 826.27,
-          "y": 612.59,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_stairs_004",
-          "type": "stairs",
-          "x": 556.3,
-          "y": 187.65,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 8
-        },
-        {
-          "id": "MBS2copy_elevator_001",
-          "type": "elevator",
-          "x": 599.88,
-          "y": 608.96,
-          "label": "",
-          "nodeSize": 5,
-          "labelSize": 7
-        },
-        {
-          "id": "MBS2copy_elevator_002",
-          "type": "elevator",
-          "x": 645.88,
-          "y": 607.75,
-          "label": "",
-          "nodeSize": 5,
-          "labelSize": 7
-        },
-        {
-          "id": "MBS2copy_elevator_003",
-          "type": "elevator",
-          "x": 688.26,
-          "y": 605.33,
-          "label": "",
-          "nodeSize": 5,
-          "labelSize": 7
-        },
-        {
-          "id": "MBS2copy_elevator_004",
-          "type": "elevator",
-          "x": 603.51,
-          "y": 561.74,
-          "label": "",
-          "nodeSize": 5,
-          "labelSize": 7
-        },
-        {
-          "id": "MBS2copy_elevator_005",
-          "type": "elevator",
-          "x": 647.09,
-          "y": 562.95,
-          "label": "",
-          "nodeSize": 5,
-          "labelSize": 7
-        },
-        {
-          "id": "MBS2copy_elevator_006",
-          "type": "elevator",
-          "x": 695.52,
-          "y": 564.16,
-          "label": "",
-          "nodeSize": 5,
-          "labelSize": 7
-        },
-        {
-          "id": "MBS2copy_metro_001",
-          "type": "metro",
-          "x": 319.47,
-          "y": 459.31,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 11
-        },
-        {
-          "id": "MBS2copy_water_002",
-          "type": "water",
-          "x": 647.88,
-          "y": 794.96,
-          "label": "",
-          "nodeSize": 6,
-          "labelSize": 11
-        }
-      ],
-      "annotations": []
-    }
-  }
+    "version":  2,
+    "exportedAt":  "2026-03-04T01:06:53.629Z",
+    "floors":  {
+                   "MB-S2-copy":  {
+                                      "label":  "MB – Sub 2 (Copy)",
+                                      "image":  "MB-S2-2 copy.png",
+                                      "width":  1000,
+                                      "height":  1000,
+                                      "nodes":  [
+                                                    {
+                                                        "id":  "MBS2copy_hallway_001",
+                                                        "type":  "hallway",
+                                                        "x":  861.38,
+                                                        "y":  815.98,
+                                                        "label":  "",
+                                                        "nodeSize":  5,
+                                                        "labelSize":  7
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_007",
+                                                        "type":  "hallway",
+                                                        "x":  766.95,
+                                                        "y":  814.77,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_008",
+                                                        "type":  "hallway",
+                                                        "x":  673.73,
+                                                        "y":  817.19,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_009",
+                                                        "type":  "hallway",
+                                                        "x":  587.77,
+                                                        "y":  815.98,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_010",
+                                                        "type":  "hallway",
+                                                        "x":  576.88,
+                                                        "y":  738.5,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_011",
+                                                        "type":  "hallway",
+                                                        "x":  579.3,
+                                                        "y":  671.91,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_012",
+                                                        "type":  "hallway",
+                                                        "x":  578.09,
+                                                        "y":  615.01,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_013",
+                                                        "type":  "hallway",
+                                                        "x":  576.88,
+                                                        "y":  583.54,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_014",
+                                                        "type":  "hallway",
+                                                        "x":  632.57,
+                                                        "y":  583.54,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_015",
+                                                        "type":  "hallway",
+                                                        "x":  712.47,
+                                                        "y":  583.54,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_016",
+                                                        "type":  "hallway",
+                                                        "x":  798.43,
+                                                        "y":  582.32,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_019",
+                                                        "type":  "hallway",
+                                                        "x":  513.92,
+                                                        "y":  483.05,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_020",
+                                                        "type":  "hallway",
+                                                        "x":  510.29,
+                                                        "y":  398.31,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_021",
+                                                        "type":  "hallway",
+                                                        "x":  512.71,
+                                                        "y":  296.61,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_022",
+                                                        "type":  "hallway",
+                                                        "x":  509.08,
+                                                        "y":  223.97,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_023",
+                                                        "type":  "hallway",
+                                                        "x":  592.62,
+                                                        "y":  211.86,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_hallway_024",
+                                                        "type":  "hallway",
+                                                        "x":  684.62,
+                                                        "y":  197.34,
+                                                        "label":  "",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  6
+                                                    }
+                                                ],
+                                      "edges":  [
+                                                    {
+                                                        "from":  "MBS2copy_classroom_012",
+                                                        "to":  "MBS2copy_hallway_001",
+                                                        "weight":  66.16,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_011",
+                                                        "to":  "MBS2copy_hallway_001",
+                                                        "weight":  75.36,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_013",
+                                                        "to":  "MBS2copy_hallway_001",
+                                                        "weight":  84.4,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_001",
+                                                        "to":  "MBS2copy_hallway_007",
+                                                        "weight":  94.44,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_010",
+                                                        "to":  "MBS2copy_hallway_001",
+                                                        "weight":  114.05,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_009",
+                                                        "to":  "MBS2copy_hallway_007",
+                                                        "weight":  31.57,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_014",
+                                                        "to":  "MBS2copy_hallway_007",
+                                                        "weight":  17.33,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_007",
+                                                        "to":  "MBS2copy_hallway_008",
+                                                        "weight":  93.25,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_015",
+                                                        "to":  "MBS2copy_hallway_007",
+                                                        "weight":  69.98,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_washroom_002",
+                                                        "to":  "MBS2copy_hallway_008",
+                                                        "weight":  47.09,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_008",
+                                                        "to":  "MBS2copy_hallway_009",
+                                                        "weight":  85.97,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_008",
+                                                        "to":  "MBS2copy_hallway_008",
+                                                        "weight":  45.04,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_008",
+                                                        "to":  "MBS2copy_hallway_009",
+                                                        "weight":  70.2,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_007",
+                                                        "to":  "MBS2copy_hallway_009",
+                                                        "weight":  118.4,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_004",
+                                                        "to":  "MBS2copy_hallway_009",
+                                                        "weight":  114.11,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_005",
+                                                        "to":  "MBS2copy_hallway_010",
+                                                        "weight":  107.99,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_washroom_001",
+                                                        "to":  "MBS2copy_hallway_009",
+                                                        "weight":  50.16,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_washroom_001",
+                                                        "to":  "MBS2copy_hallway_010",
+                                                        "weight":  41.13,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_006",
+                                                        "to":  "MBS2copy_hallway_011",
+                                                        "weight":  123.78,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_010",
+                                                        "to":  "MBS2copy_hallway_011",
+                                                        "weight":  66.63,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_009",
+                                                        "to":  "MBS2copy_hallway_010",
+                                                        "weight":  78.24,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_016",
+                                                        "to":  "MBS2copy_hallway_011",
+                                                        "weight":  58.68,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_011",
+                                                        "to":  "MBS2copy_hallway_012",
+                                                        "weight":  56.91,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_elevator_001",
+                                                        "to":  "MBS2copy_hallway_012",
+                                                        "weight":  22.61,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_elevator_001",
+                                                        "to":  "MBS2copy_hallway_013",
+                                                        "weight":  34.28,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_014",
+                                                        "to":  "MBS2copy_hallway_013",
+                                                        "weight":  55.69,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_014",
+                                                        "to":  "MBS2copy_hallway_015",
+                                                        "weight":  79.9,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_015",
+                                                        "to":  "MBS2copy_hallway_016",
+                                                        "weight":  85.97,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_stairs_003",
+                                                        "to":  "MBS2copy_hallway_016",
+                                                        "weight":  41.13,
+                                                        "accessible":  false
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_elevator_003",
+                                                        "to":  "MBS2copy_hallway_015",
+                                                        "weight":  32.57,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_elevator_002",
+                                                        "to":  "MBS2copy_hallway_014",
+                                                        "weight":  27.63,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_elevator_006",
+                                                        "to":  "MBS2copy_hallway_015",
+                                                        "weight":  25.75,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_elevator_005",
+                                                        "to":  "MBS2copy_hallway_014",
+                                                        "weight":  25.19,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_elevator_004",
+                                                        "to":  "MBS2copy_hallway_013",
+                                                        "weight":  34.42,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_019",
+                                                        "to":  "MBS2copy_hallway_015",
+                                                        "weight":  43.66,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_018",
+                                                        "to":  "MBS2copy_hallway_016",
+                                                        "weight":  29.97,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_escalator_002",
+                                                        "to":  "MBS2copy_hallway_013",
+                                                        "weight":  83.82,
+                                                        "accessible":  false
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_020",
+                                                        "to":  "MBS2copy_hallway_019",
+                                                        "weight":  106.3,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_013",
+                                                        "to":  "MBS2copy_hallway_019",
+                                                        "weight":  118.58,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_019",
+                                                        "to":  "MBS2copy_hallway_020",
+                                                        "weight":  84.82,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_026",
+                                                        "to":  "MBS2copy_hallway_020",
+                                                        "weight":  70.22,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_escalator_001",
+                                                        "to":  "MBS2copy_hallway_020",
+                                                        "weight":  101.21,
+                                                        "accessible":  false
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_020",
+                                                        "to":  "MBS2copy_hallway_021",
+                                                        "weight":  101.73,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_021",
+                                                        "to":  "MBS2copy_hallway_022",
+                                                        "weight":  72.73,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_021",
+                                                        "to":  "MBS2copy_hallway_022",
+                                                        "weight":  110.99,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_stairs_004",
+                                                        "to":  "MBS2copy_hallway_022",
+                                                        "weight":  59.57,
+                                                        "accessible":  false
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_022",
+                                                        "to":  "MBS2copy_hallway_023",
+                                                        "weight":  84.41,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_hallway_023",
+                                                        "to":  "MBS2copy_hallway_024",
+                                                        "weight":  93.14,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_035",
+                                                        "to":  "MBS2copy_hallway_024",
+                                                        "weight":  46.78,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_034",
+                                                        "to":  "MBS2copy_hallway_024",
+                                                        "weight":  55.44,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_033",
+                                                        "to":  "MBS2copy_hallway_024",
+                                                        "weight":  86.63,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_028",
+                                                        "to":  "MBS2copy_hallway_024",
+                                                        "weight":  78.14,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_027",
+                                                        "to":  "MBS2copy_hallway_024",
+                                                        "weight":  208.28,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_classroom_017",
+                                                        "to":  "MBS2copy_hallway_015",
+                                                        "weight":  91.4,
+                                                        "accessible":  true
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_metro_001",
+                                                        "to":  "MBS2copy_escalator_001",
+                                                        "weight":  116.22,
+                                                        "accessible":  false
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_metro_001",
+                                                        "to":  "MBS2copy_escalator_002",
+                                                        "weight":  205.97,
+                                                        "accessible":  false
+                                                    },
+                                                    {
+                                                        "from":  "MBS2copy_water_002",
+                                                        "to":  "MBS2copy_hallway_008",
+                                                        "weight":  34.09,
+                                                        "accessible":  true
+                                                    }
+                                                ],
+                                      "rooms":  [
+                                                    {
+                                                        "id":  "MBS2copy_classroom_004",
+                                                        "type":  "classroom",
+                                                        "x":  478.81,
+                                                        "y":  849.88,
+                                                        "label":  "S2.115",
+                                                        "nodeSize":  8,
+                                                        "labelSize":  12
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_005",
+                                                        "type":  "classroom",
+                                                        "x":  469.13,
+                                                        "y":  731.23,
+                                                        "label":  "S2.135",
+                                                        "nodeSize":  8,
+                                                        "labelSize":  12
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_006",
+                                                        "type":  "classroom",
+                                                        "x":  455.81,
+                                                        "y":  663.44,
+                                                        "label":  "S2.145",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_007",
+                                                        "type":  "classroom",
+                                                        "x":  516.34,
+                                                        "y":  910.41,
+                                                        "label":  "S2.015",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_008",
+                                                        "type":  "classroom",
+                                                        "x":  647.09,
+                                                        "y":  853.51,
+                                                        "label":  "S2.401",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  10
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_009",
+                                                        "type":  "classroom",
+                                                        "x":  764.53,
+                                                        "y":  846.25,
+                                                        "label":  "S2.470",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_010",
+                                                        "type":  "classroom",
+                                                        "x":  792.37,
+                                                        "y":  906.78,
+                                                        "label":  "S2.465",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_011",
+                                                        "type":  "classroom",
+                                                        "x":  891.65,
+                                                        "y":  884.99,
+                                                        "label":  "S2.455",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_012",
+                                                        "type":  "classroom",
+                                                        "x":  915.86,
+                                                        "y":  853.51,
+                                                        "label":  "S2.455",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_013",
+                                                        "type":  "classroom",
+                                                        "x":  849.27,
+                                                        "y":  732.45,
+                                                        "label":  "S2.435",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_014",
+                                                        "type":  "classroom",
+                                                        "x":  774.21,
+                                                        "y":  799.03,
+                                                        "label":  "S2.428",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_015",
+                                                        "type":  "classroom",
+                                                        "x":  731.84,
+                                                        "y":  754.24,
+                                                        "label":  "S2.437",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_016",
+                                                        "type":  "classroom",
+                                                        "x":  633.78,
+                                                        "y":  693.7,
+                                                        "label":  "S2.440",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_017",
+                                                        "type":  "classroom",
+                                                        "x":  730.63,
+                                                        "y":  673.12,
+                                                        "label":  "S2.438",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_018",
+                                                        "type":  "classroom",
+                                                        "x":  777.85,
+                                                        "y":  560.53,
+                                                        "label":  "S2.312",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_019",
+                                                        "type":  "classroom",
+                                                        "x":  727,
+                                                        "y":  542.37,
+                                                        "label":  "S2.230",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_020",
+                                                        "type":  "classroom",
+                                                        "x":  616.83,
+                                                        "y":  509.69,
+                                                        "label":  "S2.345",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_021",
+                                                        "type":  "classroom",
+                                                        "x":  409.81,
+                                                        "y":  174.33,
+                                                        "label":  "S2.245",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  8
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_026",
+                                                        "type":  "classroom",
+                                                        "x":  580.51,
+                                                        "y":  398.31,
+                                                        "label":  "S2.210",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  13
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_027",
+                                                        "type":  "classroom",
+                                                        "x":  747.58,
+                                                        "y":  395.88,
+                                                        "label":  "S2.330",
+                                                        "nodeSize":  7,
+                                                        "labelSize":  13
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_028",
+                                                        "type":  "classroom",
+                                                        "x":  760.9,
+                                                        "y":  180.39,
+                                                        "label":  "S2.285",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  11
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_033",
+                                                        "type":  "classroom",
+                                                        "x":  611.99,
+                                                        "y":  150.12,
+                                                        "label":  "S2.273",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  11
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_034",
+                                                        "type":  "classroom",
+                                                        "x":  655.57,
+                                                        "y":  150.12,
+                                                        "label":  "S2.275",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  11
+                                                    },
+                                                    {
+                                                        "id":  "MBS2copy_classroom_035",
+                                                        "type":  "classroom",
+                                                        "x":  693.1,
+                                                        "y":  151.33,
+                                                        "label":  "S2.279",
+                                                        "nodeSize":  6,
+                                                        "labelSize":  11
+                                                    }
+                                                ],
+                                      "pois":  [
+                                                   {
+                                                       "id":  "MBS2copy_washroom_001",
+                                                       "type":  "washroom",
+                                                       "x":  604.72,
+                                                       "y":  768.77,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  8
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_washroom_002",
+                                                       "type":  "washroom",
+                                                       "x":  706.42,
+                                                       "y":  783.29,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  8
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_escalator_001",
+                                                       "type":  "escalator",
+                                                       "x":  409.81,
+                                                       "y":  386.2,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  8
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_escalator_002",
+                                                       "type":  "escalator",
+                                                       "x":  494.55,
+                                                       "y":  567.8,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  8
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_stairs_003",
+                                                       "type":  "stairs",
+                                                       "x":  826.27,
+                                                       "y":  612.59,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  8
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_stairs_004",
+                                                       "type":  "stairs",
+                                                       "x":  556.3,
+                                                       "y":  187.65,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  8
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_elevator_001",
+                                                       "type":  "elevator",
+                                                       "x":  599.88,
+                                                       "y":  608.96,
+                                                       "label":  "",
+                                                       "nodeSize":  5,
+                                                       "labelSize":  7
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_elevator_002",
+                                                       "type":  "elevator",
+                                                       "x":  645.88,
+                                                       "y":  607.75,
+                                                       "label":  "",
+                                                       "nodeSize":  5,
+                                                       "labelSize":  7
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_elevator_003",
+                                                       "type":  "elevator",
+                                                       "x":  688.26,
+                                                       "y":  605.33,
+                                                       "label":  "",
+                                                       "nodeSize":  5,
+                                                       "labelSize":  7
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_elevator_004",
+                                                       "type":  "elevator",
+                                                       "x":  603.51,
+                                                       "y":  561.74,
+                                                       "label":  "",
+                                                       "nodeSize":  5,
+                                                       "labelSize":  7
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_elevator_005",
+                                                       "type":  "elevator",
+                                                       "x":  647.09,
+                                                       "y":  562.95,
+                                                       "label":  "",
+                                                       "nodeSize":  5,
+                                                       "labelSize":  7
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_elevator_006",
+                                                       "type":  "elevator",
+                                                       "x":  695.52,
+                                                       "y":  564.16,
+                                                       "label":  "",
+                                                       "nodeSize":  5,
+                                                       "labelSize":  7
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_metro_001",
+                                                       "type":  "metro",
+                                                       "x":  319.47,
+                                                       "y":  459.31,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  11
+                                                   },
+                                                   {
+                                                       "id":  "MBS2copy_water_002",
+                                                       "type":  "water",
+                                                       "x":  647.88,
+                                                       "y":  794.96,
+                                                       "label":  "",
+                                                       "nodeSize":  6,
+                                                       "labelSize":  11
+                                                   }
+                                               ],
+                                      "annotations":  [
+
+                                                      ]
+                                  }
+               }
 }
