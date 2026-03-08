@@ -3,7 +3,7 @@
  * This module is the source for indoor routing graph, floor rooms, and POIs.
  */
 
-import { formatRoomLabel, normalizeRoomLabel } from "./indoorRoomHighlightData";
+import { formatRoomLabel, normalizeRoomLabel, getRoomAliases } from "./indoorRoomHighlightData";
 
 const hallMappings = require("../../../Floor_Mapping/indoor/Json_Files/Hall9thMapping.json");
 const mbFloor1Mapping = require("../../../Floor_Mapping/indoor/Json_Files/floorplan-MP1.json");
@@ -54,32 +54,6 @@ const MAPPING_SOURCES = [hallMappings, mbFloor1Mapping, mbBasementMapping, loyol
 
 function toNumber(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function getRoomAliases(floorId, label) {
-  const normalized = normalizeRoomLabel(label);
-  const formatted = formatRoomLabel(floorId, label);
-  const aliases = [normalized, normalizeRoomLabel(formatted)];
-
-  if (floorId.startsWith("MB-") && !normalized.startsWith("MB")) {
-    aliases.push(`MB${normalized}`);
-  }
-
-  if (floorId.startsWith("VL-")) {
-    const vlMatch = /^VLF\d\D*(\d{3,})/.exec(String(label).toUpperCase());
-    if (vlMatch) {
-      aliases.push(`VL${vlMatch[1]}`, vlMatch[1]);
-    }
-  }
-
-  if (floorId.startsWith("VE-")) {
-    const veMatch = /^VE\D*(\d{3,})/.exec(String(label).toUpperCase());
-    if (veMatch) {
-      aliases.push(`VE${veMatch[1]}`, veMatch[1]);
-    }
-  }
-
-  return [...new Set(aliases)];
 }
 
 function buildRoomSearchKeys(floorId, roomId, rawLabel, displayLabel) {

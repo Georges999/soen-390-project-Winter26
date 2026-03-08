@@ -184,4 +184,5 @@ export {
   roomsByFloor,
   normalizeRoomLabel,
   formatRoomLabel,
+  getRoomAliases,
 };
