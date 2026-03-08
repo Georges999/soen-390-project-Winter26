@@ -31,8 +31,8 @@ appId: host.exp.Exponent
     text: "Search room or click on map"
 - inputText: "H-837"
 - waitForAnimationToEnd
-- assertVisible: "H-837 · Hall Building"
-- tapOn: "H-837 · Hall Building"
+- assertVisible: "H837 · Hall Building"
+- tapOn: "H837 · Hall Building"
 - hideKeyboard
 - waitForAnimationToEnd
 
