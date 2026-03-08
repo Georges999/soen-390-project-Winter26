@@ -150,8 +150,8 @@ describe('IndoorMapScreen', () => {
       <IndoorMapScreen navigation={mockNavigation} />
     );
     const searchInput = getByPlaceholderText('Search room or click on map');
-    fireEvent.changeText(searchInput, 'H-837');
-    expect(getByText(/H-837/)).toBeTruthy();
+    fireEvent.changeText(searchInput, 'H837');
+    expect(getByText(/H837/)).toBeTruthy();
   });
 
   it('should show no results for a non-matching query', () => {
@@ -168,7 +168,7 @@ describe('IndoorMapScreen', () => {
       <IndoorMapScreen navigation={mockNavigation} />
     );
     const searchInput = getByPlaceholderText('Search room or click on map');
-    fireEvent.changeText(searchInput, 'H-837');
+    fireEvent.changeText(searchInput, 'H837');
     // Press the close icon
     const closeIcon = getByText('close');
     fireEvent.press(closeIcon);
@@ -181,12 +181,12 @@ describe('IndoorMapScreen', () => {
       <IndoorMapScreen navigation={mockNavigation} />
     );
     const searchInput = getByPlaceholderText('Search room or click on map');
-    fireEvent.changeText(searchInput, 'H-837');
+    fireEvent.changeText(searchInput, 'H837');
     // Press the search result
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.press(getByText(/H837/));
     // Room should be selected — "Room Selected" bar should appear
     expect(getByText('Room Selected')).toBeTruthy();
-    expect(getByText(/H-837/)).toBeTruthy();
+    expect(getByText(/H837/)).toBeTruthy();
   });
 
   // --- Room Selection & Get Directions ---
@@ -195,8 +195,8 @@ describe('IndoorMapScreen', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
     expect(getByText('Get Directions')).toBeTruthy();
   });
 
@@ -204,8 +204,8 @@ describe('IndoorMapScreen', () => {
     const { getByPlaceholderText, getByText, getByTestId } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
     expect(getByTestId('selected-room-highlight')).toBeTruthy();
   });
 
@@ -214,22 +214,22 @@ describe('IndoorMapScreen', () => {
       <IndoorMapScreen navigation={mockNavigation} />
     );
 
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
 
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-861');
-    fireEvent.press(getAllByText(/H-861/)[0]);
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H861');
+    fireEvent.press(getAllByText(/H861/)[0]);
 
     expect(getAllByTestId('selected-room-highlight')).toHaveLength(1);
-    expect(getAllByText(/H-861/).length).toBeGreaterThan(0);
+    expect(getAllByText(/H861/).length).toBeGreaterThan(0);
   });
 
   it('should show the checkmark when a room is selected', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
     expect(getByText('✓')).toBeTruthy();
   });
 
@@ -237,14 +237,14 @@ describe('IndoorMapScreen', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
     fireEvent.press(getByText('Get Directions'));
     expect(mockNavigation.navigate).toHaveBeenCalledWith(
       'IndoorDirections',
       expect.objectContaining({
         destinationRoom: expect.objectContaining({
-          label: 'H-837',
+          label: 'H837',
           floor: 'Hall-8',
         }),
       })
@@ -262,8 +262,8 @@ describe('IndoorMapScreen', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'MB 1.210');
-    fireEvent.press(getByText(/MB 1.210/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'MB1.210');
+    fireEvent.press(getByText(/MB1\.210/));
     expect(getByText('Floor 1')).toBeTruthy();
   });
 
@@ -276,8 +276,8 @@ describe('IndoorMapScreen', () => {
     } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
     expect(getByTestId('selected-room-highlight')).toBeTruthy();
 
     fireEvent.press(getByText('9'));
@@ -292,8 +292,8 @@ describe('IndoorMapScreen', () => {
     const { getByPlaceholderText, getByText, queryByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
     expect(getByText('Room Selected')).toBeTruthy();
     // Switch building
     fireEvent.press(getByText('John Molson Building'));
@@ -304,8 +304,8 @@ describe('IndoorMapScreen', () => {
     const { getByPlaceholderText, getByText, queryByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    fireEvent.press(getByText(/H-837/));
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
     expect(getByText('Room Selected')).toBeTruthy();
     // Switch campus
     fireEvent.press(getByText('Loyola'));
@@ -320,7 +320,7 @@ describe('IndoorMapScreen', () => {
     );
     fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'Hall');
     // Should show Hall Building rooms
-    expect(getByText(/H-837/)).toBeTruthy();
+    expect(getByText(/H837/)).toBeTruthy();
   });
 
   // --- Search by room ID ---
@@ -329,7 +329,7 @@ describe('IndoorMapScreen', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
-    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H-837');
-    expect(getByText(/H-837/)).toBeTruthy();
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    expect(getByText(/H837/)).toBeTruthy();
   });
 });
