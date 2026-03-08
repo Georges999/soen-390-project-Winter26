@@ -1,0 +1,102 @@
+appId: host.exp.Exponent
+---
+
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Indoor Map"
+    timeout: 12000
+
+# POI structure/rendering baseline (legend should exist on indoor map)
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
+
+# Floor-specific coordinate behavior (selected room highlight should follow floor)
+- tapOn:
+    text: "Search room or click on map"
+- inputText: "H-837"
+- extendedWaitUntil:
+    visible: "H837 · Hall Building"
+    timeout: 8000
+- tapOn: "H837 · Hall Building"
+- hideKeyboard
+- waitForAnimationToEnd
+- assertVisible:
+    id: "selected-room-highlight"
+
+- tapOn: "9"
+- waitForAnimationToEnd
+- assertVisible: "Floor 9"
+- assertNotVisible:
+    id: "selected-room-highlight"
+
+# Visible for floor 9
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
+
+- tapOn: "8"
+- waitForAnimationToEnd
+- assertVisible: "Floor 8"
+- assertVisible:
+    id: "selected-room-highlight"
+
+- assertVisible: "John Molson Building"
+
+- tapOn: "John Molson Building"
+- assertVisible: "S2"
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
+
+#switch floor
+- assertVisible: "1"
+- tapOn: "1"
+# Visible for floor 1
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
+
+#Switch to a different campus
+- assertVisible: "Loyola"
+- tapOn: "Loyola"
+
+#Check Vanier Library
+- assertVisible: "Vanier Library"
+- assertVisible: "1"
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
+
+#Switch floor
+- assertVisible: "2"
+- tapOn: "2"
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
+
+#Switch building 
+- assertVisible: "Vanier Extension"
+- tapOn: "Vanier Extension"
+- assertVisible: "2"
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
+
+
