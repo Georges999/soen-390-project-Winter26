@@ -1,0 +1,62 @@
+appId: host.exp.Exponent
+---
+- launchApp
+- waitForAnimationToEnd
+
+# Navigate to Campus Guide
+- tapOn:
+    text: "Campus Guide"
+- waitForAnimationToEnd
+
+# Go to Indoor tab
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+# Wait for Indoor Map screen
+- extendedWaitUntil:
+    visible: "Indoor Map"
+    timeout: 10000
+
+# Tap the indoor room search input
+- tapOn:
+    text: "Search room or click on map"
+- waitForAnimationToEnd
+
+# Type a partial room code to trigger suggestions
+- inputText: "H83"
+
+# Wait for suggestions to appear
+- extendedWaitUntil:
+    visible: "H837.*Hall Building"
+    timeout: 10000
+
+- tapOn:
+    text: "H837.*Hall Building"
+- waitForAnimationToEnd
+
+# Verify the room was selected in the UI
+- assertVisible: "Room Selected"
+- assertVisible: "Get Directions"
+
+# Clear the search input (empty input test)
+- tapOn:
+    text: "Search room or click on map"
+- eraseText
+- waitForAnimationToEnd
+
+# Verify empty input does not break the UI
+- assertVisible:
+    text: "Search room or click on map"
+
+# Enter an invalid room code
+- inputText: "ZZ9999"
+- waitForAnimationToEnd
+
+# Verify the app remains stable and usable after invalid input
+- assertVisible:
+    text: "Search room or click on map"
