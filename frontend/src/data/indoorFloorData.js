@@ -66,18 +66,16 @@ function getRoomAliases(floorId, label) {
   }
 
   if (floorId.startsWith("VL-")) {
-    const vlMatch = String(label).toUpperCase().match(/^VLF\d[^0-9]*([0-9]{3,})/);
+    const vlMatch = /^VLF\d\D*(\d{3,})/.exec(String(label).toUpperCase());
     if (vlMatch) {
-      aliases.push(`VL${vlMatch[1]}`);
-      aliases.push(vlMatch[1]);
+      aliases.push(`VL${vlMatch[1]}`, vlMatch[1]);
     }
   }
 
   if (floorId.startsWith("VE-")) {
-    const veMatch = String(label).toUpperCase().match(/^VE[^0-9]*([0-9]{3,})/);
+    const veMatch = /^VE\D*(\d{3,})/.exec(String(label).toUpperCase());
     if (veMatch) {
-      aliases.push(`VE${veMatch[1]}`);
-      aliases.push(veMatch[1]);
+      aliases.push(`VE${veMatch[1]}`, veMatch[1]);
     }
   }
 
