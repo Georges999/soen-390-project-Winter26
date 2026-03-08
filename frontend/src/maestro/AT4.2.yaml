@@ -1,0 +1,88 @@
+appId: host.exp.Exponent
+---
+
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Indoor Map"
+    timeout: 12000
+
+- assertVisible: "Hall Building"
+- tapOn: "9"
+- waitForAnimationToEnd
+- assertVisible: "Floor 9"
+
+# Pick Hall 9 room and open directions
+- tapOn:
+    text: "Search room or click on map"
+- inputText: "H-937"
+- extendedWaitUntil:
+    visible: "H937 · Hall Building"
+    timeout: 8000
+- tapOn: "H937 · Hall Building"
+- hideKeyboard
+- waitForAnimationToEnd
+- assertVisible: "Room Selected"
+- assertVisible: "Get Directions"
+- tapOn: "Get Directions"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Indoor Directions"
+    timeout: 12000
+
+# Valid route exists on Hall floor 9.
+- tapOn: "Tap map or search start"
+- eraseText
+- inputText: "921"
+- extendedWaitUntil:
+    visible: "H921, Floor 9 · Hall Building"
+    timeout: 8000
+- tapOn: "H921, Floor 9 · Hall Building"
+
+- hideKeyboard
+- waitForAnimationToEnd
+
+- assertVisible: "STEP-BY-STEP DIRECTIONS"
+- assertVisible: "Start at H921"
+- assertVisible:
+    id: "indoor-route-overlay"
+- assertVisible:
+    id: "indoor-route-overlay-path"
+
+# Toggle direction (swap) and ensure route updates
+- tapOn:
+    id: "swap-direction-toggle"
+- waitForAnimationToEnd
+- assertVisible: "Start at H937"
+- assertVisible:
+    id: "indoor-route-overlay-path"
+
+# Accessibility toggle is present and usable
+- assertVisible:
+    id: "accessibility-route-toggle"
+- tapOn:
+    id: "accessibility-route-toggle"
+- waitForAnimationToEnd
+- assertVisible: "Indoor Directions"
+
+#Check the toggle direction
+- assertVisible: ""
+- tapOn: ""
+
+

@@ -400,7 +400,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           </View>
 
           {/* Swap Button */}
-          <Pressable style={styles.swapButton} onPress={handleSwap}>
+          <Pressable
+            testID="swap-direction-toggle"
+            style={styles.swapButton}
+            onPress={handleSwap}
+          >
             <MaterialIcons name="swap-vert" size={20} color={MAROON} />
           </Pressable>
         </View>
@@ -458,7 +462,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   resizeMode="contain"
                 />
                 {/* SVG Overlay for Route and Markers */}
-                <Svg style={styles.svgOverlay} width={MAP_IMAGE_WIDTH} height={MAP_IMAGE_HEIGHT}>
+                <Svg
+                  testID="indoor-route-overlay"
+                  style={styles.svgOverlay}
+                  width={MAP_IMAGE_WIDTH}
+                  height={MAP_IMAGE_HEIGHT}
+                >
                   {/* Show clickable room markers when in selection mode */}
                   {selectionMode && currentFloorData.rooms.map((room) => {
                     if (room.x === undefined || room.y === undefined) return null;
@@ -480,6 +489,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   {svgPath && (
                     <>
                       <Path
+                        testID="indoor-route-overlay-path"
                         d={svgPath.path}
                         stroke={BLUE}
                         strokeWidth={4}
@@ -559,6 +569,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                 </View>
                 {/* Accessibility Button */}
                 <Pressable
+                  testID="accessibility-route-toggle"
                   style={[
                     styles.accessButton,
                     accessibleRoute && styles.accessButtonActive,
