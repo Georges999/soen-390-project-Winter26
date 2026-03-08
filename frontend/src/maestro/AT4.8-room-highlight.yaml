@@ -1,0 +1,77 @@
+appId: host.exp.Exponent
+---
+- launchApp
+- waitForAnimationToEnd
+
+- tapOn:
+    text: "Campus Guide"
+- waitForAnimationToEnd
+
+#Indoor tab
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+# Ensure Indoor screen loaded
+- extendedWaitUntil:
+    visible: "Indoor Map"
+    timeout: 10000
+
+#Select room and verify highlight is visible
+- tapOn:
+    text: "Search room or click on map"
+- inputText: "H837"
+- extendedWaitUntil:
+    visible: "H837.*Hall Building"
+    timeout: 10000
+- tapOn:
+    text: "H837.*Hall Building"
+- waitForAnimationToEnd
+- hideKeyboard
+- assertVisible:
+    id: "selected-room-highlight"
+- assertVisible: "Room Selected"
+- assertVisible: "Get Directions"
+
+#Switching floors in same building -> highlight should be hidden on other floor and restored when returning
+- tapOn: "9"
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "selected-room-highlight"
+- assertVisible: "Room Selected"
+
+- tapOn: "8"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "selected-room-highlight"
+
+#new room
+- tapOn:
+    text: "Search room or click on map"
+- inputText: "H861"
+- extendedWaitUntil:
+    visible: "H861.*Hall Building"
+    timeout: 10000
+- tapOn:
+    text: "H861.*Hall Building"
+- waitForAnimationToEnd
+- hideKeyboard
+- assertVisible:
+    id: "selected-room-highlight"
+- assertVisible: "Room Selected"
+- assertVisible: "Get Directions"
+
+# 4) Selection/highlight clears when switching building/campus
+- tapOn: "John Molson Building"
+- waitForAnimationToEnd
+- assertNotVisible: "Room Selected"
+- assertNotVisible:
+    id: "selected-room-highlight"
+
+- tapOn: "Loyola"
+- waitForAnimationToEnd
+- assertNotVisible: "Room Selected"
