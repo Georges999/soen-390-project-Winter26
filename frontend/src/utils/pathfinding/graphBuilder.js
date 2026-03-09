@@ -27,6 +27,16 @@ function mergeAllNodes(floorData) {
   return nodesMap;
 }
 
+function isStairsNode(nodeId, nodesMap) {
+  const node = nodesMap.get(nodeId);
+  return node?.type === 'stairs';
+}
+
+function isElevatorNode(nodeId, nodesMap) {
+  const node = nodesMap.get(nodeId);
+  return node?.type === 'elevator';
+}
+
 function buildGraph(floorData) {
   const graph = new Map();
   const nodesMap = mergeAllNodes(floorData);
@@ -43,8 +53,9 @@ function buildGraph(floorData) {
       processedEdges.add(edgeKey);
 
       const weight = edge.weight ?? euclideanDistance(nodesMap.get(from), nodesMap.get(to));
-      graph.get(from).push({ to, weight });
-      graph.get(to).push({ to: from, weight });
+      const accessible = !isStairsNode(from, nodesMap) && !isStairsNode(to, nodesMap);
+      graph.get(from).push({ to, weight, accessible });
+      graph.get(to).push({ to: from, weight, accessible });
     });
   }
   return { graph, nodes: nodesMap };
@@ -75,4 +86,4 @@ function getNodeFloor(nodeId, floorMap) {
   return floorMap.get(nodeId) || null;
 }
 
-export { euclideanDistance, mergeAllNodes, buildGraph, buildMultiFloorGraph, getNodeFloor };
+export { euclideanDistance, mergeAllNodes, buildGraph, buildMultiFloorGraph, getNodeFloor, isStairsNode, isElevatorNode };
