@@ -10,6 +10,7 @@ import {
   Dimensions,
   SafeAreaView,
   FlatList,
+  Switch,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Svg, { Path, Circle, Line } from "react-native-svg";
@@ -137,11 +138,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const result = findShortestPath({
       floorsData,
       startNodeId: startRoom.id,
-      endNodeId: destRoom.id
+      endNodeId: destRoom.id,
+      accessible: accessibleRoute,
     });
 
     return result;
-  }, [startRoom, destRoom, selectedBuilding]);
+  }, [startRoom, destRoom, selectedBuilding, accessibleRoute]);
 
   // Generate step-by-step directions from path
   const directionSteps = useMemo(() => {
@@ -455,6 +457,26 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             <MaterialIcons name="directions-walk" size={18} color="#fff" />
             <Text style={[styles.transportChipText, styles.transportChipTextActive]}>Walking</Text>
           </View>
+        </View>
+
+        {/* Accessibility Toggle */}
+        <View style={styles.accessibilityRow} testID="accessibility-toggle-row">
+          <View style={styles.accessibilityLabelContainer}>
+            <MaterialIcons name="accessible" size={22} color={accessibleRoute ? BLUE : "#666"} />
+            <Text style={[styles.accessibilityLabel, accessibleRoute && styles.accessibilityLabelActive]}>
+              Accessible Route
+            </Text>
+          </View>
+          <Text style={styles.accessibilityHint}>
+            {accessibleRoute ? "Avoiding stairs" : "Uses stairs if shorter"}
+          </Text>
+          <Switch
+            testID="accessibility-switch"
+            value={accessibleRoute}
+            onValueChange={setAccessibleRoute}
+            trackColor={{ false: "#ddd", true: BLUE }}
+            thumbColor={accessibleRoute ? "#fff" : "#f4f3f4"}
+          />
         </View>
 
         <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -968,5 +990,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#999",
     textAlign: "center",
+  },
+  accessibilityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  accessibilityLabelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  accessibilityLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    marginLeft: 8,
+  },
+  accessibilityLabelActive: {
+    color: BLUE,
+  },
+  accessibilityHint: {
+    fontSize: 12,
+    color: "#999",
+    flex: 1,
+    textAlign: "right",
+    marginRight: 10,
   },
 });
