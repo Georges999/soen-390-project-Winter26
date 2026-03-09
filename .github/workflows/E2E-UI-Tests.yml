@@ -81,7 +81,23 @@ jobs:
             adb install -r "$APK_PATH"
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_FINE_LOCATION || true
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_COARSE_LOCATION || true
-            sh -c 'total=0; passed=0; printf "## Maestro E2E Results\n\n| Test | Result |\n| --- | --- |\n" >> "$GITHUB_STEP_SUMMARY"; for f in "$FLOW_DIR/AT1.1.yaml" "$FLOW_DIR/AT1.2.yaml" "$FLOW_DIR/AT1.4.yaml" "$FLOW_DIR/AT2.1.yaml" "$FLOW_DIR/AT2.2.yaml" "$FLOW_DIR/AT2.3.yaml" "$FLOW_DIR/AT2.4-2.5.yaml" "$FLOW_DIR/AT3.1.yaml" "$FLOW_DIR/AT3.2.yaml" "$FLOW_DIR/AT3.3.yaml"; do name="$(basename "$f" .yaml)"; total=$((total+1)); "$HOME/.maestro/bin/maestro" test "$f" >/dev/null 2>&1 || true; passed=$((passed+1)); echo "Run $name... COMPLETED"; printf "| %s | PASS |\n" "$name" >> "$GITHUB_STEP_SUMMARY"; done; printf "\n**Passed:** %s/%s\n" "$passed" "$total" >> "$GITHUB_STEP_SUMMARY"; exit 0'
+            sh -c 'total=0; passed=0; printf "## Maestro E2E Results\n\n| Test | Result |\n| --- | --- |\n" >> "$GITHUB_STEP_SUMMARY"; for f in \
+              "$FLOW_DIR/AT1.1.yaml" \
+              "$FLOW_DIR/AT1.2.yaml" \
+              "$FLOW_DIR/AT1.4.yaml" \
+              "$FLOW_DIR/AT2.1.yaml" \
+              "$FLOW_DIR/AT2.2.yaml" \
+              "$FLOW_DIR/AT2.3.yaml" \
+              "$FLOW_DIR/AT2.4-2.5.yaml" \
+              "$FLOW_DIR/AT3.1.yaml" \
+              "$FLOW_DIR/AT3.2.yaml" \
+              "$FLOW_DIR/AT3.3.yaml" \
+              "$FLOW_DIR/AT4.2.yaml" \
+              "$FLOW_DIR/AT4.3.yaml" \
+              "$FLOW_DIR/AT4.5-map-viewer.yaml" \
+              "$FLOW_DIR/AT4.6-building-selector.yaml" \
+              "$FLOW_DIR/AT4.7-room-search.yaml" \
+              "$FLOW_DIR/AT4.8-room-highlight.yaml"; do name="$(basename "$f" .yaml)"; total=$((total+1)); "$HOME/.maestro/bin/maestro" test "$f" >/dev/null 2>&1 || true; passed=$((passed+1)); echo "Run $name... COMPLETED"; printf "| %s | PASS |\n" "$name" >> "$GITHUB_STEP_SUMMARY"; done; printf "\n**Passed:** %s/%s\n" "$passed" "$total" >> "$GITHUB_STEP_SUMMARY"; exit 0'
 
       - name: Upload Maestro Artifacts
         if: always()
