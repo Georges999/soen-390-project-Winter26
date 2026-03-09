@@ -154,13 +154,43 @@ describe('IndoorMapScreen', () => {
     expect(getByText(/H837/)).toBeTruthy();
   });
 
-  it('should show no results for a non-matching query', () => {
+  it('should show "not found" message for a non-matching query', () => {
+    const { getByPlaceholderText, getByText } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+    const searchInput = getByPlaceholderText('Search room or click on map');
+    fireEvent.changeText(searchInput, 'XYZABC Hall');
+    expect(getByText(/No rooms or buildings found/)).toBeTruthy();
+  });
+
+  it('should not show "not found" message when search is empty', () => {
     const { getByPlaceholderText, queryByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
     const searchInput = getByPlaceholderText('Search room or click on map');
-    fireEvent.changeText(searchInput, 'ZZZZZ');
-    expect(queryByText(/ZZZZZ.*Building/)).toBeNull();
+    fireEvent.changeText(searchInput, '');
+    expect(queryByText(/No rooms or buildings found/)).toBeNull();
+  });
+
+  it('should hide "not found" message after clearing search', () => {
+    const { getByPlaceholderText, getByText, queryByText } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+    const searchInput = getByPlaceholderText('Search room or click on map');
+    fireEvent.changeText(searchInput, 'XYZABC');
+    expect(getByText(/No rooms or buildings found/)).toBeTruthy();
+    // Clear search
+    fireEvent.press(getByText('close'));
+    expect(queryByText(/No rooms or buildings found/)).toBeNull();
+  });
+
+  it('should handle whitespace-only search input gracefully', () => {
+    const { getByPlaceholderText, queryByText } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+    const searchInput = getByPlaceholderText('Search room or click on map');
+    fireEvent.changeText(searchInput, '   ');
+    expect(queryByText(/No rooms or buildings found/)).toBeNull();
   });
 
   it('should clear search when the close icon is pressed', () => {

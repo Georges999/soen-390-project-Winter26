@@ -304,6 +304,38 @@ describe('IndoorDirectionsScreen', () => {
     expect(getAllByText(/Vanier Library/).length).toBeGreaterThan(0);
   });
 
+  // --- Invalid search / "not found" feedback ---
+
+  it('should show "not found" message when searching for a non-existent building', () => {
+    const { getByPlaceholderText, getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    const startInput = getByPlaceholderText('Tap map or search start');
+    fireEvent(startInput, 'focus');
+    fireEvent.changeText(startInput, 'XYZABC Hall');
+    expect(getByText(/No rooms or buildings found/)).toBeTruthy();
+  });
+
+  it('should not show "not found" message when search is empty', () => {
+    const { getByPlaceholderText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    const startInput = getByPlaceholderText('Tap map or search start');
+    fireEvent(startInput, 'focus');
+    fireEvent.changeText(startInput, '');
+    expect(queryByText(/No rooms or buildings found/)).toBeNull();
+  });
+
+  it('should not show "not found" for whitespace-only search input', () => {
+    const { getByPlaceholderText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    const startInput = getByPlaceholderText('Tap map or search start');
+    fireEvent(startInput, 'focus');
+    fireEvent.changeText(startInput, '   ');
+    expect(queryByText(/No rooms or buildings found/)).toBeNull();
+  });
+
   // --- Empty prompt subtext ---
 
   it('should show subtext in empty prompt', () => {
