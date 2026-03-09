@@ -4,6 +4,8 @@ import {
   buildGraph,
   buildMultiFloorGraph,
   getNodeFloor,
+  isStairsNode,
+  isElevatorNode,
 } from "../../../src/utils/pathfinding/graphBuilder";
 
 // ── Shared test data ──
@@ -275,5 +277,101 @@ describe("getNodeFloor", () => {
 
   it("returns null for an empty floorMap", () => {
     expect(getNodeFloor("any", new Map())).toBeNull();
+  });
+});
+
+describe("isStairsNode", () => {
+  const nodesMap = new Map([
+    ["stairs_001", { id: "stairs_001", type: "stairs", x: 0, y: 0 }],
+    ["elevator_001", { id: "elevator_001", type: "elevator", x: 10, y: 10 }],
+    ["hall_001", { id: "hall_001", type: "hallway", x: 20, y: 20 }],
+  ]);
+
+  it("returns true for a stairs node", () => {
+    expect(isStairsNode("stairs_001", nodesMap)).toBe(true);
+  });
+
+  it("returns false for an elevator node", () => {
+    expect(isStairsNode("elevator_001", nodesMap)).toBe(false);
+  });
+
+  it("returns false for a hallway node", () => {
+    expect(isStairsNode("hall_001", nodesMap)).toBe(false);
+  });
+
+  it("returns false for a non-existent node", () => {
+    expect(isStairsNode("missing", nodesMap)).toBe(false);
+  });
+});
+
+describe("isElevatorNode", () => {
+  const nodesMap = new Map([
+    ["stairs_001", { id: "stairs_001", type: "stairs", x: 0, y: 0 }],
+    ["elevator_001", { id: "elevator_001", type: "elevator", x: 10, y: 10 }],
+    ["hall_001", { id: "hall_001", type: "hallway", x: 20, y: 20 }],
+  ]);
+
+  it("returns true for an elevator node", () => {
+    expect(isElevatorNode("elevator_001", nodesMap)).toBe(true);
+  });
+
+  it("returns false for a stairs node", () => {
+    expect(isElevatorNode("stairs_001", nodesMap)).toBe(false);
+  });
+
+  it("returns false for a hallway node", () => {
+    expect(isElevatorNode("hall_001", nodesMap)).toBe(false);
+  });
+
+  it("returns false for a non-existent node", () => {
+    expect(isElevatorNode("missing", nodesMap)).toBe(false);
+  });
+});
+
+describe("buildGraph edge accessibility tagging", () => {
+  it("marks edges touching stairs as non-accessible", () => {
+    const data = {
+      nodes: [
+        { id: "hall_001", type: "hallway", x: 0, y: 0 },
+        { id: "stairs_001", type: "stairs", x: 10, y: 0 },
+      ],
+      rooms: [],
+      pois: [],
+      edges: [{ from: "hall_001", to: "stairs_001", weight: 10 }],
+    };
+    const { graph } = buildGraph(data);
+    const edge = graph.get("hall_001").find((e) => e.to === "stairs_001");
+    expect(edge.accessible).toBe(false);
+  });
+
+  it("marks edges between non-stairs nodes as accessible", () => {
+    const data = {
+      nodes: [
+        { id: "hall_001", type: "hallway", x: 0, y: 0 },
+        { id: "hall_002", type: "hallway", x: 10, y: 0 },
+      ],
+      rooms: [],
+      pois: [],
+      edges: [{ from: "hall_001", to: "hall_002", weight: 10 }],
+    };
+    const { graph } = buildGraph(data);
+    const edge = graph.get("hall_001").find((e) => e.to === "hall_002");
+    expect(edge.accessible).toBe(true);
+  });
+
+  it("marks edges touching elevator nodes as accessible", () => {
+    const data = {
+      nodes: [
+        { id: "hall_001", type: "hallway", x: 0, y: 0 },
+      ],
+      rooms: [],
+      pois: [
+        { id: "elevator_001", type: "elevator", x: 10, y: 0 },
+      ],
+      edges: [{ from: "hall_001", to: "elevator_001", weight: 10 }],
+    };
+    const { graph } = buildGraph(data);
+    const edge = graph.get("hall_001").find((e) => e.to === "elevator_001");
+    expect(edge.accessible).toBe(true);
   });
 });

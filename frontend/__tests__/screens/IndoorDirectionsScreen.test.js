@@ -173,23 +173,65 @@ describe('IndoorDirectionsScreen', () => {
     expect(getByText('3')).toBeTruthy();
   });
 
-  // --- Accessibility Button ---
+  // --- Accessibility Toggle ---
 
-  it('should render the accessibility button', () => {
+  it('should render the accessibility toggle row', () => {
+    const { getByTestId, getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByTestId('accessibility-toggle-row')).toBeTruthy();
+    expect(getByTestId('accessibility-switch')).toBeTruthy();
+    expect(getByText('Accessible Route')).toBeTruthy();
+    expect(getByText('Uses stairs if shorter')).toBeTruthy();
+  });
+
+  it('should show "Avoiding stairs" hint when accessibility is toggled on', () => {
+    const { getByTestId, getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    const toggle = getByTestId('accessibility-switch');
+    fireEvent(toggle, 'valueChange', true);
+    expect(getByText('Avoiding stairs')).toBeTruthy();
+  });
+
+  it('should render the accessibility button in stats bar', () => {
     const { getByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
     expect(getByText('♿')).toBeTruthy();
   });
 
-  it('should toggle accessibility route when pressed', () => {
-    const { getByText } = render(
+  it('should toggle accessibility route when switch is toggled', () => {
+    const { getByTestId } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    const accessBtn = getByText('♿');
-    fireEvent.press(accessBtn);
+    const toggle = getByTestId('accessibility-switch');
+    fireEvent(toggle, 'valueChange', true);
     // Should not crash, toggle is internal state
-    expect(getByText('♿')).toBeTruthy();
+    expect(getByTestId('accessibility-switch')).toBeTruthy();
+  });
+
+  it('should pass accessible=true to findShortestPath when accessibility is toggled on', () => {
+    const { getByTestId } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+
+    // Initially called without accessible=true
+    const initialCall = mockFindShortestPath.mock.calls.find(
+      (call) => call[0]?.startNodeId === 'Hall8_classroom_002'
+    );
+    expect(initialCall).toBeTruthy();
+    expect(initialCall[0].accessible).toBeFalsy();
+
+    // Toggle accessibility on via the switch
+    fireEvent(getByTestId('accessibility-switch'), 'valueChange', true);
+
+    // Should now be called with accessible=true
+    const accessibleCall = mockFindShortestPath.mock.calls.find(
+      (call) => call[0]?.accessible === true
+    );
+    expect(accessibleCall).toBeTruthy();
+    expect(accessibleCall[0].accessible).toBe(true);
   });
 
   // --- Search Functionality ---

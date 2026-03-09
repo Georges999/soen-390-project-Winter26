@@ -361,4 +361,187 @@ describe("findShortestPath", () => {
     expect(result.pathNodeIds[0]).toBe("elevator_001");
     expect(result.pathNodeIds[result.pathNodeIds.length - 1]).toBe("washroom_001");
   });
+
+  // ── Accessible routing ──
+
+  it("avoids stairs when accessible=true", () => {
+    // Graph: room_A --stairs_node-- room_B  (only path goes through stairs)
+    const floorData = {
+      floors: {
+        F1: {
+          label: "F1",
+          nodes: [
+            { id: "hall_a", type: "hallway", x: 0, y: 0 },
+            { id: "stairs_mid", type: "stairs", x: 50, y: 0 },
+            { id: "hall_b", type: "hallway", x: 100, y: 0 },
+          ],
+          rooms: [
+            { id: "room_a", type: "classroom", x: 0, y: 10, label: "A" },
+            { id: "room_b", type: "classroom", x: 100, y: 10, label: "B" },
+          ],
+          pois: [],
+          edges: [
+            { from: "room_a", to: "hall_a", weight: 10 },
+            { from: "hall_a", to: "stairs_mid", weight: 50 },
+            { from: "stairs_mid", to: "hall_b", weight: 50 },
+            { from: "hall_b", to: "room_b", weight: 10 },
+          ],
+        },
+      },
+    };
+
+    // Without accessibility: should find a path through stairs
+    const normalResult = findShortestPath({
+      floorsData: floorData,
+      startNodeId: "room_a",
+      endNodeId: "room_b",
+      accessible: false,
+    });
+    expect(normalResult.ok).toBe(true);
+    expect(normalResult.pathNodeIds).toContain("stairs_mid");
+
+    // With accessibility: should fail (no accessible path exists)
+    const accessibleResult = findShortestPath({
+      floorsData: floorData,
+      startNodeId: "room_a",
+      endNodeId: "room_b",
+      accessible: true,
+    });
+    expect(accessibleResult.ok).toBe(false);
+    expect(accessibleResult.reason).toMatch(/accessible/i);
+  });
+
+  it("routes via elevator when accessible=true and alternative exists", () => {
+    const floorData = {
+      floors: {
+        F1: {
+          label: "F1",
+          nodes: [
+            { id: "hall_a", type: "hallway", x: 0, y: 0 },
+            { id: "stairs_mid", type: "stairs", x: 50, y: 0 },
+            { id: "elev_mid", type: "elevator", x: 50, y: 50 },
+            { id: "hall_b", type: "hallway", x: 100, y: 0 },
+          ],
+          rooms: [
+            { id: "room_a", type: "classroom", x: 0, y: 10, label: "A" },
+            { id: "room_b", type: "classroom", x: 100, y: 10, label: "B" },
+          ],
+          pois: [],
+          edges: [
+            { from: "room_a", to: "hall_a", weight: 10 },
+            { from: "hall_a", to: "stairs_mid", weight: 50 },
+            { from: "stairs_mid", to: "hall_b", weight: 50 },
+            { from: "hall_a", to: "elev_mid", weight: 60 },
+            { from: "elev_mid", to: "hall_b", weight: 60 },
+            { from: "hall_b", to: "room_b", weight: 10 },
+          ],
+        },
+      },
+    };
+
+    const result = findShortestPath({
+      floorsData: floorData,
+      startNodeId: "room_a",
+      endNodeId: "room_b",
+      accessible: true,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.pathNodeIds).toContain("elev_mid");
+    expect(result.pathNodeIds).not.toContain("stairs_mid");
+    expect(result.accessible).toBe(true);
+  });
+
+  it("routes to nearest elevator on cross-floor with accessible=true", () => {
+    const multiFloor = {
+      floors: {
+        F1: {
+          label: "F1",
+          nodes: [
+            { id: "f1_hall", type: "hallway", x: 0, y: 0 },
+          ],
+          rooms: [
+            { id: "f1_room", type: "classroom", x: 10, y: 0, label: "101" },
+          ],
+          pois: [
+            { id: "f1_elev", type: "elevator", x: 50, y: 0, label: "Elevator" },
+          ],
+          edges: [
+            { from: "f1_room", to: "f1_hall", weight: 10 },
+            { from: "f1_hall", to: "f1_elev", weight: 50 },
+          ],
+        },
+        F2: {
+          label: "F2",
+          nodes: [{ id: "f2_hall", x: 0, y: 0 }],
+          rooms: [{ id: "f2_room", type: "classroom", x: 10, y: 0, label: "201" }],
+          pois: [],
+          edges: [{ from: "f2_room", to: "f2_hall", weight: 10 }],
+        },
+      },
+    };
+
+    const result = findShortestPath({
+      floorsData: multiFloor,
+      startNodeId: "f1_room",
+      endNodeId: "f2_room",
+      accessible: true,
+    });
+    expect(result.ok).toBe(true);
+    // Should reroute to elevator on F1
+    expect(result.pathNodeIds[result.pathNodeIds.length - 1]).toBe("f1_elev");
+  });
+
+  it("returns error on cross-floor without accessible when no support", () => {
+    const multiFloor = {
+      floors: {
+        F1: {
+          nodes: [{ id: "f1_n", x: 0, y: 0 }],
+          rooms: [],
+          pois: [],
+          edges: [],
+        },
+        F2: {
+          nodes: [{ id: "f2_n", x: 0, y: 0 }],
+          rooms: [],
+          pois: [],
+          edges: [],
+        },
+      },
+    };
+    const result = findShortestPath({
+      floorsData: multiFloor,
+      startNodeId: "f1_n",
+      endNodeId: "f2_n",
+      accessible: false,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/different floors/i);
+  });
+
+  it("returns error on cross-floor accessible with no elevator on floor", () => {
+    const multiFloor = {
+      floors: {
+        F1: {
+          nodes: [{ id: "f1_n", type: "hallway", x: 0, y: 0 }],
+          rooms: [],
+          pois: [],
+          edges: [],
+        },
+        F2: {
+          nodes: [{ id: "f2_n", type: "hallway", x: 0, y: 0 }],
+          rooms: [],
+          pois: [],
+          edges: [],
+        },
+      },
+    };
+    const result = findShortestPath({
+      floorsData: multiFloor,
+      startNodeId: "f1_n",
+      endNodeId: "f2_n",
+      accessible: true,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.reason).toMatch(/elevator/i);
+  });
 });
