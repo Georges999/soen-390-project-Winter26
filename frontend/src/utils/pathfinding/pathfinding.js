@@ -4,7 +4,7 @@
 import { MinHeap } from './priorityQueue.js';
 import { euclideanDistance, buildMultiFloorGraph, getNodeFloor } from './graphBuilder.js';
 
-function dijkstra(graph, _nodes, startId, endId) {
+function dijkstra(graph, _nodes, startId, endId, accessibleOnly = false) {
   if (!graph.has(startId) || !graph.has(endId)) return null;
 
   const distances = new Map();
@@ -22,8 +22,9 @@ function dijkstra(graph, _nodes, startId, endId) {
     visited.add(currentId);
     if (currentId === endId) break;
 
-    for (const { to: neighborId, weight } of graph.get(currentId) || []) {
+    for (const { to: neighborId, weight, accessible } of graph.get(currentId) || []) {
       if (visited.has(neighborId)) continue;
+      if (accessibleOnly && accessible === false) continue;
       const newDistance = distances.get(currentId) + weight;
       if (newDistance < distances.get(neighborId)) {
         distances.set(neighborId, newDistance);
@@ -44,7 +45,7 @@ function dijkstra(graph, _nodes, startId, endId) {
   return { pathNodeIds, totalWeight: distances.get(endId) };
 }
 
-function aStar(graph, nodes, startId, endId) {
+function aStar(graph, nodes, startId, endId, accessibleOnly = false) {
   if (!graph.has(startId) || !nodes.has(startId) || !graph.has(endId) || !nodes.has(endId)) return null;
 
   const endNode = nodes.get(endId);
@@ -74,8 +75,9 @@ function aStar(graph, nodes, startId, endId) {
     visited.add(currentId);
     if (currentId === endId) break;
 
-    for (const { to: neighborId, weight } of graph.get(currentId) || []) {
+    for (const { to: neighborId, weight, accessible } of graph.get(currentId) || []) {
       if (visited.has(neighborId)) continue;
+      if (accessibleOnly && accessible === false) continue;
       const tentativeGScore = gScore.get(currentId) + weight;
       if (tentativeGScore < gScore.get(neighborId)) {
         previous.set(neighborId, currentId);
@@ -97,7 +99,28 @@ function aStar(graph, nodes, startId, endId) {
   return { pathNodeIds, totalWeight: gScore.get(endId) };
 }
 
-function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'astar' }) {
+/**
+ * Find the nearest elevator node on a given floor.
+ */
+function findNearestElevator(nodes, fromNodeId, floorId) {
+  const fromNode = nodes.get(fromNodeId);
+  if (!fromNode) return null;
+
+  let nearest = null;
+  let minDist = Infinity;
+  nodes.forEach((node, nodeId) => {
+    if (node.type === 'elevator' && node.floor === floorId) {
+      const dist = euclideanDistance(fromNode, node);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = nodeId;
+      }
+    }
+  });
+  return nearest;
+}
+
+function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'astar', accessible = false }) {
   if (!floorsData) return { ok: false, reason: 'floorsData is required' };
   if (!startNodeId) return { ok: false, reason: 'startNodeId is required' };
   if (!endNodeId) return { ok: false, reason: 'endNodeId is required' };
@@ -110,15 +133,29 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
 
   const startFloor = getNodeFloor(startNodeId, floorMap);
   const endFloor = getNodeFloor(endNodeId, floorMap);
-  if (startFloor !== endFloor) return { ok: false, reason: 'different floors not supported yet', startFloor, endFloor };
+
+  // Cross-floor: when accessible, reroute destination to nearest elevator
+  let effectiveEndNodeId = endNodeId;
+  if (startFloor !== endFloor) {
+    if (accessible) {
+      const elevatorId = findNearestElevator(nodes, startNodeId, startFloor);
+      if (!elevatorId) return { ok: false, reason: 'no accessible elevator found on this floor' };
+      effectiveEndNodeId = elevatorId;
+    } else {
+      return { ok: false, reason: 'different floors not supported yet', startFloor, endFloor };
+    }
+  }
 
   const normalizedAlgorithm = typeof algorithm === 'string' ? algorithm.toLowerCase() : '';
   const algorithmUsed = normalizedAlgorithm === 'dijkstra' ? 'dijkstra' : 'astar';
   const result = algorithmUsed === 'dijkstra' 
-    ? dijkstra(graph, nodes, startNodeId, endNodeId) 
-    : aStar(graph, nodes, startNodeId, endNodeId);
+    ? dijkstra(graph, nodes, startNodeId, effectiveEndNodeId, accessible) 
+    : aStar(graph, nodes, startNodeId, effectiveEndNodeId, accessible);
 
-  if (!result?.pathNodeIds?.length) return { ok: false, reason: 'no path found' };
+  if (!result?.pathNodeIds?.length) {
+    if (accessible) return { ok: false, reason: 'no accessible path found (try disabling accessibility)' };
+    return { ok: false, reason: 'no path found' };
+  }
 
   const pathCoords = result.pathNodeIds
     .map((nodeId) => {
@@ -127,7 +164,7 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
     })
     .filter(Boolean);
 
-  return { ok: true, algorithm: algorithmUsed, totalWeight: result.totalWeight, pathNodeIds: result.pathNodeIds, pathCoords };
+  return { ok: true, algorithm: algorithmUsed, totalWeight: result.totalWeight, pathNodeIds: result.pathNodeIds, pathCoords, accessible };
 }
 
 export { dijkstra, aStar, findShortestPath };
