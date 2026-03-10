@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       sprint_name:
-        description: "Sprint name used in filenames (e.g., sprint4)"
+        description: "Sprint name used in filenames (e.g., sprint5)"
         required: true
-        default: "sprint4"
+        default: "sprint5"
       milestone_name:
         description: "Milestone title to filter issues/PRs (defaults to sprint_name)"
         required: false
@@ -38,8 +38,8 @@ jobs:
       - name: Generate burndown snapshot + chart
         id: generate
         env:
-          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint4' }}
-          MILESTONE_FILTER: ${{ inputs.milestone_name || inputs.sprint_name || 'sprint4' }}
+          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint5' }}
+          MILESTONE_FILTER: ${{ inputs.milestone_name || inputs.sprint_name || 'sprint5' }}
         run: |
           set -e
 
@@ -299,7 +299,7 @@ jobs:
       - name: Commit updated burndown files
         if: steps.generate.outputs.should_commit == 'true'
         env:
-          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint4' }}
+          SPRINT_NAME: ${{ inputs.sprint_name || 'sprint5' }}
         run: |
           set -e
 
