@@ -314,14 +314,19 @@ export default function IndoorMapScreen({ navigation }) {
         </View>
 
         {/* POI Legend */}
-        <View style={styles.poiLegend}>
+        <ScrollView
+          horizontal
+          style={styles.poiLegendScroll}
+          contentContainerStyle={styles.poiLegend}
+          showsHorizontalScrollIndicator={false}
+        >
           {Object.entries(POI_ICONS).map(([key, { icon, label }]) => (
             <View key={key} style={styles.poiLegendItem}>
               <MaterialIcons name={icon} size={18} color={MAROON} />
               <Text style={styles.poiLabel}>{label}</Text>
             </View>
           ))}
-        </View>
+        </ScrollView>
 
         {/* Selected Room + Get Directions */}
         {selectedRoom && (
@@ -585,11 +590,16 @@ const styles = StyleSheet.create({
   },
 
   // POI Legend
+  poiLegendScroll: {
+    borderTopWidth: 1,
+    borderTopColor: "#e0e0e0",
+  },
   poiLegend: {
     flexDirection: "row",
-    justifyContent: "center",
     paddingVertical: 8,
+    paddingHorizontal: 16,
     gap: 16,
+    alignItems: "center",
   },
   poiLegendItem: {
     flexDirection: "row",
