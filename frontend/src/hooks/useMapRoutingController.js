@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { getRoute, getRoutingStrategy } from "../routing/routeStrategy";
 //immutable object
 export const SHUTTLE_STOP_COORD_BY_CAMPUS = Object.freeze({
   // SGW shuttle stop on De Maisonneuve side
@@ -24,6 +25,7 @@ export function useMapRoutingController({
   startCampusId,
   destCampusId,
   isShuttleServiceActive,
+  routeInputs = null,
 }) {
   const crossCampusTrip = useMemo(
     () => isCrossCampusTrip(startCampusId, destCampusId),
@@ -63,9 +65,85 @@ export function useMapRoutingController({
     destCampusId,
   ]);
 
+  const hasRoutingInputs = Boolean(routeInputs);
+
+  const routingStrategy = useMemo(
+    () =>
+      getRoutingStrategy({
+        travelMode,
+        transitSubMode,
+        isCrossCampusTrip: crossCampusTrip,
+      }),
+    [travelMode, transitSubMode, crossCampusTrip],
+  );
+
+  const routingResult = useMemo(() => {
+    if (!hasRoutingInputs) {
+      return {
+        routeCoords: [],
+        routeInfo: null,
+        routeOptions: [],
+        render: { mode: "solid", walkDotCoords: [], rideSegments: [] },
+      };
+    }
+
+    const {
+      isActiveShuttleTrip,
+      baseRouteCoords,
+      baseRouteInfo,
+      routeOptions,
+      shuttleRideInfo,
+      walkToShuttleCoords,
+      shuttleRideCoords,
+      walkFromShuttleCoords,
+    } = routeInputs;
+
+    return getRoute({
+      strategy: routingStrategy,
+      travelMode,
+      transitSubMode,
+      isCrossCampusTrip: crossCampusTrip,
+      isActiveShuttleTrip,
+      baseRouteCoords,
+      baseRouteInfo,
+      routeOptions,
+      shuttleRideInfo,
+      walkToShuttleCoords,
+      shuttleRideCoords,
+      walkFromShuttleCoords,
+    });
+  }, [
+    hasRoutingInputs,
+    routingStrategy,
+    travelMode,
+    transitSubMode,
+    crossCampusTrip,
+    routeInputs,
+  ]);
+
+  //Normalize routing result to ensure consistent data structure for the MapScreen
+  const routeCoords = routingResult.routeCoords;
+  const routeInfo = routingResult.routeInfo;
+  const strategyRouteOptions = routingResult.routeOptions;
+  const safeRouteCoords = Array.isArray(routeCoords) ? routeCoords : [];
+  const routeRenderMode = routingResult.render?.mode ?? "solid";
+  const routeRideSegments = Array.isArray(routingResult.render?.rideSegments)
+    ? routingResult.render.rideSegments
+    : [];
+  const routeWalkDotCoords = Array.isArray(routingResult.render?.walkDotCoords)
+    ? routingResult.render.walkDotCoords
+    : [];
+
   return {
     isCrossCampusTrip: crossCampusTrip,
     directionsMode,
     shuttleRouting,
+    routeCoords,
+    routeInfo,
+    strategyRouteOptions,
+    safeRouteCoords,
+    routeRenderMode,
+    routeRideSegments,
+    routeWalkDotCoords,
   };
 }

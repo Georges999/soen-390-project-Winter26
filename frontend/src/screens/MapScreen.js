@@ -26,7 +26,6 @@ import { useMapRoutingController } from "../hooks/useMapRoutingController";
 import { useSimulation } from "../hooks/useSimulation";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { getPolygonCenter } from "../utils/geoUtils";
-import { getRoute, getRoutingStrategy } from "../routing/routeStrategy";
 import { normalizeText, stripHtml } from "../utils/textUtils";
 import {
   getShuttleDepartures,
@@ -444,37 +443,21 @@ export default function MapScreen({ route }) {
     fitToRoute: false,
   });
 
-  const routingStrategy = useMemo(
-    () =>
-      getRoutingStrategy({
-        travelMode,
-        transitSubMode,
-        isCrossCampusTrip,
-      }),
-    [travelMode, transitSubMode, isCrossCampusTrip],
-  );
-
-  const routingResult = useMemo(
-    () =>
-      getRoute({
-        strategy: routingStrategy,
-        travelMode,
-        transitSubMode,
-        isCrossCampusTrip,
-        isActiveShuttleTrip,
-        baseRouteCoords,
-        baseRouteInfo,
-        routeOptions,
-        shuttleRideInfo,
-        walkToShuttleCoords,
-        shuttleRideCoords,
-        walkFromShuttleCoords,
-      }),
-    [
-      routingStrategy,
-      travelMode,
-      transitSubMode,
-      isCrossCampusTrip,
+  const {
+    routeCoords,
+    routeInfo,
+    strategyRouteOptions,
+    safeRouteCoords,
+    routeRenderMode,
+    routeRideSegments,
+    routeWalkDotCoords,
+  } = useMapRoutingController({
+    travelMode,
+    transitSubMode,
+    startCampusId,
+    destCampusId,
+    isShuttleServiceActive,
+    routeInputs: {
       isActiveShuttleTrip,
       baseRouteCoords,
       baseRouteInfo,
@@ -483,20 +466,8 @@ export default function MapScreen({ route }) {
       walkToShuttleCoords,
       shuttleRideCoords,
       walkFromShuttleCoords,
-    ],
-  );
-
-  const routeCoords = routingResult.routeCoords;
-  const routeInfo = routingResult.routeInfo;
-  const strategyRouteOptions = routingResult.routeOptions;
-  const safeRouteCoords = Array.isArray(routeCoords) ? routeCoords : [];
-  const routeRenderMode = routingResult.render?.mode ?? "solid";
-  const routeRideSegments = Array.isArray(routingResult.render?.rideSegments)
-    ? routingResult.render.rideSegments
-    : [];
-  const routeWalkDotCoords = Array.isArray(routingResult.render?.walkDotCoords)
-    ? routingResult.render.walkDotCoords
-    : [];
+    },
+  });
 
   const { isSimulating, simulatedCoord, stopSim, toggleSim } = useSimulation({
     routeCoords: safeRouteCoords,
