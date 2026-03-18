@@ -913,7 +913,7 @@ export default function MapScreen({ route }) {
         />
 
         {isPOIPanelOpen && (
-          <View style={styles.poiPanel}>
+          <View testID="poi-panel" style={styles.poiPanel}>
             <View style={styles.poiPanelHeader}>
               <Text style={styles.poiPanelTitle}>Outdoor POIs</Text>
               <Pressable onPress={() => setIsPOIPanelOpen(false)}>
@@ -1004,6 +1004,7 @@ export default function MapScreen({ route }) {
 
         {/* POI Button */}
         <Pressable
+          testID="poi-button"
           onPress={() => {
             setIsPOIPanelOpen(true);
             loadNearbyPOIs();

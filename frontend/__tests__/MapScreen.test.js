@@ -219,6 +219,53 @@ describe('MapScreen', () => {
     });
   });
 
+  describe('Outdoor POI Panel', () => {
+    it('should open the POI panel when the POI button is pressed', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Outdoor POIs')).toBeTruthy();
+      });
+    });
+
+    it('should display category filters when the POI panel opens', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+        expect(getByText('Food')).toBeTruthy();
+        expect(getByText('Study')).toBeTruthy();
+      });
+    });
+
+    it('should show the default radius value in the POI panel', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('1000')).toBeTruthy();
+      });
+    });
+
+    it('should show empty state text when no POIs are available', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+  });
+
+
+
   describe('Campus Data Integration', () => {
     it('should load campus data on mount', () => {
       const { getByText } = render(<MapScreen />);
