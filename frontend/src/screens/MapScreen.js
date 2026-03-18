@@ -22,6 +22,7 @@ import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
 import { useDirectionsRoute } from "../hooks/useDirectionsRoute";
 import { useCurrentBuilding } from "../hooks/useCurrentBuilding";
 import { useNavigationSteps } from "../hooks/useNavigationSteps";
+import { useMapRoutingController } from "../hooks/useMapRoutingController";
 import { useSimulation } from "../hooks/useSimulation";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { getPolygonCenter } from "../utils/geoUtils";
@@ -334,50 +335,17 @@ export default function MapScreen({ route }) {
     toggleSim();
   };
 
-  const isCrossCampusTrip =
-    startCampusId && destCampusId && startCampusId !== destCampusId;
-
-  const shuttleStopCoordByCampus = useMemo(() => {
-    return {
-      // SGW shuttle stop on De Maisonneuve side
-      sgw: "45.496820,-73.578760",
-      // Loyola stop on Sherbrooke Street
-      loyola: "45.458360,-73.638150",
-    };
-  }, []);
-
-  const shuttleRouting = useMemo(
-    () => {
-      if (
-        travelMode !== "transit" ||
-        transitSubMode !== "shuttle" ||
-        !isCrossCampusTrip ||
-        !isShuttleServiceActive
-      ) {
-        return null;
-      }
-
-      const originAddress = shuttleStopCoordByCampus[startCampusId];
-      const destinationAddress = shuttleStopCoordByCampus[destCampusId];
-      if (!originAddress || !destinationAddress) return null;
-
-      return {
-        originAddress,
-        destinationAddress,
-        waypoints: [],
-      };
-    },
-    //Recompute shuttle routing using memo when any of these following inputs changes
-    [
-      travelMode,
-      transitSubMode,
-      isCrossCampusTrip,
-      isShuttleServiceActive,
-      startCampusId,
-      destCampusId,
-      shuttleStopCoordByCampus,
-    ],
-  );
+  const {
+    isCrossCampusTrip,
+    directionsMode,
+    shuttleRouting,
+  } = useMapRoutingController({
+    travelMode,
+    transitSubMode,
+    startCampusId,
+    destCampusId,
+    isShuttleServiceActive,
+  });
 
   //swapping destinations
   const handleSwapStartDest = () => {
@@ -415,14 +383,6 @@ export default function MapScreen({ route }) {
     setHasLocationPerm,
     setStartCoord,
   });
-
-  //Route to send to google directions API
-  const directionsMode =
-    travelMode === "transit"
-      ? transitSubMode === "public"
-        ? "transit"
-        : null //null is sent if shuttle
-      : travelMode;
 
   //fetch/prepare route data
   const {
