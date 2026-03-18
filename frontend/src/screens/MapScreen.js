@@ -32,6 +32,7 @@ import {
   mapShuttleSchedules,
 } from "../utils/shuttleUtils";
 import { getUserCoords } from "../services/locationService";
+import { fetchNearbyPOIs, categoryToType } from "../services/poiService";
 import styles from "./MapScreen.styles";
 
 //array of campuses with default as SGW + .? optional chaining to avoid crash if null -> undefined instead
@@ -61,6 +62,13 @@ export default function MapScreen({ route }) {
   // Building info bottom sheet
   const [selectedBuilding, setSelectedBuilding] = useState(null);
 
+  // outdoorPOI info
+  const [isPOIPanelOpen, setIsPOIPanelOpen] = useState(false);
+  const [pois, setPois] = useState([]);
+  const [selectedPOICategory, setSelectedPOICategory] = useState("Coffee");
+  const [poiRadius, setPOIRadius] = useState(1000);
+  const [selectedPOI, setSelectedPOI] = useState(null);
+  const [isPOILoading, setIsPOILoading] = useState(false);
   // Start/Destination inputs
   const [activeField, setActiveField] = useState(null);
   const [startText, setStartText] = useState("");
@@ -396,6 +404,27 @@ export default function MapScreen({ route }) {
     setDestCampusId(nextDestCampusId);
   };
 
+  // loadnearby POIs based on category and radius
+  const loadNearbyPOIs = async ({
+  category = selectedPOICategory,
+  radius = poiRadius,
+} = {}) => {
+  if (!userCoord) return;
+
+  setIsPOILoading(true);
+  try {
+    const results = await fetchNearbyPOIs({
+      lat: userCoord.latitude,
+      lng: userCoord.longitude,
+      radius,
+      type: categoryToType[category] ?? "cafe",
+    });
+    setPois(results);
+  } finally {
+    setIsPOILoading(false);
+  }
+};
+
   //when campus selection/toggle change this makes sure context is reset cleanly
   useEffect(() => {
     if (mapRef.current && selectedCampus) {
@@ -623,6 +652,13 @@ export default function MapScreen({ route }) {
     );
   }, [followUser, userCoord]);
 
+  useEffect(() => {
+    if (!selectedPOI) return;
+    setDestText(selectedPOI.name);
+    setDestCoord(selectedPOI.coords);
+    setDestCampusId(null);
+}, [selectedPOI]);
+
   if (!selectedCampus) {
     return (
       <View style={styles.loadingContainer}>
@@ -823,6 +859,16 @@ export default function MapScreen({ route }) {
               </Marker>
             ))}
 
+          {pois.map((poi) => (
+            <Marker
+              key={poi.id}
+              coordinate={poi.coords}
+              onPress={() => setSelectedPOI(poi)}
+            >
+              <View style={styles.poiMarker} />
+            </Marker>
+          ))}
+
           <RouteOverlay
             safeRouteCoords={safeRouteCoords}
             routeRenderMode={routeRenderMode}
@@ -865,6 +911,110 @@ export default function MapScreen({ route }) {
           onClose={() => setSelectedBuilding(null)}
           onDirections={setDestinationToSelectedBuilding}
         />
+
+        {isPOIPanelOpen && (
+          <View style={styles.poiPanel}>
+            <View style={styles.poiPanelHeader}>
+              <Text style={styles.poiPanelTitle}>Outdoor POIs</Text>
+              <Pressable onPress={() => setIsPOIPanelOpen(false)}>
+                <MaterialIcons name="close" size={20} color="#1F1F1F" />
+              </Pressable>
+            </View>
+
+            <Text style={styles.poiPanelSectionLabel}>Show nearest</Text>
+
+            <View style={styles.poiCategoryRow}>
+              {Object.keys(categoryToType).map((category) => {
+                const isSelected = selectedPOICategory === category;
+                return (
+                  <Pressable
+                    key={category}
+                    onPress={() => {
+                      setSelectedPOICategory(category);
+                      loadNearbyPOIs({ category });
+                    }}
+                    style={[
+                      styles.poiCategoryChip,
+                      isSelected && styles.poiCategoryChipActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.poiCategoryChipText,
+                        isSelected && styles.poiCategoryChipTextActive,
+                      ]}
+                    >
+                      {category}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.poiPanelSectionLabel}>Range (meters)</Text>
+
+            <View style={styles.poiRadiusRow}>
+              <Pressable
+                onPress={() => {
+                  const nextRadius = Math.max(100, poiRadius - 100);
+                  setPOIRadius(nextRadius);
+                  loadNearbyPOIs({ radius: nextRadius });
+                }}
+                style={styles.poiRadiusButton}
+              >
+                <Text style={styles.poiRadiusButtonText}>-</Text>
+              </Pressable>
+
+              <View style={styles.poiRadiusValueBox}>
+                <Text style={styles.poiRadiusValueText}>{poiRadius}</Text>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  const nextRadius = poiRadius + 100;
+                  setPOIRadius(nextRadius);
+                  loadNearbyPOIs({ radius: nextRadius });
+                }}
+                style={styles.poiRadiusButton}
+              >
+                <Text style={styles.poiRadiusButtonText}>+</Text>
+              </Pressable>
+            </View>
+
+            {isPOILoading ? (
+              <Text style={styles.poiStatusText}>Loading nearby places...</Text>
+            ) : pois.length === 0 ? (
+              <Text style={styles.poiStatusText}>No nearby POIs found.</Text>
+            ) : (
+              pois.slice(0, 3).map((poi) => (
+                <Pressable
+                  key={poi.id}
+                  onPress={() => setSelectedPOI(poi)}
+                  style={styles.poiResultRow}
+                >
+                  <Text style={styles.poiResultTitle}>{poi.name}</Text>
+                  <Text style={styles.poiResultAddress} numberOfLines={1}>
+                    {poi.address}
+                  </Text>
+                </Pressable>
+              ))
+            )}
+          </View>
+        )}
+
+        {/* POI Button */}
+        <Pressable
+          onPress={() => {
+            setIsPOIPanelOpen(true);
+            loadNearbyPOIs();
+          }}
+          style={[
+            styles.poiButton,
+            isPOIPanelOpen && styles.poiButtonActive,
+          ]}
+        >
+          <MaterialIcons name="info" size={44} style={styles.poiButtonIcon} />
+        </Pressable>
 
         {canShowDirectionsPanel && (
           <DirectionsPanel
