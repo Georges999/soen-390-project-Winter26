@@ -262,6 +262,83 @@ describe('MapScreen', () => {
         expect(getByText('No nearby POIs found.')).toBeTruthy();
       });
     });
+
+    it('should render POI results when the API returns nearby places', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: 'poi-1',
+              name: 'Coffee',
+              rating: 4.2,
+              geometry: {
+                location: {
+                  lat: 45.5,
+                  lng: -73.5,
+                },
+              },
+              vicinity: '123 Main St',
+            },
+          ],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+    });
+
+    it('should keep the POI panel visible when a different category is selected', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Food'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Food')).toBeTruthy();
+      });
+    });
+
+    it('should show radius controls when the POI panel is opened', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('+')).toBeTruthy();
+        expect(getByText('-')).toBeTruthy();
+        expect(getByText('1000')).toBeTruthy();
+      });
+    });
+
+    it('should keep the POI panel visible when the Study category is selected', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Study'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Study')).toBeTruthy();
+      });
+    });
   });
 
 

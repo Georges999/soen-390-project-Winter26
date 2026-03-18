@@ -72,4 +72,24 @@ describe('poiService', () => {
     expect(result[0]).toHaveProperty('name', 'Coffee Shop');
     expect(fetch).toHaveBeenCalledTimes(1);
   });
+
+  it('should return empty array when API status is not OK', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'ZERO_RESULTS',
+        results: [],
+      }),
+    });
+
+    const result = await fetchNearbyPOIs({
+      lat: 45.5,
+      lng: -73.5,
+      radius: 1000,
+      type: 'cafe',
+    });
+
+    expect(result).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
 });
