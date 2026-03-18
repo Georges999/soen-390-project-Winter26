@@ -92,4 +92,43 @@ describe('poiService', () => {
     expect(result).toEqual([]);
     expect(fetch).toHaveBeenCalledTimes(1);
   });
+
+  it('should return empty array when the API returns OK without results', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'OK',
+      }),
+    });
+
+    const result = await fetchNearbyPOIs({
+      lat: 45.5,
+      lng: -73.5,
+      radius: 1000,
+      type: 'cafe',
+    });
+
+    expect(result).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('should return empty array when the API key is missing', async () => {
+    const previousKey = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+    delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+    jest.resetModules();
+    const { fetchNearbyPOIs: fetchNearbyPOIsWithoutKey } = require('../../src/services/poiService');
+
+    const result = await fetchNearbyPOIsWithoutKey({
+      lat: 45.5,
+      lng: -73.5,
+      radius: 1000,
+      type: 'cafe',
+    });
+
+    expect(result).toEqual([]);
+    expect(fetch).not.toHaveBeenCalled();
+
+    process.env.EXPO_PUBLIC_GOOGLE_API_KEY = previousKey;
+    jest.resetModules();
+  });
 });

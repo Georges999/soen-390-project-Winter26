@@ -339,6 +339,75 @@ describe('MapScreen', () => {
         expect(getByText('Study')).toBeTruthy();
       });
     });
+
+    it('should keep the POI panel visible when the Coffee category is selected', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Coffee'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+    });
+
+    it('should show the Show nearest label when the POI panel opens', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Show nearest')).toBeTruthy();
+      });
+    });
+
+    it('should show the Range label when the POI panel opens', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Range (meters)')).toBeTruthy();
+      });
+    });
+
+    it('should still show empty state text after selecting Food', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Food'));
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('should still show empty state text after selecting Study', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Study'));
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
   });
 
 
