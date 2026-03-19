@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { getRoute, getRoutingStrategy } from "../routing/routeStrategy";
 //immutable object
 export const SHUTTLE_STOP_COORD_BY_CAMPUS = Object.freeze({
@@ -146,4 +146,78 @@ export function useMapRoutingController({
     routeRideSegments,
     routeWalkDotCoords,
   };
+}
+
+export function useMapRoutingSideEffects({
+  startCoord,
+  destCoord,
+  stopSim,
+  setShowDirectionsPanel,
+  setNavActive,
+  setFollowUser,
+  setCurrentStepIndex,
+  isSimulating,
+  setIsTransitCollapsed,
+  isCrossCampusTrip,
+  travelMode,
+  setTravelMode,
+  followUser,
+  userCoord,
+  mapRef,
+  isActiveShuttleTrip,
+  safeRouteCoords,
+}) {
+  useEffect(() => {
+    if (!startCoord || !destCoord) {
+      setShowDirectionsPanel(false);
+      setNavActive(false);
+      setFollowUser(false);
+      setCurrentStepIndex(0);
+      stopSim();
+      return;
+    }
+
+    setShowDirectionsPanel(true);
+  }, [
+    startCoord,
+    destCoord,
+    stopSim,
+    setShowDirectionsPanel,
+    setNavActive,
+    setFollowUser,
+    setCurrentStepIndex,
+  ]);
+
+  //when user starts simulation, transit details auto-hide to free map space
+  useEffect(() => {
+    if (isSimulating) {
+      setIsTransitCollapsed(true);
+    }
+  }, [isSimulating, setIsTransitCollapsed]);
+
+  //Within one campus, transit mode is invalid for routing -> walking in one campus
+
+  useEffect(() => {
+    if (!isCrossCampusTrip && travelMode === "transit") {
+      setTravelMode("walking");
+    }
+  }, [isCrossCampusTrip, travelMode, setTravelMode]);
+
+  //As user location updates, map keeps centering on them
+  useEffect(() => {
+    if (!followUser || !userCoord) return;
+    mapRef.current?.animateToRegion(
+      { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+      500,
+    );
+  }, [followUser, userCoord, mapRef]);
+
+  // Auto-zoom map to full shuttle route when shuttle route becomes available
+  useEffect(() => {
+    if (!isActiveShuttleTrip || safeRouteCoords.length < 2) return;
+    mapRef.current?.fitToCoordinates(safeRouteCoords, {
+      edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+      animated: true,
+    });
+  }, [isActiveShuttleTrip, safeRouteCoords, mapRef]);
 }

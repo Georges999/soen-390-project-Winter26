@@ -22,7 +22,10 @@ import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
 import { useDirectionsRoute } from "../hooks/useDirectionsRoute";
 import { useCurrentBuilding } from "../hooks/useCurrentBuilding";
 import { useNavigationSteps } from "../hooks/useNavigationSteps";
-import { useMapRoutingController } from "../hooks/useMapRoutingController";
+import {
+  useMapRoutingController,
+  useMapRoutingSideEffects,
+} from "../hooks/useMapRoutingController";
 import { useSimulation } from "../hooks/useSimulation";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { getPolygonCenter } from "../utils/geoUtils";
@@ -500,15 +503,6 @@ export default function MapScreen({ route }) {
     speechEnabled,
   });
 
-  //auto-zoom map to the full shuttle route when shuttle route becomes available
-  useEffect(() => {
-    if (!isActiveShuttleTrip || safeRouteCoords.length < 2) return;
-    mapRef.current?.fitToCoordinates(safeRouteCoords, {
-      edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
-      animated: true,
-    });
-  }, [isActiveShuttleTrip, safeRouteCoords]);
-
   const canShowDirectionsPanel = Boolean(
     showDirectionsPanel && startCoord && destCoord,
   );
@@ -518,41 +512,25 @@ export default function MapScreen({ route }) {
   //Move recenter floating button upward when panel is open, so it doesn’t overlap the panel
   const recenterBottomOffset = isBottomPanelOpen ? 170 : 30;
 
-  useEffect(() => {
-    if (!startCoord || !destCoord) {
-      setShowDirectionsPanel(false);
-      setNavActive(false);
-      setFollowUser(false);
-      setCurrentStepIndex(0);
-      stopSim();
-      return;
-    }
-
-    setShowDirectionsPanel(true);
-  }, [startCoord, destCoord, stopSim, setCurrentStepIndex]);
-
-  //when user starts simulation, transit details auto-hide to free map space
-  useEffect(() => {
-    if (isSimulating) {
-      setIsTransitCollapsed(true);
-    }
-  }, [isSimulating]);
-
-  //walking in one campus
-  useEffect(() => {
-    if (!isCrossCampusTrip && travelMode === "transit") {
-      setTravelMode("walking");
-    }
-  }, [isCrossCampusTrip, travelMode]);
-
-  //as user location updates, map keeps centering on them
-  useEffect(() => {
-    if (!followUser || !userCoord) return;
-    mapRef.current?.animateToRegion(
-      { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-      500,
-    );
-  }, [followUser, userCoord]);
+  useMapRoutingSideEffects({
+    startCoord,
+    destCoord,
+    stopSim,
+    setShowDirectionsPanel,
+    setNavActive,
+    setFollowUser,
+    setCurrentStepIndex,
+    isSimulating,
+    setIsTransitCollapsed,
+    isCrossCampusTrip,
+    travelMode,
+    setTravelMode,
+    followUser,
+    userCoord,
+    mapRef,
+    isActiveShuttleTrip,
+    safeRouteCoords,
+  });
 
   if (!selectedCampus) {
     return (
