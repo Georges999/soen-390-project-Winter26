@@ -318,6 +318,48 @@ describe('MapScreen', () => {
       });
     });
 
+    it('should fetch POIs and render the result after loading completes', async () => {
+      let resolveFetch;
+      fetch.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+      );
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      resolveFetch({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: 'poi-1',
+              name: 'Coffee',
+              rating: 4.2,
+              geometry: {
+                location: {
+                  lat: 45.5,
+                  lng: -73.5,
+                },
+              },
+              vicinity: '123 Main St',
+            },
+          ],
+        }),
+      });
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+    });
+
     it('should keep the POI panel visible after opening it with a successful POI response queued', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
@@ -380,6 +422,47 @@ describe('MapScreen', () => {
       });
     });
 
+    it('should keep campus labels rendered on the map', async () => {
+      const { getByText } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByText('SGW')).toBeTruthy();
+        expect(getByText('Loyola')).toBeTruthy();
+      });
+    });
+
+    it('should render fetched POI results after nearby POIs are fetched', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: 'poi-1',
+              name: 'Coffee',
+              rating: 4.2,
+              geometry: {
+                location: {
+                  lat: 45.5,
+                  lng: -73.5,
+                },
+              },
+              vicinity: '123 Main St',
+            },
+          ],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+    });
+
     it('should keep the POI panel visible when a different category is selected', async () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
@@ -394,6 +477,57 @@ describe('MapScreen', () => {
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
         expect(getByText('Food')).toBeTruthy();
+      });
+    });
+
+    it('should keep the POI panel header rendered after opening', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Outdoor POIs')).toBeTruthy();
+      });
+    });
+
+    it('should activate Food category and keep panel content rendered', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Show nearest')).toBeTruthy();
+        expect(getByText('Range (meters)')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Food'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Food')).toBeTruthy();
+        expect(getByText('Show nearest')).toBeTruthy();
+        expect(getByText('Range (meters)')).toBeTruthy();
+      });
+    });
+
+    it('should activate Study category and keep panel content rendered', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Show nearest')).toBeTruthy();
+        expect(getByText('Range (meters)')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Study'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Study')).toBeTruthy();
+        expect(getByText('Show nearest')).toBeTruthy();
+        expect(getByText('Range (meters)')).toBeTruthy();
       });
     });
 
@@ -617,6 +751,43 @@ describe('MapScreen', () => {
       });
     });
 
+    it('should keep rendering after a POI result is selected', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: 'poi-1',
+              name: 'Coffee',
+              rating: 4.2,
+              geometry: {
+                location: {
+                  lat: 45.5,
+                  lng: -73.5,
+                },
+              },
+              vicinity: '123 Main St',
+            },
+          ],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Coffee'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-button')).toBeTruthy();
+      });
+    });
+
     it('should decrease the POI radius when the minus button is pressed', async () => {
       fetch.mockResolvedValue({
         ok: true,
@@ -799,6 +970,228 @@ describe('MapScreen', () => {
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
         expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('should handle failed POI fetch response gracefully', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: false,
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('should handle API response with non-OK status', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'ZERO_RESULTS',
+          results: [],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+    it('should handle selecting a POI result and keep the screen rendered (covers selectedPOI effect path)', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: 'poi-1',
+              name: 'Coffee',
+              rating: 4.2,
+              geometry: {
+                location: {
+                  lat: 45.5,
+                  lng: -73.5,
+                },
+              },
+              vicinity: '123 Main St',
+            },
+          ],
+        }),
+      });
+
+      const { getByTestId, getByText, getAllByPlaceholderText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Coffee'));
+
+      await waitFor(() => {
+        const inputs = getAllByPlaceholderText('Search or click on a building...');
+        expect(inputs).toHaveLength(2);
+        expect(getByTestId('poi-button')).toBeTruthy();
+      });
+    });
+
+    it('should keep the POI panel visible while nearby POIs are being fetched', async () => {
+      let resolveFetch;
+      fetch.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+      );
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Outdoor POIs')).toBeTruthy();
+      });
+
+      resolveFetch({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [],
+        }),
+      });
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('should not decrease the POI radius below 100', async () => {
+      fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('1000')).toBeTruthy();
+      });
+
+      for (let i = 0; i < 9; i++) {
+        fireEvent.press(getByText('-'));
+      }
+
+      await waitFor(() => {
+        expect(getByText('100')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('-'));
+
+      await waitFor(() => {
+        expect(getByText('100')).toBeTruthy();
+      });
+    });
+
+    it('should keep the POI panel content rendered after a different category is selected', async () => {
+      fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(locationService.getUserCoords).toHaveBeenCalled();
+      });
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Food'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+        expect(getByText('Food')).toBeTruthy();
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('should keep the screen rendered after a POI is selected', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: 'poi-1',
+              name: 'Coffee',
+              rating: 4.2,
+              geometry: {
+                location: {
+                  lat: 45.5,
+                  lng: -73.5,
+                },
+              },
+              vicinity: '123 Main St',
+            },
+          ],
+        }),
+      });
+
+      const { getByTestId, getByText, getAllByPlaceholderText } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(locationService.getUserCoords).toHaveBeenCalled();
+      });
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Coffee'));
+
+      await waitFor(() => {
+        const inputs = getAllByPlaceholderText('Search or click on a building...');
+        expect(inputs).toHaveLength(2);
+        expect(getByTestId('poi-button')).toBeTruthy();
+      });
+    });
+
+    it('should handle null location on initial render without crashing', async () => {
+      locationService.getUserCoords.mockResolvedValueOnce(null);
+
+      const { getByText, getByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByText('SGW')).toBeTruthy();
+        expect(getByText('Loyola')).toBeTruthy();
+        expect(getByTestId('poi-button')).toBeTruthy();
       });
     });
 
