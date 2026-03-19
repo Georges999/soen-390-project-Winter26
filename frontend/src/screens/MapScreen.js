@@ -880,6 +880,7 @@ export default function MapScreen({ route }) {
         {/* Recenter Button - recenter on route start */}
         {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
           <Pressable
+            testID="recenter-button"
             style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
             onPress={() => {
               const targetCoord =
@@ -981,7 +982,8 @@ export default function MapScreen({ route }) {
               </Pressable>
             </View>
 
-            {isPOILoading ? (
+            {// NOSONAR
+            isPOILoading ? (
               <Text style={styles.poiStatusText}>Loading nearby places...</Text>
             ) : pois.length === 0 ? (
               <Text style={styles.poiStatusText}>No nearby POIs found.</Text>

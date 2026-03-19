@@ -131,4 +131,32 @@ describe('poiService', () => {
     process.env.EXPO_PUBLIC_GOOGLE_API_KEY = previousKey;
     jest.resetModules();
   });
+
+  it('should set rating to null when POI has no rating', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'OK',
+        results: [
+          {
+            place_id: 'abc123',
+            name: 'Coffee Shop',
+            geometry: {
+              location: { lat: 45.5, lng: -73.5 },
+            },
+            vicinity: '123 Main St',
+          },
+        ],
+      }),
+    });
+
+    const result = await fetchNearbyPOIs({
+      lat: 45.5,
+      lng: -73.5,
+      radius: 1000,
+      type: 'cafe',
+    });
+
+    expect(result[0].rating).toBeNull();
+  });
 });

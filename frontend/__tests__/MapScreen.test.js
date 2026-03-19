@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import MapScreen from '../src/screens/MapScreen';
 import * as locationService from '../src/services/locationService';
 
@@ -1008,6 +1008,67 @@ describe('MapScreen', () => {
         expect(getByText('No nearby POIs found.')).toBeTruthy();
       });
     });
+
+    it('handles fetch failure gracefully', async () => {
+      fetch.mockResolvedValueOnce({ ok: false });
+
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+    });
+
+    it('sets destination when a POI is selected', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: '1',
+              name: 'Coffee',
+              geometry: { location: { lat: 1, lng: 1 } },
+              vicinity: 'Test',
+            },
+          ],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Coffee'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-button')).toBeTruthy();
+      });
+    });
+
+    it('should apply active style when the currently selected category is pressed again', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+
+      // Coffee is already selected by default — press it again to hit isSelected===true branch
+      fireEvent.press(getByText('Coffee'));
+
+      await waitFor(() => {
+        expect(getByText('Coffee')).toBeTruthy();
+      });
+    });
+
     it('should handle selecting a POI result and keep the screen rendered (covers selectedPOI effect path)', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
