@@ -23,6 +23,14 @@ describe('MapScreen', () => {
     locationService.watchUserCoords.mockResolvedValue({
       remove: jest.fn(),
     });
+    process.env.EXPO_PUBLIC_GOOGLE_API_KEY = 'test-key';
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'OK',
+        results: [],
+      }),
+    });
   });
 
   describe('Campus Toggle', () => {
@@ -263,6 +271,84 @@ describe('MapScreen', () => {
       });
     });
 
+    it('should keep the POI panel visible after user location is initialized and the POI panel opens', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(locationService.getUserCoords).toHaveBeenCalled();
+      });
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('should keep the POI panel open while nearby POIs are being fetched', async () => {
+      let resolveFetch;
+      fetch.mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+      );
+
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      resolveFetch({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [],
+        }),
+      });
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+    });
+
+    it('should keep the POI panel visible after opening it with a successful POI response queued', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [
+            {
+              place_id: 'poi-1',
+              name: 'Coffee',
+              rating: 4.2,
+              geometry: {
+                location: {
+                  lat: 45.5,
+                  lng: -73.5,
+                },
+              },
+              vicinity: '123 Main St',
+            },
+          ],
+        }),
+      });
+
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+    });
+
     it('should render POI results when the API returns nearby places', async () => {
       fetch.mockResolvedValueOnce({
         ok: true,
@@ -403,6 +489,42 @@ describe('MapScreen', () => {
       });
 
       fireEvent.press(getByText('Study'));
+
+      await waitFor(() => {
+        expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('should NOT fetch POIs if user location is null', async () => {
+      locationService.getUserCoords.mockResolvedValueOnce(null);
+
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
+
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('should keep the POI panel visible when user location exists and the POI button is pressed', async () => {
+      fetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          results: [],
+        }),
+      });
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-panel')).toBeTruthy();
+      });
 
       await waitFor(() => {
         expect(getByText('No nearby POIs found.')).toBeTruthy();
