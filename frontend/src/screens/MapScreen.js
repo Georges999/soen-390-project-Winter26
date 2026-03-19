@@ -25,6 +25,7 @@ import { useNavigationSteps } from "../hooks/useNavigationSteps";
 import {
   useMapRoutingController,
   useMapRoutingSideEffects,
+  useMapRoutingActions,
 } from "../hooks/useMapRoutingController";
 import { useSimulation } from "../hooks/useSimulation";
 import { useUserLocation } from "../hooks/useUserLocation";
@@ -307,36 +308,6 @@ export default function MapScreen({ route }) {
     Keyboard.dismiss();
   };
 
-  const handleGoPress = () => {
-    if (!startCoord || !destCoord) return;
-    setFollowUser(true);
-    setNavActive(true);
-    setCurrentStepIndex(0); //resets navigation to the first instruction step
-    const firstInstruction = routeInfo?.steps?.[0]?.instruction;
-    if (firstInstruction && speechEnabled) {
-      Speech.stop();
-      Speech.speak(stripHtml(firstInstruction));
-    }
-    //adjusts map camera for navigation if route path exists
-    if (routeCoords.length > 1) {
-      mapRef.current?.fitToCoordinates(routeCoords, {
-        edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
-        animated: true,
-      });
-    }
-    //if route has no usable polyline, center map on user location.
-    else if (userCoord) {
-      mapRef.current?.animateToRegion(
-        { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-        500,
-      );
-    }
-  };
-
-  const handleSimulatePress = () => {
-    toggleSim();
-  };
-
   const {
     isCrossCampusTrip,
     directionsMode,
@@ -501,6 +472,22 @@ export default function MapScreen({ route }) {
     userCoord,
     routeInfo,
     speechEnabled,
+  });
+
+  const { handleGoPress, handleSimulatePress } = useMapRoutingActions({
+    startCoord,
+    destCoord,
+    setFollowUser,
+    setNavActive,
+    setCurrentStepIndex,
+    routeInfo,
+    speechEnabled,
+    speechApi: Speech,
+    stripHtml,
+    routeCoords,
+    mapRef,
+    userCoord,
+    toggleSim,
   });
 
   const canShowDirectionsPanel = Boolean(

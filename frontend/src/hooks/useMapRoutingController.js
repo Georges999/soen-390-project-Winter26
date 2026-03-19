@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { getRoute, getRoutingStrategy } from "../routing/routeStrategy";
 //immutable object
 export const SHUTTLE_STOP_COORD_BY_CAMPUS = Object.freeze({
@@ -220,4 +220,69 @@ export function useMapRoutingSideEffects({
       animated: true,
     });
   }, [isActiveShuttleTrip, safeRouteCoords, mapRef]);
+}
+
+export function useMapRoutingActions({
+  startCoord,
+  destCoord,
+  setFollowUser,
+  setNavActive,
+  setCurrentStepIndex,
+  routeInfo,
+  speechEnabled,
+  speechApi,
+  stripHtml,
+  routeCoords,
+  mapRef,
+  userCoord,
+  toggleSim,
+}) {
+  const handleGoPress = useCallback(() => {
+    if (!startCoord || !destCoord) return;
+
+    setFollowUser(true);
+    setNavActive(true);
+    setCurrentStepIndex(0); //resets navigation to the first instruction step
+
+    const firstInstruction = routeInfo?.steps?.[0]?.instruction;
+    if (firstInstruction && speechEnabled) {
+      speechApi?.stop?.();
+      speechApi?.speak?.(stripHtml(firstInstruction));
+    }
+    //adjusts map camera for navigation if route path exists
+    if (routeCoords.length > 1) {
+      mapRef.current?.fitToCoordinates(routeCoords, {
+        edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+        animated: true,
+      });
+      //if route has no usable polyline, center map on user location
+    } else if (userCoord) {
+      mapRef.current?.animateToRegion(
+        { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+        500,
+      );
+    }
+  }, [
+    startCoord,
+    destCoord,
+    setFollowUser,
+    setNavActive,
+    setCurrentStepIndex,
+    routeInfo,
+    speechEnabled,
+    speechApi,
+    stripHtml,
+    routeCoords,
+    mapRef,
+    userCoord,
+  ]);
+
+  const handleSimulatePress = useCallback(() => {
+    toggleSim();
+  }, [toggleSim]);
+
+  return {
+    handleGoPress,
+    handleSimulatePress,
+  };
 }
