@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react-native";
 import {
+  getDirectionsMode,
   useMapRoutingController,
   useMapRoutingSideEffects,
   useMapRoutingActions,
@@ -10,6 +11,18 @@ jest.mock("../../src/routing/routeStrategy", () => ({
   getRoute: jest.fn(),
   getRoutingStrategy: jest.fn(),
 }));
+
+describe("getDirectionsMode", () => {
+  it("returns travel mode directly for non-transit modes", () => {
+    expect(getDirectionsMode("walking", "public")).toBe("walking");
+    expect(getDirectionsMode("driving", "shuttle")).toBe("driving");
+  });
+
+  it("returns transit only for public transit submode", () => {
+    expect(getDirectionsMode("transit", "public")).toBe("transit");
+    expect(getDirectionsMode("transit", "shuttle")).toBeNull();
+  });
+});
 
 //Unit tests for derived routing outputs and shuttle routing decisions.
 describe("useMapRoutingController", () => {
@@ -236,7 +249,7 @@ describe("useMapRoutingActions", () => {
 
     act(() => {
       result.current.handleGoPress();
-    });
+    }); //map routing actions returns functions so to test them we need to call them within an act block -> basically manually call them
 
     expect(props.setFollowUser).toHaveBeenCalledWith(true);
     expect(props.setNavActive).toHaveBeenCalledWith(true);
@@ -248,6 +261,8 @@ describe("useMapRoutingActions", () => {
       expect.objectContaining({ animated: true }),
     );
   });
+
+  //Route has only one coordinate. -> Expects no fit-to-route, but camera recenters on user.
 
   it("handleGoPress recenters on user when route has no polyline", () => {
     const props = buildActionProps();

@@ -12,12 +12,11 @@ export const isCrossCampusTrip = (startCampusId, destCampusId) =>
   Boolean(startCampusId && destCampusId && startCampusId !== destCampusId);
 
 //selected travel mode to a valid Google Directions mode
-export const getDirectionsMode = (travelMode, transitSubMode) =>
-  travelMode === "transit"
-    ? transitSubMode === "public"
-      ? "transit"
-      : null
-    : travelMode;
+export const getDirectionsMode = (travelMode, transitSubMode) => {
+  if (travelMode !== "transit") return travelMode;
+  if (transitSubMode === "public") return "transit";
+  return null;
+};
 
 export function useMapRoutingController({
   travelMode,
