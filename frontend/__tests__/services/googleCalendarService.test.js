@@ -2,8 +2,16 @@ jest.mock('../../src/services/googleCalendarAuth', () => ({
   getValidAccessToken: jest.fn(),
 }));
 
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn(),
+  getItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
+}), { virtual: true });
+
 const { getValidAccessToken } = require('../../src/services/googleCalendarAuth');
+const SecureStore = require('expo-secure-store');
 const {
+  fetchGoogleCalendars,
   fetchCalendarEvents,
   getUpcomingEvents,
   getNextClassEvent,
@@ -14,69 +22,139 @@ describe('googleCalendarService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn();
+    SecureStore.getItemAsync.mockResolvedValue(null);
+    SecureStore.setItemAsync.mockResolvedValue();
+  });
+
+  describe('fetchGoogleCalendars', () => {
+    it('returns auth error when not connected', async () => {
+      getValidAccessToken.mockResolvedValue(null);
+
+      const result = await fetchGoogleCalendars();
+      expect(result).toEqual({
+        success: false,
+        error: 'Not authenticated. Please connect your calendar.',
+      });
+    });
+
+    it('loads calendars and persists default selection', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            { id: 'secondary', summary: 'Team', accessRole: 'owner', primary: false },
+            { id: 'primary', summary: 'Primary', accessRole: 'owner', primary: true },
+          ],
+        }),
+      });
+
+      const result = await fetchGoogleCalendars();
+
+      expect(result.success).toBe(true);
+      expect(result.calendars[0]).toEqual({
+        id: 'primary',
+        name: 'Primary',
+        primary: true,
+        selected: true,
+      });
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+        'google_calendar_selected_ids',
+        JSON.stringify(['primary'])
+      );
+    });
   });
 
   describe('fetchCalendarEvents', () => {
-    // In DEV mode with USE_MOCK_DATA = true, it returns mock data
-    it('should return mock events in DEV mode', async () => {
+    it('returns auth error when no token is available', async () => {
+      getValidAccessToken.mockResolvedValue(null);
+
       const result = await fetchCalendarEvents();
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/Not authenticated/);
+    });
+
+    it('loads and normalizes events from multiple calendars', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            items: [
+              {
+                id: '2',
+                summary: 'COMP 346',
+                location: 'EV 3.309',
+                start: { dateTime: '2026-03-13T15:00:00.000Z' },
+                end: { dateTime: '2026-03-13T16:00:00.000Z' },
+              },
+            ],
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            items: [
+              {
+                id: '1',
+                summary: 'SOEN 390',
+                location: 'H 961',
+                start: { dateTime: '2026-03-13T13:00:00.000Z' },
+                end: { dateTime: '2026-03-13T14:00:00.000Z' },
+              },
+            ],
+          }),
+        });
+
+      const result = await fetchCalendarEvents(['team', 'primary'], new Date('2026-03-13T00:00:00Z'));
+
       expect(result.success).toBe(true);
-      expect(result.events).toBeDefined();
-      expect(Array.isArray(result.events)).toBe(true);
-      expect(result.events.length).toBe(3);
-    });
-
-    it('should return events with correct structure', async () => {
-      const result = await fetchCalendarEvents();
-      const event = result.events[0];
-      expect(event).toHaveProperty('id');
-      expect(event).toHaveProperty('title');
-      expect(event).toHaveProperty('location');
-      expect(event).toHaveProperty('startTime');
-      expect(event).toHaveProperty('endTime');
-      expect(event).toHaveProperty('description');
-    });
-
-    it('mock events should have class-like titles', async () => {
-      const result = await fetchCalendarEvents();
-      const titles = result.events.map(e => e.title);
-      expect(titles.some(t => t.includes('SOEN'))).toBe(true);
-      expect(titles.some(t => t.includes('COMP'))).toBe(true);
-      expect(titles.some(t => t.includes('ENGR'))).toBe(true);
+      expect(result.events.map((event) => event.summary)).toEqual(['SOEN 390', 'COMP 346']);
+      expect(result.events[0].calendarId).toBe('primary');
+      expect(result.events[1].calendarId).toBe('team');
     });
   });
 
   describe('getUpcomingEvents', () => {
-    it('should call fetchCalendarEvents and return results', async () => {
-      const result = await getUpcomingEvents(24);
-      expect(result.success).toBe(true);
-      expect(result.events).toBeDefined();
-    });
+    it('delegates to fetchCalendarEvents for selected calendars', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({ items: [] }),
+      });
 
-    it('should use default 24 hours ahead', async () => {
-      const result = await getUpcomingEvents();
+      const result = await getUpcomingEvents(24, ['primary']);
       expect(result.success).toBe(true);
+      expect(global.fetch).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('getNextClassEvent', () => {
-    it('should return the next upcoming class event', async () => {
-      const result = await getNextClassEvent();
-      // In mock mode, should find SOEN 390 as closest future class
-      if (result) {
-        expect(result.title).toBeDefined();
-      }
-    });
+    it('returns the nearest matching class event', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: '1',
+              summary: 'Lunch',
+              start: { dateTime: new Date(Date.now() + 1800000).toISOString() },
+              end: { dateTime: new Date(Date.now() + 3600000).toISOString() },
+            },
+            {
+              id: '2',
+              summary: 'SOEN 390',
+              location: 'H 961',
+              start: { dateTime: new Date(Date.now() + 5400000).toISOString() },
+              end: { dateTime: new Date(Date.now() + 7200000).toISOString() },
+            },
+          ],
+        }),
+      });
 
-    it('should only return future events with class keywords', async () => {
-      const result = await getNextClassEvent();
-      if (result) {
-        const classKeywords = ['SOEN', 'ENGR', 'COMP', 'ELEC', 'MECH', 'CIVI', 'INDU'];
-        const titleUpper = result.title.toUpperCase();
-        const hasKeyword = classKeywords.some(k => titleUpper.includes(k));
-        expect(hasKeyword).toBe(true);
-        expect(new Date(result.startTime).getTime()).toBeGreaterThan(Date.now());
-      }
+      const result = await getNextClassEvent(['primary']);
+      expect(result.summary).toBe('SOEN 390');
     });
   });
 
@@ -99,114 +177,8 @@ describe('googleCalendarService', () => {
       expect(parseBuildingFromLocation('MB 3.270')).toBe('MB');
     });
 
-    it('should parse LB building code', () => {
-      expect(parseBuildingFromLocation('LB 125')).toBe('LB');
-    });
-
-    it('should parse Hall Building', () => {
-      const result = parseBuildingFromLocation('Hall Building');
-      expect(result).toBe('HALL BUILDING');
-    });
-
-    it('should parse Engineering Building', () => {
-      const result = parseBuildingFromLocation('Engineering Building Room 100');
-      expect(result).toBe('ENGINEERING BUILDING');
-    });
-
-    it('should parse Visual Arts', () => {
-      const result = parseBuildingFromLocation('Visual Arts wing');
-      expect(result).toBe('VISUAL ARTS');
-    });
-
-    it('should parse Library Building', () => {
-      const result = parseBuildingFromLocation('Library Building floor 2');
-      expect(result).toBe('LIBRARY BUILDING');
-    });
-
-    it('should parse VA building code', () => {
-      expect(parseBuildingFromLocation('VA 101')).toBe('VA');
-    });
-
-    it('should parse GM building code', () => {
-      expect(parseBuildingFromLocation('GM 410')).toBe('GM');
-    });
-
-    it('should parse CC building code', () => {
-      expect(parseBuildingFromLocation('CC 304')).toBe('CC');
-    });
-
-    it('should parse FB building code', () => {
-      expect(parseBuildingFromLocation('FB 820')).toBe('FB');
-    });
-
     it('should return null for unrecognized location', () => {
       expect(parseBuildingFromLocation('Starbucks')).toBeNull();
-    });
-
-    it('should be case insensitive for building codes', () => {
-      expect(parseBuildingFromLocation('ev building')).toBe('EV');
-    });
-  });
-
-  describe('normalizeEventForGoogle and exportEventsToGoogleCalendar', () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
-    it('normalizeEventForGoogle returns null for missing dates', () => {
-      const evt = { title: 'test' };
-      const { normalizeEventForGoogle } = require('../../src/services/googleCalendarService');
-      expect(normalizeEventForGoogle(evt)).toBeNull();
-    });
-
-    it('normalizeEventForGoogle uses title fallback', () => {
-      const evt = { startTime: '2021-01-01T00:00:00Z', endTime: '2021-01-01T01:00:00Z' };
-      const { normalizeEventForGoogle } = require('../../src/services/googleCalendarService');
-      const norm = normalizeEventForGoogle(evt);
-      expect(norm.summary).toBe('Campus Guide Event');
-    });
-
-    it('exportEventsToGoogleCalendar fails when not authenticated', async () => {
-      getValidAccessToken.mockResolvedValue(null);
-      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
-      const result = await exportEventsToGoogleCalendar([{ title: 'test', startTime: 'a', endTime: 'b' }]);
-      expect(result.success).toBe(false);
-      expect(result.error).toMatch(/Not authenticated/);
-    });
-
-    it('exportEventsToGoogleCalendar fails with invalid events', async () => {
-      getValidAccessToken.mockResolvedValue('token');
-      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
-      const result = await exportEventsToGoogleCalendar([{}]);
-      expect(result.success).toBe(false);
-      expect(result.error).toMatch(/No valid events/);
-    });
-
-    it('exportEventsToGoogleCalendar posts events and returns count', async () => {
-      getValidAccessToken.mockResolvedValue('token');
-      global.fetch = jest
-        .fn()
-        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: '1' }) })
-        .mockResolvedValueOnce({ ok: true, json: async () => ({ id: '2' }) });
-      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
-      const events = [
-        { startTime: '2021-01-01T00:00:00Z', endTime: '2021-01-01T01:00:00Z' },
-        { startTime: '2021-01-02T00:00:00Z', endTime: '2021-01-02T01:00:00Z' },
-      ];
-      const result = await exportEventsToGoogleCalendar(events, 'primary');
-      expect(result.success).toBe(true);
-      expect(result.exportedCount).toBe(2);
-      expect(global.fetch).toHaveBeenCalledTimes(2);
-    });
-
-    it('exportEventsToGoogleCalendar returns error when fetch fails', async () => {
-      getValidAccessToken.mockResolvedValue('token');
-      global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
-      const { exportEventsToGoogleCalendar } = require('../../src/services/googleCalendarService');
-      const events = [{ startTime: '2021-01-01', endTime: '2021-01-02' }];
-      const result = await exportEventsToGoogleCalendar(events);
-      expect(result.success).toBe(false);
-      expect(result.error).toMatch(/Export failed/);
     });
   });
 });

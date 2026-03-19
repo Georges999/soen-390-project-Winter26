@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,63 +8,56 @@ import {
 import MapView, { Polygon } from 'react-native-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 import campuses from '../data/campuses.json';
-import mockCalendars from '../data/mockCalendars.json';
+import { isAuthenticated } from '../services/googleCalendarAuth';
+import { useNextClass } from '../hooks/useNextClass';
 
 const MAROON = '#95223D';
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 
-function getByDay(recurrenceString) {
-  const match = recurrenceString.match(/BYDAY=([A-Z,]+)/);
-  if (!match) return [];
-  return match[1].split(',');
-}
-
-function getNextClass(calendars) {
-  const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-  const now = new Date();
-  const todayCode = dayMap[now.getDay()];
-
-  const selectedCalendars = calendars.filter(c => c.selected);
-  const events = selectedCalendars.flatMap(c => c.events || []);
-
-  const todayEvents = events.filter(event => {
-    const byDays = getByDay(event.recurrence?.[0] || '');
-    return byDays.includes(todayCode);
-  });
-
-  const upcoming = todayEvents
-    .map(event => {
-      const eventDate = new Date(event.start.dateTime);
-      const classTime = new Date();
-      classTime.setHours(eventDate.getHours(), eventDate.getMinutes(), 0, 0);
-      return { ...event, classTime };
-    })
-    .filter(event => event.classTime > now)
-    .sort((a, b) => a.classTime - b.classTime);
-
-  return upcoming[0] || null;
-}
-
 export default function NextClassScreen({ navigation }) {
-  const [calendars] = useState(mockCalendars.calendars);
+  const [isConnected, setIsConnected] = useState(false);
   const [showDetected, setShowDetected] = useState(false);
-  const nextClass = getNextClass(calendars);
+  const { nextClass, isLoading, refresh } = useNextClass(isConnected);
 
-  // Reset detected state if no next class
+  useEffect(() => {
+    refreshConnectionState();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener?.('focus', () => {
+      refreshConnectionState();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  useEffect(() => {
+    if (!nextClass) {
+      setShowDetected(false);
+    }
+  }, [nextClass]);
+
+  async function refreshConnectionState() {
+    const authenticated = await isAuthenticated();
+    setIsConnected(authenticated);
+
+    if (authenticated) {
+      await refresh();
+    }
+  }
+
   const shouldShowDetected = showDetected && nextClass !== null;
 
   function getMinutesUntil(event) {
-    const eventDate = new Date(event.start.dateTime);
-    const classTime = new Date();
-    classTime.setHours(eventDate.getHours(), eventDate.getMinutes(), 0, 0);
-    const mins = Math.floor((classTime - new Date()) / 1000 / 60);
+    const startTime = event.startTime || event.start?.dateTime;
+    const mins = Math.floor((new Date(startTime) - new Date()) / 1000 / 60);
     return Math.max(0, mins);
   }
 
   function handleGetDirections() {
     navigation.navigate('Map', {
       nextClassLocation: nextClass?.location,
-      nextClassSummary: nextClass?.summary,
+      nextClassSummary: nextClass?.summary || nextClass?.title,
     });
   }
 
@@ -80,8 +73,8 @@ export default function NextClassScreen({ navigation }) {
         scrollEnabled={true}
         zoomEnabled={true}
       >
-        {campusList.map(campus =>
-          campus.buildings.map(building => (
+        {campusList.map((campus) =>
+          campus.buildings.map((building) => (
             <Polygon
               key={`${campus.id}-${building.id}`}
               coordinates={building.coordinates}
@@ -96,10 +89,14 @@ export default function NextClassScreen({ navigation }) {
       <View style={styles.bottomCard}>
         {!nextClass ? (
           <View style={styles.noClassCard}>
-            <MaterialIcons name="event-busy" size={40} color="#CCC" />
+            <MaterialIcons name={isLoading ? 'schedule' : 'event-busy'} size={40} color="#CCC" />
             <Text style={styles.noClassTitle}>No upcoming classes today</Text>
             <Text style={styles.noClassSubtitle}>
-              Check your calendar for upcoming classes
+              {isLoading
+                ? 'Loading your Google Calendar'
+                : isConnected
+                ? 'No upcoming classes found in your selected Google calendars'
+                : 'Connect Google Calendar from Profile to see your next class'}
             </Text>
             <Pressable
               style={styles.profileButton}
@@ -125,7 +122,7 @@ export default function NextClassScreen({ navigation }) {
             </View>
 
             <View style={styles.classInfoRow}>
-              <Text style={styles.courseName}>{nextClass.summary}</Text>
+              <Text style={styles.courseName}>{nextClass.summary || nextClass.title}</Text>
               <View style={styles.dot} />
               <Text style={styles.roomCode}>{nextClass.location}</Text>
             </View>

@@ -6,30 +6,70 @@ import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_OAUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
+const GOOGLE_OAUTH_SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const TOKEN_KEY = 'google_calendar_tokens';
+const GOOGLE_REDIRECT_PATH = 'oauthredirect';
+const FALLBACK_NATIVE_REDIRECT_URI = 'com.concordia.campusguide:/oauthredirect';
 
 // DEV MODE: Bypass OAuth for testing
 const USE_MOCK_AUTH =
   __DEV__ && process.env.EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH === 'true';
 
+function isExpoGo() {
+  return Constants.appOwnership === 'expo';
+}
+
 function getClientId() {
   const configuredWebClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID;
-  const fallbackWebClientId =
-    '976436224829-6kchsprd6kdjmrup6rjaj3pnfcbs2jno.apps.googleusercontent.com';
 
-  // For Expo Go development, always use Web client
-  if (__DEV__) {
-    return configuredWebClientId || fallbackWebClientId;
+  if (Platform.OS === 'web' || isExpoGo()) {
+    return configuredWebClientId;
   }
-  
-  // For production builds
+
   if (Platform.OS === 'ios') {
-    return process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID;
+    return process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID || configuredWebClientId;
   } else if (Platform.OS === 'android') {
-    return process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID;
+    return process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID || configuredWebClientId;
   }
-  return configuredWebClientId || fallbackWebClientId;
+
+  return configuredWebClientId;
+}
+
+function getProjectNameForProxy() {
+  const owner = Constants.expoConfig?.owner;
+  const slug = Constants.expoConfig?.slug || 'campus-guide';
+  return owner ? `@${owner}/${slug}` : `@anonymous/${slug}`;
+}
+
+function getNativeRedirectUri(clientId) {
+  if (!clientId || !clientId.endsWith('.apps.googleusercontent.com')) {
+    return FALLBACK_NATIVE_REDIRECT_URI;
+  }
+
+  const clientPrefix = clientId.replace(/\.apps\.googleusercontent\.com$/, '');
+  return `com.googleusercontent.apps.${clientPrefix}:/oauthredirect`;
+}
+
+function getRedirectUri(clientId) {
+  if (Platform.OS === 'web') {
+    return AuthSession.makeRedirectUri({ path: GOOGLE_REDIRECT_PATH });
+  }
+
+  if (isExpoGo()) {
+    return `https://auth.expo.io/${getProjectNameForProxy()}`;
+  }
+
+  return AuthSession.makeRedirectUri({
+    native: getNativeRedirectUri(clientId),
+  });
+}
+
+function assertGoogleOAuthConfig(clientId) {
+  if (!clientId) {
+    throw new Error(
+      'Google OAuth is not configured. Add the EXPO_PUBLIC_GOOGLE_OAUTH client ID variables to your .env file.'
+    );
+  }
 }
 
 const discovery = {
@@ -58,40 +98,26 @@ export async function authenticateWithGoogle() {
   try {
     console.log('[Auth] Starting authentication...');
     const clientId = getClientId();
+    assertGoogleOAuthConfig(clientId);
     console.log('[Auth] Client ID:', clientId?.substring(0, 20) + '...');
 
-    const owner = Constants.expoConfig?.owner;
-    const slug = Constants.expoConfig?.slug || 'campus-guide';
-    const projectNameForProxy = owner ? `@${owner}/${slug}` : `@anonymous/${slug}`;
-    const useExpoProxyFlow = Platform.OS !== 'web';
-    const responseType = useExpoProxyFlow
-      ? AuthSession.ResponseType.Token
-      : AuthSession.ResponseType.Code;
-
-    const redirectUri = useExpoProxyFlow
-      ? `https://auth.expo.io/${projectNameForProxy}`
-      : AuthSession.makeRedirectUri({ path: 'oauthredirect' });
+    const useExpoProxyFlow = Platform.OS !== 'web' && isExpoGo();
+    const redirectUri = getRedirectUri(clientId);
     console.log('[Auth] Redirect URI:', redirectUri);
     
     const authRequest = new AuthSession.AuthRequest({
       clientId,
       scopes: GOOGLE_OAUTH_SCOPES,
       redirectUri,
-      responseType,
-      usePKCE: responseType === AuthSession.ResponseType.Code,
-      extraParams:
-        responseType === AuthSession.ResponseType.Code
-          ? {
-              access_type: 'offline',
-              prompt: 'consent',
-            }
-          : {
-              prompt: 'consent',
-            },
+      responseType: AuthSession.ResponseType.Code,
+      usePKCE: true,
+      extraParams: {
+        access_type: 'offline',
+        include_granted_scopes: 'true',
+        prompt: 'consent',
+      },
     });
 
-    const codeVerifier = authRequest.codeVerifier;
-    
     console.log('[Auth] Opening browser...');
 
     let result;
@@ -115,28 +141,20 @@ export async function authenticateWithGoogle() {
     }
 
     console.log('[Auth] Result type:', result.type);
+    if (result?.params) {
+      console.log('[Auth] Result params:', JSON.stringify(result.params));
+    }
 
     if (result.type === 'success') {
-      if (result.params?.access_token) {
-        const accessToken = result.params.access_token;
-        const expiresIn = Number(result.params.expires_in) || 3600;
+      const { code } = result.params;
 
-        await saveTokens({
-          accessToken,
-          refreshToken: null,
-          expiresIn,
-          issuedAt: Date.now(),
-        });
-
-        console.log('[Auth] Access token received and saved');
-
+      if (!code) {
         return {
-          success: true,
-          accessToken,
+          success: false,
+          error: result.params?.error_description || result.params?.error || 'Authentication failed',
         };
       }
 
-      const { code } = result.params;
       console.log('[Auth] Got authorization code, exchanging for token...');
 
       const tokenResult = await AuthSession.exchangeCodeAsync(
@@ -145,7 +163,7 @@ export async function authenticateWithGoogle() {
           code,
           redirectUri,
           extraParams: {
-            code_verifier: codeVerifier,
+            code_verifier: authRequest.codeVerifier,
           },
         },
         discovery
@@ -155,8 +173,8 @@ export async function authenticateWithGoogle() {
 
       await saveTokens({
         accessToken: tokenResult.accessToken,
-        refreshToken: tokenResult.refreshToken,
-        expiresIn: tokenResult.expiresIn,
+        refreshToken: tokenResult.refreshToken || null,
+        expiresIn: tokenResult.expiresIn || 3600,
         issuedAt: Date.now(),
       });
 
@@ -186,6 +204,9 @@ export async function authenticateWithGoogle() {
     }
   } catch (error) {
     console.error('[Auth] Exception:', error);
+    if (error?.response) {
+      console.error('[Auth] Exception response:', JSON.stringify(error.response));
+    }
     return {
       success: false,
       error: error.message || 'Authentication failed',
@@ -252,8 +273,8 @@ export async function refreshAccessToken() {
 
     const newTokens = {
       accessToken: tokenResult.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: tokenResult.expiresIn,
+      refreshToken: tokenResult.refreshToken || tokens.refreshToken,
+      expiresIn: tokenResult.expiresIn || tokens.expiresIn || 3600,
       issuedAt: Date.now(),
     };
 
@@ -318,6 +339,6 @@ export async function disconnectCalendar() {
 }
 
 export async function isAuthenticated() {
-  const tokens = await getStoredTokens();
-  return tokens !== null;
+  const accessToken = await getValidAccessToken();
+  return Boolean(accessToken);
 }

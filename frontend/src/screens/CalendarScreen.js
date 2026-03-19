@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   Pressable,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import mockCalendars from '../data/mockCalendars.json';
+import { isAuthenticated } from '../services/googleCalendarAuth';
+import { fetchCalendarEvents } from '../services/googleCalendarService';
 
 const MAROON = '#95223D';
 
@@ -28,27 +29,119 @@ function getWeekDays(referenceDate) {
   });
 }
 
+function getStartOfDay(date) {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
+function getEndOfDay(date) {
+  const normalized = new Date(date);
+  normalized.setHours(23, 59, 59, 999);
+  return normalized;
+}
+
+function getWeekRange(referenceDate) {
+  const weekDays = getWeekDays(referenceDate);
+  return {
+    timeMin: getStartOfDay(weekDays[0]),
+    timeMax: getEndOfDay(weekDays[weekDays.length - 1]),
+  };
+}
+
+function getLegacyClassesForDate(calendars, selectedDate) {
+  const selectedCalendars = calendars.filter((cal) => cal.selected);
+  const events = selectedCalendars.flatMap((cal) => cal.events || []);
+  const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+  const selectedDayCode = dayMap[selectedDate.getDay()];
+
+  return events
+    .filter((event) => {
+      const recurrence = event.recurrence?.[0] || '';
+      const byDays = getByDay(recurrence);
+      return byDays.includes(selectedDayCode);
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime()
+    );
+}
+
+function getLiveClassesForDate(events, selectedDate) {
+  const selectedDay = getStartOfDay(selectedDate).getTime();
+
+  return events
+    .filter((event) => {
+      const start = event.startTime || event.start?.dateTime || event.start?.date;
+      return getStartOfDay(new Date(start)).getTime() === selectedDay;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.startTime || a.start?.dateTime).getTime() -
+        new Date(b.startTime || b.start?.dateTime).getTime()
+    );
+}
+
 export default function CalendarScreen({ navigation, route }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState(null);
 
   const weekDays = getWeekDays(selectedDate);
+  const routeCalendars = route?.params?.calendars;
 
-  // Accept calendars from ProfileScreen or fall back to JSON
-  const calendarState = route?.params?.calendars || mockCalendars.calendars;
-  const selectedCalendars = calendarState.filter(cal => cal.selected);
-  const events = selectedCalendars.flatMap(cal => cal.events || []);
+  useEffect(() => {
+    if (!routeCalendars) {
+      loadWeekEvents(selectedDate);
+    }
+  }, [selectedDate, routeCalendars]);
 
-  const dayOfWeek = selectedDate.getDay();
-  const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-  const selectedDayCode = dayMap[dayOfWeek];
+  useEffect(() => {
+    const unsubscribe = navigation.addListener?.('focus', () => {
+      if (!routeCalendars) {
+        loadWeekEvents(selectedDate);
+      }
+    });
 
-  const todaysClasses = events.filter(event => {
-    const recurrence = event.recurrence?.[0] || '';
-    const byDays = getByDay(recurrence);
-    return byDays.includes(selectedDayCode);
-  }).sort((a, b) =>
-    new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime()
-  );
+    return unsubscribe;
+  }, [navigation, routeCalendars, selectedDate]);
+
+  async function loadWeekEvents(referenceDate) {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const authenticated = await isAuthenticated();
+      setIsConnected(authenticated);
+
+      if (!authenticated) {
+        setEvents([]);
+        return;
+      }
+
+      const { timeMin, timeMax } = getWeekRange(referenceDate);
+      const result = await fetchCalendarEvents(
+        route?.params?.selectedCalendarIds,
+        timeMin,
+        timeMax
+      );
+
+      if (result.success) {
+        setEvents(result.events);
+      } else {
+        setEvents([]);
+        setError(result.error || 'Failed to load calendar events');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const todaysClasses = routeCalendars
+    ? getLegacyClassesForDate(routeCalendars, selectedDate)
+    : getLiveClassesForDate(events, selectedDate);
 
   function formatTime(dateString) {
     const date = new Date(dateString);
@@ -76,7 +169,7 @@ export default function CalendarScreen({ navigation, route }) {
   function handleGetDirections(event) {
     navigation.navigate('Map', {
       nextClassLocation: event.location,
-      nextClassSummary: event.summary,
+      nextClassSummary: event.summary || event.title,
     });
   }
 
@@ -101,7 +194,7 @@ export default function CalendarScreen({ navigation, route }) {
       <View style={styles.weekDays}>
         {weekDays.map((date) => {
           const dayIdx = date.getDay();
-          const dayLabel = ['Mon','Tue','Wed','Thu','Fri','Sat'][(dayIdx === 0 ? 7 : dayIdx) - 1];
+          const dayLabel = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(dayIdx === 0 ? 7 : dayIdx) - 1];
           const isSelected = date.toDateString() === selectedDate.toDateString();
           return (
             <Pressable
@@ -133,28 +226,42 @@ export default function CalendarScreen({ navigation, route }) {
       </View>
 
       <ScrollView style={styles.classList}>
-        {todaysClasses.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.emptyState}>
+            <MaterialIcons name="schedule" size={48} color="#CCC" />
+            <Text style={styles.emptyText}>Loading calendar...</Text>
+          </View>
+        ) : todaysClasses.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialIcons name="event-busy" size={48} color="#CCC" />
             <Text style={styles.emptyText}>No classes scheduled for this day</Text>
+            {!routeCalendars && !isConnected ? (
+              <Text style={styles.emptySubtext}>
+                Connect Google Calendar from Profile to see your schedule.
+              </Text>
+            ) : error ? (
+              <Text style={styles.emptySubtext}>{error}</Text>
+            ) : null}
           </View>
         ) : (
           todaysClasses.map((event, index) => (
             <View key={index} style={styles.classCard}>
               <View style={styles.classTime}>
-                <Text style={styles.timeText}>{formatTime(event.start.dateTime)}</Text>
+                <Text style={styles.timeText}>
+                  {formatTime(event.startTime || event.start?.dateTime)}
+                </Text>
               </View>
               <View style={styles.classInfo}>
                 <View style={styles.classBar} />
                 <View style={styles.classContent}>
-                  <Text style={styles.className}>{event.summary}</Text>
+                  <Text style={styles.className}>{event.summary || event.title}</Text>
                   <Text style={styles.classDetail}>No additional info</Text>
                   <View style={styles.locationRow}>
                     <MaterialIcons name="location-on" size={16} color="#666" />
                     <Text style={styles.locationText}>{event.location}</Text>
                   </View>
                 </View>
-                <Pressable 
+                <Pressable
                   style={styles.directionsButton}
                   onPress={() => handleGetDirections(event)}
                 >
@@ -276,6 +383,12 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 12,
   },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   classCard: {
     flexDirection: 'row',
     paddingVertical: 16,
@@ -326,13 +439,13 @@ const styles = StyleSheet.create({
   },
   directionsButton: {
     backgroundColor: MAROON,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
   },
   directionsText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     color: '#FFF',
   },

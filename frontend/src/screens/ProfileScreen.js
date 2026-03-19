@@ -13,14 +13,17 @@ import {
   disconnectCalendar,
   isAuthenticated,
 } from '../services/googleCalendarAuth';
-import { exportEventsToGoogleCalendar } from '../services/googleCalendarService';
-import mockCalendars from '../data/mockCalendars.json';
+import {
+  fetchGoogleCalendars,
+  saveSelectedCalendarIds,
+} from '../services/googleCalendarService';
 
 const MAROON = '#95223D';
 
 export default function ProfileScreen({ navigation }) {
   const [isConnected, setIsConnected] = useState(false);
-  const [calendars, setCalendars] = useState(mockCalendars.calendars);
+  const [calendars, setCalendars] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
@@ -29,45 +32,82 @@ export default function ProfileScreen({ navigation }) {
   async function checkAuthStatus() {
     const authenticated = await isAuthenticated();
     setIsConnected(authenticated);
+
+    if (authenticated) {
+      await loadCalendars();
+    } else {
+      setCalendars([]);
+    }
+  }
+
+  async function loadCalendars() {
+    const result = await fetchGoogleCalendars();
+
+    if (result.success) {
+      setCalendars(result.calendars);
+      return result.calendars;
+    }
+
+    setCalendars([]);
+    return [];
   }
 
   async function handleConnect() {
-    const result = await authenticateWithGoogle();
-    if (result.success) {
-      const eventsToExport = calendars
-        .filter((calendar) => calendar.selected)
-        .flatMap((calendar) => calendar.events || []);
+    setIsLoading(true);
 
-      const exportResult = await exportEventsToGoogleCalendar(eventsToExport);
+    try {
+      const result = await authenticateWithGoogle();
 
-      if (!exportResult.success) {
-        Alert.alert('Export Failed', exportResult.error || 'Could not export events');
-      } else {
-        Alert.alert(
-          'Calendar Synced',
-          `${exportResult.exportedCount} event(s) exported to Google Calendar`
-        );
+      if (!result.success) {
+        Alert.alert('Connection Failed', result.error || 'Could not connect calendar');
+        return;
       }
 
+      const connectedCalendars = await loadCalendars();
       setIsConnected(true);
+
+      if (connectedCalendars.length > 0) {
+        Alert.alert('Calendar Connected', 'Google Calendar connected successfully');
+      } else {
+        Alert.alert(
+          'Calendar Connected',
+          'Google Calendar connected, but no calendars were returned for this account.'
+        );
+      }
+    } finally {
+      setIsLoading(false);
     }
   }
 
   async function handleDisconnect() {
-    await disconnectCalendar();
-    setIsConnected(false);
+    setIsLoading(true);
+
+    try {
+      await disconnectCalendar();
+      setIsConnected(false);
+      setCalendars([]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  function toggleCalendar(calendarId) {
-    setCalendars((prev) =>
-      prev.map((cal) =>
-        cal.id === calendarId ? { ...cal, selected: !cal.selected } : cal
-      )
+  async function toggleCalendar(calendarId) {
+    const updatedCalendars = calendars.map((cal) =>
+      cal.id === calendarId ? { ...cal, selected: !cal.selected } : cal
+    );
+
+    setCalendars(updatedCalendars);
+    await saveSelectedCalendarIds(
+      updatedCalendars.filter((calendar) => calendar.selected).map((calendar) => calendar.id)
     );
   }
 
   function handleViewCalendar() {
-    navigation.navigate('Calendar', { calendars });
+    navigation.navigate('Calendar', {
+      selectedCalendarIds: calendars
+        .filter((calendar) => calendar.selected)
+        .map((calendar) => calendar.id),
+    });
   }
 
   return (
@@ -97,9 +137,10 @@ export default function ProfileScreen({ navigation }) {
           <Pressable
             style={styles.connectButton}
             onPress={isConnected ? handleDisconnect : handleConnect}
+            disabled={isLoading}
           >
             <Text style={styles.connectButtonText}>
-              {isConnected ? 'Disconnect' : 'Connect'}
+              {isLoading ? 'Loading...' : isConnected ? 'Disconnect' : 'Connect'}
             </Text>
           </Pressable>
         </View>
@@ -108,20 +149,24 @@ export default function ProfileScreen({ navigation }) {
           <>
             <Text style={styles.sectionTitle}>Connected Calendars</Text>
 
-            {calendars.map((calendar) => (
-              <Pressable
-                key={calendar.id}
-                style={styles.calendarItem}
-                onPress={() => toggleCalendar(calendar.id)}
-              >
-                <View style={[styles.checkbox, calendar.selected && styles.checkboxSelected]}>
-                  {calendar.selected && (
-                    <MaterialIcons name="check" size={16} color="#FFF" />
-                  )}
-                </View>
-                <Text style={styles.calendarName}>{calendar.name}</Text>
-              </Pressable>
-            ))}
+            {calendars.length === 0 ? (
+              <Text style={styles.emptyCalendarsText}>No Google calendars found.</Text>
+            ) : (
+              calendars.map((calendar) => (
+                <Pressable
+                  key={calendar.id}
+                  style={styles.calendarItem}
+                  onPress={() => toggleCalendar(calendar.id)}
+                >
+                  <View style={[styles.checkbox, calendar.selected && styles.checkboxSelected]}>
+                    {calendar.selected && (
+                      <MaterialIcons name="check" size={16} color="#FFF" />
+                    )}
+                  </View>
+                  <Text style={styles.calendarName}>{calendar.name}</Text>
+                </Pressable>
+              ))
+            )}
 
             <Pressable style={styles.viewCalendarButton} onPress={handleViewCalendar}>
               <Text style={styles.viewCalendarText}>View Calendar</Text>
@@ -245,6 +290,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginLeft: 12,
+    flex: 1,
+  },
+  emptyCalendarsText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
   },
   viewCalendarButton: {
     backgroundColor: MAROON,

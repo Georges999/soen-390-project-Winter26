@@ -7,7 +7,10 @@
     "orientation": "portrait",
     "icon": "./assets/Clogo.png",
     "userInterfaceStyle": "light",
-    "scheme": "campusguide",
+    "scheme": [
+      "campusguide",
+      "com.concordia.campusguide"
+    ],
     "splash": {
       "image": "./assets/directionsLogo.png",
       "resizeMode": "contain",

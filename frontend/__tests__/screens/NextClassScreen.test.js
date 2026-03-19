@@ -1,103 +1,101 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import NextClassScreen from '../../src/screens/NextClassScreen';
+import * as googleCalendarAuth from '../../src/services/googleCalendarAuth';
+import { useNextClass } from '../../src/hooks/useNextClass';
+
+jest.mock('../../src/services/googleCalendarAuth');
+jest.mock('../../src/hooks/useNextClass');
 
 const mockNavigation = {
   navigate: jest.fn(),
+  addListener: jest.fn(),
 };
 
 describe('NextClassScreen', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockNavigation.addListener.mockReturnValue(jest.fn());
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(false);
+    useNextClass.mockReturnValue({
+      nextClass: null,
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+  });
 
   it('should render the map view', () => {
     const { toJSON } = render(<NextClassScreen navigation={mockNavigation} />);
     expect(toJSON()).toBeTruthy();
   });
 
-  it('should show "Go to My Next Class" button', () => {
+  it('should show connect guidance when not connected', async () => {
     const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    // The component shows either:
-    // no class
-    // goToClass
-    // detected card
-    // With mock data, it should show the "Go to My Next Class" card if there's a next class
-    try {
+
+    await waitFor(() => {
+      expect(getByText('Connect Google Calendar from Profile to see your next class')).toBeTruthy();
+    });
+  });
+
+  it('should show "Go to My Next Class" when a next class exists', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        summary: 'SOEN 390',
+        location: 'H 961',
+        startTime: new Date(Date.now() + 3600000).toISOString(),
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
       expect(getByText('Go to My Next Class')).toBeTruthy();
-    } catch {
-      // If no upcoming class, it shows "No upcoming classes today"
-      expect(getByText('No upcoming classes today')).toBeTruthy();
-    }
+    });
   });
 
-  it('should navigate to Profile when View Schedule pressed (no class)', () => {
-    // Override mock calendars to have no events for today
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const viewSchedule = queryByText('View Schedule');
-    if (viewSchedule) {
-      fireEvent.press(viewSchedule);
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('Profile');
-    }
+  it('should show next class detected when pressed', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        summary: 'SOEN 390',
+        location: 'H 961',
+        startTime: new Date(Date.now() + 3600000).toISOString(),
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => expect(getByText('Go to My Next Class')).toBeTruthy());
+    fireEvent.press(getByText('Go to My Next Class'));
+    expect(getByText('Next Class Detected')).toBeTruthy();
   });
 
-  it('should show next class detected when Go to My Next Class is pressed', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      // After pressing, it should show "Next Class Detected"
-      expect(queryByText('Next Class Detected')).toBeTruthy();
-    }
-  });
+  it('should navigate to Map when Get Directions is pressed', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        summary: 'SOEN 390',
+        location: 'H 961',
+        startTime: new Date(Date.now() + 3600000).toISOString(),
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
 
-  it('should show Get Directions button after detecting class', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      expect(queryByText('Get Directions')).toBeTruthy();
-    }
-  });
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
 
-  it('should navigate to Map with class info when Get Directions pressed', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      const directionsBtn = queryByText('Get Directions');
-      if (directionsBtn) {
-        fireEvent.press(directionsBtn);
-        expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', expect.objectContaining({
-          nextClassLocation: expect.any(String),
-          nextClassSummary: expect.any(String),
-        }));
-      }
-    }
-  });
+    await waitFor(() => expect(getByText('Go to My Next Class')).toBeTruthy());
+    fireEvent.press(getByText('Go to My Next Class'));
+    fireEvent.press(getByText('Get Directions'));
 
-  it('should show class summary and location after detection', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      // The mock calendar data should have some class info
-      expect(queryByText('Next Class Detected')).toBeTruthy();
-    }
-  });
-
-  it('should display "Based on your schedule" subtitle', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const subtitle = queryByText('Based on your schedule');
-    if (subtitle) {
-      expect(subtitle).toBeTruthy();
-    }
-  });
-
-  it('should show starts in timer after detection', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      expect(queryByText(/Starts in/)).toBeTruthy();
-    }
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
+      nextClassLocation: 'H 961',
+      nextClassSummary: 'SOEN 390',
+    });
   });
 });
