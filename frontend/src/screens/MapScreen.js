@@ -615,6 +615,31 @@ export default function MapScreen({ route }) {
     showDirectionsPanel && startCoord && destCoord
   );
 
+  const renderPOIContent = () => {
+    if (isPOILoading) {
+      return (
+        <Text style={styles.poiStatusText}>Loading nearby places...</Text>
+      );
+    }
+
+    if (pois.length === 0) {
+      return <Text style={styles.poiStatusText}>No nearby POIs found.</Text>;
+    }
+
+    return pois.slice(0, 3).map((poi) => (
+      <Pressable
+        key={poi.id}
+        onPress={() => setSelectedPOI(poi)}
+        style={styles.poiResultRow}
+      >
+        <Text style={styles.poiResultTitle}>{poi.name}</Text>
+        <Text style={styles.poiResultAddress} numberOfLines={1}>
+          {poi.address}
+        </Text>
+      </Pressable>
+    ));
+  };
+
   const isBottomPanelOpen = Boolean(selectedBuilding) || canShowDirectionsPanel;
 
   //Move recenter floating button upward when panel is open, so it doesn’t overlap the panel
@@ -986,29 +1011,7 @@ export default function MapScreen({ route }) {
               </Pressable>
             </View>
 
-            {
-              // NOSONAR
-              isPOILoading ? (
-                <Text style={styles.poiStatusText}>
-                  Loading nearby places...
-                </Text>
-              ) : pois.length === 0 ? (
-                <Text style={styles.poiStatusText}>No nearby POIs found.</Text>
-              ) : (
-                pois.slice(0, 3).map((poi) => (
-                  <Pressable
-                    key={poi.id}
-                    onPress={() => setSelectedPOI(poi)}
-                    style={styles.poiResultRow}
-                  >
-                    <Text style={styles.poiResultTitle}>{poi.name}</Text>
-                    <Text style={styles.poiResultAddress} numberOfLines={1}>
-                      {poi.address}
-                    </Text>
-                  </Pressable>
-                ))
-              )
-            }
+            {renderPOIContent()}
           </View>
         )}
 

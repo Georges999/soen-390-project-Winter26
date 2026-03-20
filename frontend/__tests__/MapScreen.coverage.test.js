@@ -92,6 +92,19 @@ jest.mock('react-native-maps', () => {
 import { __mapMocks } from 'react-native-maps';
 
 describe('MapScreen coverage-focused interactions', () => {
+  const setupShuttleMode = async (utils) => {
+    const { getByTestId, getByText } = utils;
+    fireEvent(getByTestId('start-input'), 'focus');
+    fireEvent.press(getByTestId('building-sgw-b'));
+    fireEvent(getByTestId('dest-input'), 'focus');
+    fireEvent.changeText(getByTestId('dest-input'), 'Administration');
+    await waitFor(() => expect(getByText('Administration Building')).toBeTruthy());
+    fireEvent.press(getByText('Administration Building'));
+    await waitFor(() => expect(getByText('Transit')).toBeTruthy());
+    fireEvent.press(getByText('Transit'));
+    fireEvent.press(getByText('Shuttle'));
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseDirectionsRoute.mockImplementation(() => ({
@@ -160,7 +173,7 @@ describe('MapScreen coverage-focused interactions', () => {
       },
     ]);
 
-    const { getByTestId, getByText, queryByText, getAllByTestId } = render(<MapScreen />);
+    const { getByTestId, getByText, queryByText, getAllByTestId, getAllByText, queryByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('poi-button'));
 
@@ -173,6 +186,12 @@ describe('MapScreen coverage-focused interactions', () => {
 
     await waitFor(() => {
       expect(getByTestId('dest-input').props.value).toBe('Coffee Spot');
+    });
+
+    fireEvent.press(getAllByText('close')[0]);
+
+    await waitFor(() => {
+      expect(queryByTestId('poi-panel')).toBeNull();
     });
   });
 
@@ -271,13 +290,9 @@ describe('MapScreen coverage-focused interactions', () => {
   });
 
   it('covers shuttle modal close toggle branch', async () => {
-    const { getByTestId, getByText, queryByText, getAllByText } = render(<MapScreen />);
-    fireEvent(getByTestId('start-input'), 'focus'); fireEvent.press(getByTestId('building-sgw-b'));
-    fireEvent(getByTestId('dest-input'), 'focus'); fireEvent.changeText(getByTestId('dest-input'), 'Administration');
-    await waitFor(() => expect(getByText('Administration Building')).toBeTruthy());
-    fireEvent.press(getByText('Administration Building'));
-    await waitFor(() => expect(getByText('Transit')).toBeTruthy());
-    fireEvent.press(getByText('Transit')); fireEvent.press(getByText('Shuttle'));
+    const utils = render(<MapScreen />);
+    const { getByText, queryByText, getAllByText } = utils;
+    await setupShuttleMode(utils);
     await waitFor(() => expect(getByText('Concordia Shuttle')).toBeTruthy());
     fireEvent.press(getAllByText('X')[getAllByText('X').length - 1]);
     await waitFor(() => expect(queryByText('Concordia Shuttle')).toBeNull());
@@ -294,11 +309,8 @@ describe('MapScreen coverage-focused interactions', () => {
   it('covers shuttle auto-fit effect branch (line 604)', async () => {
     const routeSpy = jest.spyOn(routeStrategy, 'getRoute').mockReturnValue({ routeCoords: [{ latitude: 45.49, longitude: -73.58 }, { latitude: 45.5, longitude: -73.57 }], routeInfo: {}, routeOptions: [], render: { mode: 'solid', rideSegments: [], walkDotCoords: [] } });
     const shuttleSpy = jest.spyOn(shuttleUtils, 'getShuttleDepartures').mockReturnValue({ active: true, times: [] });
-    const { getByTestId, getByText } = render(<MapScreen />);
-    fireEvent(getByTestId('start-input'), 'focus'); fireEvent.press(getByTestId('building-sgw-b'));
-    fireEvent(getByTestId('dest-input'), 'focus'); fireEvent.changeText(getByTestId('dest-input'), 'Administration');
-    await waitFor(() => expect(getByText('Administration Building')).toBeTruthy()); fireEvent.press(getByText('Administration Building'));
-    await waitFor(() => expect(getByText('Transit')).toBeTruthy()); fireEvent.press(getByText('Transit'));
+    const utils = render(<MapScreen />);
+    await setupShuttleMode(utils);
     await waitFor(() => expect(__mapMocks.fitToCoordinatesMock).toHaveBeenCalled()); routeSpy.mockRestore(); shuttleSpy.mockRestore();
   });
 });
