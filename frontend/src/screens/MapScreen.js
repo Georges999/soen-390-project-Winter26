@@ -1,10 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  Keyboard,
-} from "react-native";
+import { View, Text, Pressable, Keyboard } from "react-native";
 import MapView, { Polygon, Marker } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
@@ -49,8 +44,8 @@ const getAmenities = (building) => {
     genderNeutralBathrooms: Boolean(a.genderNeutralBathrooms),
     wheelchairAccessible: Boolean(
       a.wheelchairAccessible ??
-      a.wheelchairAccessibleEntrances ??
-      a.wheelchairAccessibleEntrance,
+        a.wheelchairAccessibleEntrances ??
+        a.wheelchairAccessibleEntrance
     ),
   };
 };
@@ -90,21 +85,22 @@ export default function MapScreen({ route }) {
   const [transitRouteIndex, setTransitRouteIndex] = useState(0);
   const [isTransitCollapsed, setIsTransitCollapsed] = useState(false);
   const [mapRegion, setMapRegion] = useState(
-    campuses.sgw?.region ?? campusList[0]?.region ?? null,
+    campuses.sgw?.region ?? campusList[0]?.region ?? null
   );
 
   const mapRef = useRef(null);
+  const latestPOIRequestIdRef = useRef(0);
 
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
     () => campusList.find((campus) => campus.id === selectedCampusId),
-    [selectedCampusId], //checking the dependency array, if changed, it runs find again
+    [selectedCampusId] //checking the dependency array, if changed, it runs find again
   );
 
   // campuses other than the selected one
   const otherCampuses = useMemo(
     () => campusList.filter((c) => c.id !== selectedCampusId),
-    [selectedCampusId],
+    [selectedCampusId]
   );
 
   //one array with both campuses + extra id
@@ -114,9 +110,9 @@ export default function MapScreen({ route }) {
         campus.buildings.map((building) => ({
           ...building,
           __campusId: campus.id,
-        })),
+        }))
       ),
-    [], //runs once only
+    [] //runs once only
   );
 
   const getBuildingName = (b) => b?.name || b?.label || "Building";
@@ -140,7 +136,7 @@ export default function MapScreen({ route }) {
     if (center) {
       mapRef.current?.animateToRegion(
         { ...center, latitudeDelta: 0.003, longitudeDelta: 0.003 }, //zoom into building when selected 0.003 with 500 ms
-        500,
+        500
       );
     }
   };
@@ -175,7 +171,7 @@ export default function MapScreen({ route }) {
   //read array from json
   const shuttleSchedules = useMemo(
     () => mapShuttleSchedules(shuttleSchedule),
-    [],
+    []
   );
 
   const filteredShuttleSchedules = useMemo(() => {
@@ -192,9 +188,9 @@ export default function MapScreen({ route }) {
   const isShuttleServiceActive = useMemo(
     () =>
       filteredShuttleSchedules.some(
-        (schedule) => getShuttleDepartures(new Date(), schedule).active,
+        (schedule) => getShuttleDepartures(new Date(), schedule).active
       ),
-    [filteredShuttleSchedules],
+    [filteredShuttleSchedules]
   );
 
   //picking a building from search results
@@ -333,7 +329,7 @@ export default function MapScreen({ route }) {
     else if (userCoord) {
       mapRef.current?.animateToRegion(
         { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-        500,
+        500
       );
     }
   };
@@ -384,7 +380,7 @@ export default function MapScreen({ route }) {
       startCampusId,
       destCampusId,
       shuttleStopCoordByCampus,
-    ],
+    ]
   );
 
   //swapping destinations
@@ -404,26 +400,33 @@ export default function MapScreen({ route }) {
     setDestCampusId(nextDestCampusId);
   };
 
-  // loadnearby POIs based on category and radius
+  // load nearby POIs based on category and radius
   const loadNearbyPOIs = async ({
-  category = selectedPOICategory,
-  radius = poiRadius,
-} = {}) => {
-  if (!userCoord) return;
+    category = selectedPOICategory,
+    radius = poiRadius,
+  } = {}) => {
+    if (!userCoord) return;
 
-  setIsPOILoading(true);
-  try {
-    const results = await fetchNearbyPOIs({
-      lat: userCoord.latitude,
-      lng: userCoord.longitude,
-      radius,
-      type: categoryToType[category] ?? "cafe",
-    });
-    setPois(results);
-  } finally {
-    setIsPOILoading(false);
-  }
-};
+    const requestId = ++latestPOIRequestIdRef.current;
+    setIsPOILoading(true);
+
+    try {
+      const results = await fetchNearbyPOIs({
+        lat: userCoord.latitude,
+        lng: userCoord.longitude,
+        radius,
+        type: categoryToType[category] ?? "cafe",
+      });
+
+      if (requestId === latestPOIRequestIdRef.current) {
+        setPois(results);
+      }
+    } finally {
+      if (requestId === latestPOIRequestIdRef.current) {
+        setIsPOILoading(false);
+      }
+    }
+  };
 
   //when campus selection/toggle change this makes sure context is reset cleanly
   useEffect(() => {
@@ -470,10 +473,10 @@ export default function MapScreen({ route }) {
   //valid shuttle trip flow?
   const isActiveShuttleTrip = Boolean(
     shuttleRouting &&
-    startCoord &&
-    destCoord &&
-    travelMode === "transit" &&
-    transitSubMode === "shuttle",
+      startCoord &&
+      destCoord &&
+      travelMode === "transit" &&
+      transitSubMode === "shuttle"
   );
 
   //shuttle ride
@@ -520,7 +523,7 @@ export default function MapScreen({ route }) {
         transitSubMode,
         isCrossCampusTrip,
       }),
-    [travelMode, transitSubMode, isCrossCampusTrip],
+    [travelMode, transitSubMode, isCrossCampusTrip]
   );
 
   const routingResult = useMemo(
@@ -552,7 +555,7 @@ export default function MapScreen({ route }) {
       walkToShuttleCoords,
       shuttleRideCoords,
       walkFromShuttleCoords,
-    ],
+    ]
   );
 
   const routeCoords = routingResult.routeCoords;
@@ -575,7 +578,8 @@ export default function MapScreen({ route }) {
     },
   });
 
-  const userCoord = isSimulating && simulatedCoord ? simulatedCoord : liveUserCoord;
+  const userCoord =
+    isSimulating && simulatedCoord ? simulatedCoord : liveUserCoord;
 
   // Resolve the building currently containing the effective user coordinate
   const { currentBuilding } = useCurrentBuilding({
@@ -608,7 +612,7 @@ export default function MapScreen({ route }) {
   }, [isActiveShuttleTrip, safeRouteCoords]);
 
   const canShowDirectionsPanel = Boolean(
-    showDirectionsPanel && startCoord && destCoord,
+    showDirectionsPanel && startCoord && destCoord
   );
 
   const isBottomPanelOpen = Boolean(selectedBuilding) || canShowDirectionsPanel;
@@ -648,7 +652,7 @@ export default function MapScreen({ route }) {
     if (!followUser || !userCoord) return;
     mapRef.current?.animateToRegion(
       { ...userCoord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-      500,
+      500
     );
   }, [followUser, userCoord]);
 
@@ -657,7 +661,7 @@ export default function MapScreen({ route }) {
     setDestText(selectedPOI.name);
     setDestCoord(selectedPOI.coords);
     setDestCampusId(null);
-}, [selectedPOI]);
+  }, [selectedPOI]);
 
   if (!selectedCampus) {
     return (
@@ -836,7 +840,7 @@ export default function MapScreen({ route }) {
                   ) : null}
                 </React.Fragment>
               );
-            }),
+            })
           )}
 
           {showCampusLabels &&
@@ -893,7 +897,7 @@ export default function MapScreen({ route }) {
                     latitudeDelta: 0.003,
                     longitudeDelta: 0.003,
                   },
-                  500,
+                  500
                 );
               }
             }}
@@ -982,25 +986,29 @@ export default function MapScreen({ route }) {
               </Pressable>
             </View>
 
-            {// NOSONAR
-            isPOILoading ? (
-              <Text style={styles.poiStatusText}>Loading nearby places...</Text>
-            ) : pois.length === 0 ? (
-              <Text style={styles.poiStatusText}>No nearby POIs found.</Text>
-            ) : (
-              pois.slice(0, 3).map((poi) => (
-                <Pressable
-                  key={poi.id}
-                  onPress={() => setSelectedPOI(poi)}
-                  style={styles.poiResultRow}
-                >
-                  <Text style={styles.poiResultTitle}>{poi.name}</Text>
-                  <Text style={styles.poiResultAddress} numberOfLines={1}>
-                    {poi.address}
-                  </Text>
-                </Pressable>
-              ))
-            )}
+            {
+              // NOSONAR
+              isPOILoading ? (
+                <Text style={styles.poiStatusText}>
+                  Loading nearby places...
+                </Text>
+              ) : pois.length === 0 ? (
+                <Text style={styles.poiStatusText}>No nearby POIs found.</Text>
+              ) : (
+                pois.slice(0, 3).map((poi) => (
+                  <Pressable
+                    key={poi.id}
+                    onPress={() => setSelectedPOI(poi)}
+                    style={styles.poiResultRow}
+                  >
+                    <Text style={styles.poiResultTitle}>{poi.name}</Text>
+                    <Text style={styles.poiResultAddress} numberOfLines={1}>
+                      {poi.address}
+                    </Text>
+                  </Pressable>
+                ))
+              )
+            }
           </View>
         )}
 
@@ -1011,10 +1019,7 @@ export default function MapScreen({ route }) {
             setIsPOIPanelOpen(true);
             loadNearbyPOIs();
           }}
-          style={[
-            styles.poiButton,
-            isPOIPanelOpen && styles.poiButtonActive,
-          ]}
+          style={[styles.poiButton, isPOIPanelOpen && styles.poiButtonActive]}
         >
           <MaterialIcons name="info" size={44} style={styles.poiButtonIcon} />
         </Pressable>

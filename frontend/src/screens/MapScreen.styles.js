@@ -3,7 +3,6 @@ import { StyleSheet } from "react-native";
 const MAROON = "#95223D";
 
 const styles = StyleSheet.create({
-
   container: { flex: 1, backgroundColor: "#fff" },
   header: {
     paddingTop: 48,
@@ -254,22 +253,22 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   poiButton: {
-  position: "absolute",
-  right: 20,
-  bottom: 400,
-  width: 72,
-  height: 72,
-  borderRadius: 36,
-  backgroundColor: "#BDB6A9",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 20,
-  elevation: 6,
-  shadowColor: "#000",
-  shadowOpacity: 0.18,
-  shadowRadius: 6,
-  shadowOffset: { width: 0, height: 2 },
-},
+    position: "absolute",
+    right: 20,
+    bottom: 400,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#BDB6A9",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 20,
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
   poiButtonActive: {
     borderWidth: 4,
     borderColor: MAROON,
