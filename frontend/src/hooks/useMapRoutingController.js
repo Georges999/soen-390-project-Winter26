@@ -18,6 +18,17 @@ export const getDirectionsMode = (travelMode, transitSubMode) => {
   return null;
 };
 
+const ROUTE_KEYS_REQUIRED = [
+  "isActiveShuttleTrip",
+  "baseRouteCoords",
+  "baseRouteInfo",
+  "routeOptions",
+  "shuttleRideInfo",
+  "walkToShuttleCoords",
+  "shuttleRideCoords",
+  "walkFromShuttleCoords",
+];
+
 export function useMapRoutingController({
   travelMode,
   transitSubMode,
@@ -64,7 +75,12 @@ export function useMapRoutingController({
     destCampusId,
   ]);
 
-  const hasRoutingInputs = Boolean(routeInputs);
+  const hasRoutingInputs = useMemo(() => {
+    if (!routeInputs || typeof routeInputs !== "object") return false;
+    return ROUTE_KEYS_REQUIRED.every(
+      (key) => Object.prototype.hasOwnProperty.call(routeInputs, key), //check if each required key exists in routeInputs object
+    );
+  }, [routeInputs]);
 
   const routingStrategy = useMemo(
     () =>
