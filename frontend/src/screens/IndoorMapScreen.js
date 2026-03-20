@@ -17,6 +17,8 @@ import { getRoomHighlightPoint } from "../data/indoorRoomHighlightData";
 
 const MAROON = "#912338";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
+const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
 
 export default function IndoorMapScreen({ navigation }) {
   // Campus toggle: "sgw" or "loyola"
@@ -272,37 +274,28 @@ export default function IndoorMapScreen({ navigation }) {
         {/* Floor Plan Image */}
         <View style={styles.floorPlanContainer}>
           {currentFloor?.image ? (
-            <ScrollView
-              horizontal
-              contentContainerStyle={styles.floorPlanScrollContent}
-              showsHorizontalScrollIndicator={false}
-            >
-              <ScrollView
-                contentContainerStyle={styles.floorPlanScrollContent}
-                showsVerticalScrollIndicator={false}
-              >
-                <View style={styles.floorPlanCanvas}>
-                  <Image
-                    source={currentFloor.image}
-                    style={styles.floorPlanImage}
-                    resizeMode="contain"
+            <View style={styles.floorPlanScrollContent}>
+              <View style={styles.floorPlanCanvas}>
+                <Image
+                  source={currentFloor.image}
+                  style={styles.floorPlanImage}
+                  resizeMode="contain"
+                />
+                {selectedRoomHighlight ? (
+                  <View
+                    key={selectedRoom?.id ?? selectedRoom?.label}
+                    testID="selected-room-highlight"
+                    style={[
+                      styles.roomHighlight,
+                      {
+                        left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
+                        top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
+                      },
+                    ]}
                   />
-                  {selectedRoomHighlight ? (
-                    <View
-                      key={selectedRoom?.id ?? selectedRoom?.label}
-                      testID="selected-room-highlight"
-                      style={[
-                        styles.roomHighlight,
-                        {
-                          left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
-                          top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
-                        },
-                      ]}
-                    />
-                  ) : null}
-                </View>
-              </ScrollView>
-            </ScrollView>
+                ) : null}
+              </View>
+            </View>
           ) : (
             <View style={styles.noFloorPlan}>
               <MaterialIcons name="map" size={48} color="#ccc" />
@@ -537,21 +530,23 @@ const styles = StyleSheet.create({
   floorPlanContainer: {
     flex: 1,
     marginHorizontal: 12,
-    marginVertical: 4,
+    marginVertical: 8,
     borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "#f9f5ef",
     borderWidth: 1,
     borderColor: "#e0d8ce",
+    minHeight: 250,
+    justifyContent: "center",
+    alignItems: "center",
   },
   floorPlanScrollContent: {
-    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   floorPlanImage: {
-    width: SCREEN_WIDTH - 32,
-    height: SCREEN_WIDTH - 32,
+    width: MAP_IMAGE_WIDTH,
+    height: MAP_IMAGE_HEIGHT,
   },
   floorPlanCanvas: {
     position: "relative",
@@ -591,20 +586,27 @@ const styles = StyleSheet.create({
 
   // POI Legend
   poiLegendScroll: {
-    borderTopWidth: 1,
-    borderTopColor: "#e0e0e0",
+    marginTop: 2,
+    marginBottom: 4,
+    alignSelf: "center",
   },
   poiLegend: {
     flexDirection: "row",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    gap: 16,
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+    gap: 8,
     alignItems: "center",
   },
   poiLegendItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderColor: "#e3d8dd",
+    borderRadius: 8,
+    backgroundColor: "#f7f2f4",
   },
   poiLabel: {
     fontSize: 12,
