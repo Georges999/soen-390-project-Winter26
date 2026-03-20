@@ -283,12 +283,8 @@ export function useMapRoutingActions({
     userCoord,
   ]);
 
-  const handleSimulatePress = useCallback(() => {
-    toggleSim();
-  }, [toggleSim]);
-
   return {
     handleGoPress,
-    handleSimulatePress,
+    handleSimulatePress: toggleSim,
   };
 }
