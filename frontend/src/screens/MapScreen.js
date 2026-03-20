@@ -897,8 +897,11 @@ export default function MapScreen({ route }) {
               <Text style={styles.poiInfoTitle} numberOfLines={1}>
                 {selectedPOI.name}
               </Text>
-              <Pressable onPress={() => setSelectedPOI(null)}>
-                <MaterialIcons name="close" size={18} color="#1F1F1F" />
+              <Pressable
+                accessibilityLabel="Dismiss POI info card"
+                onPress={() => setSelectedPOI(null)}
+              >
+                <MaterialIcons name="clear" size={18} color="#1F1F1F" />
               </Pressable>
             </View>
 

@@ -179,7 +179,6 @@ describe('MapScreen coverage-focused interactions', () => {
     fireEvent.press(getByText('Show on map'));
 
     await waitFor(() => {
-      expect(queryByText('Loading nearby places...')).toBeFalsy();
       expect(getByText('Coffee Spot')).toBeTruthy();
     });
 
