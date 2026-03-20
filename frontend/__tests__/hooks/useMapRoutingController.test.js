@@ -98,6 +98,25 @@ describe("useMapRoutingController", () => {
     expect(getRoute).not.toHaveBeenCalled();
   });
 
+  //neww TC for edge cases around route inputs and outputs
+  it("treats incomplete route inputs object as missing inputs", () => {
+    const { result } = renderHook(() =>
+      useMapRoutingController({
+        travelMode: "walking",
+        transitSubMode: "shuttle",
+        startCampusId: "sgw",
+        destCampusId: "loyola",
+        isShuttleServiceActive: true,
+        routeInputs: {},
+      }),
+    );
+
+    expect(result.current.routeCoords).toEqual([]);
+    expect(result.current.routeInfo).toBeNull();
+    expect(result.current.strategyRouteOptions).toEqual([]);
+    expect(getRoute).not.toHaveBeenCalled();
+  });
+
   it("normalizes non-array route output from getRoute", () => {
     getRoute.mockReturnValue({
       routeCoords: null,
@@ -177,7 +196,9 @@ describe("useMapRoutingSideEffects", () => {
 
     renderHook(() => useMapRoutingSideEffects(props));
 
-    expect(props.routeSetters.setShowDirectionsPanel).toHaveBeenCalledWith(false);
+    expect(props.routeSetters.setShowDirectionsPanel).toHaveBeenCalledWith(
+      false,
+    );
     expect(props.routeSetters.setNavActive).toHaveBeenCalledWith(false);
     expect(props.routeSetters.setFollowUser).toHaveBeenCalledWith(false);
     expect(props.routeSetters.setCurrentStepIndex).toHaveBeenCalledWith(0);
@@ -191,7 +212,9 @@ describe("useMapRoutingSideEffects", () => {
 
     renderHook(() => useMapRoutingSideEffects(props));
 
-    expect(props.routeSetters.setShowDirectionsPanel).toHaveBeenCalledWith(true);
+    expect(props.routeSetters.setShowDirectionsPanel).toHaveBeenCalledWith(
+      true,
+    );
     expect(props.routeSetters.stopSim).not.toHaveBeenCalled();
   });
 
