@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
   poiLegend: {
     flexDirection: "row",
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     gap: 16,
     alignItems: "center",
   },
