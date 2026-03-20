@@ -22,6 +22,12 @@ describe('poiFilter utils', () => {
   };
 
   describe('getDistanceMeters', () => {
+    it('returns Infinity when "to" is missing', () => {
+      expect(getDistanceMeters(userCoord, undefined)).toBe(
+        Number.POSITIVE_INFINITY,
+      );
+    });
+
     it('returns Infinity when from or to is missing', () => {
       expect(getDistanceMeters(null, userCoord)).toBe(Number.POSITIVE_INFINITY);
       expect(getDistanceMeters(userCoord, null)).toBe(Number.POSITIVE_INFINITY);
@@ -73,12 +79,37 @@ describe('poiFilter utils', () => {
       expect(result[0].distance).toBeLessThan(result[1].distance);
     });
 
+    it('nearest mode returns all POIs when nearestCount exceeds list length', () => {
+      const result = filterPOIsByMode({
+        pois: [farPoi, nearPoi],
+        userCoord,
+        mode: 'nearest',
+        nearestCount: 99,
+      });
+
+      expect(result).toHaveLength(2);
+      expect(result.map((poi) => poi.id)).toEqual(['near', 'far']);
+    });
+
     it('range mode returns only POIs within the radius', () => {
       const result = filterPOIsByMode({
         pois: [nearPoi, mediumPoi, farPoi],
         userCoord,
         mode: 'range',
         radius: 300,
+      });
+
+      expect(result.map((poi) => poi.id)).toEqual(['near', 'medium']);
+    });
+
+    it('range mode includes a POI exactly at the radius boundary', () => {
+      const boundaryDistance = getDistanceMeters(userCoord, mediumPoi.coords);
+
+      const result = filterPOIsByMode({
+        pois: [nearPoi, mediumPoi, farPoi],
+        userCoord,
+        mode: 'range',
+        radius: boundaryDistance,
       });
 
       expect(result.map((poi) => poi.id)).toEqual(['near', 'medium']);
@@ -107,6 +138,15 @@ describe('poiFilter utils', () => {
       expect(result.map((poi) => poi.id)).toEqual(['near', 'medium', 'far']);
       expect(result[0].distance).toBeLessThan(result[1].distance);
       expect(result[1].distance).toBeLessThan(result[2].distance);
+    });
+
+    it('returns all POIs sorted by distance when mode is undefined', () => {
+      const result = filterPOIsByMode({
+        pois: [farPoi, nearPoi, mediumPoi],
+        userCoord,
+      });
+
+      expect(result.map((poi) => poi.id)).toEqual(['near', 'medium', 'far']);
     });
   });
 });
