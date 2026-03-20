@@ -176,6 +176,7 @@ describe('MapScreen coverage-focused interactions', () => {
     const { getByTestId, getByText, queryByText, getAllByTestId, getAllByText, queryByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('poi-button'));
+    fireEvent.press(getByText('Show on map'));
 
     await waitFor(() => {
       expect(queryByText('Loading nearby places...')).toBeFalsy();
@@ -268,6 +269,7 @@ describe('MapScreen coverage-focused interactions', () => {
     const { getByTestId, getByText } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('poi-button'));
+    fireEvent.press(getByText('Show on map'));
 
     await waitFor(() => {
       expect(getByText('Library POI')).toBeTruthy();

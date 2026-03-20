@@ -1,4 +1,4 @@
-process.env.EXPO_PUBLIC_GOOGLE_API_KEY = 'test-key';
+process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY = 'test-key';
 const { fetchNearbyPOIs } = require('../../src/services/poiService');
 
 global.fetch = jest.fn();
@@ -113,8 +113,8 @@ describe('poiService', () => {
   });
 
   it('should return empty array when the API key is missing', async () => {
-    const previousKey = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
-    delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+    const previousKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+    delete process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
     jest.resetModules();
     const { fetchNearbyPOIs: fetchNearbyPOIsWithoutKey } = require('../../src/services/poiService');
 
@@ -128,7 +128,7 @@ describe('poiService', () => {
     expect(result).toEqual([]);
     expect(fetch).not.toHaveBeenCalled();
 
-    process.env.EXPO_PUBLIC_GOOGLE_API_KEY = previousKey;
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY = previousKey;
     jest.resetModules();
   });
 
