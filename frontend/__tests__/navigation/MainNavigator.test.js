@@ -1,32 +1,63 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 
-// Mock bottom-tabs with virtual: true
 jest.mock('@react-navigation/bottom-tabs', () => {
   const React = require('react');
-  const { View, Text } = require('react-native');
+  const { View, Text, Pressable } = require('react-native');
+
   return {
     createBottomTabNavigator: () => ({
-      Navigator: ({ children }) => <View testID="tab-navigator">{children}</View>,
-      Screen: ({ name, component: Component, options }) => {
-        const label = options?.tabBarLabel || name;
+      Navigator: ({ children }) => {
+        const tabs = React.Children.toArray(children);
+        const [activeTab, setActiveTab] = React.useState(tabs[0]?.props?.name);
+        const current = tabs.find((tab) => tab.props.name === activeTab) || tabs[0];
+        const CurrentComponent = current?.props?.component;
+
         return (
-          <View testID={`tab-screen-${name}`}>
-            <Text>{label}</Text>
+          <View testID="tab-navigator">
+            <View>
+              {tabs.map((tab) => {
+                const options = tab.props.options || {};
+                const label = options.tabBarLabel || tab.props.name;
+                if (typeof options.tabBarIcon === 'function') {
+                  options.tabBarIcon({ color: '#111', size: 18 });
+                }
+                return (
+                  <Pressable
+                    key={tab.props.name}
+                    testID={`tab-${tab.props.name}`}
+                    onPress={() => setActiveTab(tab.props.name)}
+                  >
+                    <Text>{label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <View testID={`active-tab-${activeTab}`}>
+              {CurrentComponent ? <CurrentComponent /> : null}
+            </View>
           </View>
         );
       },
+      Screen: () => null,
     }),
   };
-}, { virtual: true });
+});
 
 jest.mock('@react-navigation/stack', () => {
   const React = require('react');
   const { View } = require('react-native');
+
   return {
     createStackNavigator: () => ({
-      Navigator: ({ children }) => <View testID="stack-navigator">{children}</View>,
-      Screen: ({ name }) => <View testID={`stack-screen-${name}`} />,
+      Navigator: ({ children }) => {
+        const screens = React.Children.toArray(children);
+        const first = screens[0];
+        const ScreenComponent = first?.props?.component;
+        return <View testID="stack-navigator">{ScreenComponent ? <ScreenComponent /> : null}</View>;
+      },
+      Screen: () => null,
     }),
   };
 });
@@ -65,23 +96,25 @@ jest.mock('../../src/screens/IndoorDirectionsScreen', () => {
 import MainNavigator from '../../src/navigation/MainNavigator';
 
 describe('MainNavigator', () => {
-  it('should render without crashing', () => {
-    const { toJSON } = render(<MainNavigator />);
-    expect(toJSON()).toBeTruthy();
+  it('navigates between tab screens', () => {
+    const { getByTestId, getByText } = render(<MainNavigator />);
+
+    expect(getByText('MapScreen')).toBeTruthy();
+
+    fireEvent.press(getByTestId('tab-NextClass'));
+    expect(getByText('NextClassScreen')).toBeTruthy();
+
+    fireEvent.press(getByTestId('tab-Indoor'));
+    expect(getByText('IndoorMapScreen')).toBeTruthy();
+
+    fireEvent.press(getByTestId('tab-Profile'));
+    expect(getByText('ProfileScreen')).toBeTruthy();
   });
 
-  it('should render Map tab', () => {
+  it('renders tabs including custom and default labels', () => {
     const { getByText } = render(<MainNavigator />);
+
     expect(getByText('Map')).toBeTruthy();
-  });
-
-  it('should render Next Class tab', () => {
-    const { getByText } = render(<MainNavigator />);
     expect(getByText('Next Class')).toBeTruthy();
-  });
-
-  it('should render Profile tab', () => {
-    const { getByText } = render(<MainNavigator />);
-    expect(getByText('Profile')).toBeTruthy();
   });
 });

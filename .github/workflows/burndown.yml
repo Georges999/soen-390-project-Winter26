@@ -39,7 +39,7 @@ jobs:
         id: generate
         env:
           SPRINT_NAME: ${{ inputs.sprint_name || 'sprint5' }}
-          MILESTONE_FILTER: ${{ inputs.milestone_name || inputs.sprint_name || 'sprint5' }}
+          MILESTONE_FILTER: ${{ inputs.milestone_name || inputs.sprint_name || 'Sprint 5' }}
         run: |
           set -e
 
