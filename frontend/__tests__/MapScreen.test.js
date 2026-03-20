@@ -238,7 +238,7 @@ describe('MapScreen', () => {
 
   describe('Outdoor POI Panel', () => {
     it('should open the POI panel when the POI button is pressed', async () => {
-      const { getByTestId, getByText } = render(<MapScreen />);
+      const { getByTestId, getByText, getAllByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
 
@@ -1167,6 +1167,44 @@ describe('MapScreen', () => {
             lng: userLocation.longitude,
           })
         );
+      });
+    });
+
+    it('shows POI info card with name, category, distance, address and CTA', async () => {
+      const poi = {
+        id: 'poi-card',
+        name: 'Card Cafe',
+        rating: 4.4,
+        coords: { latitude: 45.5, longitude: -73.57 },
+        distance: 120,
+        address: '1457 Rue Sainte-Catherine O, Montréal',
+      };
+
+      const userLocation = { latitude: 45.5, longitude: -73.57 };
+      locationService.watchUserCoords.mockImplementation((cb) => {
+        cb(userLocation);
+        return Promise.resolve({ remove: jest.fn() });
+      });
+      fetchNearbyPOIs.mockResolvedValueOnce([poi]);
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Show on map'));
+
+      await waitFor(() => {
+        expect(getAllByText('Card Cafe').length).toBeGreaterThan(0);
+      });
+
+      // tap marker via list press
+      fireEvent.press(getByText('Card Cafe'));
+      await act(async () => {});
+
+      await waitFor(() => {
+        expect(getAllByText('Card Cafe').length).toBeGreaterThan(0);
+        expect(getByText('Coffee')).toBeTruthy();
+        expect(getByText('1457 Rue Sainte-Catherine O, Montréal')).toBeTruthy();
+        expect(getByText('Get Directions')).toBeTruthy();
       });
     });
 
