@@ -78,7 +78,7 @@ export function useMapRoutingController({
   const hasRoutingInputs = useMemo(() => {
     if (!routeInputs || typeof routeInputs !== "object") return false;
     return ROUTE_KEYS_REQUIRED.every(
-      (key) => Object.prototype.hasOwnProperty.call(routeInputs, key), //check if each required key exists in routeInputs object
+      (key) => Object.hasOwn(routeInputs, key), //check if each required key exists in routeInputs object
     );
   }, [routeInputs]);
 
