@@ -159,4 +159,37 @@ describe('poiService', () => {
 
     expect(result[0].rating).toBeNull();
   });
+
+  it('should return empty array when lng is null', async () => {
+    const result = await fetchNearbyPOIs({
+      lat: 45.5,
+      lng: null,
+      radius: 1000,
+      type: 'cafe',
+    });
+
+    expect(result).toEqual([]);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('should return empty array when API status is not OK or ZERO_RESULTS', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'INVALID_REQUEST',
+        error_message: 'Invalid location argument',
+        results: [],
+      }),
+    });
+
+    const result = await fetchNearbyPOIs({
+      lat: 45.5,
+      lng: -73.5,
+      radius: 1000,
+      type: 'cafe',
+    });
+
+    expect(result).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
 });

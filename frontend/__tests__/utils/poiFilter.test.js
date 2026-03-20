@@ -91,6 +91,17 @@ describe('poiFilter utils', () => {
       expect(result.map((poi) => poi.id)).toEqual(['near', 'far']);
     });
 
+    it('nearest mode defaults to 1 result when nearestCount is undefined', () => {
+      const result = filterPOIsByMode({
+        pois: [farPoi, nearPoi, mediumPoi],
+        userCoord,
+        mode: 'nearest',
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('near');
+    });
+
     it('range mode returns only POIs within the radius', () => {
       const result = filterPOIsByMode({
         pois: [nearPoi, mediumPoi, farPoi],
@@ -113,6 +124,16 @@ describe('poiFilter utils', () => {
       });
 
       expect(result.map((poi) => poi.id)).toEqual(['near', 'medium']);
+    });
+
+    it('range mode defaults radius to Infinity when radius is undefined', () => {
+      const result = filterPOIsByMode({
+        pois: [farPoi, nearPoi, mediumPoi],
+        userCoord,
+        mode: 'range',
+      });
+
+      expect(result.map((poi) => poi.id)).toEqual(['near', 'medium', 'far']);
     });
 
     it('ignores POIs missing coords', () => {
