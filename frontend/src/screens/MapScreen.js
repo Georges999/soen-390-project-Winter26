@@ -500,23 +500,31 @@ export default function MapScreen({ route }) {
   const recenterBottomOffset = isBottomPanelOpen ? 170 : 30;
 
   useMapRoutingSideEffects({
-    startCoord,
-    destCoord,
-    stopSim,
-    setShowDirectionsPanel,
-    setNavActive,
-    setFollowUser,
-    setCurrentStepIndex,
-    isSimulating,
-    setIsTransitCollapsed,
-    isCrossCampusTrip,
-    travelMode,
-    setTravelMode,
-    followUser,
-    userCoord,
-    mapRef,
-    isActiveShuttleTrip,
-    safeRouteCoords,
+    routeState: {
+      startCoord,
+      destCoord,
+      isSimulating,
+      isCrossCampusTrip,
+      travelMode,
+      followUser,
+    },
+    routeSetters: {
+      stopSim,
+      setShowDirectionsPanel,
+      setNavActive,
+      setFollowUser,
+      setCurrentStepIndex,
+      setIsTransitCollapsed,
+      setTravelMode,
+    },
+    mapState: {
+      userCoord,
+      mapRef,
+    },
+    shuttleState: {
+      isActiveShuttleTrip,
+      safeRouteCoords,
+    },
   });
 
   if (!selectedCampus) {

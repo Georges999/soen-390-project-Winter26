@@ -148,24 +148,31 @@ export function useMapRoutingController({
 }
 
 export function useMapRoutingSideEffects({
-  startCoord,
-  destCoord,
-  stopSim,
-  setShowDirectionsPanel,
-  setNavActive,
-  setFollowUser,
-  setCurrentStepIndex,
-  isSimulating,
-  setIsTransitCollapsed,
-  isCrossCampusTrip,
-  travelMode,
-  setTravelMode,
-  followUser,
-  userCoord,
-  mapRef,
-  isActiveShuttleTrip,
-  safeRouteCoords,
+  routeState,
+  routeSetters,
+  mapState,
+  shuttleState,
 }) {
+  const {
+    startCoord,
+    destCoord,
+    isSimulating,
+    isCrossCampusTrip,
+    travelMode,
+    followUser,
+  } = routeState;
+  const {
+    stopSim,
+    setShowDirectionsPanel,
+    setNavActive,
+    setFollowUser,
+    setCurrentStepIndex,
+    setIsTransitCollapsed,
+    setTravelMode,
+  } = routeSetters;
+  const { userCoord, mapRef } = mapState;
+  const { isActiveShuttleTrip, safeRouteCoords } = shuttleState;
+
   useEffect(() => {
     if (!startCoord || !destCoord) {
       setShowDirectionsPanel(false);
