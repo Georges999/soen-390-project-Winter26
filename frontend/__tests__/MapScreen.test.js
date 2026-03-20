@@ -2,9 +2,17 @@ import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import MapScreen from '../src/screens/MapScreen';
 import * as locationService from '../src/services/locationService';
+import { fetchNearbyPOIs } from '../src/services/poiService';
 
 // Mock dependencies
 jest.mock('../src/services/locationService');
+jest.mock('../src/services/poiService', () => {
+  const actual = jest.requireActual('../src/services/poiService');
+  return {
+    ...actual,
+    fetchNearbyPOIs: jest.fn(),
+  };
+});
 jest.mock('expo-speech', () => ({
   speak: jest.fn(),
   stop: jest.fn(),
@@ -24,6 +32,7 @@ describe('MapScreen', () => {
       remove: jest.fn(),
     });
     process.env.EXPO_PUBLIC_GOOGLE_API_KEY = 'test-key';
+    fetchNearbyPOIs.mockResolvedValue([]);
     fetch.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -1134,6 +1143,30 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(getByText('No nearby POIs found.')).toBeTruthy();
+      });
+    });
+
+    it('passes user location as origin when fetching POIs', async () => {
+      const userLocation = { latitude: 45.5, longitude: -73.57 };
+      locationService.watchUserCoords.mockImplementation((cb) => {
+        cb(userLocation);
+        return Promise.resolve({ remove: jest.fn() });
+      });
+      fetchNearbyPOIs.mockResolvedValue([]);
+
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Show on map'));
+
+      await waitFor(() => {
+        expect(fetchNearbyPOIs).toHaveBeenCalledWith(
+          expect.objectContaining({
+            origin: userLocation,
+            lat: userLocation.latitude,
+            lng: userLocation.longitude,
+          })
+        );
       });
     });
 

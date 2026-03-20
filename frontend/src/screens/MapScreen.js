@@ -417,12 +417,13 @@ export default function MapScreen({ route }) {
     setIsPOILoading(true);
 
     try {
-      const results = await fetchNearbyPOIs({
-        lat: userCoord.latitude,
-        lng: userCoord.longitude,
-        radius,
-        type: categoryToType[category] ?? "cafe",
-      });
+    const results = await fetchNearbyPOIs({
+      lat: userCoord.latitude,
+      lng: userCoord.longitude,
+      radius,
+      type: categoryToType[category] ?? "cafe",
+      origin: userCoord,
+    });
       const normalizedResults = Array.isArray(results) ? results : [];
 
       if (requestId === latestPOIRequestIdRef.current) {
