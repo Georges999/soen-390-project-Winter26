@@ -1,3 +1,5 @@
+import { getDistanceMeters } from "../utils/poiFilter";
+
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 export const fetchNearbyPOIs = async ({
@@ -5,6 +7,7 @@ export const fetchNearbyPOIs = async ({
   lng,
   radius = 1000,
   type = "cafe",
+  origin,
 }) => {
 
 
@@ -38,16 +41,26 @@ export const fetchNearbyPOIs = async ({
       return [];
     }
 
-    const mappedResults = data.results.map((poi) => ({
-      id: poi.place_id,
-      name: poi.name,
-      rating: poi.rating || null,
-      coords: {
+    const mappedResults = data.results.map((poi) => {
+      const coords = {
         latitude: poi.geometry.location.lat,
         longitude: poi.geometry.location.lng,
-      },
-      address: poi.vicinity,
-    }));
+      };
+
+      const hasOrigin =
+        origin &&
+        typeof origin.latitude === "number" &&
+        typeof origin.longitude === "number";
+
+      return {
+        id: poi.place_id,
+        name: poi.name,
+        rating: poi.rating || null,
+        coords,
+        address: poi.vicinity,
+        distance: hasOrigin ? getDistanceMeters(origin, coords) : undefined,
+      };
+    });
 
     return mappedResults;
   } catch (error) {
