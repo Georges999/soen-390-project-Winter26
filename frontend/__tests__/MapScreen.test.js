@@ -255,6 +255,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('1000')).toBeTruthy();
@@ -267,7 +268,7 @@ describe('MapScreen', () => {
       fireEvent.press(getByTestId('poi-button'));
 
       await waitFor(() => {
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
+        expect(getByText('Show on map')).toBeTruthy();
       });
     });
 
@@ -285,7 +286,7 @@ describe('MapScreen', () => {
       });
 
       await waitFor(() => {
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
+        expect(getByText('Show on map')).toBeTruthy();
       });
     });
 
@@ -498,7 +499,6 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(getByText('Show nearest')).toBeTruthy();
-        expect(getByText('Range (meters)')).toBeTruthy();
       });
 
       fireEvent.press(getByText('Food'));
@@ -507,7 +507,6 @@ describe('MapScreen', () => {
         expect(getByTestId('poi-panel')).toBeTruthy();
         expect(getByText('Food')).toBeTruthy();
         expect(getByText('Show nearest')).toBeTruthy();
-        expect(getByText('Range (meters)')).toBeTruthy();
       });
     });
 
@@ -518,7 +517,6 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(getByText('Show nearest')).toBeTruthy();
-        expect(getByText('Range (meters)')).toBeTruthy();
       });
 
       fireEvent.press(getByText('Study'));
@@ -527,7 +525,6 @@ describe('MapScreen', () => {
         expect(getByTestId('poi-panel')).toBeTruthy();
         expect(getByText('Study')).toBeTruthy();
         expect(getByText('Show nearest')).toBeTruthy();
-        expect(getByText('Range (meters)')).toBeTruthy();
       });
     });
 
@@ -535,6 +532,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('+')).toBeTruthy();
@@ -591,6 +589,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('Range (meters)')).toBeTruthy();
@@ -602,14 +601,10 @@ describe('MapScreen', () => {
 
       fireEvent.press(getByTestId('poi-button'));
 
-      await waitFor(() => {
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
-      });
-
       fireEvent.press(getByText('Food'));
 
       await waitFor(() => {
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
+        expect(getByText('Food')).toBeTruthy();
       });
     });
 
@@ -618,14 +613,10 @@ describe('MapScreen', () => {
 
       fireEvent.press(getByTestId('poi-button'));
 
-      await waitFor(() => {
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
-      });
-
       fireEvent.press(getByText('Study'));
 
       await waitFor(() => {
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
+        expect(getByText('Study')).toBeTruthy();
       });
     });
 
@@ -655,6 +646,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Show on map'));
 
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
@@ -800,6 +792,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('1000')).toBeTruthy();
@@ -824,6 +817,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('1000')).toBeTruthy();
@@ -885,15 +879,16 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('1000')).toBeTruthy();
       });
 
       fireEvent.press(getByText('-'));
+      fireEvent.press(getByText('Show on map'));
 
       await waitFor(() => {
-        expect(getByText('900')).toBeTruthy();
         expect(getByText('No nearby POIs found.')).toBeTruthy();
       });
     });
@@ -910,15 +905,16 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('1000')).toBeTruthy();
       });
 
       fireEvent.press(getByText('+'));
+      fireEvent.press(getByText('Show on map'));
 
       await waitFor(() => {
-        expect(getByText('1100')).toBeTruthy();
         expect(getByText('No nearby POIs found.')).toBeTruthy();
       });
     });
@@ -944,7 +940,7 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
+        expect(getByText('Food')).toBeTruthy();
       });
     });
 
@@ -969,7 +965,7 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
+        expect(getByText('Coffee')).toBeTruthy();
       });
     });
 
@@ -981,6 +977,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Show on map'));
 
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
@@ -1003,6 +1000,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Show on map'));
 
       await waitFor(() => {
         expect(getByText('No nearby POIs found.')).toBeTruthy();
@@ -1119,6 +1117,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Show on map'));
 
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
@@ -1150,6 +1149,7 @@ describe('MapScreen', () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Range'));
 
       await waitFor(() => {
         expect(getByText('1000')).toBeTruthy();
@@ -1189,7 +1189,6 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
       });
 
       fireEvent.press(getByText('Food'));
@@ -1197,7 +1196,6 @@ describe('MapScreen', () => {
       await waitFor(() => {
         expect(getByTestId('poi-panel')).toBeTruthy();
         expect(getByText('Food')).toBeTruthy();
-        expect(getByText('No nearby POIs found.')).toBeTruthy();
       });
     });
 
