@@ -876,6 +876,35 @@ describe('MapScreen', () => {
       });
     });
 
+    it('hides the POI list and shows card when a map marker is tapped', async () => {
+      fetchNearbyPOIs.mockResolvedValueOnce([
+        {
+          id: 'poi-marker-1',
+          name: 'Marker Cafe',
+          rating: 4.1,
+          coords: { latitude: 45.5, longitude: -73.5 },
+          address: '1 Marker St',
+        },
+      ]);
+
+      const { getByTestId, getByText, queryByTestId, getAllByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('poi-button'));
+      fireEvent.press(getByText('Show on map'));
+
+      await waitFor(() => {
+        expect(getByText('Marker Cafe')).toBeTruthy();
+      });
+
+      fireEvent.press(getAllByTestId('poi-marker')[0]);
+
+      await waitFor(() => {
+        expect(queryByTestId('poi-panel')).toBeNull();
+        expect(getByText('Marker Cafe')).toBeTruthy();
+        expect(getByText('Get Directions')).toBeTruthy();
+      });
+    });
+
     it('should still show empty state after decreasing the POI radius', async () => {
       fetch.mockResolvedValue({
         ok: true,

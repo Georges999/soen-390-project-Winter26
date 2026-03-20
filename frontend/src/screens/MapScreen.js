@@ -593,7 +593,10 @@ export default function MapScreen({ route }) {
         keyExtractor={(poi) => String(poi.id ?? poi.name)}
         renderItem={({ item: poi }) => (
           <Pressable
-            onPress={() => setSelectedPOI(poi)}
+            onPress={() => {
+              setSelectedPOI(poi);
+              setIsPOIPanelOpen(false);
+            }}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -871,7 +874,12 @@ export default function MapScreen({ route }) {
             <Marker
               key={poi.id}
               coordinate={poi.coords}
-              onPress={() => setSelectedPOI(poi)}
+              onPress={() => {
+                setSelectedPOI(poi);
+                setIsPOIPanelOpen(false);
+                setHasRequestedPOIs(true);
+              }}
+              testID="poi-marker"
             >
               <View style={styles.poiMarker} />
             </Marker>
