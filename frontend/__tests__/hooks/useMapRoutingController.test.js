@@ -140,28 +140,36 @@ describe("useMapRoutingController", () => {
 // Unit tests for routing-related effects extracted from MapScreen.
 describe("useMapRoutingSideEffects", () => {
   const buildBaseProps = () => ({
-    startCoord: null,
-    destCoord: null,
-    stopSim: jest.fn(),
-    setShowDirectionsPanel: jest.fn(),
-    setNavActive: jest.fn(),
-    setFollowUser: jest.fn(),
-    setCurrentStepIndex: jest.fn(),
-    isSimulating: false,
-    setIsTransitCollapsed: jest.fn(),
-    isCrossCampusTrip: true,
-    travelMode: "walking",
-    setTravelMode: jest.fn(),
-    followUser: false,
-    userCoord: null,
-    mapRef: {
-      current: {
-        animateToRegion: jest.fn(),
-        fitToCoordinates: jest.fn(),
+    routeState: {
+      startCoord: null,
+      destCoord: null,
+      isSimulating: false,
+      isCrossCampusTrip: true,
+      travelMode: "walking",
+      followUser: false,
+    },
+    routeSetters: {
+      stopSim: jest.fn(),
+      setShowDirectionsPanel: jest.fn(),
+      setNavActive: jest.fn(),
+      setFollowUser: jest.fn(),
+      setCurrentStepIndex: jest.fn(),
+      setIsTransitCollapsed: jest.fn(),
+      setTravelMode: jest.fn(),
+    },
+    mapState: {
+      userCoord: null,
+      mapRef: {
+        current: {
+          animateToRegion: jest.fn(),
+          fitToCoordinates: jest.fn(),
+        },
       },
     },
-    isActiveShuttleTrip: false,
-    safeRouteCoords: [],
+    shuttleState: {
+      isActiveShuttleTrip: false,
+      safeRouteCoords: [],
+    },
   });
 
   it("resets routing UI when start/destination are missing", () => {
@@ -169,46 +177,46 @@ describe("useMapRoutingSideEffects", () => {
 
     renderHook(() => useMapRoutingSideEffects(props));
 
-    expect(props.setShowDirectionsPanel).toHaveBeenCalledWith(false);
-    expect(props.setNavActive).toHaveBeenCalledWith(false);
-    expect(props.setFollowUser).toHaveBeenCalledWith(false);
-    expect(props.setCurrentStepIndex).toHaveBeenCalledWith(0);
-    expect(props.stopSim).toHaveBeenCalled();
+    expect(props.routeSetters.setShowDirectionsPanel).toHaveBeenCalledWith(false);
+    expect(props.routeSetters.setNavActive).toHaveBeenCalledWith(false);
+    expect(props.routeSetters.setFollowUser).toHaveBeenCalledWith(false);
+    expect(props.routeSetters.setCurrentStepIndex).toHaveBeenCalledWith(0);
+    expect(props.routeSetters.stopSim).toHaveBeenCalled();
   });
 
   it("shows directions when both start and destination are present", () => {
     const props = buildBaseProps();
-    props.startCoord = { latitude: 45.5, longitude: -73.58 };
-    props.destCoord = { latitude: 45.46, longitude: -73.63 };
+    props.routeState.startCoord = { latitude: 45.5, longitude: -73.58 };
+    props.routeState.destCoord = { latitude: 45.46, longitude: -73.63 };
 
     renderHook(() => useMapRoutingSideEffects(props));
 
-    expect(props.setShowDirectionsPanel).toHaveBeenCalledWith(true);
-    expect(props.stopSim).not.toHaveBeenCalled();
+    expect(props.routeSetters.setShowDirectionsPanel).toHaveBeenCalledWith(true);
+    expect(props.routeSetters.stopSim).not.toHaveBeenCalled();
   });
 
   it("handles simulation/transit/follow-user and shuttle fit side effects", () => {
     const props = buildBaseProps();
-    props.startCoord = { latitude: 45.5, longitude: -73.58 };
-    props.destCoord = { latitude: 45.46, longitude: -73.63 };
-    props.isSimulating = true;
-    props.isCrossCampusTrip = false;
-    props.travelMode = "transit";
-    props.followUser = true;
-    props.userCoord = { latitude: 45.5, longitude: -73.58 };
-    props.isActiveShuttleTrip = true;
-    props.safeRouteCoords = [
+    props.routeState.startCoord = { latitude: 45.5, longitude: -73.58 };
+    props.routeState.destCoord = { latitude: 45.46, longitude: -73.63 };
+    props.routeState.isSimulating = true;
+    props.routeState.isCrossCampusTrip = false;
+    props.routeState.travelMode = "transit";
+    props.routeState.followUser = true;
+    props.mapState.userCoord = { latitude: 45.5, longitude: -73.58 };
+    props.shuttleState.isActiveShuttleTrip = true;
+    props.shuttleState.safeRouteCoords = [
       { latitude: 45.5, longitude: -73.58 },
       { latitude: 45.46, longitude: -73.63 },
     ];
 
     renderHook(() => useMapRoutingSideEffects(props));
 
-    expect(props.setIsTransitCollapsed).toHaveBeenCalledWith(true);
-    expect(props.setTravelMode).toHaveBeenCalledWith("walking");
-    expect(props.mapRef.current.animateToRegion).toHaveBeenCalled();
-    expect(props.mapRef.current.fitToCoordinates).toHaveBeenCalledWith(
-      props.safeRouteCoords,
+    expect(props.routeSetters.setIsTransitCollapsed).toHaveBeenCalledWith(true);
+    expect(props.routeSetters.setTravelMode).toHaveBeenCalledWith("walking");
+    expect(props.mapState.mapRef.current.animateToRegion).toHaveBeenCalled();
+    expect(props.mapState.mapRef.current.fitToCoordinates).toHaveBeenCalledWith(
+      props.shuttleState.safeRouteCoords,
       expect.objectContaining({ animated: true }),
     );
   });
