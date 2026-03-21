@@ -1,0 +1,1929 @@
+{
+  "version": 2,
+  "exportedAt": "2026-03-21T16:05:09.494Z",
+  "floors": {
+    "Hall-2-Red": {
+      "label": "Hall - Floor 2 (Annotated)",
+      "image": "Hall-2-Red.png",
+      "width": 2072,
+      "height": 2048,
+      "nodes": [
+        {
+          "id": "Hall2Red_hallway_001",
+          "type": "hallway",
+          "x": 916.12,
+          "y": 647.52,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_002",
+          "type": "hallway",
+          "x": 916.12,
+          "y": 579.57,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_003",
+          "type": "hallway",
+          "x": 1019.83,
+          "y": 579.57,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_004",
+          "type": "hallway",
+          "x": 1105.65,
+          "y": 576,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_005",
+          "type": "hallway",
+          "x": 1220.09,
+          "y": 586.72,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_006",
+          "type": "hallway",
+          "x": 1320.22,
+          "y": 586.72,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_007",
+          "type": "hallway",
+          "x": 1409.62,
+          "y": 583.15,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_008",
+          "type": "hallway",
+          "x": 1545.51,
+          "y": 583.15,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_009",
+          "type": "hallway",
+          "x": 1645.65,
+          "y": 586.72,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_010",
+          "type": "hallway",
+          "x": 1777.96,
+          "y": 583.15,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_011",
+          "type": "hallway",
+          "x": 1892.4,
+          "y": 583.15,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_012",
+          "type": "hallway",
+          "x": 2006.83,
+          "y": 590.3,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_013",
+          "type": "hallway",
+          "x": 2006.83,
+          "y": 661.82,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_014",
+          "type": "hallway",
+          "x": 2017.56,
+          "y": 726.19,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_015",
+          "type": "hallway",
+          "x": 2017.56,
+          "y": 790.56,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_016",
+          "type": "hallway",
+          "x": 2013.98,
+          "y": 847.78,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_017",
+          "type": "hallway",
+          "x": 2013.98,
+          "y": 933.61,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_018",
+          "type": "hallway",
+          "x": 2013.98,
+          "y": 1019.43,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_019",
+          "type": "hallway",
+          "x": 2013.98,
+          "y": 1094.53,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_020",
+          "type": "hallway",
+          "x": 2021.14,
+          "y": 1194.66,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_021",
+          "type": "hallway",
+          "x": 1967.5,
+          "y": 1194.66,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_022",
+          "type": "hallway",
+          "x": 1878.09,
+          "y": 1194.66,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_023",
+          "type": "hallway",
+          "x": 1792.27,
+          "y": 1191.08,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_025",
+          "type": "hallway",
+          "x": 1574.12,
+          "y": 1176.78,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_026",
+          "type": "hallway",
+          "x": 1484.72,
+          "y": 1176.78,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_027",
+          "type": "hallway",
+          "x": 1384.59,
+          "y": 1183.93,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_028",
+          "type": "hallway",
+          "x": 1291.61,
+          "y": 1183.93,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_029",
+          "type": "hallway",
+          "x": 1195.06,
+          "y": 1187.51,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_030",
+          "type": "hallway",
+          "x": 1091.35,
+          "y": 1180.36,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_031",
+          "type": "hallway",
+          "x": 994.79,
+          "y": 1180.36,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_032",
+          "type": "hallway",
+          "x": 991.22,
+          "y": 1115.99,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_033",
+          "type": "hallway",
+          "x": 908.97,
+          "y": 1112.41,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_034",
+          "type": "hallway",
+          "x": 841.02,
+          "y": 1073.07,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_035",
+          "type": "hallway",
+          "x": 748.04,
+          "y": 1073.07,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_036",
+          "type": "hallway",
+          "x": 662.22,
+          "y": 1069.5,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_037",
+          "type": "hallway",
+          "x": 551.36,
+          "y": 1062.35,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_038",
+          "type": "hallway",
+          "x": 465.53,
+          "y": 1062.35,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_039",
+          "type": "hallway",
+          "x": 372.55,
+          "y": 1058.77,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_040",
+          "type": "hallway",
+          "x": 376.13,
+          "y": 983.67,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_041",
+          "type": "hallway",
+          "x": 265.27,
+          "y": 976.52,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_042",
+          "type": "hallway",
+          "x": 197.32,
+          "y": 976.52,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_043",
+          "type": "hallway",
+          "x": 132.95,
+          "y": 976.52,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_056",
+          "type": "hallway",
+          "x": 118.65,
+          "y": 1773.99,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_057",
+          "type": "hallway",
+          "x": 90.04,
+          "y": 1856.24,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_058",
+          "type": "hallway",
+          "x": 122.23,
+          "y": 1938.49,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_059",
+          "type": "hallway",
+          "x": 204.48,
+          "y": 1945.64,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_060",
+          "type": "hallway",
+          "x": 272.42,
+          "y": 1952.8,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_061",
+          "type": "hallway",
+          "x": 415.47,
+          "y": 1977.83,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_062",
+          "type": "hallway",
+          "x": 476.26,
+          "y": 1981.4,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_063",
+          "type": "hallway",
+          "x": 547.78,
+          "y": 1981.4,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_064",
+          "type": "hallway",
+          "x": 651.49,
+          "y": 1988.56,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_065",
+          "type": "hallway",
+          "x": 737.32,
+          "y": 1992.13,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_066",
+          "type": "hallway",
+          "x": 855.33,
+          "y": 1977.83,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_067",
+          "type": "hallway",
+          "x": 901.82,
+          "y": 1949.22,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_068",
+          "type": "hallway",
+          "x": 962.61,
+          "y": 1913.46,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_069",
+          "type": "hallway",
+          "x": 1062.74,
+          "y": 1959.95,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_070",
+          "type": "hallway",
+          "x": 1134.26,
+          "y": 1974.25,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_071",
+          "type": "hallway",
+          "x": 1198.63,
+          "y": 1977.83,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_072",
+          "type": "hallway",
+          "x": 1345.25,
+          "y": 1977.83,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_073",
+          "type": "hallway",
+          "x": 1420.35,
+          "y": 1977.83,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_074",
+          "type": "hallway",
+          "x": 1534.79,
+          "y": 1984.98,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_075",
+          "type": "hallway",
+          "x": 1677.83,
+          "y": 1981.4,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_076",
+          "type": "hallway",
+          "x": 1738.62,
+          "y": 1981.4,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_077",
+          "type": "hallway",
+          "x": 1813.72,
+          "y": 1984.98,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_078",
+          "type": "hallway",
+          "x": 1935.31,
+          "y": 1984.98,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_079",
+          "type": "hallway",
+          "x": 1820.87,
+          "y": 1906.31,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_080",
+          "type": "hallway",
+          "x": 1820.87,
+          "y": 1802.6,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_081",
+          "type": "hallway",
+          "x": 1813.72,
+          "y": 1741.8,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_082",
+          "type": "hallway",
+          "x": 1817.3,
+          "y": 1616.64,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_083",
+          "type": "hallway",
+          "x": 1713.59,
+          "y": 1616.64,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_084",
+          "type": "hallway",
+          "x": 1581.28,
+          "y": 1620.22,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_085",
+          "type": "hallway",
+          "x": 1484.72,
+          "y": 1620.22,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_086",
+          "type": "hallway",
+          "x": 1370.29,
+          "y": 1620.22,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_087",
+          "type": "hallway",
+          "x": 1263,
+          "y": 1620.22,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_088",
+          "type": "hallway",
+          "x": 1162.87,
+          "y": 1605.91,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_089",
+          "type": "hallway",
+          "x": 1087.77,
+          "y": 1605.91,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_090",
+          "type": "hallway",
+          "x": 1055.59,
+          "y": 1548.7,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_091",
+          "type": "hallway",
+          "x": 1052.01,
+          "y": 1452.14,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_092",
+          "type": "hallway",
+          "x": 1052.01,
+          "y": 1341.28,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_093",
+          "type": "hallway",
+          "x": 1052.01,
+          "y": 1273.34,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_094",
+          "type": "hallway",
+          "x": 1019.83,
+          "y": 1673.86,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_095",
+          "type": "hallway",
+          "x": 1034.13,
+          "y": 1763.26,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_096",
+          "type": "hallway",
+          "x": 1034.13,
+          "y": 1838.36,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_097",
+          "type": "hallway",
+          "x": 1345.25,
+          "y": 1419.96,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_098",
+          "type": "hallway",
+          "x": 1431.08,
+          "y": 1427.11,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_099",
+          "type": "hallway",
+          "x": 1534.79,
+          "y": 1434.26,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_100",
+          "type": "hallway",
+          "x": 1656.37,
+          "y": 1434.26,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_101",
+          "type": "hallway",
+          "x": 1756.5,
+          "y": 1441.41,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_102",
+          "type": "hallway",
+          "x": 1273.73,
+          "y": 1409.23,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_103",
+          "type": "hallway",
+          "x": 1263,
+          "y": 1280.49,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_104",
+          "type": "hallway",
+          "x": 1277.31,
+          "y": 1523.66,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_105",
+          "type": "hallway",
+          "x": 1491.87,
+          "y": 1305.52,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_106",
+          "type": "hallway",
+          "x": 1502.6,
+          "y": 1530.81,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_108",
+          "type": "hallway",
+          "x": 1742.2,
+          "y": 1530.81,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_109",
+          "type": "hallway",
+          "x": 1212.94,
+          "y": 994.4,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_110",
+          "type": "hallway",
+          "x": 1191.48,
+          "y": 901.42,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_111",
+          "type": "hallway",
+          "x": 1191.48,
+          "y": 779.83,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_112",
+          "type": "hallway",
+          "x": 1191.48,
+          "y": 676.13,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_113",
+          "type": "hallway",
+          "x": 1230.82,
+          "y": 1083.8,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_114",
+          "type": "hallway",
+          "x": 1352.41,
+          "y": 1098.11,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_hallway_115",
+          "type": "hallway",
+          "x": 152.09,
+          "y": 1705.26,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        }
+      ],
+      "edges": [
+        {
+          "from": "Hall2Red_hallway_040",
+          "to": "Hall2Red_hallway_039",
+          "weight": 75.19
+        },
+        {
+          "from": "Hall2Red_hallway_040",
+          "to": "Hall2Red_hallway_041",
+          "weight": 111.09
+        },
+        {
+          "from": "Hall2Red_hallway_041",
+          "to": "Hall2Red_hallway_043",
+          "weight": 132.32
+        },
+        {
+          "from": "Hall2Red_classroom_005",
+          "to": "Hall2Red_hallway_039",
+          "weight": 211.51
+        },
+        {
+          "from": "Hall2Red_hallway_040",
+          "to": "Hall2Red_classroom_006",
+          "weight": 159.17
+        },
+        {
+          "from": "Hall2Red_hallway_039",
+          "to": "Hall2Red_hallway_038",
+          "weight": 93.05
+        },
+        {
+          "from": "Hall2Red_hallway_038",
+          "to": "Hall2Red_hallway_037",
+          "weight": 85.83
+        },
+        {
+          "from": "Hall2Red_hallway_037",
+          "to": "Hall2Red_hallway_036",
+          "weight": 111.09
+        },
+        {
+          "from": "Hall2Red_hallway_036",
+          "to": "Hall2Red_hallway_035",
+          "weight": 85.89
+        },
+        {
+          "from": "Hall2Red_hallway_035",
+          "to": "Hall2Red_hallway_034",
+          "weight": 92.98
+        },
+        {
+          "from": "Hall2Red_washroom_005",
+          "to": "Hall2Red_hallway_036",
+          "weight": 93.84
+        },
+        {
+          "from": "Hall2Red_washroom_006",
+          "to": "Hall2Red_hallway_035",
+          "weight": 91.31
+        },
+        {
+          "from": "Hall2Red_hallway_034",
+          "to": "Hall2Red_hallway_033",
+          "weight": 78.52
+        },
+        {
+          "from": "Hall2Red_hallway_033",
+          "to": "Hall2Red_hallway_032",
+          "weight": 82.33
+        },
+        {
+          "from": "Hall2Red_hallway_032",
+          "to": "Hall2Red_hallway_031",
+          "weight": 64.47
+        },
+        {
+          "from": "Hall2Red_washroom_003",
+          "to": "Hall2Red_hallway_001",
+          "weight": 108.44
+        },
+        {
+          "from": "Hall2Red_hallway_001",
+          "to": "Hall2Red_hallway_002",
+          "weight": 67.95
+        },
+        {
+          "from": "Hall2Red_hallway_002",
+          "to": "Hall2Red_hallway_003",
+          "weight": 103.71
+        },
+        {
+          "from": "Hall2Red_hallway_003",
+          "to": "Hall2Red_washroom_004",
+          "weight": 85.28
+        },
+        {
+          "from": "Hall2Red_hallway_003",
+          "to": "Hall2Red_hallway_004",
+          "weight": 85.89
+        },
+        {
+          "from": "Hall2Red_hallway_004",
+          "to": "Hall2Red_hallway_005",
+          "weight": 114.94
+        },
+        {
+          "from": "Hall2Red_hallway_005",
+          "to": "Hall2Red_hallway_006",
+          "weight": 100.13
+        },
+        {
+          "from": "Hall2Red_hallway_005",
+          "to": "Hall2Red_hallway_112",
+          "weight": 93.88
+        },
+        {
+          "from": "Hall2Red_hallway_112",
+          "to": "Hall2Red_hallway_111",
+          "weight": 103.7
+        },
+        {
+          "from": "Hall2Red_hallway_111",
+          "to": "Hall2Red_classroom_007",
+          "weight": 147.36
+        },
+        {
+          "from": "Hall2Red_hallway_110",
+          "to": "Hall2Red_hallway_111",
+          "weight": 121.59
+        },
+        {
+          "from": "Hall2Red_hallway_110",
+          "to": "Hall2Red_hallway_109",
+          "weight": 95.42
+        },
+        {
+          "from": "Hall2Red_hallway_109",
+          "to": "Hall2Red_hallway_113",
+          "weight": 91.17
+        },
+        {
+          "from": "Hall2Red_hallway_113",
+          "to": "Hall2Red_hallway_032",
+          "weight": 241.75
+        },
+        {
+          "from": "Hall2Red_hallway_113",
+          "to": "Hall2Red_hallway_114",
+          "weight": 122.43
+        },
+        {
+          "from": "Hall2Red_hallway_114",
+          "to": "Hall2Red_classroom_008",
+          "weight": 128.03
+        },
+        {
+          "from": "Hall2Red_hallway_114",
+          "to": "Hall2Red_hallway_026",
+          "weight": 153.93
+        },
+        {
+          "from": "Hall2Red_hallway_026",
+          "to": "Hall2Red_hallway_025",
+          "weight": 89.4
+        },
+        {
+          "from": "Hall2Red_hallway_023",
+          "to": "Hall2Red_hallway_025",
+          "weight": 218.62
+        },
+        {
+          "from": "Hall2Red_hallway_023",
+          "to": "Hall2Red_hallway_022",
+          "weight": 85.89
+        },
+        {
+          "from": "Hall2Red_hallway_022",
+          "to": "Hall2Red_hallway_021",
+          "weight": 89.41
+        },
+        {
+          "from": "Hall2Red_hallway_021",
+          "to": "Hall2Red_hallway_020",
+          "weight": 53.64
+        },
+        {
+          "from": "Hall2Red_hallway_020",
+          "to": "Hall2Red_hallway_019",
+          "weight": 100.39
+        },
+        {
+          "from": "Hall2Red_hallway_019",
+          "to": "Hall2Red_hallway_018",
+          "weight": 75.1
+        },
+        {
+          "from": "Hall2Red_hallway_018",
+          "to": "Hall2Red_hallway_017",
+          "weight": 85.82
+        },
+        {
+          "from": "Hall2Red_hallway_017",
+          "to": "Hall2Red_hallway_016",
+          "weight": 85.83
+        },
+        {
+          "from": "Hall2Red_hallway_016",
+          "to": "Hall2Red_hallway_015",
+          "weight": 57.33
+        },
+        {
+          "from": "Hall2Red_hallway_015",
+          "to": "Hall2Red_hallway_014",
+          "weight": 64.37
+        },
+        {
+          "from": "Hall2Red_hallway_014",
+          "to": "Hall2Red_hallway_013",
+          "weight": 65.26
+        },
+        {
+          "from": "Hall2Red_hallway_013",
+          "to": "Hall2Red_hallway_012",
+          "weight": 71.52
+        },
+        {
+          "from": "Hall2Red_classroom_002",
+          "to": "Hall2Red_hallway_115",
+          "weight": 136.1
+        },
+        {
+          "from": "Hall2Red_hallway_115",
+          "to": "Hall2Red_hallway_056",
+          "weight": 76.43
+        },
+        {
+          "from": "Hall2Red_hallway_056",
+          "to": "Hall2Red_hallway_057",
+          "weight": 87.08
+        },
+        {
+          "from": "Hall2Red_hallway_057",
+          "to": "Hall2Red_hallway_058",
+          "weight": 88.32
+        },
+        {
+          "from": "Hall2Red_hallway_058",
+          "to": "Hall2Red_hallway_059",
+          "weight": 82.56
+        },
+        {
+          "from": "Hall2Red_hallway_059",
+          "to": "Hall2Red_hallway_060",
+          "weight": 68.32
+        },
+        {
+          "from": "Hall2Red_hallway_060",
+          "to": "Hall2Red_hallway_061",
+          "weight": 145.22
+        },
+        {
+          "from": "Hall2Red_hallway_061",
+          "to": "Hall2Red_hallway_062",
+          "weight": 60.89
+        },
+        {
+          "from": "Hall2Red_hallway_062",
+          "to": "Hall2Red_hallway_063",
+          "weight": 71.52
+        },
+        {
+          "from": "Hall2Red_hallway_063",
+          "to": "Hall2Red_classroom_001",
+          "weight": 111.03
+        },
+        {
+          "from": "Hall2Red_hallway_063",
+          "to": "Hall2Red_hallway_064",
+          "weight": 103.96
+        },
+        {
+          "from": "Hall2Red_hallway_064",
+          "to": "Hall2Red_hallway_065",
+          "weight": 85.9
+        },
+        {
+          "from": "Hall2Red_hallway_065",
+          "to": "Hall2Red_hallway_066",
+          "weight": 118.87
+        },
+        {
+          "from": "Hall2Red_hallway_066",
+          "to": "Hall2Red_hallway_067",
+          "weight": 54.59
+        },
+        {
+          "from": "Hall2Red_hallway_067",
+          "to": "Hall2Red_hallway_068",
+          "weight": 70.53
+        },
+        {
+          "from": "Hall2Red_hallway_068",
+          "to": "Hall2Red_hallway_096",
+          "weight": 103.71
+        },
+        {
+          "from": "Hall2Red_hallway_096",
+          "to": "Hall2Red_hallway_095",
+          "weight": 75.1
+        },
+        {
+          "from": "Hall2Red_hallway_095",
+          "to": "Hall2Red_hallway_094",
+          "weight": 90.54
+        },
+        {
+          "from": "Hall2Red_hallway_094",
+          "to": "Hall2Red_classroom_012",
+          "weight": 86.12
+        },
+        {
+          "from": "Hall2Red_hallway_094",
+          "to": "Hall2Red_hallway_089",
+          "weight": 96.09
+        },
+        {
+          "from": "Hall2Red_hallway_089",
+          "to": "Hall2Red_hallway_090",
+          "weight": 65.64
+        },
+        {
+          "from": "Hall2Red_hallway_090",
+          "to": "Hall2Red_hallway_091",
+          "weight": 96.63
+        },
+        {
+          "from": "Hall2Red_hallway_091",
+          "to": "Hall2Red_washroom_001",
+          "weight": 83.01
+        },
+        {
+          "from": "Hall2Red_hallway_091",
+          "to": "Hall2Red_hallway_092",
+          "weight": 110.86
+        },
+        {
+          "from": "Hall2Red_hallway_092",
+          "to": "Hall2Red_hallway_093",
+          "weight": 67.94
+        },
+        {
+          "from": "Hall2Red_hallway_093",
+          "to": "Hall2Red_hallway_031",
+          "weight": 109.18
+        },
+        {
+          "from": "Hall2Red_hallway_092",
+          "to": "Hall2Red_washroom_002",
+          "weight": 77.37
+        },
+        {
+          "from": "Hall2Red_hallway_089",
+          "to": "Hall2Red_hallway_088",
+          "weight": 75.1
+        },
+        {
+          "from": "Hall2Red_hallway_088",
+          "to": "Hall2Red_hallway_087",
+          "weight": 101.15
+        },
+        {
+          "from": "Hall2Red_hallway_087",
+          "to": "Hall2Red_hallway_086",
+          "weight": 107.29
+        },
+        {
+          "from": "Hall2Red_hallway_086",
+          "to": "Hall2Red_hallway_085",
+          "weight": 114.43
+        },
+        {
+          "from": "Hall2Red_hallway_087",
+          "to": "Hall2Red_hallway_104",
+          "weight": 97.61
+        },
+        {
+          "from": "Hall2Red_hallway_104",
+          "to": "Hall2Red_hallway_102",
+          "weight": 114.49
+        },
+        {
+          "from": "Hall2Red_hallway_102",
+          "to": "Hall2Red_hallway_103",
+          "weight": 129.19
+        },
+        {
+          "from": "Hall2Red_hallway_103",
+          "to": "Hall2Red_hallway_029",
+          "weight": 115.16
+        },
+        {
+          "from": "Hall2Red_hallway_029",
+          "to": "Hall2Red_escalator_001",
+          "weight": 83.55
+        },
+        {
+          "from": "Hall2Red_hallway_102",
+          "to": "Hall2Red_hallway_097",
+          "weight": 72.32
+        },
+        {
+          "from": "Hall2Red_hallway_097",
+          "to": "Hall2Red_hallway_098",
+          "weight": 86.13
+        },
+        {
+          "from": "Hall2Red_hallway_098",
+          "to": "Hall2Red_hallway_099",
+          "weight": 103.96
+        },
+        {
+          "from": "Hall2Red_hallway_099",
+          "to": "Hall2Red_hallway_106",
+          "weight": 101.77
+        },
+        {
+          "from": "Hall2Red_hallway_106",
+          "to": "Hall2Red_hallway_085",
+          "weight": 91.18
+        },
+        {
+          "from": "Hall2Red_hallway_099",
+          "to": "Hall2Red_hallway_100",
+          "weight": 121.58
+        },
+        {
+          "from": "Hall2Red_hallway_100",
+          "to": "Hall2Red_hallway_101",
+          "weight": 100.38
+        },
+        {
+          "from": "Hall2Red_hallway_101",
+          "to": "Hall2Red_classroom_009",
+          "weight": 68.24
+        },
+        {
+          "from": "Hall2Red_hallway_108",
+          "to": "Hall2Red_hallway_101",
+          "weight": 90.54
+        },
+        {
+          "from": "Hall2Red_hallway_108",
+          "to": "Hall2Red_hallway_106",
+          "weight": 239.6
+        },
+        {
+          "from": "Hall2Red_hallway_106",
+          "to": "Hall2Red_hallway_104",
+          "weight": 225.4
+        },
+        {
+          "from": "Hall2Red_hallway_098",
+          "to": "Hall2Red_hallway_105",
+          "weight": 135.94
+        },
+        {
+          "from": "Hall2Red_hallway_103",
+          "to": "Hall2Red_hallway_105",
+          "weight": 230.23
+        },
+        {
+          "from": "Hall2Red_hallway_105",
+          "to": "Hall2Red_hallway_026",
+          "weight": 128.94
+        },
+        {
+          "from": "Hall2Red_hallway_081",
+          "to": "Hall2Red_hallway_080",
+          "weight": 61.22
+        },
+        {
+          "from": "Hall2Red_hallway_080",
+          "to": "Hall2Red_hallway_079",
+          "weight": 103.71
+        },
+        {
+          "from": "Hall2Red_hallway_079",
+          "to": "Hall2Red_hallway_077",
+          "weight": 78.99
+        },
+        {
+          "from": "Hall2Red_hallway_077",
+          "to": "Hall2Red_hallway_078",
+          "weight": 121.59
+        },
+        {
+          "from": "Hall2Red_hallway_077",
+          "to": "Hall2Red_hallway_076",
+          "weight": 75.19
+        },
+        {
+          "from": "Hall2Red_hallway_076",
+          "to": "Hall2Red_hallway_075",
+          "weight": 60.79
+        },
+        {
+          "from": "Hall2Red_hallway_075",
+          "to": "Hall2Red_stairs_002",
+          "weight": 65.74
+        },
+        {
+          "from": "Hall2Red_hallway_075",
+          "to": "Hall2Red_hallway_074",
+          "weight": 143.08
+        },
+        {
+          "from": "Hall2Red_hallway_074",
+          "to": "Hall2Red_escalator_003",
+          "weight": 67.17
+        },
+        {
+          "from": "Hall2Red_hallway_074",
+          "to": "Hall2Red_hallway_073",
+          "weight": 114.66
+        },
+        {
+          "from": "Hall2Red_hallway_073",
+          "to": "Hall2Red_hallway_072",
+          "weight": 75.1
+        },
+        {
+          "from": "Hall2Red_hallway_072",
+          "to": "Hall2Red_hallway_071",
+          "weight": 146.62
+        },
+        {
+          "from": "Hall2Red_hallway_071",
+          "to": "Hall2Red_hallway_070",
+          "weight": 64.47
+        },
+        {
+          "from": "Hall2Red_hallway_070",
+          "to": "Hall2Red_hallway_069",
+          "weight": 72.94
+        },
+        {
+          "from": "Hall2Red_hallway_069",
+          "to": "Hall2Red_hallway_068",
+          "weight": 110.4
+        },
+        {
+          "from": "Hall2Red_hallway_070",
+          "to": "Hall2Red_stairs_001",
+          "weight": 58.1
+        },
+        {
+          "from": "Hall2Red_classroom_003",
+          "to": "Hall2Red_hallway_043",
+          "weight": 234.89
+        },
+        {
+          "from": "Hall2Red_classroom_004",
+          "to": "Hall2Red_classroom_003",
+          "weight": 203.09
+        }
+      ],
+      "rooms": [
+        {
+          "id": "Hall2Red_classroom_001",
+          "type": "classroom",
+          "x": 576.39,
+          "y": 1874.12,
+          "label": "H-110",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_002",
+          "type": "classroom",
+          "x": 137.52,
+          "y": 1569.94,
+          "label": "H-209",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_003",
+          "type": "classroom",
+          "x": 135.01,
+          "y": 1211.4,
+          "label": "H-290",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_004",
+          "type": "classroom",
+          "x": 135.01,
+          "y": 1414.49,
+          "label": "H-290-2",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_005",
+          "type": "classroom",
+          "x": 285.45,
+          "y": 1251.51,
+          "label": "H-290-1",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_006",
+          "type": "classroom",
+          "x": 521.14,
+          "y": 918.04,
+          "label": "H-231",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_007",
+          "type": "classroom",
+          "x": 1323.48,
+          "y": 845.33,
+          "label": "H-(0052)",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_008",
+          "type": "classroom",
+          "x": 1478.93,
+          "y": 1078.51,
+          "label": "H-222",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_009",
+          "type": "classroom",
+          "x": 1817.42,
+          "y": 1472.16,
+          "label": "H-260",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_classroom_012",
+          "type": "classroom",
+          "x": 979.98,
+          "y": 1597.52,
+          "label": "H-224-2",
+          "nodeSize": 8,
+          "labelSize": 13
+        }
+      ],
+      "pois": [
+        {
+          "id": "Hall2Red_washroom_001",
+          "type": "washroom",
+          "x": 969.95,
+          "y": 1464.64,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_washroom_002",
+          "type": "washroom",
+          "x": 974.96,
+          "y": 1334.26,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_washroom_003",
+          "type": "washroom",
+          "x": 902.25,
+          "y": 755.07,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_washroom_004",
+          "type": "washroom",
+          "x": 1022.6,
+          "y": 664.8,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_washroom_005",
+          "type": "washroom",
+          "x": 659.04,
+          "y": 975.71,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_washroom_006",
+          "type": "washroom",
+          "x": 764.35,
+          "y": 983.23,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_elevator_001",
+          "type": "elevator",
+          "x": 1401.21,
+          "y": 1715.37,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_escalator_001",
+          "type": "escalator",
+          "x": 1147.97,
+          "y": 1256.53,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_escalator_002",
+          "type": "escalator",
+          "x": 1235.72,
+          "y": 1918.46,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_escalator_003",
+          "type": "escalator",
+          "x": 1544.12,
+          "y": 1918.46,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_stairs_001",
+          "type": "stairs",
+          "x": 1150.47,
+          "y": 1918.46,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall2Red_stairs_002",
+          "type": "stairs",
+          "x": 1651.94,
+          "y": 1920.97,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        }
+      ],
+      "annotations": [
+        {
+          "id": "anno_1774023162088_qsfp",
+          "kind": "text",
+          "text": "H-110",
+          "x": 551,
+          "y": 1581,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023168491_pgb1",
+          "kind": "text",
+          "text": "H-224",
+          "x": 905,
+          "y": 1320,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023173482_fske",
+          "kind": "text",
+          "text": "H-224-1",
+          "x": 920,
+          "y": 1470,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023177698_2wq7",
+          "kind": "text",
+          "text": "H-224-2",
+          "x": 938,
+          "y": 1574,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023182790_frnn",
+          "kind": "text",
+          "text": "H-209",
+          "x": 176,
+          "y": 1552,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023187547_65d5",
+          "kind": "text",
+          "text": "H-205",
+          "x": 230,
+          "y": 1413,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023196386_4pz8",
+          "kind": "text",
+          "text": "H-290",
+          "x": 169,
+          "y": 1198,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023203857_i99j",
+          "kind": "text",
+          "text": "H-290-1",
+          "x": 247,
+          "y": 1291,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023207494_bhwd",
+          "kind": "text",
+          "text": "H-290-2",
+          "x": 140,
+          "y": 1352,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023214723_5unt",
+          "kind": "text",
+          "text": "H-231",
+          "x": 437,
+          "y": 751,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023223652_0wst",
+          "kind": "text",
+          "text": "H-239",
+          "x": 913,
+          "y": 798,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023231328_qk1t",
+          "kind": "text",
+          "text": "H-219",
+          "x": 1013,
+          "y": 698,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023289371_gci9",
+          "kind": "text",
+          "text": "H-(0052)",
+          "x": 1599,
+          "y": 801,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023296755_jbxt",
+          "kind": "text",
+          "text": "H-222",
+          "x": 1520,
+          "y": 1041,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023304513_7e3y",
+          "kind": "text",
+          "text": "H-260",
+          "x": 1910,
+          "y": 1438,
+          "size": 21,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1774023793621_58as",
+          "kind": "emoji",
+          "text": "🛗",
+          "x": 1395,
+          "y": 1750,
+          "size": 34
+        },
+        {
+          "id": "anno_1774023797317_v3hg",
+          "kind": "emoji",
+          "text": "🚻",
+          "x": 670,
+          "y": 875,
+          "size": 34
+        },
+        {
+          "id": "anno_1774023798499_1b93",
+          "kind": "emoji",
+          "text": "🚻",
+          "x": 762,
+          "y": 921,
+          "size": 34
+        },
+        {
+          "id": "anno_1774023800151_hwvf",
+          "kind": "emoji",
+          "text": "🚻",
+          "x": 955,
+          "y": 813,
+          "size": 34
+        },
+        {
+          "id": "anno_1774023801761_qf56",
+          "kind": "emoji",
+          "text": "🚻",
+          "x": 1021,
+          "y": 844,
+          "size": 34
+        }
+      ]
+    }
+  }
+}
