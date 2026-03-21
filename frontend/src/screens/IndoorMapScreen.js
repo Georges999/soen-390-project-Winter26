@@ -21,6 +21,59 @@ const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
 const MAP_INSPECT_SCALE = 1.45;
 
+const buildAllRooms = (campusBuildings) => {
+  const rooms = [];
+  campusBuildings.forEach((building) => {
+    building.rooms.forEach((room) => {
+      rooms.push({ ...room, buildingName: building.name, buildingId: building.id });
+    });
+  });
+  return rooms;
+};
+
+const getFilteredRooms = (allRooms, searchQuery) => {
+  if (!searchQuery.trim()) return [];
+
+  const lowerQuery = searchQuery.toLowerCase();
+  const normalizedQuery = searchQuery.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  return allRooms.filter(
+    (room) =>
+      (room.label || "").toLowerCase().includes(lowerQuery) ||
+      (room.id || "").toLowerCase().includes(lowerQuery) ||
+      (room.buildingName || "").toLowerCase().includes(lowerQuery) ||
+      (room.searchKeys || []).some((key) => key.includes(normalizedQuery))
+  );
+};
+
+const getSelectedRoomContext = (campusBuildings, selectedRoom) => {
+  if (!selectedRoom) return null;
+
+  const building = campusBuildings.find((candidate) =>
+    candidate.rooms.some((room) => room.id === selectedRoom.id)
+  );
+  if (!building) return null;
+
+  const floor = building.floors.find(
+    (candidate) => candidate.id === selectedRoom.floor
+  );
+
+  return { building, floor };
+};
+
+const getRoomSelectionIndexes = (campusBuildings, room) => {
+  const buildingIdx = campusBuildings.findIndex(
+    (building) => building.id === room.buildingId
+  );
+  if (buildingIdx < 0) return null;
+
+  const floorIdx = campusBuildings[buildingIdx].floors.findIndex(
+    (floor) => floor.id === room.floor
+  );
+
+  return { buildingIdx, floorIdx };
+};
+
 export default function IndoorMapScreen({ navigation }) {
   // Campus toggle: "sgw" or "loyola"
   const [selectedCampus, setSelectedCampus] = useState("sgw");
@@ -47,43 +100,16 @@ export default function IndoorMapScreen({ navigation }) {
   const currentFloor = currentBuilding?.floors?.[selectedFloorIdx] || currentBuilding?.floors?.[0];
 
   // All rooms for search
-  const allRooms = useMemo(() => {
-    const rooms = [];
-    campusBuildings.forEach((building) => {
-      building.rooms.forEach((room) => {
-        rooms.push({ ...room, buildingName: building.name, buildingId: building.id });
-      });
-    });
-    return rooms;
-  }, [campusBuildings]);
+  const allRooms = useMemo(() => buildAllRooms(campusBuildings), [campusBuildings]);
 
   // Filtered search results
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    const normalizedQuery = searchQuery.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    return allRooms.filter(
-      (r) =>
-        (r.label || "").toLowerCase().includes(q) ||
-        (r.id || "").toLowerCase().includes(q) ||
-        (r.buildingName || "").toLowerCase().includes(q) ||
-        (r.searchKeys || []).some((key) => key.includes(normalizedQuery))
-    );
-  }, [searchQuery, allRooms]);
+  const searchResults = useMemo(
+    () => getFilteredRooms(allRooms, searchQuery),
+    [searchQuery, allRooms]
+  );
 
   const selectedRoomContext = useMemo(() => {
-    if (!selectedRoom) return null;
-
-    const building = campusBuildings.find((candidate) =>
-      candidate.rooms.some((room) => room.id === selectedRoom.id)
-    );
-    if (!building) return null;
-
-    const floor = building.floors.find(
-      (candidate) => candidate.id === selectedRoom.floor
-    );
-
-    return { building, floor };
+    return getSelectedRoomContext(campusBuildings, selectedRoom);
   }, [campusBuildings, selectedRoom]);
 
   const selectedRoomHighlight = useMemo(
@@ -116,26 +142,83 @@ export default function IndoorMapScreen({ navigation }) {
     setSelectedRoom(room);
     setSearchQuery("");
 
-    // Find which building and floor this room belongs to
-    const buildingIdx = campusBuildings.findIndex((b) => b.id === room.buildingId);
-    if (buildingIdx >= 0) {
-      setSelectedBuildingIdx(buildingIdx);
-      const building = campusBuildings[buildingIdx];
-      const floorIdx = building.floors.findIndex((f) => f.id === room.floor);
-      if (floorIdx >= 0) {
-        setSelectedFloorIdx(floorIdx);
-      }
+    const selectionIndexes = getRoomSelectionIndexes(campusBuildings, room);
+    if (!selectionIndexes) return;
+
+    setSelectedBuildingIdx(selectionIndexes.buildingIdx);
+    if (selectionIndexes.floorIdx >= 0) {
+      setSelectedFloorIdx(selectionIndexes.floorIdx);
     }
   };
 
   const handleGetDirections = () => {
-    if (selectedRoom && selectedRoomContext) {
-      navigation.navigate("IndoorDirections", {
-        destinationRoom: selectedRoom,
-        building: selectedRoomContext.building,
-        floor: selectedRoomContext.floor,
-      });
+    if (!selectedRoom || !selectedRoomContext) return;
+
+    navigation.navigate("IndoorDirections", {
+      destinationRoom: selectedRoom,
+      building: selectedRoomContext.building,
+      floor: selectedRoomContext.floor,
+    });
+  };
+
+  const renderRoomHighlightMarker = () => {
+    if (!selectedRoomHighlight) return null;
+
+    return (
+      <View
+        testID="selected-room-highlight"
+        style={[
+          styles.roomHighlight,
+          {
+            left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
+            top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
+          },
+        ]}
+      />
+    );
+  };
+
+  const renderFloorPlanCanvas = (imageStyle) => (
+    <View style={styles.floorPlanCanvas}>
+      <Image source={currentFloor.image} style={imageStyle} resizeMode="contain" />
+      {renderRoomHighlightMarker()}
+    </View>
+  );
+
+  const renderFloorPlanContent = () => {
+    if (!currentFloor?.image) {
+      return (
+        <View style={styles.noFloorPlan}>
+          <MaterialIcons name="map" size={48} color="#ccc" />
+          <Text style={styles.noFloorPlanText}>
+            Floor plan not available
+          </Text>
+        </View>
+      );
     }
+
+    if (inspectMode) {
+      return (
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.floorPlanScrollContent}
+          showsHorizontalScrollIndicator={false}
+        >
+          <ScrollView
+            contentContainerStyle={styles.floorPlanScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {renderFloorPlanCanvas([styles.floorPlanImage, styles.floorPlanImageInspect])}
+          </ScrollView>
+        </ScrollView>
+      );
+    }
+
+    return (
+      <View style={styles.floorPlanScrollContent}>
+        {renderFloorPlanCanvas(styles.floorPlanImage)}
+      </View>
+    );
   };
 
   return (
@@ -296,71 +379,7 @@ export default function IndoorMapScreen({ navigation }) {
 
         {/* Floor Plan Image */}
         <View style={styles.floorPlanContainer}>
-          {currentFloor?.image ? (
-            inspectMode ? (
-              <ScrollView
-                horizontal
-                contentContainerStyle={styles.floorPlanScrollContent}
-                showsHorizontalScrollIndicator={false}
-              >
-                <ScrollView
-                  contentContainerStyle={styles.floorPlanScrollContent}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <View style={styles.floorPlanCanvas}>
-                    <Image
-                      source={currentFloor.image}
-                      style={[styles.floorPlanImage, styles.floorPlanImageInspect]}
-                      resizeMode="contain"
-                    />
-                    {selectedRoomHighlight ? (
-                      <View
-                        key={selectedRoom?.id ?? selectedRoom?.label}
-                        testID="selected-room-highlight"
-                        style={[
-                          styles.roomHighlight,
-                          {
-                            left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
-                            top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
-                          },
-                        ]}
-                      />
-                    ) : null}
-                  </View>
-                </ScrollView>
-              </ScrollView>
-            ) : (
-              <View style={styles.floorPlanScrollContent}>
-                <View style={styles.floorPlanCanvas}>
-                  <Image
-                    source={currentFloor.image}
-                    style={styles.floorPlanImage}
-                    resizeMode="contain"
-                  />
-                  {selectedRoomHighlight ? (
-                    <View
-                      key={selectedRoom?.id ?? selectedRoom?.label}
-                      testID="selected-room-highlight"
-                      style={[
-                        styles.roomHighlight,
-                        {
-                          left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
-                          top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
-                        },
-                      ]}
-                    />
-                  ) : null}
-                </View>
-              </View>
-            )
-          ) : (
-            <View style={styles.noFloorPlan}>
-              <MaterialIcons name="map" size={48} color="#ccc" />
-              <Text style={styles.noFloorPlanText}>
-                Floor plan not available
-              </Text>
-            </View>
-          )}
+          {renderFloorPlanContent()}
         </View>
 
         {/* POI Legend */}
