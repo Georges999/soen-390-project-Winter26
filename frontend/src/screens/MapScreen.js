@@ -358,12 +358,13 @@ export default function MapScreen({ route }) {
     setIsPOILoading(true);
 
     try {
-      const results = await fetchNearbyPOIs({
-        lat: userCoord.latitude,
-        lng: userCoord.longitude,
-        radius,
-        type: categoryToType[category] ?? "cafe",
-      });
+    const results = await fetchNearbyPOIs({
+      lat: userCoord.latitude,
+      lng: userCoord.longitude,
+      radius,
+      type: categoryToType[category] ?? "cafe",
+      origin: userCoord,
+    });
       const normalizedResults = Array.isArray(results) ? results : [];
 
       if (requestId === latestPOIRequestIdRef.current) {
@@ -592,7 +593,10 @@ export default function MapScreen({ route }) {
         keyExtractor={(poi) => String(poi.id ?? poi.name)}
         renderItem={({ item: poi }) => (
           <Pressable
-            onPress={() => setSelectedPOI(poi)}
+            onPress={() => {
+              setSelectedPOI(poi);
+              setIsPOIPanelOpen(false);
+            }}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -870,25 +874,77 @@ export default function MapScreen({ route }) {
             <Marker
               key={poi.id}
               coordinate={poi.coords}
-              onPress={() => setSelectedPOI(poi)}
+              onPress={() => {
+                setSelectedPOI(poi);
+                setIsPOIPanelOpen(false);
+                setHasRequestedPOIs(true);
+              }}
+              testID="poi-marker"
             >
               <View style={styles.poiMarker} />
             </Marker>
           ))}
 
-          <RouteOverlay
-            safeRouteCoords={safeRouteCoords}
-            routeRenderMode={routeRenderMode}
-            routeRideSegments={routeRideSegments}
-            routeWalkDotCoords={routeWalkDotCoords}
-          />
-        </MapView>
+        <RouteOverlay
+          safeRouteCoords={safeRouteCoords}
+          routeRenderMode={routeRenderMode}
+          routeRideSegments={routeRideSegments}
+          routeWalkDotCoords={routeWalkDotCoords}
+        />
+      </MapView>
 
-        {/* Recenter Button - recenter on route start */}
-        {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
-          <Pressable
-            testID="recenter-button"
-            style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
+      {selectedPOI && (
+        <View
+          style={[
+            styles.poiInfoCardContainer,
+            { bottom: isPOIPanelOpen ? 300 : 40 },
+          ]}
+        >
+          <View style={styles.poiInfoCard}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Text style={styles.poiInfoTitle} numberOfLines={1}>
+                {selectedPOI.name}
+              </Text>
+              <Pressable
+                accessibilityLabel="Dismiss POI info card"
+                onPress={() => setSelectedPOI(null)}
+              >
+                <MaterialIcons name="clear" size={18} color="#1F1F1F" />
+              </Pressable>
+            </View>
+
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
+              <View style={styles.poiInfoTag}>
+                <Text style={styles.poiInfoTagText}>{selectedPOICategory}</Text>
+              </View>
+              <Text style={styles.poiInfoDistance}>
+                {formatPOIDistance(selectedPOI.distance)}
+              </Text>
+            </View>
+
+            <Text style={styles.poiInfoAddress} numberOfLines={2}>
+              {selectedPOI.address}
+            </Text>
+
+            <Pressable
+              style={styles.poiInfoCTA}
+              onPress={() => {
+                setDestCoord(selectedPOI.coords);
+                setDestText(selectedPOI.name);
+                setSelectedPOI(null);
+              }}
+            >
+              <Text style={styles.poiInfoCTAText}>Get Directions</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {/* Recenter Button - recenter on route start */}
+      {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
+        <Pressable
+          testID="recenter-button"
+          style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
             onPress={() => {
               const targetCoord =
                 routeCoords.length > 0 ? routeCoords[0] : userCoord;

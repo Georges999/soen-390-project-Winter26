@@ -192,4 +192,55 @@ describe('poiService', () => {
     expect(result).toEqual([]);
     expect(fetch).toHaveBeenCalledTimes(1);
   });
+
+  it('adds distance from origin when provided', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'OK',
+        results: [
+          {
+            place_id: 'dist-1',
+            name: 'Cafe With Distance',
+            rating: 4.4,
+            geometry: { location: { lat: 45.5015, lng: -73.567 } },
+            vicinity: '321 Distance Rd',
+          },
+        ],
+      }),
+    });
+
+    const [poi] = await fetchNearbyPOIs({
+      lat: 45.5,
+      lng: -73.57,
+      origin: { latitude: 45.5, longitude: -73.57 },
+    });
+
+    expect(typeof poi.distance).toBe('number');
+    expect(poi.distance).toBeGreaterThan(0);
+  });
+
+  it('omits distance when origin is missing', async () => {
+    fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: 'OK',
+        results: [
+          {
+            place_id: 'no-origin',
+            name: 'Cafe Without Distance',
+            geometry: { location: { lat: 45.6, lng: -73.6 } },
+            vicinity: '987 No Origin Ln',
+          },
+        ],
+      }),
+    });
+
+    const [poi] = await fetchNearbyPOIs({
+      lat: 45.6,
+      lng: -73.6,
+    });
+
+    expect(poi.distance).toBeUndefined();
+  });
 });
