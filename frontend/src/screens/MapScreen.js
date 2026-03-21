@@ -71,6 +71,7 @@ export default function MapScreen({ route }) {
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [isPOILoading, setIsPOILoading] = useState(false);
   const [hasRequestedPOIs, setHasRequestedPOIs] = useState(false);
+  const [poiSearchOrigin, setPoiSearchOrigin] = useState(null);
   // Start/Destination inputs
   const [activeField, setActiveField] = useState(null);
   const [startText, setStartText] = useState("");
@@ -352,19 +353,31 @@ export default function MapScreen({ route }) {
     radius = poiRadius,
   } = {}) => {
     setHasRequestedPOIs(true);
-    if (!userCoord) return;
+    // Determine which coordinate to use for POI suggestions:
+    // 1) If the user has entered a custom start (not "My location") and it has coords, use that.
+    // 2) Else if the user has entered a custom destination (not "My location") and it has coords, use that.
+    // 3) Otherwise fall back to the device location (`userCoord`).
+    const poiOriginCoord =
+      (startText && startText !== "My location" && startCoord) ||
+      (destText && destText !== "My location" && destCoord) ||
+      userCoord;
+
+    if (!poiOriginCoord) return;
+    // Remember the origin used for these POI results so that subsequent
+    // live user location updates don't reorder or force the list to reset.
+    setPoiSearchOrigin(poiOriginCoord);
 
     const requestId = ++latestPOIRequestIdRef.current;
     setIsPOILoading(true);
 
     try {
-    const results = await fetchNearbyPOIs({
-      lat: userCoord.latitude,
-      lng: userCoord.longitude,
-      radius,
-      type: categoryToType[category] ?? "cafe",
-      origin: userCoord,
-    });
+      const results = await fetchNearbyPOIs({
+        lat: poiOriginCoord.latitude,
+        lng: poiOriginCoord.longitude,
+        radius,
+        type: categoryToType[category] ?? "cafe",
+        origin: poiOriginCoord,
+      });
       const normalizedResults = Array.isArray(results) ? results : [];
 
       if (requestId === latestPOIRequestIdRef.current) {
@@ -395,7 +408,13 @@ export default function MapScreen({ route }) {
     () => {
       if (normalizedPOIs.length === 0) return [];
 
-      if (!userCoord) {
+      // Use the POI search origin (the coordinate used when fetching the
+      // current `pois`) when available, otherwise fall back to the live
+      // `userCoord`. This prevents live location updates from changing
+      // the ordering and resetting the FlatList scroll position.
+      const orderingOrigin = poiSearchOrigin ?? userCoord;
+
+      if (!orderingOrigin) {
         return poiFilterMode === "nearest"
           ? normalizedPOIs.slice(0, 5)
           : normalizedPOIs;
@@ -403,13 +422,13 @@ export default function MapScreen({ route }) {
 
       return filterPOIsByMode({
         pois: normalizedPOIs,
-        userCoord,
+        userCoord: orderingOrigin,
         mode: poiFilterMode,
         nearestCount: 5,
         radius: poiRadius,
       });
     },
-    [normalizedPOIs, userCoord, poiFilterMode, poiRadius]
+    [normalizedPOIs, userCoord, poiSearchOrigin, poiFilterMode, poiRadius]
   );
 
   //when campus selection/toggle change this makes sure context is reset cleanly
@@ -566,8 +585,40 @@ export default function MapScreen({ route }) {
     toggleSim,
   });
 
+  // Ensure Go uses the user's origin input when available. Only fall back
+  // to device location if the origin input is completely empty.
+  const handleGo = () => {
+    // If the user left the origin field empty, default to device location.
+    const effectiveStart =
+      startCoord ?? (startText && startText !== "" ? null : userCoord);
+
+    if (!effectiveStart || !destCoord) return;
+
+    setFollowUser(true);
+    setNavActive(true);
+    setCurrentStepIndex(0);
+
+    const firstInstruction = routeInfo?.steps?.[0]?.instruction;
+    if (firstInstruction && speechEnabled) {
+      Speech?.stop?.();
+      Speech?.speak?.(stripHtml(firstInstruction));
+    }
+
+    if (routeCoords.length > 1) {
+      mapRef.current?.fitToCoordinates(routeCoords, {
+        edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+        animated: true,
+      });
+    } else if (effectiveStart) {
+      mapRef.current?.animateToRegion(
+        { ...effectiveStart, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+        500,
+      );
+    }
+  };
+
   const canShowDirectionsPanel = Boolean(
-    showDirectionsPanel && startCoord && destCoord
+    showDirectionsPanel && startCoord && destCoord && !selectedPOI
   );
 
   const formatPOIDistance = (distance) => {
@@ -665,6 +716,9 @@ export default function MapScreen({ route }) {
 
   useEffect(() => {
     if (!selectedPOI) return;
+    // When a POI card is shown, hide the bottom directions panel so
+    // the two are never visible at the same time.
+    setShowDirectionsPanel(false);
     setDestText(selectedPOI.name);
     setDestCoord(selectedPOI.coords);
     setDestCampusId(null);
@@ -929,8 +983,22 @@ export default function MapScreen({ route }) {
             <Pressable
               style={styles.poiInfoCTA}
               onPress={() => {
+                // Prefill directions: only default origin to device location
+                // if the user has not entered a custom origin.
+                if (!startText) {
+                  setHasInteracted(true);
+                  setStartText("My location");
+                  if (userCoord) setStartCoord(userCoord);
+                  setStartCampusId(null);
+                }
+
                 setDestCoord(selectedPOI.coords);
                 setDestText(selectedPOI.name);
+                setDestCampusId(null);
+
+                // Open the directions panel and dismiss the POI card so
+                // both are never visible together.
+                setShowDirectionsPanel(true);
                 setSelectedPOI(null);
               }}
             >
@@ -1181,7 +1249,7 @@ export default function MapScreen({ route }) {
             }}
             isSimulating={isSimulating}
             onSimulate={handleSimulatePress}
-            onGo={handleGoPress}
+            onGo={handleGo}
           />
         )}
       </View>
