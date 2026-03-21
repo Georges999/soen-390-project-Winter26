@@ -1863,62 +1863,6 @@ describe('MapScreen', () => {
       // Get Directions handler skips the setStartText("My location") block
       // This tests the condition path where the if statement is false
     });
-
-    it('should set showDirectionsPanel=true after Get Directions (line 1003)', async () => {
-      // Tests: setShowDirectionsPanel(true)
-      // After pressing Get Directions, the directions panel should become visible
-      jest.clearAllMocks();
-      locationService.getUserCoords.mockResolvedValue({
-        latitude: 45.4973,
-        longitude: -73.5789,
-      });
-      locationService.watchUserCoords.mockResolvedValue({ remove: jest.fn() });
-      fetchNearbyPOIs.mockResolvedValue([]);
-      fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          status: 'OK',
-          results: [],
-        }),
-      });
-
-      const { getByText, queryByText } = render(<MapScreen />);
-
-      await waitFor(() => {
-        expect(getByText('SGW')).toBeTruthy();
-      }, { timeout: 3000 });
-
-      // The GET Directions handler includes: setShowDirectionsPanel(true);
-      // This causes the DirectionsPanel to be visible (contains the GO button)
-    });
-
-    it('should set selectedPOI=null after Get Directions (line 1004)', async () => {
-      // Tests: setSelectedPOI(null)
-      // After pressing Get Directions, selectedPOI is cleared so the POI info card disappears
-      jest.clearAllMocks();
-      locationService.getUserCoords.mockResolvedValue({
-        latitude: 45.4973,
-        longitude: -73.5789,
-      });
-      locationService.watchUserCoords.mockResolvedValue({ remove: jest.fn() });
-      fetchNearbyPOIs.mockResolvedValue([]);
-      fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          status: 'OK',
-          results: [],
-        }),
-      });
-
-      const { getByText } = render(<MapScreen />);
-
-      await waitFor(() => {
-        expect(getByText('SGW')).toBeTruthy();
-      }, { timeout: 3000 });
-
-      // The Get Directions handler includes: setSelectedPOI(null)
-      // This clears the POI info card from display
-    });
   });
 
   }); // closes MapScreen describe
