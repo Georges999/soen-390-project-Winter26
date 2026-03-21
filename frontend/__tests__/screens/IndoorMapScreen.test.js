@@ -362,4 +362,26 @@ describe('IndoorMapScreen', () => {
     fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
     expect(getByText(/H837/)).toBeTruthy();
   });
+
+  // --- Inspect Mode ---
+
+  it('should render inspect map toggle in default state', () => {
+    const { getByText } = render(<IndoorMapScreen navigation={mockNavigation} />);
+    expect(getByText('Inspect map')).toBeTruthy();
+    expect(getByText('zoom-in')).toBeTruthy();
+  });
+
+  it('should toggle inspect mode on and off', () => {
+    const { getByText, queryByText } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+
+    fireEvent.press(getByText('Inspect map'));
+    expect(getByText('Inspecting map')).toBeTruthy();
+    expect(getByText('zoom-out-map')).toBeTruthy();
+
+    fireEvent.press(getByText('Inspecting map'));
+    expect(getByText('Inspect map')).toBeTruthy();
+    expect(queryByText('Inspecting map')).toBeNull();
+  });
 });
