@@ -19,6 +19,7 @@ const MAROON = "#912338";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
+const MAP_INSPECT_SCALE = 1.45;
 
 export default function IndoorMapScreen({ navigation }) {
   // Campus toggle: "sgw" or "loyola"
@@ -31,6 +32,7 @@ export default function IndoorMapScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");
   // Selected room
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [inspectMode, setInspectMode] = useState(false);
 
   // Get available buildings for selected campus
   const campusBuildings = useMemo(
@@ -268,34 +270,89 @@ export default function IndoorMapScreen({ navigation }) {
                 Floor {currentFloor.label}
               </Text>
             </View>
+            <Pressable
+              style={[
+                styles.inspectToggle,
+                inspectMode && styles.inspectToggleActive,
+              ]}
+              onPress={() => setInspectMode((prev) => !prev)}
+            >
+              <MaterialIcons
+                name={inspectMode ? "zoom-out-map" : "zoom-in"}
+                size={14}
+                color={inspectMode ? "#fff" : MAROON}
+              />
+              <Text
+                style={[
+                  styles.inspectToggleText,
+                  inspectMode && styles.inspectToggleTextActive,
+                ]}
+              >
+                {inspectMode ? "Inspecting map" : "Inspect map"}
+              </Text>
+            </Pressable>
           </View>
         )}
 
         {/* Floor Plan Image */}
         <View style={styles.floorPlanContainer}>
           {currentFloor?.image ? (
-            <View style={styles.floorPlanScrollContent}>
-              <View style={styles.floorPlanCanvas}>
-                <Image
-                  source={currentFloor.image}
-                  style={styles.floorPlanImage}
-                  resizeMode="contain"
-                />
-                {selectedRoomHighlight ? (
-                  <View
-                    key={selectedRoom?.id ?? selectedRoom?.label}
-                    testID="selected-room-highlight"
-                    style={[
-                      styles.roomHighlight,
-                      {
-                        left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
-                        top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
-                      },
-                    ]}
+            inspectMode ? (
+              <ScrollView
+                horizontal
+                contentContainerStyle={styles.floorPlanScrollContent}
+                showsHorizontalScrollIndicator={false}
+              >
+                <ScrollView
+                  contentContainerStyle={styles.floorPlanScrollContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <View style={styles.floorPlanCanvas}>
+                    <Image
+                      source={currentFloor.image}
+                      style={[styles.floorPlanImage, styles.floorPlanImageInspect]}
+                      resizeMode="contain"
+                    />
+                    {selectedRoomHighlight ? (
+                      <View
+                        key={selectedRoom?.id ?? selectedRoom?.label}
+                        testID="selected-room-highlight"
+                        style={[
+                          styles.roomHighlight,
+                          {
+                            left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
+                            top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
+                          },
+                        ]}
+                      />
+                    ) : null}
+                  </View>
+                </ScrollView>
+              </ScrollView>
+            ) : (
+              <View style={styles.floorPlanScrollContent}>
+                <View style={styles.floorPlanCanvas}>
+                  <Image
+                    source={currentFloor.image}
+                    style={styles.floorPlanImage}
+                    resizeMode="contain"
                   />
-                ) : null}
+                  {selectedRoomHighlight ? (
+                    <View
+                      key={selectedRoom?.id ?? selectedRoom?.label}
+                      testID="selected-room-highlight"
+                      style={[
+                        styles.roomHighlight,
+                        {
+                          left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
+                          top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
+                        },
+                      ]}
+                    />
+                  ) : null}
+                </View>
               </View>
-            </View>
+            )
           ) : (
             <View style={styles.noFloorPlan}>
               <MaterialIcons name="map" size={48} color="#ccc" />
@@ -510,6 +567,9 @@ const styles = StyleSheet.create({
 
   // Floor Label
   floorLabelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 6,
   },
@@ -524,6 +584,29 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "700",
+  },
+  inspectToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(145, 35, 56, 0.35)",
+    backgroundColor: "#fff",
+  },
+  inspectToggleActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  inspectToggleText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: MAROON,
+  },
+  inspectToggleTextActive: {
+    color: "#fff",
   },
 
   // Floor Plan
@@ -547,6 +630,10 @@ const styles = StyleSheet.create({
   floorPlanImage: {
     width: MAP_IMAGE_WIDTH,
     height: MAP_IMAGE_HEIGHT,
+  },
+  floorPlanImageInspect: {
+    width: MAP_IMAGE_WIDTH * MAP_INSPECT_SCALE,
+    height: MAP_IMAGE_HEIGHT * MAP_INSPECT_SCALE,
   },
   floorPlanCanvas: {
     position: "relative",
