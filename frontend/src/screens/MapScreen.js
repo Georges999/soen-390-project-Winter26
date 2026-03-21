@@ -981,6 +981,7 @@ export default function MapScreen({ route }) {
             </Text>
 
             <Pressable
+              testID="poi-get-directions-btn"
               style={styles.poiInfoCTA}
               onPress={() => {
                 // Prefill directions: only default origin to device location
