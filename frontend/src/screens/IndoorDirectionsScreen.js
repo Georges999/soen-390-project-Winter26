@@ -11,11 +11,13 @@ import {
   SafeAreaView,
   FlatList,
   Switch,
+  Modal,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Svg, { Path, Circle, Line } from "react-native-svg";
-import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor } from "../data/indoorFloorData";
+import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor, getBuildingById, FLOOR_META } from "../data/indoorFloorData";
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
+import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
 
 const MAROON = "#912338";
 const BLUE = "#4A90D9";
@@ -44,6 +46,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Accessibility route toggle
   const [accessibleRoute, setAccessibleRoute] = useState(false);
+
+  // Transition preference for cross-floor routes
+  const [transitionPref, setTransitionPref] = useState(null); // "stairs" | "elevator"
+  const [showTransitionModal, setShowTransitionModal] = useState(false);
+  const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
 
   // Current floor being displayed
   const selectedBuilding = params.building || buildings.sgw[1]; // Default to MB building
@@ -100,6 +107,45 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     };
   }, [selectedFloor]);
 
+  // Route type classification
+  const routeType = useMemo(() => {
+    if (!startRoom || !destRoom) return null;
+    return classifyRoute(startRoom, destRoom);
+  }, [startRoom, destRoom]);
+
+  // Route segments for cross-floor / cross-building
+  const routeSegments = useMemo(() => {
+    if (!routeType) return [];
+    if (routeType === "same-floor" || routeType === "same-room") return [];
+    const pref = transitionPref || (accessibleRoute ? "elevator" : "stairs");
+    return buildRouteSegments(startRoom, destRoom, pref);
+  }, [startRoom, destRoom, routeType, transitionPref, accessibleRoute]);
+
+  // Multi-segment path results (cross-floor)
+  const segmentResults = useMemo(() => {
+    if (!routeSegments.length) return [];
+    return routeSegments.map((seg) => {
+      if (seg.type !== "indoor") return { segment: seg, pathResult: null };
+
+      const buildingObj = getBuildingById(seg.buildingId);
+      if (!buildingObj) return { segment: seg, pathResult: { ok: false, reason: "Building not found" } };
+
+      const floorsData = { floors: {} };
+      buildingObj.floors.forEach((floor) => {
+        const fd = getFloorGraphData(buildingObj.id, floor.id);
+        floorsData.floors[floor.id] = { label: floor.label, nodes: fd.nodes, rooms: fd.rooms, pois: fd.pois, edges: fd.edges };
+      });
+
+      const result = findShortestPath({
+        floorsData,
+        startNodeId: seg.fromNodeId,
+        endNodeId: seg.toNodeId,
+        accessible: accessibleRoute,
+      });
+      return { segment: seg, pathResult: result };
+    });
+  }, [routeSegments, accessibleRoute]);
+
   // Filtered search results
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -112,16 +158,27 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     );
   }, [searchQuery, allRooms]);
 
-  // Calculate path using pathfinding algorithm
+  // Calculate path - single floor (same-floor) or first indoor segment (cross-floor)
   const pathResult = useMemo(() => {
     if (!startRoom || !destRoom) return null;
+
+    // Cross-floor / cross-building: use the active segment result
+    if (routeSegments.length > 0 && segmentResults.length > 0) {
+      // Find the indoor segment at activeSegmentIndex
+      const activeResult = segmentResults[activeSegmentIndex];
+      if (activeResult?.pathResult) return activeResult.pathResult;
+      // If active segment is vertical/outdoor, show the nearest indoor segment
+      for (const sr of segmentResults) {
+        if (sr.pathResult?.ok) return sr.pathResult;
+      }
+      return { ok: false, reason: "No indoor path available for this segment" };
+    }
     
-    // Build floors data structure for pathfinding
+    // Same-floor: build floors data from the selected building
     const floorsData = {
       floors: {}
     };
     
-    // Get floor data from the selected building
     if (selectedBuilding?.floors) {
       selectedBuilding.floors.forEach((floor) => {
         const floorGraphData = getFloorGraphData(selectedBuilding.id, floor.id);
@@ -143,10 +200,63 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     });
 
     return result;
-  }, [startRoom, destRoom, selectedBuilding, accessibleRoute]);
+  }, [startRoom, destRoom, selectedBuilding, accessibleRoute, routeSegments, segmentResults, activeSegmentIndex]);
 
-  // Generate step-by-step directions from path
+  // Generate step-by-step directions from path (supports multi-segment)
   const directionSteps = useMemo(() => {
+    // Cross-floor / cross-building: combine all segments into unified steps
+    if (segmentResults.length > 0) {
+      const steps = [];
+      let stepNum = 1;
+
+      steps.push({ step: stepNum++, text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
+
+      for (let si = 0; si < segmentResults.length; si++) {
+        const { segment, pathResult: segPath } = segmentResults[si];
+
+        if (segment.type === "indoor" && segPath?.ok) {
+          const coords = segPath.pathCoords || [];
+          const floorMeta = FLOOR_META[segment.floorId];
+          const floorLabel = floorMeta?.floorLabel || segment.floorId;
+
+          if (si > 0) {
+            steps.push({ step: stepNum++, text: `Continue on Floor ${floorLabel}`, icon: "layers" });
+          }
+
+          for (let i = 1; i < coords.length - 1; i++) {
+            const node = coords[i];
+            let stepText = "Continue along the corridor";
+            if (node.type === "elevator") stepText = "Pass the elevator";
+            else if (node.type === "stairs") stepText = "Pass the stairs";
+            else if (node.type === "washroom") stepText = "Pass the washroom";
+            else if (node.type === "escalator") stepText = "Pass the escalator";
+            steps.push({ step: stepNum++, text: stepText });
+          }
+        } else if (segment.type === "vertical") {
+          const fromMeta = FLOOR_META[segment.fromFloor];
+          const toMeta = FLOOR_META[segment.toFloor];
+          const fromLabel = fromMeta?.floorLabel || segment.fromFloor;
+          const toLabel = toMeta?.floorLabel || segment.toFloor;
+          const method = segment.transitionType === "elevator" ? "elevator" : "stairs";
+          steps.push({
+            step: stepNum++,
+            text: `Take the ${method} from Floor ${fromLabel} to Floor ${toLabel}`,
+            icon: method === "elevator" ? "elevator" : "stairs",
+          });
+        } else if (segment.type === "outdoor") {
+          steps.push({
+            step: stepNum++,
+            text: `Walk outside to the ${segment.toBuildingId?.toUpperCase() || "destination"} building`,
+            icon: "directions-walk",
+          });
+        }
+      }
+
+      steps.push({ step: stepNum, text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
+      return steps;
+    }
+
+    // Same-floor: original logic
     if (!pathResult?.ok || !pathResult.pathCoords) {
       return [];
     }
@@ -161,7 +271,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         distance: null
       });
 
-      // Add intermediate steps based on path nodes
       for (let i = 1; i < coords.length - 1; i++) {
         const node = coords[i];
         let stepText = "Continue along the corridor";
@@ -193,7 +302,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     }
 
     return steps;
-  }, [pathResult, startRoom, destRoom]);
+  }, [pathResult, startRoom, destRoom, segmentResults]);
 
   // Route stats - calculate actual distance
   const routeStats = useMemo(() => {
@@ -216,6 +325,19 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     };
   }, [pathResult]);
 
+  // Determine the floor image to display for active segment
+  const displayedFloor = useMemo(() => {
+    if (segmentResults.length > 0) {
+      const activeSeg = segmentResults[activeSegmentIndex]?.segment;
+      if (activeSeg?.type === "indoor" && activeSeg.floorId) {
+        const building = getBuildingById(activeSeg.buildingId);
+        const floor = building?.floors?.find((f) => f.id === activeSeg.floorId);
+        if (floor) return floor;
+      }
+    }
+    return selectedFloor;
+  }, [segmentResults, activeSegmentIndex, selectedFloor]);
+
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
     if (!pathResult?.ok || !pathResult.pathCoords || pathResult.pathCoords.length < 2) {
@@ -223,9 +345,10 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     }
 
     const coords = pathResult.pathCoords;
-    // Scale coordinates to match image dimensions
-    const scaleX = MAP_IMAGE_WIDTH / floorDimensions.width;
-    const scaleY = MAP_IMAGE_HEIGHT / floorDimensions.height;
+    const displayWidth = displayedFloor?.width || floorDimensions.width;
+    const displayHeight = displayedFloor?.height || floorDimensions.height;
+    const scaleX = MAP_IMAGE_WIDTH / displayWidth;
+    const scaleY = MAP_IMAGE_HEIGHT / displayHeight;
 
     let pathD = `M ${coords[0].x * scaleX} ${coords[0].y * scaleY}`;
     for (let i = 1; i < coords.length; i++) {
@@ -238,7 +361,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       end: { x: coords[coords.length - 1].x * scaleX, y: coords[coords.length - 1].y * scaleY },
       points: coords.map(c => ({ x: c.x * scaleX, y: c.y * scaleY, type: c.type }))
     };
-  }, [pathResult, floorDimensions]);
+  }, [pathResult, displayedFloor, floorDimensions]);
 
   const handleFieldChange = (text) => {
     setSearchQuery(text);
@@ -473,22 +596,73 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           <Switch
             testID="accessibility-switch"
             value={accessibleRoute}
-            onValueChange={setAccessibleRoute}
+            onValueChange={(val) => {
+              setAccessibleRoute(val);
+              if (val) setTransitionPref("elevator");
+            }}
             trackColor={{ false: "#ddd", true: BLUE }}
             thumbColor={accessibleRoute ? "#fff" : "#f4f3f4"}
           />
         </View>
 
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Cross-floor prompt: show transition choice if needed */}
+        {(routeType === "cross-floor" || routeType === "cross-building") && !transitionPref && startRoom && destRoom && (
+          <Pressable
+            style={styles.transitionPrompt}
+            onPress={() => setShowTransitionModal(true)}
+          >
+            <MaterialIcons name="swap-vert" size={22} color={MAROON} />
+            <Text style={styles.transitionPromptText}>
+              This route requires changing floors. Tap to choose stairs or elevator.
+            </Text>
+            <MaterialIcons name="chevron-right" size={22} color={MAROON} />
+          </Pressable>
+        )}
+
+        {/* Segment tabs for cross-floor navigation */}
+        {segmentResults.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.segmentTabs}>
+            {segmentResults.map((sr, idx) => {
+              const seg = sr.segment;
+              let label = "";
+              let icon = "layers";
+              if (seg.type === "indoor") {
+                const meta = FLOOR_META[seg.floorId];
+                label = meta ? `Floor ${meta.floorLabel}` : seg.floorId;
+                icon = "layers";
+              } else if (seg.type === "vertical") {
+                label = seg.transitionType === "elevator" ? "Elevator" : "Stairs";
+                icon = seg.transitionType === "elevator" ? "elevator" : "stairs";
+              } else if (seg.type === "outdoor") {
+                label = "Outdoor";
+                icon = "directions-walk";
+              }
+              return (
+                <Pressable
+                  key={idx}
+                  style={[styles.segmentTab, idx === activeSegmentIndex && styles.segmentTabActive]}
+                  onPress={() => setActiveSegmentIndex(idx)}
+                >
+                  <MaterialIcons name={icon} size={16} color={idx === activeSegmentIndex ? "#fff" : MAROON} />
+                  <Text style={[styles.segmentTabText, idx === activeSegmentIndex && styles.segmentTabTextActive]}>
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}}>
           {/* Floor Plan with Route */}
           <Pressable 
             style={styles.floorPlanContainer}
             onPress={handleMapPress}
           >
-            {selectedFloor?.image ? (
+            {displayedFloor?.image ? (
               <View style={styles.mapWrapper}>
                 <Image
-                  source={selectedFloor.image}
+                  source={displayedFloor.image}
                   style={styles.floorPlanImage}
                   resizeMode="contain"
                 />
@@ -651,6 +825,40 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             </View>
           )}
         </ScrollView>
+
+        {/* Transition Preference Modal (stairs vs elevator) */}
+        <Modal
+          visible={showTransitionModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowTransitionModal(false)}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setShowTransitionModal(false)}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>How would you like to change floors?</Text>
+              <Pressable
+                style={styles.modalOption}
+                onPress={() => { setTransitionPref("stairs"); setShowTransitionModal(false); }}
+              >
+                <MaterialIcons name="stairs" size={28} color={MAROON} />
+                <View style={styles.modalOptionText}>
+                  <Text style={styles.modalOptionLabel}>Stairs</Text>
+                  <Text style={styles.modalOptionHint}>Faster route</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                style={styles.modalOption}
+                onPress={() => { setTransitionPref("elevator"); setShowTransitionModal(false); }}
+              >
+                <MaterialIcons name="elevator" size={28} color={BLUE} />
+                <View style={styles.modalOptionText}>
+                  <Text style={styles.modalOptionLabel}>Elevator</Text>
+                  <Text style={styles.modalOptionHint}>Accessible route</Text>
+                </View>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -1020,5 +1228,104 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
     marginRight: 10,
+  },
+  // Cross-floor transition prompt
+  transitionPrompt: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#fff5f0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0d0c7",
+  },
+  transitionPromptText: {
+    flex: 1,
+    marginHorizontal: 10,
+    fontSize: 14,
+    color: MAROON,
+    fontWeight: "500",
+  },
+  // Segment tabs
+  segmentTabs: {
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#fafafa",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  segmentTab: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: "#f0f0f0",
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    gap: 4,
+  },
+  segmentTabActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  segmentTabText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: MAROON,
+  },
+  segmentTabTextActive: {
+    color: "#fff",
+  },
+  // Transition modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: SCREEN_WIDTH - 64,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: "#f8f8f8",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e8e8e8",
+  },
+  modalOptionText: {
+    marginLeft: 16,
+  },
+  modalOptionLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  modalOptionHint: {
+    fontSize: 13,
+    color: "#888",
+    marginTop: 2,
   },
 });
