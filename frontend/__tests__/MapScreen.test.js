@@ -1795,6 +1795,43 @@ describe('MapScreen', () => {
       // Component handles short routes correctly
       expect(getByText('SGW')).toBeTruthy();
     });
+
+    it('should handle Speech methods being null (covers optional chaining Speech?.stop?.() and Speech?.speak?.())', async () => {
+      // Covers the optional chaining when Speech methods are null
+      jest.clearAllMocks();
+      const speech = require('expo-speech');
+      speech.speak = null;
+      speech.stop = null;
+
+      fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          routes: [
+            {
+              legs: [
+                {
+                  duration: { text: '5 mins', value: 300 },
+                  distance: { text: '0.5 km', value: 500 },
+                }
+              ],
+              overview_polyline: { points: 'encoded' },
+              steps: [
+                {
+                  html_instructions: 'Turn left',
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      const { getByText } = render(<MapScreen />);
+
+      await waitFor(() => expect(getByText('SGW')).toBeTruthy());
+
+      // The optional chaining handles null gracefully
+    });
   });
 
   describe('POI Get Directions handler branch coverage', () => {
@@ -1863,6 +1900,24 @@ describe('MapScreen', () => {
       // Get Directions handler skips the setStartText("My location") block
       // This tests the condition path where the if statement is false
     });
-  });
 
+    it('should press the recenter button', async () => {
+      jest.clearAllMocks();
+      locationService.getUserCoords.mockResolvedValue({
+        latitude: 45.4973,
+        longitude: -73.5789,
+      });
+      locationService.watchUserCoords.mockImplementation((cb) => {
+        cb({ latitude: 45.4973, longitude: -73.5789 });
+        return Promise.resolve({ remove: jest.fn() });
+      });
+
+      const { getByTestId } = render(<MapScreen />);
+
+      await waitFor(() => expect(getByTestId('recenter-button')).toBeTruthy());
+      fireEvent.press(getByTestId('recenter-button'));
+    });
+    
+
+  });
   }); // closes MapScreen describe

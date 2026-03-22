@@ -248,6 +248,38 @@ describe('MapScreen coverage-focused interactions', () => {
     });
   });
 
+  it('covers POI info card bottom positioning when the panel is open', async () => {
+    // Branch: selectedPOI renders the POI info card.
+    const testPOI = {
+      id: 'poi-bottom-1',
+      name: 'Bottom Branch POI',
+      coords: { latitude: 45.501, longitude: -73.57 },
+      address: '456 Bottom St',
+      distance: 175,
+    };
+
+    fetchNearbyPOIs.mockImplementationOnce(async () => [testPOI]);
+
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('poi-button'));
+    await waitFor(() => {
+      expect(getByTestId('poi-panel')).toBeTruthy();
+    });
+
+    fireEvent.press(getByText('Show on map'));
+
+    await waitFor(() => {
+      expect(getByText('Bottom Branch POI')).toBeTruthy();
+    });
+
+    fireEvent.press(getByText('Bottom Branch POI'));
+
+    await waitFor(() => {
+      expect(getByTestId('poi-info-card')).toBeTruthy();
+    });
+  });
+
   it('covers My location destination branch', async () => {
     jest.spyOn(locationService, 'getUserCoords').mockResolvedValue({ latitude: 45.5, longitude: -73.5 });
     const { getByTestId, getByText } = render(<MapScreen />);

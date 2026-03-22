@@ -55,6 +55,100 @@ const getAmenities = (building) => {
   };
 };
 
+export const handleGoLogic = ({
+  startCoord,
+  startText,
+  userCoord,
+  destCoord,
+  routeInfo,
+  speechEnabled,
+  routeCoords,
+  mapRef,
+  Speech,
+  stripHtml,
+  setFollowUser,
+  setNavActive,
+  setCurrentStepIndex,
+}) => {
+  const effectiveStart =
+    startCoord ?? (startText && startText !== "" ? null : userCoord);
+
+  if (!effectiveStart || !destCoord) return;
+
+  setFollowUser(true);
+  setNavActive(true);
+  setCurrentStepIndex(0);
+
+  const firstInstruction = routeInfo?.steps?.[0]?.instruction;
+  if (firstInstruction && speechEnabled) {
+    Speech?.stop?.();
+    Speech?.speak?.(stripHtml(firstInstruction));
+  }
+
+  if (routeCoords.length > 1) {
+    mapRef.current?.fitToCoordinates(routeCoords, {
+      edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+      animated: true,
+    });
+  } else if (effectiveStart) {
+    mapRef.current?.animateToRegion(
+      { ...effectiveStart, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+      500,
+    );
+  }
+};
+
+export const handlePoiInfoCtaLogic = ({
+  startText,
+  userCoord,
+  selectedPOI,
+  setHasInteracted,
+  setStartText,
+  setStartCoord,
+  setStartCampusId,
+  setDestCoord,
+  setDestText,
+  setDestCampusId,
+  setShowDirectionsPanel,
+  setSelectedPOI,
+}) => {
+  // Prefill directions: only default origin to device location
+  // if the user has not entered a custom origin.
+  if (!startText) {
+    setHasInteracted(true);
+    setStartText("My location");
+    if (userCoord) setStartCoord(userCoord);
+    setStartCampusId(null);
+  }
+
+  setDestCoord(selectedPOI.coords);
+  setDestText(selectedPOI.name);
+  setDestCampusId(null);
+
+  // Open the directions panel and dismiss the POI card so
+  // both are never visible together.
+  setShowDirectionsPanel(true);
+  setSelectedPOI(null);
+};
+
+export const getPoiInfoCardBottomOffset = (isPOIPanelOpen) =>
+  isPOIPanelOpen ? 300 : 40;
+
+export const handleRecenterPressLogic = ({ routeCoords, userCoord, mapRef }) => {
+  const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
+  if (targetCoord) {
+    mapRef.current?.animateToRegion(
+      {
+        latitude: targetCoord.latitude,
+        longitude: targetCoord.longitude,
+        latitudeDelta: 0.003,
+        longitudeDelta: 0.003,
+      },
+      500,
+    );
+  }
+};
+
 export default function MapScreen({ route }) {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -944,9 +1038,10 @@ export default function MapScreen({ route }) {
 
         {selectedPOI && (
           <View
+            testID="poi-info-card"
             style={[
               styles.poiInfoCardContainer,
-              { bottom: isPOIPanelOpen ? 300 : 40 },
+              { bottom: getPoiInfoCardBottomOffset(isPOIPanelOpen) },
             ]}
           >
             <View style={styles.poiInfoCard}>
@@ -993,23 +1088,20 @@ export default function MapScreen({ route }) {
                 testID="poi-get-directions-btn"
                 style={styles.poiInfoCTA}
                 onPress={() => {
-                  // Prefill directions: only default origin to device location
-                  // if the user has not entered a custom origin.
-                  if (!startText) {
-                    setHasInteracted(true);
-                    setStartText("My location");
-                    if (userCoord) setStartCoord(userCoord);
-                    setStartCampusId(null);
-                  }
-
-                  setDestCoord(selectedPOI.coords);
-                  setDestText(selectedPOI.name);
-                  setDestCampusId(null);
-
-                  // Open the directions panel and dismiss the POI card so
-                  // both are never visible together.
-                  setShowDirectionsPanel(true);
-                  setSelectedPOI(null);
+                  handlePoiInfoCtaLogic({
+                    startText,
+                    userCoord,
+                    selectedPOI,
+                    setHasInteracted,
+                    setStartText,
+                    setStartCoord,
+                    setStartCampusId,
+                    setDestCoord,
+                    setDestText,
+                    setDestCampusId,
+                    setShowDirectionsPanel,
+                    setSelectedPOI,
+                  });
                 }}
               >
                 <Text style={styles.poiInfoCTAText}>Get Directions</Text>
@@ -1024,19 +1116,7 @@ export default function MapScreen({ route }) {
             testID="recenter-button"
             style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
             onPress={() => {
-              const targetCoord =
-                routeCoords.length > 0 ? routeCoords[0] : userCoord;
-              if (targetCoord) {
-                mapRef.current?.animateToRegion(
-                  {
-                    latitude: targetCoord.latitude,
-                    longitude: targetCoord.longitude,
-                    latitudeDelta: 0.003,
-                    longitudeDelta: 0.003,
-                  },
-                  500,
-                );
-              }
+              handleRecenterPressLogic({ routeCoords, userCoord, mapRef });
             }}
           >
             <MaterialIcons name="my-location" size={24} color={MAROON} />
