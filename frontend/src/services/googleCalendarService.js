@@ -1,10 +1,11 @@
 import { getValidAccessToken } from './googleCalendarAuth';
+import * as SecureStore from 'expo-secure-store';
 
 const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
+const CALENDAR_SELECTION_KEY = 'google_calendar_selected_ids';
 
 // Allow CI/release builds to force mock calendar data for deterministic E2E.
-const USE_MOCK_DATA =
-  process.env.EXPO_PUBLIC_USE_MOCK_CALENDAR === 'true' || __DEV__;
+const USE_MOCK_DATA = process.env.EXPO_PUBLIC_USE_MOCK_CALENDAR === 'true';
 
 const MOCK_EVENTS = [
   {
@@ -33,18 +34,202 @@ const MOCK_EVENTS = [
   },
 ];
 
-export async function fetchCalendarEvents(timeMin = new Date(), timeMax = null) {
+function sortEventsByStartTime(events) {
+  return [...events].sort(
+    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+  );
+}
+
+function normalizeGoogleEvent(event, calendarId = 'primary') {
+  const title = event.summary || 'Untitled Event';
+  const start = event.start || {};
+  const end = event.end || {};
+
+  return {
+    id: event.id,
+    googleEventId: event.id,
+    calendarId,
+    title,
+    summary: title,
+    location: event.location || null,
+    start,
+    end,
+    startTime: start.dateTime || start.date,
+    endTime: end.dateTime || end.date,
+    description: event.description || null,
+    recurrence: event.recurrence || [],
+  };
+}
+
+function getDefaultSelectedCalendarIds(calendars = [], storedIds = []) {
+  const availableIds = new Set(calendars.map((calendar) => calendar.id));
+  const validStoredIds = storedIds.filter((id) => availableIds.has(id));
+
+  if (validStoredIds.length > 0) {
+    return validStoredIds;
+  }
+
+  const primaryCalendar = calendars.find((calendar) => calendar.primary);
+  if (primaryCalendar) {
+    return [primaryCalendar.id];
+  }
+
+  return calendars[0] ? [calendars[0].id] : [];
+}
+
+function getCalendarRequestParams(timeMin = new Date(), timeMax = null) {
+  const params = new URLSearchParams({
+    timeMin: timeMin.toISOString(),
+    singleEvents: 'true',
+    orderBy: 'startTime',
+    maxResults: '50',
+  });
+
+  if (timeMax) {
+    params.append('timeMax', timeMax.toISOString());
+  }
+
+  return params;
+}
+
+async function fetchEventsForCalendar(calendarId, accessToken, timeMin, timeMax) {
+  const response = await fetch(
+    `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events?${getCalendarRequestParams(
+      timeMin,
+      timeMax
+    )}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return (data.items || []).map((event) => normalizeGoogleEvent(event, calendarId));
+}
+
+async function resolveCalendarIds(calendarIds) {
+  if (Array.isArray(calendarIds) && calendarIds.length > 0) {
+    return calendarIds;
+  }
+
+  const storedIds = await getSelectedCalendarIds();
+  return storedIds.length > 0 ? storedIds : ['primary'];
+}
+
+export async function getSelectedCalendarIds() {
+  try {
+    const storedValue = await SecureStore.getItemAsync(CALENDAR_SELECTION_KEY);
+    const parsed = storedValue ? JSON.parse(storedValue) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error('Failed to read selected calendar IDs:', error);
+    return [];
+  }
+}
+
+export async function saveSelectedCalendarIds(calendarIds = []) {
+  try {
+    await SecureStore.setItemAsync(
+      CALENDAR_SELECTION_KEY,
+      JSON.stringify(Array.isArray(calendarIds) ? calendarIds : [])
+    );
+  } catch (error) {
+    console.error('Failed to save selected calendar IDs:', error);
+  }
+}
+
+export async function fetchGoogleCalendars() {
+  if (USE_MOCK_DATA) {
+    return {
+      success: true,
+      calendars: [
+        {
+          id: 'primary',
+          name: 'Mock Google Calendar',
+          primary: true,
+          selected: true,
+        },
+      ],
+    };
+  }
+
+  try {
+    const accessToken = await getValidAccessToken();
+
+    if (!accessToken) {
+      return {
+        success: false,
+        error: 'Not authenticated. Please connect your calendar.',
+      };
+    }
+
+    const response = await fetch(`${GOOGLE_CALENDAR_API}/users/me/calendarList`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const calendars = (data.items || [])
+      .filter((calendar) => calendar.accessRole && calendar.accessRole !== 'none')
+      .map((calendar) => ({
+        id: calendar.id,
+        name: calendar.summaryOverride || calendar.summary || calendar.id,
+        primary: Boolean(calendar.primary),
+      }))
+      .sort((a, b) => {
+        if (a.primary && !b.primary) return -1;
+        if (!a.primary && b.primary) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+    const storedIds = await getSelectedCalendarIds();
+    const selectedIds = getDefaultSelectedCalendarIds(calendars, storedIds);
+    await saveSelectedCalendarIds(selectedIds);
+
+    return {
+      success: true,
+      calendars: calendars.map((calendar) => ({
+        ...calendar,
+        selected: selectedIds.includes(calendar.id),
+      })),
+    };
+  } catch (error) {
+    console.error('Failed to fetch calendars:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to fetch calendars',
+    };
+  }
+}
+
+export async function fetchCalendarEvents(
+  calendarIdsOrTimeMin = new Date(),
+  timeMinOrTimeMax = null,
+  maybeTimeMax = null
+) {
+  const calendarIds = Array.isArray(calendarIdsOrTimeMin) ? calendarIdsOrTimeMin : null;
+  const timeMin = Array.isArray(calendarIdsOrTimeMin)
+    ? timeMinOrTimeMax || new Date()
+    : calendarIdsOrTimeMin || new Date();
+  const timeMax = Array.isArray(calendarIdsOrTimeMin) ? maybeTimeMax : timeMinOrTimeMax;
+
   // DEV MODE: Return mock data
   if (USE_MOCK_DATA) {
     console.log('[Calendar] Using mock calendar data (DEV MODE)');
-    const events = MOCK_EVENTS.map((event) => ({
-      id: event.id,
-      title: event.summary,
-      location: event.location,
-      startTime: event.start.dateTime,
-      endTime: event.end.dateTime,
-      description: event.description,
-    }));
+    const events = sortEventsByStartTime(
+      MOCK_EVENTS.map((event) => normalizeGoogleEvent(event))
+    );
     
     return {
       success: true,
@@ -62,40 +247,13 @@ export async function fetchCalendarEvents(timeMin = new Date(), timeMax = null) 
       };
     }
 
-    const params = new URLSearchParams({
-      timeMin: timeMin.toISOString(),
-      singleEvents: 'true',
-      orderBy: 'startTime',
-      maxResults: '50',
-    });
-
-    if (timeMax) {
-      params.append('timeMax', timeMax.toISOString());
-    }
-
-    const response = await fetch(
-      `${GOOGLE_CALENDAR_API}/calendars/primary/events?${params}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+    const resolvedCalendarIds = await resolveCalendarIds(calendarIds);
+    const calendarEvents = await Promise.all(
+      resolvedCalendarIds.map((calendarId) =>
+        fetchEventsForCalendar(calendarId, accessToken, timeMin, timeMax)
+      )
     );
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    const events = data.items.map((event) => ({
-      id: event.id,
-      title: event.summary || 'Untitled Event',
-      location: event.location || null,
-      startTime: event.start?.dateTime || event.start?.date,
-      endTime: event.end?.dateTime || event.end?.date,
-      description: event.description || null,
-    }));
+    const events = sortEventsByStartTime(calendarEvents.flat());
 
     return {
       success: true,
@@ -110,16 +268,16 @@ export async function fetchCalendarEvents(timeMin = new Date(), timeMax = null) 
   }
 }
 
-export async function getUpcomingEvents(hoursAhead = 24) {
+export async function getUpcomingEvents(hoursAhead = 24, calendarIds = null) {
   const now = new Date();
   const future = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
   
-  return fetchCalendarEvents(now, future);
+  return fetchCalendarEvents(calendarIds, now, future);
 }
 
-export async function getNextClassEvent() {
+export async function getNextClassEvent(calendarIds = null) {
   try {
-    const result = await getUpcomingEvents(12);
+    const result = await getUpcomingEvents(12, calendarIds);
     
     if (!result.success || !result.events) {
       return null;
@@ -132,7 +290,7 @@ export async function getNextClassEvent() {
       const eventTime = new Date(event.startTime);
       if (eventTime <= now) return false;
       
-      const titleUpper = event.title.toUpperCase();
+      const titleUpper = (event.title || event.summary || '').toUpperCase();
       return classKeywords.some((keyword) => titleUpper.includes(keyword));
     });
 
