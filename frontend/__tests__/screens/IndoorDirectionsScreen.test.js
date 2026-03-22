@@ -256,6 +256,34 @@ describe('IndoorDirectionsScreen', () => {
     expect(getAllByText(/H837.*Hall Building/).length).toBeGreaterThan(0);
   });
 
+  it('should hide search results when start input blurs', () => {
+    const { getByPlaceholderText, getAllByText, queryAllByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    const startInput = getByPlaceholderText('Tap map or search start');
+
+    fireEvent(startInput, 'focus');
+    fireEvent.changeText(startInput, 'H837');
+    expect(getAllByText(/H837.*Hall Building/).length).toBeGreaterThan(0);
+
+    fireEvent(startInput, 'blur');
+    expect(queryAllByText(/H837.*Hall Building/).length).toBe(0);
+  });
+
+  it('should hide search results when destination input blurs', () => {
+    const { getByPlaceholderText, getAllByText, queryAllByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    const destInput = getByPlaceholderText('Tap map or search destination');
+
+    fireEvent(destInput, 'focus');
+    fireEvent.changeText(destInput, 'H837');
+    expect(getAllByText(/H837.*Hall Building/).length).toBeGreaterThan(0);
+
+    fireEvent(destInput, 'blur');
+    expect(queryAllByText(/H837.*Hall Building/).length).toBe(0);
+  });
+
   it('should select a room from search results into start field', () => {
     const { getByPlaceholderText, getAllByText, getByDisplayValue } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
