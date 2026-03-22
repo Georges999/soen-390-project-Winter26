@@ -654,6 +654,54 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         )}
 
         <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}}>
+          {/* Outdoor segment card */}
+          {segmentResults.length > 0 && segmentResults[activeSegmentIndex]?.segment?.type === "outdoor" && (
+            <View style={styles.outdoorCard}>
+              <MaterialIcons name="directions-walk" size={40} color={MAROON} />
+              <Text style={styles.outdoorCardTitle}>Walk between buildings</Text>
+              <Text style={styles.outdoorCardSubtext}>
+                {segmentResults[activeSegmentIndex].segment.fromBuildingId?.toUpperCase()} → {segmentResults[activeSegmentIndex].segment.toBuildingId?.toUpperCase()}
+              </Text>
+              <Pressable
+                style={styles.outdoorNavButton}
+                onPress={() => {
+                  const seg = segmentResults[activeSegmentIndex].segment;
+                  const { BUILDING_META: bm } = require("../data/indoorFloorData");
+                  const startName = bm[seg.fromBuildingId]?.name || seg.fromBuildingId;
+                  const destName = bm[seg.toBuildingId]?.name || seg.toBuildingId;
+                  navigation.navigate("Map", {
+                    outdoorRoute: {
+                      startName,
+                      destName,
+                      startCoords: seg.fromCoords,
+                      destCoords: seg.toCoords,
+                    },
+                  });
+                }}
+              >
+                <MaterialIcons name="map" size={20} color="#fff" />
+                <Text style={styles.outdoorNavButtonText}>Open Outdoor Directions</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Vertical segment card */}
+          {segmentResults.length > 0 && segmentResults[activeSegmentIndex]?.segment?.type === "vertical" && (
+            <View style={styles.outdoorCard}>
+              <MaterialIcons
+                name={segmentResults[activeSegmentIndex].segment.transitionType === "elevator" ? "elevator" : "stairs"}
+                size={40}
+                color={MAROON}
+              />
+              <Text style={styles.outdoorCardTitle}>
+                Take the {segmentResults[activeSegmentIndex].segment.transitionType}
+              </Text>
+              <Text style={styles.outdoorCardSubtext}>
+                Floor {FLOOR_META[segmentResults[activeSegmentIndex].segment.fromFloor]?.floorLabel} → Floor {FLOOR_META[segmentResults[activeSegmentIndex].segment.toFloor]?.floorLabel}
+              </Text>
+            </View>
+          )}
+
           {/* Floor Plan with Route */}
           <Pressable 
             style={styles.floorPlanContainer}
@@ -1327,5 +1375,44 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#888",
     marginTop: 2,
+  },
+  // Outdoor / vertical segment cards
+  outdoorCard: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "#f9f5ef",
+    borderWidth: 1,
+    borderColor: "#e0d8ce",
+  },
+  outdoorCardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 12,
+  },
+  outdoorCardSubtext: {
+    fontSize: 14,
+    color: "#888",
+    marginTop: 4,
+  },
+  outdoorNavButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: MAROON,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    marginTop: 16,
+    gap: 8,
+  },
+  outdoorNavButtonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

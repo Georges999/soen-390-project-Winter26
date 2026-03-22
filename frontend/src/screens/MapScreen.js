@@ -276,6 +276,20 @@ export default function MapScreen({ route }) {
     return normalized.startsWith("my");
   }, [activeField, startText, destText]);
 
+  // Pre-fill outdoor route when navigating from indoor cross-building directions
+  useEffect(() => {
+    const outdoor = route?.params?.outdoorRoute;
+    if (!outdoor) return;
+
+    setStartText(outdoor.startName || "");
+    setDestText(outdoor.destName || "");
+    setHasInteracted(true);
+    setShowDirectionsPanel(true);
+
+    if (outdoor.startCoords) setStartCoord(outdoor.startCoords);
+    if (outdoor.destCoords) setDestCoord(outdoor.destCoords);
+  }, [route?.params?.outdoorRoute]);
+
   //building open and user selects “Directions”
   // Pre-fill destination from Calendar/Next Class and resolve to coords so directions run
   useEffect(() => {
