@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
   View,
@@ -92,24 +92,9 @@ export default function CalendarScreen({ navigation, route }) {
 
   const weekDays = getWeekDays(selectedDate);
   const routeCalendars = route?.params?.calendars;
+  const selectedCalendarIds = route?.params?.selectedCalendarIds;
 
-  useEffect(() => {
-    if (!routeCalendars) {
-      loadWeekEvents(selectedDate);
-    }
-  }, [selectedDate, routeCalendars]);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener?.('focus', () => {
-      if (!routeCalendars) {
-        loadWeekEvents(selectedDate);
-      }
-    });
-
-    return unsubscribe;
-  }, [navigation, routeCalendars, selectedDate]);
-
-  async function loadWeekEvents(referenceDate) {
+  const loadWeekEvents = useCallback(async (referenceDate) => {
     setIsLoading(true);
     setError(null);
 
@@ -124,7 +109,7 @@ export default function CalendarScreen({ navigation, route }) {
 
       const { timeMin, timeMax } = getWeekRange(referenceDate);
       const result = await fetchCalendarEvents(
-        route?.params?.selectedCalendarIds,
+        selectedCalendarIds,
         timeMin,
         timeMax
       );
@@ -138,7 +123,23 @@ export default function CalendarScreen({ navigation, route }) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [selectedCalendarIds]);
+
+  useEffect(() => {
+    if (!routeCalendars) {
+      loadWeekEvents(selectedDate);
+    }
+  }, [loadWeekEvents, routeCalendars, selectedDate]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener?.('focus', () => {
+      if (!routeCalendars) {
+        loadWeekEvents(selectedDate);
+      }
+    });
+
+    return unsubscribe;
+  }, [loadWeekEvents, navigation, routeCalendars, selectedDate]);
 
   const todaysClasses = routeCalendars
     ? getLegacyClassesForDate(routeCalendars, selectedDate)
