@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import IndoorMapScreen from '../../src/screens/IndoorMapScreen';
+import { buildings } from '../../src/data/indoorFloorData';
 
 // Mock the floor plan images
 jest.mock('../../assets/floor-maps/Hall-8-F.png', () => 'hall8img', { virtual: true });
@@ -361,5 +362,54 @@ describe('IndoorMapScreen', () => {
     );
     fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
     expect(getByText(/H837/)).toBeTruthy();
+  });
+
+  // --- Inspect Mode ---
+
+  it('should render inspect map toggle in default state', () => {
+    const { getByText } = render(<IndoorMapScreen navigation={mockNavigation} />);
+    expect(getByText('Inspect map')).toBeTruthy();
+    expect(getByText('zoom-in')).toBeTruthy();
+  });
+
+  it('should toggle inspect mode on and off', () => {
+    const { getByText, queryByText } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+
+    fireEvent.press(getByText('Inspect map'));
+    expect(getByText('Inspecting map')).toBeTruthy();
+    expect(getByText('zoom-out-map')).toBeTruthy();
+
+    fireEvent.press(getByText('Inspecting map'));
+    expect(getByText('Inspect map')).toBeTruthy();
+    expect(queryByText('Inspecting map')).toBeNull();
+  });
+
+  it('should keep the room highlight visible in inspect mode', () => {
+    const { getByPlaceholderText, getByText, getByTestId } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H837');
+    fireEvent.press(getByText(/H837/));
+    fireEvent.press(getByText('Inspect map'));
+
+    expect(getByText('Inspecting map')).toBeTruthy();
+    expect(getByTestId('selected-room-highlight')).toBeTruthy();
+  });
+
+  it('should show fallback when floor plan image is missing', () => {
+    const originalImage = buildings.sgw[0].floors[0].image;
+    buildings.sgw[0].floors[0].image = null;
+
+    try {
+      const { getByText } = render(
+        <IndoorMapScreen navigation={mockNavigation} />
+      );
+      expect(getByText('Floor plan not available')).toBeTruthy();
+    } finally {
+      buildings.sgw[0].floors[0].image = originalImage;
+    }
   });
 });

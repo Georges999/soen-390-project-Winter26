@@ -1,0 +1,3 @@
+ignore:
+  - "frontend/__tests__/**"
+  - "backend/**/__tests__/**"

@@ -1,0 +1,615 @@
+{
+  "version": 2,
+  "exportedAt": "2026-03-18T21:55:34.466Z",
+  "floors": {
+    "CC1-red": {
+      "label": "CC – Floor 1 (Red)",
+      "image": "CC1-Red.png",
+      "width": 1536,
+      "height": 1024,
+      "nodes": [
+        {
+          "id": "CC1red_hallway_001",
+          "type": "hallway",
+          "x": 170.3,
+          "y": 457.22,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_hallway_002",
+          "type": "hallway",
+          "x": 421.91,
+          "y": 458.32,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_hallway_003",
+          "type": "hallway",
+          "x": 708.67,
+          "y": 455.02,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_hallway_004",
+          "type": "hallway",
+          "x": 903.15,
+          "y": 453.92,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_hallway_005",
+          "type": "hallway",
+          "x": 1118.5,
+          "y": 453.92,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_hallway_006",
+          "type": "hallway",
+          "x": 1118.5,
+          "y": 453.92,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_hallway_007",
+          "type": "hallway",
+          "x": 1291,
+          "y": 451.73,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_hallway_008",
+          "type": "hallway",
+          "x": 1396.47,
+          "y": 450.63,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        }
+      ],
+      "edges": [
+        {
+          "from": "CC1red_stairs_001",
+          "to": "CC1red_hallway_001",
+          "weight": 61.07
+        },
+        {
+          "from": "CC1red_hallway_001",
+          "to": "CC1red_washroom_001",
+          "weight": 67.46
+        },
+        {
+          "from": "CC1red_hallway_001",
+          "to": "CC1red_classroom_015",
+          "weight": 83.46
+        },
+        {
+          "from": "CC1red_hallway_001",
+          "to": "CC1red_classroom_001",
+          "weight": 108.13
+        },
+        {
+          "from": "CC1red_hallway_001",
+          "to": "CC1red_hallway_002",
+          "weight": 251.61
+        },
+        {
+          "from": "CC1red_hallway_002",
+          "to": "CC1red_classroom_002",
+          "weight": 73.91
+        },
+        {
+          "from": "CC1red_hallway_002",
+          "to": "CC1red_classroom_014",
+          "weight": 75.51
+        },
+        {
+          "from": "CC1red_hallway_002",
+          "to": "CC1red_hallway_003",
+          "weight": 286.78
+        },
+        {
+          "from": "CC1red_hallway_003",
+          "to": "CC1red_classroom_013",
+          "weight": 123.73
+        },
+        {
+          "from": "CC1red_hallway_003",
+          "to": "CC1red_classroom_003",
+          "weight": 136.42
+        },
+        {
+          "from": "CC1red_hallway_003",
+          "to": "CC1red_hallway_004",
+          "weight": 194.48
+        },
+        {
+          "from": "CC1red_hallway_004",
+          "to": "CC1red_classroom_004",
+          "weight": 119.16
+        },
+        {
+          "from": "CC1red_hallway_004",
+          "to": "CC1red_classroom_005",
+          "weight": 65.96
+        },
+        {
+          "from": "CC1red_hallway_004",
+          "to": "CC1red_classroom_012",
+          "weight": 81.35
+        },
+        {
+          "from": "CC1red_hallway_004",
+          "to": "CC1red_hallway_005",
+          "weight": 215.35
+        },
+        {
+          "from": "CC1red_hallway_005",
+          "to": "CC1red_classroom_011",
+          "weight": 91.46
+        },
+        {
+          "from": "CC1red_hallway_005",
+          "to": "CC1red_classroom_006",
+          "weight": 60.11
+        },
+        {
+          "from": "CC1red_hallway_005",
+          "to": "CC1red_stairs_002",
+          "weight": 83.14
+        },
+        {
+          "from": "CC1red_hallway_005",
+          "to": "CC1red_hallway_007",
+          "weight": 172.51
+        },
+        {
+          "from": "CC1red_hallway_007",
+          "to": "CC1red_classroom_007",
+          "weight": 117.62
+        },
+        {
+          "from": "CC1red_hallway_005",
+          "to": "CC1red_classroom_010",
+          "weight": 74.85
+        },
+        {
+          "from": "CC1red_hallway_007",
+          "to": "CC1red_classroom_009",
+          "weight": 76.95
+        },
+        {
+          "from": "CC1red_hallway_007",
+          "to": "CC1red_hallway_008",
+          "weight": 105.48
+        },
+        {
+          "from": "CC1red_hallway_007",
+          "to": "CC1red_washroom_002",
+          "weight": 61.5
+        },
+        {
+          "from": "CC1red_hallway_008",
+          "to": "CC1red_classroom_008",
+          "weight": 62.89
+        },
+        {
+          "from": "CC1red_hallway_008",
+          "to": "CC1red_stairs_003",
+          "weight": 39.39
+        }
+      ],
+      "rooms": [
+        {
+          "id": "CC1red_classroom_001",
+          "type": "classroom",
+          "x": 250.51,
+          "y": 384.7,
+          "label": "CC-122",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_002",
+          "type": "classroom",
+          "x": 407.63,
+          "y": 385.8,
+          "label": "CC-120",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_003",
+          "type": "classroom",
+          "x": 591.11,
+          "y": 385.8,
+          "label": "CC-116",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_004",
+          "type": "classroom",
+          "x": 803.16,
+          "y": 389.1,
+          "label": "CC-112-1",
+          "nodeSize": 8,
+          "labelSize": 10
+        },
+        {
+          "id": "CC1red_classroom_005",
+          "type": "classroom",
+          "x": 905.35,
+          "y": 388,
+          "label": "CC-112",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_006",
+          "type": "classroom",
+          "x": 1099.82,
+          "y": 396.79,
+          "label": "CC-115",
+          "nodeSize": 8,
+          "labelSize": 9
+        },
+        {
+          "id": "CC1red_classroom_007",
+          "type": "classroom",
+          "x": 1188.81,
+          "y": 393.49,
+          "label": "CC-106",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_008",
+          "type": "classroom",
+          "x": 1375.6,
+          "y": 391.3,
+          "label": "CC-102",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_009",
+          "type": "classroom",
+          "x": 1277.81,
+          "y": 527.54,
+          "label": "CC-101",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_010",
+          "type": "classroom",
+          "x": 1114.1,
+          "y": 528.64,
+          "label": "CC-107",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_011",
+          "type": "classroom",
+          "x": 1065.76,
+          "y": 528.64,
+          "label": "CC-109",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_012",
+          "type": "classroom",
+          "x": 880.07,
+          "y": 531.93,
+          "label": "CC-111",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_013",
+          "type": "classroom",
+          "x": 610.89,
+          "y": 530.83,
+          "label": "CC-115",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_014",
+          "type": "classroom",
+          "x": 410.92,
+          "y": 533.03,
+          "label": "CC-117",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_015",
+          "type": "classroom",
+          "x": 193.37,
+          "y": 537.43,
+          "label": "CC-119",
+          "nodeSize": 8,
+          "labelSize": 13
+        }
+      ],
+      "pois": [
+        {
+          "id": "CC1red_stairs_001",
+          "type": "stairs",
+          "x": 109.87,
+          "y": 466.01,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_stairs_002",
+          "type": "stairs",
+          "x": 1060.26,
+          "y": 394.59,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_stairs_003",
+          "type": "stairs",
+          "x": 1432.73,
+          "y": 466.01,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_washroom_001",
+          "type": "washroom",
+          "x": 151.62,
+          "y": 392.4,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_washroom_002",
+          "type": "washroom",
+          "x": 1310.77,
+          "y": 393.49,
+          "label": "",
+          "nodeSize": 8,
+          "labelSize": 13
+        }
+      ],
+      "annotations": [
+        {
+          "id": "anno_1773869496574_wcna",
+          "kind": "text",
+          "text": "CC-122",
+          "x": 281.1718384490573,
+          "y": 323.20113125364895,
+          "size": 18,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869508590_g0fp",
+          "kind": "text",
+          "text": "CC-120",
+          "x": 421.1846391540313,
+          "y": 324.88847871793877,
+          "size": 18,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869517241_eqzu",
+          "kind": "text",
+          "text": "CC-116",
+          "x": 628.0731185195548,
+          "y": 324.53200356128133,
+          "size": 18,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869525825_jmvo",
+          "kind": "text",
+          "text": "CC-112-1",
+          "x": 826.974398590052,
+          "y": 359.6782375783287,
+          "size": 18,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869533748_pos1",
+          "kind": "text",
+          "text": "CC-112",
+          "x": 957.8628779555756,
+          "y": 326.7769574358775,
+          "size": 18,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869546128_cx4v",
+          "kind": "text",
+          "text": "CC-155",
+          "x": 1116.7897594360209,
+          "y": 381.8025602849025,
+          "size": 13,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869574791_o7yk",
+          "kind": "text",
+          "text": "CC-106",
+          "x": 1211.9487971801043,
+          "y": 325.4679964387187,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869584789_8now",
+          "kind": "text",
+          "text": "CC-102",
+          "x": 1382.1297506238463,
+          "y": 382.2961595726463,
+          "size": 13,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869600717_zupx",
+          "kind": "text",
+          "text": "CC-101",
+          "x": 1298.5667181670676,
+          "y": 611.7641560113649,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869612851_8zwy",
+          "kind": "text",
+          "text": "CC-107",
+          "x": 1131.5411167571199,
+          "y": 552.7897588603901,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869619366_mz2h",
+          "kind": "text",
+          "text": "CC-109",
+          "x": 1103.979827874448,
+          "y": 619.36927658117,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869626185_h28y",
+          "kind": "text",
+          "text": "CC-111",
+          "x": 909.4387111173281,
+          "y": 614.3089609971587,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869642519_71nr",
+          "kind": "text",
+          "text": "CC-115",
+          "x": 638.3820790130364,
+          "y": 609.7897588603901,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869648572_qh1m",
+          "kind": "text",
+          "text": "CC-117",
+          "x": 422.72575591115105,
+          "y": 604.009109885961,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869662839_xz4m",
+          "kind": "text",
+          "text": "CC-119",
+          "x": 225.88479365523443,
+          "y": 605.5977374927021,
+          "size": 17,
+          "color": "#ffffff",
+          "bold": true,
+          "italic": false,
+          "bg": "none",
+          "rotation": 0
+        },
+        {
+          "id": "anno_1773869681212_5c8f",
+          "kind": "emoji",
+          "text": "🚻",
+          "x": 1336.0859192245287,
+          "y": 328.03840427353754,
+          "size": 28
+        },
+        {
+          "id": "anno_1773869686996_e7jg",
+          "kind": "emoji",
+          "text": "🚻",
+          "x": 161.5667181670677,
+          "y": 340.605120569805,
+          "size": 28
+        }
+      ]
+    }
+  }
+}

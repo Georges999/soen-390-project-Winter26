@@ -54,6 +54,7 @@ jobs:
         with:
           use_oidc: true
           files: frontend/coverage/lcov.info
+          codecov_yml_path: ./codecov.yml
           flags: frontend
           name: frontend-coverage
           fail_ci_if_error: true
