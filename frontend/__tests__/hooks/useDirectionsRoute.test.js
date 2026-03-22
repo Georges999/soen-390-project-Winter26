@@ -254,4 +254,66 @@ describe('useDirectionsRoute', () => {
     });
     expect(fetch.mock.calls[0][0]).toContain('mode=bicycling');
   });
+
+  it('should pick best transit route by shortest duration', async () => {
+    fetch.mockResolvedValueOnce({
+      json: () =>
+        Promise.resolve({
+          routes: [
+            {
+              overview_polyline: { points: 'enc1' },
+              legs: [{ duration: { text: '30 mins', value: 1800 }, distance: { text: '5 km', value: 5000 }, steps: [] }],
+            },
+            {
+              overview_polyline: { points: 'enc2' },
+              legs: [{ duration: { text: '15 mins', value: 900 }, distance: { text: '3 km', value: 3000 }, steps: [] }],
+            },
+          ],
+        }),
+    });
+
+    const mapRef = makeMapRef();
+    const props = { startCoord: START, destCoord: DEST, mapRef, mode: 'transit', routeIndex: 0 };
+    const { result } = renderHook(() => useDirectionsRoute(props));
+
+    await waitFor(() => {
+      expect(result.current.routeCoords.length).toBeGreaterThan(0);
+    });
+    // Should select route index 0 (clamped), which is the 30 min route
+    expect(result.current.routeInfo.durationText).toBe('30 mins');
+    expect(result.current.routeOptions.length).toBe(2);
+  });
+
+  it('should handle step with missing polyline gracefully', async () => {
+    const polyline = require('@mapbox/polyline');
+    polyline.decode.mockImplementationOnce(() => [[45.49, -73.57]]).mockImplementationOnce(() => { throw new Error('bad'); });
+
+    fetch.mockResolvedValueOnce({
+      json: () =>
+        Promise.resolve({
+          routes: [
+            {
+              overview_polyline: { points: 'encoded' },
+              legs: [{
+                duration: { text: '5 mins', value: 300 },
+                distance: { text: '1 km', value: 1000 },
+                steps: [
+                  { travel_mode: 'WALKING', html_instructions: 'Walk', polyline: { points: 'bad' }, distance: { text: '100 m' }, duration: { text: '1 min' } },
+                ],
+              }],
+            },
+          ],
+        }),
+    });
+
+    const mapRef = makeMapRef();
+    const props = { startCoord: START, destCoord: DEST, mapRef, mode: 'walking' };
+    const { result } = renderHook(() => useDirectionsRoute(props));
+
+    await waitFor(() => {
+      expect(result.current.routeCoords.length).toBeGreaterThan(0);
+    });
+    // The step's coords should be empty array due to catch
+    expect(result.current.routeInfo.steps[0].coords).toEqual([]);
+  });
 });

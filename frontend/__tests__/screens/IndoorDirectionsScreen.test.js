@@ -3,6 +3,8 @@ import { render, fireEvent } from '@testing-library/react-native';
 import IndoorDirectionsScreen from '../../src/screens/IndoorDirectionsScreen';
 
 // Mock the floor plan images
+jest.mock('../../assets/floor-maps/Hall-1-F.png', () => 'hall1img', { virtual: true });
+jest.mock('../../assets/floor-maps/Hall-2-F.png', () => 'hall2img', { virtual: true });
 jest.mock('../../assets/floor-maps/Hall-8-F.png', () => 'hall8img', { virtual: true });
 jest.mock('../../assets/floor-maps/Hall-9-F.png', () => 'hall9img', { virtual: true });
 jest.mock('../../assets/floor-maps/MB-1.png', () => 'mb1img', { virtual: true });
@@ -40,6 +42,15 @@ const mockFindShortestPath = jest.fn().mockReturnValue({
 
 jest.mock('../../src/utils/pathfinding/pathfinding', () => ({
   findShortestPath: (...args) => mockFindShortestPath(...args),
+}));
+
+// Mock crossFloorRouter with controllable fns
+const mockClassifyRoute = jest.fn().mockReturnValue(null);
+const mockBuildRouteSegments = jest.fn().mockReturnValue([]);
+
+jest.mock('../../src/utils/pathfinding/crossFloorRouter', () => ({
+  classifyRoute: (...args) => mockClassifyRoute(...args),
+  buildRouteSegments: (...args) => mockBuildRouteSegments(...args),
 }));
 
 const mockNavigation = {
@@ -540,5 +551,338 @@ describe('IndoorDirectionsScreen', () => {
     );
     // The floor plan container is pressable
     expect(getByText('Indoor Directions')).toBeTruthy();
+  });
+
+  // ===================================================================
+  // Cross-floor / cross-building tests
+  // ===================================================================
+
+  describe('cross-floor navigation', () => {
+    const crossFloorRoute = {
+      params: {
+        startRoom: { id: 'Hall8_classroom_002', label: 'H837', floor: 'Hall-8', x: 100, y: 200, type: 'classroom', buildingId: 'hall', buildingName: 'Hall Building' },
+        destinationRoom: { id: 'Hall9_classroom_001', label: 'H961', floor: 'Hall-9', x: 150, y: 250, type: 'classroom', buildingId: 'hall', buildingName: 'Hall Building' },
+        building: {
+          id: 'hall',
+          label: 'H',
+          name: 'Hall Building',
+          floors: [
+            { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+            { id: 'Hall-9', label: '9', floorNumber: 9, image: 'hall9img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+          ],
+          rooms: [],
+        },
+        floor: { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+      },
+    };
+
+    const indoorSegFloor8 = {
+      type: 'indoor',
+      floorId: 'Hall-8',
+      buildingId: 'hall',
+      fromNodeId: 'Hall8_classroom_002',
+      toNodeId: 'Hall8_stairs_001',
+    };
+
+    const verticalSeg = {
+      type: 'vertical',
+      buildingId: 'hall',
+      fromFloor: 'Hall-8',
+      toFloor: 'Hall-9',
+      transitionType: 'stairs',
+      transitionNodeStart: 'Hall8_stairs_001',
+      transitionNodeEnd: 'Hall9_stairs_001',
+    };
+
+    const indoorSegFloor9 = {
+      type: 'indoor',
+      floorId: 'Hall-9',
+      buildingId: 'hall',
+      fromNodeId: 'Hall9_stairs_001',
+      toNodeId: 'Hall9_classroom_001',
+    };
+
+    const outdoorSeg = {
+      type: 'outdoor',
+      fromBuildingId: 'hall',
+      toBuildingId: 'mb',
+      fromCoords: { lat: 45.497, lng: -73.579 },
+      toCoords: { lat: 45.495, lng: -73.578 },
+    };
+
+    const elevatorVerticalSeg = {
+      type: 'vertical',
+      buildingId: 'hall',
+      fromFloor: 'Hall-8',
+      toFloor: 'Hall-9',
+      transitionType: 'elevator',
+      transitionNodeStart: 'Hall8_elevator_001',
+      transitionNodeEnd: 'Hall9_elevator_001',
+    };
+
+    it('should show transition prompt when routeType is cross-floor and no preference set', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      expect(getByText(/requires changing floors/)).toBeTruthy();
+    });
+
+    it('should open the transition modal when prompt is pressed', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      fireEvent.press(getByText(/requires changing floors/));
+      expect(getByText('How would you like to change floors?')).toBeTruthy();
+    });
+
+    it('should select stairs from the transition modal', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText, queryByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      fireEvent.press(getByText(/requires changing floors/));
+      fireEvent.press(getByText('Stairs'));
+      // Modal should close
+      expect(queryByText('How would you like to change floors?')).toBeNull();
+      // Prompt should disappear since transitionPref is now set
+      expect(queryByText(/requires changing floors/)).toBeNull();
+    });
+
+    it('should select elevator from the transition modal', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText, queryByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      fireEvent.press(getByText(/requires changing floors/));
+      fireEvent.press(getByText('Elevator'));
+      expect(queryByText('How would you like to change floors?')).toBeNull();
+      expect(queryByText(/requires changing floors/)).toBeNull();
+    });
+
+    it('should render segment tabs for multi-segment cross-floor route', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'stairs' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      // Segment tabs labels
+      expect(getByText('Stairs')).toBeTruthy();
+    });
+
+    it('should switch active segment when tab is pressed', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 200,
+        reason: null,
+      });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      // Press the Stairs tab (vertical segment)
+      fireEvent.press(getByText('Stairs'));
+      // Should not crash — segment switched
+      expect(getByText('Indoor Directions')).toBeTruthy();
+    });
+
+    it('should render vertical segment card when vertical tab is active', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([verticalSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no indoor path' });
+      const { getAllByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      expect(getAllByText(/Take the stairs/).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should render elevator vertical segment card', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([elevatorVerticalSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no indoor path' });
+      const { getAllByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      expect(getAllByText(/Take the elevator/).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should show cross-floor direction steps with floor labels', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      expect(getByText(/Start at H837/)).toBeTruthy();
+      expect(getByText(/Arrive at H961/)).toBeTruthy();
+    });
+
+    it('should set transitionPref to elevator when accessibility is toggled on', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByTestId, queryByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      // Toggle accessibility on
+      fireEvent(getByTestId('accessibility-switch'), 'valueChange', true);
+      // transitionPref should now be elevator → prompt should disappear
+      expect(queryByText(/requires changing floors/)).toBeNull();
+    });
+
+    it('should show transition prompt for cross-building route', () => {
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      expect(getByText(/requires changing floors/)).toBeTruthy();
+    });
+  });
+
+  describe('outdoor segment', () => {
+    const outdoorSeg = {
+      type: 'outdoor',
+      fromBuildingId: 'hall',
+      toBuildingId: 'mb',
+      fromCoords: { lat: 45.497, lng: -73.579 },
+      toCoords: { lat: 45.495, lng: -73.578 },
+    };
+
+    const crossBuildingRoute = {
+      params: {
+        startRoom: { id: 'Hall8_classroom_002', label: 'H837', floor: 'Hall-8', x: 100, y: 200, type: 'classroom', buildingId: 'hall' },
+        destinationRoom: { id: 'MB1_classroom_001', label: 'MB101', floor: 'MB-1', x: 100, y: 200, type: 'classroom', buildingId: 'mb' },
+        building: {
+          id: 'hall',
+          label: 'H',
+          name: 'Hall Building',
+          floors: [
+            { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+          ],
+          rooms: [],
+        },
+        floor: { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+      },
+    };
+
+    it('should render outdoor segment card when active segment is outdoor', () => {
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
+      );
+      expect(getByText('Walk between buildings')).toBeTruthy();
+      expect(getByText(/HALL.*MB/)).toBeTruthy();
+    });
+
+    it('should navigate to Map screen when outdoor directions button pressed', () => {
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
+      );
+      fireEvent.press(getByText('Open Outdoor Directions'));
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', expect.objectContaining({
+        outdoorRoute: expect.objectContaining({
+          startCoords: outdoorSeg.fromCoords,
+          destCoords: outdoorSeg.toCoords,
+        }),
+      }));
+    });
+
+    it('should show outdoor step in cross-building direction steps', () => {
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
+      );
+      expect(getByText(/Walk outside to the MB building/)).toBeTruthy();
+    });
+  });
+
+  describe('cross-floor pathResult fallback', () => {
+    const crossRoute = {
+      params: {
+        startRoom: { id: 'Hall8_classroom_002', label: 'H837', floor: 'Hall-8', x: 100, y: 200, type: 'classroom' },
+        destinationRoom: { id: 'Hall9_classroom_001', label: 'H961', floor: 'Hall-9', x: 200, y: 300, type: 'classroom' },
+        building: {
+          id: 'hall',
+          label: 'H',
+          name: 'Hall Building',
+          floors: [
+            { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+            { id: 'Hall-9', label: '9', floorNumber: 9, image: 'hall9img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+          ],
+          rooms: [],
+        },
+        floor: { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+      },
+    };
+
+    it('should show fallback error when all segment results fail', () => {
+      const vertSeg = { type: 'vertical', fromFloor: 'Hall-8', toFloor: 'Hall-9', transitionType: 'stairs' };
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([vertSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
+      const { getAllByText } = render(
+        <IndoorDirectionsScreen route={crossRoute} navigation={mockNavigation} />
+      );
+      // Should show -- stats
+      expect(getAllByText('--').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should use first ok indoor segment result when activeSegment has no indoor path', () => {
+      const indoor1 = { type: 'indoor', floorId: 'Hall-8', buildingId: 'hall', fromNodeId: 'a', toNodeId: 'b' };
+      const vertSeg = { type: 'vertical', fromFloor: 'Hall-8', toFloor: 'Hall-9', transitionType: 'stairs' };
+      const indoor2 = { type: 'indoor', floorId: 'Hall-9', buildingId: 'hall', fromNodeId: 'c', toNodeId: 'd' };
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoor1, vertSeg, indoor2]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 200,
+        reason: null,
+      });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossRoute} navigation={mockNavigation} />
+      );
+      // Should show route stats (not --)
+      expect(getByText(/min/)).toBeTruthy();
+    });
   });
 });

@@ -9,7 +9,6 @@ import {
   ScrollView,
   Dimensions,
   SafeAreaView,
-  FlatList,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { buildings, POI_ICONS } from "../data/indoorFloorData";
@@ -232,6 +231,8 @@ export default function IndoorMapScreen({ navigation }) {
           <Text style={styles.headerTitle}>Indoor Map</Text>
         </View>
 
+        <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
         {/* Campus Toggle */}
         <View style={styles.campusToggleContainer}>
           <Pressable
@@ -289,11 +290,10 @@ export default function IndoorMapScreen({ navigation }) {
         {searchQuery.trim().length > 0 && (
           <View style={styles.searchResultsContainer}>
             {searchResults.length > 0 ? (
-              <FlatList
-                data={searchResults.slice(0, 8)}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
+              <View>
+                {searchResults.slice(0, 8).map((item) => (
                   <Pressable
+                    key={item.id}
                     style={styles.searchResultItem}
                     onPress={() => handleRoomSelect(item)}
                   >
@@ -301,9 +301,8 @@ export default function IndoorMapScreen({ navigation }) {
                       {item.label} · {item.buildingName}
                     </Text>
                   </Pressable>
-                )}
-                keyboardShouldPersistTaps="handled"
-              />
+                ))}
+              </View>
             ) : (
               <View style={styles.noResultsContainer}>
                 <MaterialIcons name="search-off" size={24} color="#999" />
@@ -445,6 +444,8 @@ export default function IndoorMapScreen({ navigation }) {
             </ScrollView>
           </View>
         )}
+
+        </ScrollView>
       </View>
     </SafeAreaView>
   );

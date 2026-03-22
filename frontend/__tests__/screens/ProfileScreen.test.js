@@ -1,9 +1,12 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import ProfileScreen from '../../src/screens/ProfileScreen';
 import * as googleCalendarAuth from '../../src/services/googleCalendarAuth';
+import * as googleCalendarService from '../../src/services/googleCalendarService';
 
 jest.mock('../../src/services/googleCalendarAuth');
+jest.mock('../../src/services/googleCalendarService');
 
 const mockNavigation = {
   navigate: jest.fn(),
@@ -15,6 +18,10 @@ describe('ProfileScreen', () => {
     googleCalendarAuth.isAuthenticated.mockResolvedValue(false);
     googleCalendarAuth.authenticateWithGoogle.mockResolvedValue({ success: true });
     googleCalendarAuth.disconnectCalendar.mockResolvedValue();
+    googleCalendarService.exportEventsToGoogleCalendar.mockResolvedValue({
+      success: true,
+      exportedCount: 0,
+    });
   });
 
   it('should render Profile title', async () => {
@@ -174,6 +181,49 @@ describe('ProfileScreen', () => {
 
     await waitFor(() => {
       expect(getByText('Sync Your Class')).toBeTruthy();
+    });
+  });
+
+  it('should show alert when export fails after connect', async () => {
+    jest.spyOn(Alert, 'alert');
+    googleCalendarAuth.authenticateWithGoogle.mockResolvedValue({ success: true });
+    googleCalendarService.exportEventsToGoogleCalendar.mockResolvedValue({
+      success: false,
+      error: 'Export quota exceeded',
+    });
+
+    const { getByText } = render(<ProfileScreen navigation={mockNavigation} />);
+    await waitFor(() => expect(getByText('Connect')).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(getByText('Connect'));
+    });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith('Export Failed', 'Export quota exceeded');
+    });
+  });
+
+  it('should show alert when export succeeds after connect', async () => {
+    jest.spyOn(Alert, 'alert');
+    googleCalendarAuth.authenticateWithGoogle.mockResolvedValue({ success: true });
+    googleCalendarService.exportEventsToGoogleCalendar.mockResolvedValue({
+      success: true,
+      exportedCount: 5,
+    });
+
+    const { getByText } = render(<ProfileScreen navigation={mockNavigation} />);
+    await waitFor(() => expect(getByText('Connect')).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(getByText('Connect'));
+    });
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Calendar Synced',
+        '5 event(s) exported to Google Calendar',
+      );
     });
   });
 });

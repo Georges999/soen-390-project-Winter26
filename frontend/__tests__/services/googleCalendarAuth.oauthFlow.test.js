@@ -181,3 +181,84 @@ describe("googleCalendarAuth OAuth flows", () => {
     expect(result).toEqual({ success: false, error: "oauth boom" });
   });
 });
+
+/* ------------------------------------------------------------------ */
+/*  Production getClientId paths (__DEV__ = false)                    */
+/* ------------------------------------------------------------------ */
+describe("googleCalendarAuth – production getClientId", () => {
+  afterAll(() => {
+    process.env = ORIGINAL_ENV;
+    global.__DEV__ = true;
+  });
+
+  function setupProd(platformOS, envOverrides = {}) {
+    jest.resetModules();
+    global.__DEV__ = false;
+    process.env = {
+      ...ORIGINAL_ENV,
+      EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH: "false",
+      EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: "web_cid",
+      ...envOverrides,
+    };
+
+    const secureStore = {
+      setItemAsync: jest.fn().mockResolvedValue(),
+      getItemAsync: jest.fn().mockResolvedValue(null),
+      deleteItemAsync: jest.fn().mockResolvedValue(),
+    };
+    const promptAsyncFn = jest.fn().mockResolvedValue({
+      type: "success",
+      params: { access_token: "prompt_tok", expires_in: "3600" },
+    });
+    const AuthReq = jest.fn().mockImplementation(() => ({
+      codeVerifier: "cv",
+      promptAsync: promptAsyncFn,
+      makeAuthUrlAsync: jest.fn().mockResolvedValue("https://auth"),
+      parseReturnUrl: jest.fn().mockReturnValue({
+        type: "success",
+        params: { access_token: "proxy_tok", expires_in: "3600" },
+      }),
+    }));
+
+    jest.doMock("expo-secure-store", () => secureStore, { virtual: true });
+    jest.doMock(
+      "expo-auth-session",
+      () => ({
+        AuthRequest: AuthReq,
+        ResponseType: { Code: "code", Token: "token" },
+        makeRedirectUri: jest.fn().mockReturnValue("https://redirect/"),
+        getDefaultReturnUrl: jest.fn().mockReturnValue("exp://return"),
+        exchangeCodeAsync: jest.fn(),
+        refreshAsync: jest.fn(),
+      }),
+      { virtual: true },
+    );
+    jest.doMock("expo-web-browser", () => ({
+      maybeCompleteAuthSession: jest.fn(),
+      openAuthSessionAsync: jest.fn().mockResolvedValue({
+        type: "success",
+        url: "exp://return#ok",
+      }),
+    }), { virtual: true });
+    jest.doMock("expo-constants", () => ({
+      expoConfig: { owner: "test", slug: "campus-guide" },
+    }), { virtual: true });
+    jest.doMock("react-native", () => ({
+      Platform: { OS: platformOS },
+    }), { virtual: true });
+
+    const mod = require("../../src/services/googleCalendarAuth");
+    const { AuthRequest } = require("expo-auth-session");
+    return { mod, AuthRequest, promptAsync: promptAsyncFn };
+  }
+
+  it("uses iOS client ID in production", async () => {
+    const { mod, AuthRequest } = setupProd("ios", {
+      EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: "ios_cid",
+    });
+    await mod.authenticateWithGoogle();
+    expect(AuthRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ clientId: "ios_cid" }),
+    );
+  });
+});

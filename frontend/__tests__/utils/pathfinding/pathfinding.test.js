@@ -542,4 +542,87 @@ describe("findShortestPath", () => {
     expect(result.ok).toBe(false);
     expect(result.reason).toMatch(/elevator/i);
   });
+
+  it("finds nearest stairs on cross-floor non-accessible routing", () => {
+    const multiFloor = {
+      floors: {
+        F1: {
+          label: "F1",
+          nodes: [
+            { id: "f1_hall", type: "hallway", x: 0, y: 0 },
+            { id: "f1_stairs", type: "stairs", x: 50, y: 0 },
+          ],
+          rooms: [
+            { id: "f1_room", type: "classroom", x: 10, y: 0, label: "101" },
+          ],
+          pois: [],
+          edges: [
+            { from: "f1_room", to: "f1_hall", weight: 10 },
+            { from: "f1_hall", to: "f1_stairs", weight: 50 },
+          ],
+        },
+        F2: {
+          label: "F2",
+          nodes: [{ id: "f2_hall", type: "hallway", x: 0, y: 0 }],
+          rooms: [
+            { id: "f2_room", type: "classroom", x: 10, y: 0, label: "201" },
+          ],
+          pois: [],
+          edges: [{ from: "f2_room", to: "f2_hall", weight: 10 }],
+        },
+      },
+    };
+
+    const result = findShortestPath({
+      floorsData: multiFloor,
+      startNodeId: "f1_room",
+      endNodeId: "f2_room",
+      accessible: false,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.pathNodeIds).toContain("f1_stairs");
+  });
+
+  it("picks nearest among multiple stairs and elevators on same floor", () => {
+    const multiFloor = {
+      floors: {
+        F1: {
+          label: "F1",
+          nodes: [
+            { id: "f1_hall", type: "hallway", x: 0, y: 0 },
+            { id: "stairs_near", type: "stairs", x: 10, y: 0 },
+            { id: "stairs_far", type: "stairs", x: 200, y: 0 },
+            { id: "elev_mid", type: "elevator", x: 100, y: 0 },
+          ],
+          rooms: [
+            { id: "f1_room", type: "classroom", x: 5, y: 0, label: "101" },
+          ],
+          pois: [],
+          edges: [
+            { from: "f1_room", to: "f1_hall", weight: 5 },
+            { from: "f1_hall", to: "stairs_near", weight: 10 },
+            { from: "stairs_near", to: "stairs_far", weight: 190 },
+            { from: "stairs_near", to: "elev_mid", weight: 90 },
+          ],
+        },
+        F2: {
+          label: "F2",
+          nodes: [{ id: "f2_hall", type: "hallway", x: 0, y: 0 }],
+          rooms: [{ id: "f2_room", type: "classroom", x: 10, y: 0, label: "201" }],
+          pois: [],
+          edges: [{ from: "f2_room", to: "f2_hall", weight: 10 }],
+        },
+      },
+    };
+
+    // Non-accessible: should prefer nearest stairs
+    const result = findShortestPath({
+      floorsData: multiFloor,
+      startNodeId: "f1_room",
+      endNodeId: "f2_room",
+      accessible: false,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.pathNodeIds).toContain("stairs_near");
+  });
 });

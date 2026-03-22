@@ -64,14 +64,16 @@ describe('IndoorMapScreen', () => {
 
   it('should render floor selector buttons', () => {
     const { getByText } = render(<IndoorMapScreen navigation={mockNavigation} />);
-    // SGW default => Hall Building with floors 8 and 9
+    // SGW default => Hall Building with floors 1, 2, 8, 9
+    expect(getByText('1')).toBeTruthy();
+    expect(getByText('2')).toBeTruthy();
     expect(getByText('8')).toBeTruthy();
     expect(getByText('9')).toBeTruthy();
   });
 
   it('should show the floor label badge for default floor', () => {
     const { getByText } = render(<IndoorMapScreen navigation={mockNavigation} />);
-    expect(getByText('Floor 8')).toBeTruthy();
+    expect(getByText('Floor 1')).toBeTruthy();
   });
 
   it('should render building selector chips for SGW', () => {
@@ -346,12 +348,12 @@ describe('IndoorMapScreen', () => {
   // --- Search by building name ---
 
   it('should search rooms by building name', () => {
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, getAllByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />
     );
     fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'Hall');
-    // Should show Hall Building rooms
-    expect(getByText(/H837/)).toBeTruthy();
+    // Should show Hall Building rooms (any room starting with H)
+    expect(getAllByText(/^H\d/)[0]).toBeTruthy();
   });
 
   // --- Search by room ID ---

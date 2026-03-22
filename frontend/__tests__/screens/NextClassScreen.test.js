@@ -1,103 +1,136 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+
+// Fix system time to Wednesday June 18, 2025 at 10:00 AM for deterministic tests.
+// This ensures the mock events below always match "today" (Wednesday) and are
+// always in the future (14:00 > 10:00).
+beforeAll(() => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date(2025, 5, 18, 10, 0, 0));
+});
+afterAll(() => jest.useRealTimers());
+
+// Deterministic mock calendars. One selected calendar with a Wednesday class at
+// 14:00, events with no BYDAY and no recurrence to exercise getByDay guards,
+// and one unselected calendar to verify filter logic.
+jest.mock('../../src/data/mockCalendars.json', () => ({
+  calendars: [
+    {
+      selected: true,
+      events: [
+        {
+          summary: 'SOEN 390 - Software Engineering',
+          location: 'H 501',
+          recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=WE'],
+          start: { dateTime: '2025-06-18T14:00:00' },
+          end: { dateTime: '2025-06-18T15:30:00' },
+        },
+        {
+          summary: 'Daily Standup',
+          location: 'H 101',
+          recurrence: ['RRULE:FREQ=DAILY'],
+          start: { dateTime: '2025-06-18T15:00:00' },
+          end: { dateTime: '2025-06-18T15:30:00' },
+        },
+        {
+          summary: 'No Recurrence',
+          location: 'H 201',
+          start: { dateTime: '2025-06-18T16:00:00' },
+          end: { dateTime: '2025-06-18T17:00:00' },
+        },
+      ],
+    },
+    {
+      selected: false,
+      events: [
+        {
+          summary: 'COMP 346',
+          location: 'EV 3.309',
+          recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=WE'],
+          start: { dateTime: '2025-06-18T16:00:00' },
+        },
+      ],
+    },
+  ],
+}));
+
 import NextClassScreen from '../../src/screens/NextClassScreen';
 
-const mockNavigation = {
-  navigate: jest.fn(),
-};
+const mockNavigation = { navigate: jest.fn() };
 
-describe('NextClassScreen', () => {
-  beforeEach(() => jest.clearAllMocks());
+describe('NextClassScreen – upcoming class', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.setSystemTime(new Date(2025, 5, 18, 10, 0, 0)); // Wed 10 AM
+  });
 
-  it('should render the map view', () => {
+  it('renders the map view', () => {
     const { toJSON } = render(<NextClassScreen navigation={mockNavigation} />);
     expect(toJSON()).toBeTruthy();
   });
 
-  it('should show "Go to My Next Class" button', () => {
+  it('shows Go to My Next Class button', () => {
     const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    // The component shows either:
-    // no class
-    // goToClass
-    // detected card
-    // With mock data, it should show the "Go to My Next Class" card if there's a next class
-    try {
-      expect(getByText('Go to My Next Class')).toBeTruthy();
-    } catch {
-      // If no upcoming class, it shows "No upcoming classes today"
-      expect(getByText('No upcoming classes today')).toBeTruthy();
-    }
+    expect(getByText('Go to My Next Class')).toBeTruthy();
   });
 
-  it('should navigate to Profile when View Schedule pressed (no class)', () => {
-    // Override mock calendars to have no events for today
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const viewSchedule = queryByText('View Schedule');
-    if (viewSchedule) {
-      fireEvent.press(viewSchedule);
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('Profile');
-    }
+  it('displays subtitle', () => {
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    expect(getByText('Based on your schedule')).toBeTruthy();
   });
 
-  it('should show next class detected when Go to My Next Class is pressed', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      // After pressing, it should show "Next Class Detected"
-      expect(queryByText('Next Class Detected')).toBeTruthy();
-    }
+  it('shows detected card after pressing button', () => {
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    fireEvent.press(getByText('Go to My Next Class'));
+    expect(getByText('Next Class Detected')).toBeTruthy();
+    expect(getByText('SOEN 390 - Software Engineering')).toBeTruthy();
+    expect(getByText('H 501')).toBeTruthy();
   });
 
-  it('should show Get Directions button after detecting class', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      expect(queryByText('Get Directions')).toBeTruthy();
-    }
+  it('shows minutes until class after detection', () => {
+    const { getByText, queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    fireEvent.press(getByText('Go to My Next Class'));
+    expect(queryByText(/Starts in/)).toBeTruthy();
+    // 10:00 → 14:00 = 240 min
+    expect(queryByText(/240 min/)).toBeTruthy();
   });
 
-  it('should navigate to Map with class info when Get Directions pressed', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      const directionsBtn = queryByText('Get Directions');
-      if (directionsBtn) {
-        fireEvent.press(directionsBtn);
-        expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', expect.objectContaining({
-          nextClassLocation: expect.any(String),
-          nextClassSummary: expect.any(String),
-        }));
-      }
-    }
+  it('Get Directions navigates to Map with class info', () => {
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    fireEvent.press(getByText('Go to My Next Class'));
+    fireEvent.press(getByText('Get Directions'));
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
+      nextClassLocation: 'H 501',
+      nextClassSummary: 'SOEN 390 - Software Engineering',
+    });
   });
 
-  it('should show class summary and location after detection', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      // The mock calendar data should have some class info
-      expect(queryByText('Next Class Detected')).toBeTruthy();
-    }
+  it('excludes events from unselected calendars', () => {
+    const { getByText, queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    fireEvent.press(getByText('Go to My Next Class'));
+    expect(queryByText('COMP 346')).toBeNull();
+  });
+});
+
+describe('NextClassScreen – no upcoming class', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('shows no class on a non-matching day (Sunday)', () => {
+    jest.setSystemTime(new Date(2025, 5, 22, 10, 0, 0)); // Sunday
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    expect(getByText('No upcoming classes today')).toBeTruthy();
   });
 
-  it('should display "Based on your schedule" subtitle', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const subtitle = queryByText('Based on your schedule');
-    if (subtitle) {
-      expect(subtitle).toBeTruthy();
-    }
+  it('shows no class when all events have passed', () => {
+    jest.setSystemTime(new Date(2025, 5, 18, 23, 0, 0)); // 11 PM Wed
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    expect(getByText('No upcoming classes today')).toBeTruthy();
   });
 
-  it('should show starts in timer after detection', () => {
-    const { queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    const goBtn = queryByText('Go to My Next Class');
-    if (goBtn) {
-      fireEvent.press(goBtn);
-      expect(queryByText(/Starts in/)).toBeTruthy();
-    }
+  it('navigates to Profile on View Schedule', () => {
+    jest.setSystemTime(new Date(2025, 5, 22, 10, 0, 0)); // Sunday - no class
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+    fireEvent.press(getByText('View Schedule'));
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Profile');
   });
 });

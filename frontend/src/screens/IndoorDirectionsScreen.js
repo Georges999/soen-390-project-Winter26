@@ -9,7 +9,6 @@ import {
   ScrollView,
   Dimensions,
   SafeAreaView,
-  FlatList,
   Switch,
   Modal,
 } from "react-native";
@@ -458,6 +457,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           <Text style={styles.headerTitle}>Indoor Directions</Text>
         </View>
 
+        <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
         {/* Search Inputs with Map Selection Buttons */}
         <View style={styles.searchSection}>
           {/* Start Input */}
@@ -548,11 +549,10 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         {searchQuery.trim().length > 0 && activeField && (
           <View style={styles.searchResultsContainer}>
             {searchResults.length > 0 ? (
-              <FlatList
-                data={searchResults.slice(0, 6)}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
+              <View>
+                {searchResults.slice(0, 6).map((item) => (
                   <Pressable
+                    key={item.id}
                     style={styles.searchResultItem}
                     onPress={() => handleSelectRoom(item)}
                   >
@@ -560,9 +560,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                       {item.label}, Floor {item.floor?.split("-")[1] || item.floor} · {item.buildingName}
                     </Text>
                   </Pressable>
-                )}
-                keyboardShouldPersistTaps="handled"
-              />
+                ))}
+              </View>
             ) : (
               <View style={styles.noResultsContainer}>
                 <MaterialIcons name="search-off" size={24} color="#999" />
@@ -653,7 +652,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           </ScrollView>
         )}
 
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Outdoor segment card */}
           {segmentResults.length > 0 && segmentResults[activeSegmentIndex]?.segment?.type === "outdoor" && (
             <View style={styles.outdoorCard}>
@@ -703,9 +701,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           )}
 
           {/* Floor Plan with Route */}
-          <Pressable 
+          <View 
             style={styles.floorPlanContainer}
-            onPress={handleMapPress}
+            {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
           >
             {displayedFloor?.image ? (
               <View style={styles.mapWrapper}>
@@ -801,7 +799,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                 <Text style={styles.noFloorPlanText}>Select start and destination</Text>
               </View>
             )}
-          </Pressable>
+          </View>
 
           {/* Route Stats Bar */}
           {startRoom && destRoom ? (
@@ -872,6 +870,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               </Text>
             </View>
           )}
+
         </ScrollView>
 
         {/* Transition Preference Modal (stairs vs elevator) */}
@@ -1071,9 +1070,6 @@ const styles = StyleSheet.create({
   },
   transportChipTextActive: {
     color: "#fff",
-  },
-  scrollContent: {
-    flex: 1,
   },
   floorPlanContainer: {
     marginHorizontal: 12,

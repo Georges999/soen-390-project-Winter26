@@ -135,4 +135,58 @@ describe("routeStrategy", () => {
     expect(customStrategy.getRoute).toHaveBeenCalled();
     expect(result.routeCoords).toEqual([1]);
   });
+
+  it("uses getRoutingStrategy fallback when no explicit strategy", () => {
+    const coords = [
+      { latitude: 45.49, longitude: -73.57 },
+      { latitude: 45.50, longitude: -73.58 },
+    ];
+    const result = getRoute({ travelMode: "walking", baseRouteCoords: coords });
+    expect(result.render.mode).toBe("walking");
+    expect(result.routeCoords).toEqual(coords);
+  });
+
+  it("deduplicates consecutive identical points in shuttle merge", () => {
+    const shared = { latitude: 2, longitude: 2 };
+    const result = ShuttleRouteStrategy.getRoute({
+      isActiveShuttleTrip: true,
+      walkToShuttleCoords: [{ latitude: 1, longitude: 1 }, shared],
+      shuttleRideCoords: [shared, { latitude: 3, longitude: 3 }],
+      walkFromShuttleCoords: [{ latitude: 3, longitude: 3 }, { latitude: 4, longitude: 4 }],
+      shuttleRideInfo: null,
+    });
+    // After snapping & merging, consecutive dupes should be removed
+    const coords = result.routeCoords;
+    for (let i = 1; i < coords.length; i++) {
+      const prev = coords[i - 1];
+      const curr = coords[i];
+      expect(prev.latitude === curr.latitude && prev.longitude === curr.longitude).toBe(false);
+    }
+  });
+
+  it("builds transit render with only walking steps as solid fallback", () => {
+    const result = PublicTransitRouteStrategy.getRoute({
+      baseRouteCoords: [{ latitude: 0, longitude: 0 }],
+      baseRouteInfo: {
+        steps: [
+          {
+            travelMode: "WALKING",
+            coords: [{ latitude: 1, longitude: 1 }],
+          },
+        ],
+      },
+    });
+    // No ride segments → should be solid (or mixed with empty ride)
+    expect(result.render.rideSegments).toEqual([]);
+  });
+
+  it("returns shuttle ride segment only when ride has >1 coord", () => {
+    const result = ShuttleRouteStrategy.getRoute({
+      isActiveShuttleTrip: true,
+      walkToShuttleCoords: [{ latitude: 1, longitude: 1 }],
+      shuttleRideCoords: [{ latitude: 2, longitude: 2 }], // only 1 point
+      walkFromShuttleCoords: [{ latitude: 3, longitude: 3 }],
+    });
+    expect(result.render.rideSegments).toEqual([]);
+  });
 });

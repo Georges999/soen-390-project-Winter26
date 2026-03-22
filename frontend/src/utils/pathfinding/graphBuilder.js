@@ -52,10 +52,24 @@ function buildGraph(floorData) {
       if (processedEdges.has(edgeKey)) return;
       processedEdges.add(edgeKey);
 
-      const weight = edge.weight ?? euclideanDistance(nodesMap.get(from), nodesMap.get(to));
+      const baseWeight = edge.weight ?? euclideanDistance(nodesMap.get(from), nodesMap.get(to));
       const accessible = !isStairsNode(from, nodesMap) && !isStairsNode(to, nodesMap);
-      graph.get(from).push({ to, weight, accessible });
-      graph.get(to).push({ to: from, weight, accessible });
+
+      // Penalise edges that pass through room/classroom nodes so the
+      // pathfinder prefers hallway-only routes.  The penalty only affects
+      // the "entering-room" direction; leaving a room toward a hallway
+      // keeps normal weight so start/end room nodes are still reachable.
+      const ROOM_PENALTY = 1000;
+      const fromIsRoom = nodesMap.get(from)?.type === 'room' || nodesMap.get(from)?.type === 'classroom';
+      const toIsRoom   = nodesMap.get(to)?.type   === 'room' || nodesMap.get(to)?.type   === 'classroom';
+
+      // hallway → room  (entering a room): penalise
+      // room → hallway  (leaving a room):  normal weight
+      const weightToRoom   = toIsRoom   ? baseWeight + ROOM_PENALTY : baseWeight;
+      const weightFromRoom = fromIsRoom ? baseWeight + ROOM_PENALTY : baseWeight;
+
+      graph.get(from).push({ to, weight: weightToRoom, accessible });
+      graph.get(to).push({ to: from, weight: weightFromRoom, accessible });
     });
   }
   return { graph, nodes: nodesMap };

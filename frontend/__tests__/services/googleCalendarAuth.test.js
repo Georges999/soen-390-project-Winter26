@@ -266,6 +266,17 @@ describe('googleCalendarAuth', () => {
       const result = await disconnectCalendar();
       expect(result).toEqual({ success: true });
     });
+
+    it('should return failure when fetch rejects during revocation', async () => {
+      const tokens = { accessToken: 'token123', refreshToken: 'refresh' };
+      SecureStore.getItemAsync.mockResolvedValue(JSON.stringify(tokens));
+      global.fetch.mockRejectedValue(new Error('network error'));
+      SecureStore.deleteItemAsync.mockResolvedValue();
+
+      const result = await disconnectCalendar();
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('network error');
+    });
   });
 
   describe('isAuthenticated', () => {
