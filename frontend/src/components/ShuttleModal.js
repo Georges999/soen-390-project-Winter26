@@ -61,7 +61,7 @@ export default function ShuttleModal({
                         <Text style={styles.departureEta}>
                           ETA{" "}
                           {(() => {
-                            const [h, m] = t.split(":").map((v) => parseInt(v, 10));
+                            const [h, m] = t.split(":").map((v) => Number.parseInt(v, 10));
                             const mins = h * 60 + m + (schedule.estimatedTravelMin || 0);
                             const eh = Math.floor(mins / 60) % 24;
                             const em = mins % 60;

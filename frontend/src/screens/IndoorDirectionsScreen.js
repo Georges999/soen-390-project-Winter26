@@ -13,7 +13,7 @@ import {
   Switch,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import Svg, { Path, Circle, Line } from "react-native-svg";
+import Svg, { Path, Circle} from "react-native-svg";
 import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor } from "../data/indoorFloorData";
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
 
@@ -47,7 +47,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Current floor being displayed
   const selectedBuilding = params.building || buildings.sgw[1]; // Default to MB building
-  const [selectedFloor, setSelectedFloor] = useState(params.floor || selectedBuilding?.floors?.[0]);
+  const [selectedFloor] = useState(params.floor || selectedBuilding?.floors?.[0]);
 
   // Get current floor dimensions from the floor data
   const floorDimensions = useMemo(() => {

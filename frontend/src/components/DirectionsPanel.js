@@ -214,7 +214,7 @@ export default function DirectionsPanel({
                               </View>
                               <Text style={styles.transitMeta}>
                                 {opt.durationText || "--"}
-                                {opt.durationValue && isFinite(opt.durationValue)
+                                {opt.durationValue && Number.isFinite(opt.durationValue)
                                   ? ` (ETA ${(() => {
                                       const now = new Date();
                                       const mins = Math.round(opt.durationValue / 60);

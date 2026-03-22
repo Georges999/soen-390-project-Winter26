@@ -35,7 +35,7 @@ const getFilteredRooms = (allRooms, searchQuery) => {
   if (!searchQuery.trim()) return [];
 
   const lowerQuery = searchQuery.toLowerCase();
-  const normalizedQuery = searchQuery.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const normalizedQuery = searchQuery.toUpperCase().replaceAll(/[^A-Z0-9]/g, "");
 
   return allRooms.filter(
     (room) =>
