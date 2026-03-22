@@ -86,15 +86,9 @@ export const handleGoLogic = ({
   }
 
   if (routeCoords.length > 1) {
-    mapRef.current?.fitToCoordinates(routeCoords, {
-      edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
-      animated: true,
-    });
+    fitMapToRoute(mapRef, routeCoords);
   } else if (effectiveStart) {
-    mapRef.current?.animateToRegion(
-      { ...effectiveStart, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-      500,
-    );
+    zoomMapToCoordinate(mapRef, effectiveStart);
   }
 };
 
@@ -137,16 +131,22 @@ export const getPoiInfoCardBottomOffset = (isPOIPanelOpen) =>
 export const handleRecenterPressLogic = ({ routeCoords, userCoord, mapRef }) => {
   const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
   if (targetCoord) {
-    mapRef.current?.animateToRegion(
-      {
-        latitude: targetCoord.latitude,
-        longitude: targetCoord.longitude,
-        latitudeDelta: 0.003,
-        longitudeDelta: 0.003,
-      },
-      500,
-    );
+    zoomMapToCoordinate(mapRef, targetCoord);
   }
+};
+
+const zoomMapToCoordinate = (mapRef, coord) => {
+  mapRef.current?.animateToRegion(
+    { ...coord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+    500,
+  );
+};
+
+const fitMapToRoute = (mapRef, routeCoords) => {
+  mapRef.current?.fitToCoordinates(routeCoords, {
+    edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+    animated: true,
+  });
 };
 
 export default function MapScreen({ route }) {
@@ -195,16 +195,45 @@ export default function MapScreen({ route }) {
   const getPOIFetchRadius = (mode = poiFilterMode, radius = poiRadius) =>
     mode === "range" ? radius : Math.max(radius, 2000);
 
+  const setLocationDetails = (
+    setText,
+    setCoord,
+    setCampusId,
+    text,
+    coords,
+    campusId,
+  ) => {
+    setText(text);
+    if (coords) setCoord(coords);
+    if (campusId !== undefined) setCampusId(campusId);
+  };
+
+  const clearLocationDetails = (setText, setCoord, setCampusId) => {
+    setText("");
+    setCoord(null);
+    setCampusId(null);
+  };
+
   const setOriginDetails = (text, coords, campusId) => {
-    setStartText(text);
-    if (coords) setStartCoord(coords);
-    if (campusId !== undefined) setStartCampusId(campusId);
+    setLocationDetails(
+      setStartText,
+      setStartCoord,
+      setStartCampusId,
+      text,
+      coords,
+      campusId,
+    );
   };
 
   const setDestinationDetails = (text, coords, campusId) => {
-    setDestText(text);
-    if (coords) setDestCoord(coords);
-    if (campusId !== undefined) setDestCampusId(campusId);
+    setLocationDetails(
+      setDestText,
+      setDestCoord,
+      setDestCampusId,
+      text,
+      coords,
+      campusId,
+    );
   };
 
   const setOriginToUserLocation = (coords) => {
@@ -212,10 +241,60 @@ export default function MapScreen({ route }) {
     setOriginDetails("My location", coords, null);
   };
 
+  const clearOriginDetails = () => {
+    clearLocationDetails(setStartText, setStartCoord, setStartCampusId);
+  };
+
   const clearDestinationDetails = () => {
-    setDestText("");
-    setDestCoord(null);
-    setDestCampusId(null);
+    clearLocationDetails(setDestText, setDestCoord, setDestCampusId);
+  };
+
+  const openDirectionsPanel = () => {
+    setShowDirectionsPanel(true);
+  };
+
+  const setDestinationAndOpenPanel = (text, coords, campusId) => {
+    setDestinationDetails(text, coords, campusId);
+    openDirectionsPanel();
+  };
+
+  const handleLocationTextChange = ({
+    value,
+    setText,
+    setCoord,
+    clearDetails,
+    preserveMyLocation = false,
+  }) => {
+    setHasInteracted(true);
+    if (!value) {
+      clearDetails();
+      setShowDirectionsPanel(false);
+      return;
+    }
+
+    setText(value);
+    if (setCoord && (!preserveMyLocation || value !== "My location")) {
+      setCoord(null);
+    }
+  };
+
+  const handleStartTextChange = (t) => {
+    handleLocationTextChange({
+      value: t,
+      setText: setStartText,
+      setCoord: setStartCoord,
+      clearDetails: clearOriginDetails,
+      preserveMyLocation: true,
+    });
+  };
+
+  const handleDestTextChange = (t) => {
+    handleLocationTextChange({
+      value: t,
+      setText: setDestText,
+      setCoord: setDestCoord,
+      clearDetails: clearDestinationDetails,
+    });
   };
 
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
@@ -261,10 +340,7 @@ export default function MapScreen({ route }) {
 
     const center = getPolygonCenter(building.coordinates);
     if (center) {
-      mapRef.current?.animateToRegion(
-        { ...center, latitudeDelta: 0.003, longitudeDelta: 0.003 }, //zoom into building when selected 0.003 with 500 ms
-        500,
-      );
+      zoomMapToCoordinate(mapRef, center); //zoom into building when selected 0.003 with 500 ms
     }
   };
 
@@ -389,9 +465,7 @@ export default function MapScreen({ route }) {
     const summary = route?.params?.nextClassSummary;
     if (!location) return;
 
-    setDestinationDetails(location);
     setOriginToUserLocation(userCoord);
-    setShowDirectionsPanel(true);
 
     const code = String(location).trim().split(/\s+/)[0];
     if (code) {
@@ -400,9 +474,12 @@ export default function MapScreen({ route }) {
       );
       if (building) {
         const center = getPolygonCenter(building.coordinates);
-        if (center) setDestCoord(center);
-        setDestCampusId(building.__campusId ?? null);
+        setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
+      } else {
+        setDestinationAndOpenPanel(location);
       }
+    } else {
+      setDestinationAndOpenPanel(location);
     }
   }, [route?.params, userCoord, allBuildings]);
 
@@ -412,10 +489,13 @@ export default function MapScreen({ route }) {
     const name = getBuildingName(selectedBuilding);
     const center = getPolygonCenter(selectedBuilding.coordinates);
 
-    setDestinationDetails(name, center, selectedBuilding.__campusId ?? selectedCampus?.id ?? null);
+    setDestinationAndOpenPanel(
+      name,
+      center,
+      selectedBuilding.__campusId ?? selectedCampus?.id ?? null,
+    );
 
     setSelectedBuilding(null);
-    setShowDirectionsPanel(true);
     Keyboard.dismiss();
   };
 
@@ -683,35 +763,22 @@ export default function MapScreen({ route }) {
 
   // Ensure Go uses the user's origin input when available. Only fall back
   // to device location if the origin input is completely empty.
-  const handleGo = () => {
-    // If the user left the origin field empty, default to device location.
-    const effectiveStart =
-      startCoord ?? (startText && startText !== "" ? null : userCoord);
-
-    if (!effectiveStart || !destCoord) return;
-
-    setFollowUser(true);
-    setNavActive(true);
-    setCurrentStepIndex(0);
-
-    const firstInstruction = routeInfo?.steps?.[0]?.instruction;
-    if (firstInstruction && speechEnabled) {
-      Speech?.stop?.();
-      Speech?.speak?.(stripHtml(firstInstruction));
-    }
-
-    if (routeCoords.length > 1) {
-      mapRef.current?.fitToCoordinates(routeCoords, {
-        edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
-        animated: true,
-      });
-    } else if (effectiveStart) {
-      mapRef.current?.animateToRegion(
-        { ...effectiveStart, latitudeDelta: 0.003, longitudeDelta: 0.003 },
-        500,
-      );
-    }
-  };
+  const handleGo = () =>
+    handleGoLogic({
+      startCoord,
+      startText,
+      userCoord,
+      destCoord,
+      routeInfo,
+      speechEnabled,
+      routeCoords,
+      mapRef,
+      Speech,
+      stripHtml,
+      setFollowUser,
+      setNavActive,
+      setCurrentStepIndex,
+    });
 
   const canShowDirectionsPanel = Boolean(
     showDirectionsPanel && startCoord && destCoord && !selectedPOI,
@@ -740,7 +807,7 @@ export default function MapScreen({ route }) {
           <Pressable
             onPress={() => {
               setSelectedPOI(poi);
-              setIsPOIPanelOpen(false);
+              setIsPOIPanelOpen(alse);
             }}
             style={{
               flexDirection: "row",
@@ -863,21 +930,8 @@ export default function MapScreen({ route }) {
           shouldShowMyLocationOption={shouldShowMyLocationOption}
           getBuildingKey={getBuildingKey}
           getBuildingName={getBuildingName}
-          onStartChange={(t) => {
-            setHasInteracted(true);
-            setStartText(t);
-            // If they type random text, it no longer matches a known coordinate
-            if (t !== "My location") setStartCoord(null);
-            if (!t) setStartCampusId(null);
-            if (!t) setShowDirectionsPanel(false);
-          }}
-          onDestChange={(t) => {
-            setHasInteracted(true);
-            setDestText(t);
-            setDestCoord(null);
-            if (!t) clearDestinationDetails();
-            if (!t) setShowDirectionsPanel(false);
-          }}
+          onStartChange={handleStartTextChange}
+          onDestChange={handleDestTextChange}
           onStartFocus={() => {
             setHasInteracted(true);
             setActiveField("start");
@@ -886,13 +940,8 @@ export default function MapScreen({ route }) {
             setHasInteracted(true);
             setActiveField("dest");
           }}
-          onClearStart={() => {
-            setStartText("");
-            setStartCoord(null);
-          }}
-          onClearDest={() => {
-            clearDestinationDetails();
-          }}
+          onClearStart={clearOriginDetails}
+          onClearDest={clearDestinationDetails}
           onSwap={handleSwapStartDest}
           onSelectMyLocation={selectMyLocationForField}
           onSelectBuilding={selectBuildingForField}
