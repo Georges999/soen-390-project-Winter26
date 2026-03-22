@@ -280,7 +280,7 @@ export default function MapScreen({ route }) {
   // Pre-fill destination from Calendar/Next Class and resolve to coords so directions run
   useEffect(() => {
     const location = route?.params?.nextClassLocation;
-    const summary = route?.params?.nextClassSummary;
+    
     if (!location) return;
 
     setDestText(location);
