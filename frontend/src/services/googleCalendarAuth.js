@@ -42,7 +42,7 @@ function getProjectNameForProxy() {
 }
 
 function getNativeRedirectUri(clientId) {
-  if (!clientId || !clientId.endsWith('.apps.googleusercontent.com')) {
+  if (!clientId?.endsWith('.apps.googleusercontent.com')) {
     return FALLBACK_NATIVE_REDIRECT_URI;
   }
 

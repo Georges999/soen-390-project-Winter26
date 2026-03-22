@@ -2,20 +2,26 @@ const ORIGINAL_ENV = { ...process.env };
 
 function loadModule({
   platformOS = 'ios',
+  appOwnership = 'standalone',
   exchangeResult = {
     accessToken: 'exchanged_access',
     refreshToken: 'refresh_token',
     expiresIn: 3600,
   },
   promptAsyncResult = { type: 'success', params: { code: 'native-code' } },
+  openAuthResult = { type: 'success', url: 'exp://127.0.0.1#state=ok' },
+  parseReturnUrlResult = { type: 'success', params: { code: 'proxy-code' } },
+  webClientId = 'web_client_id',
+  iosClientId = 'ios_client_id',
+  androidClientId = 'android_client_id',
 } = {}) {
   jest.resetModules();
   process.env = {
     ...ORIGINAL_ENV,
     EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH: 'false',
-    EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: 'web_client_id',
-    EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: 'ios_client_id',
-    EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID: 'android_client_id',
+    EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: webClientId,
+    EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: iosClientId,
+    EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID: androidClientId,
   };
   global.__DEV__ = true;
 
@@ -27,12 +33,15 @@ function loadModule({
 
   const promptAsyncMock = jest.fn().mockResolvedValue(promptAsyncResult);
   const makeRedirectUriMock = jest.fn().mockReturnValue('com.concordia.campusguide://oauthredirect');
+  const openAuthSessionAsyncMock = jest.fn().mockResolvedValue(openAuthResult);
+  const getDefaultReturnUrlMock = jest.fn().mockReturnValue('exp://127.0.0.1');
+  const parseReturnUrlMock = jest.fn().mockReturnValue(parseReturnUrlResult);
 
   const AuthRequestMock = jest.fn().mockImplementation(() => ({
     codeVerifier: 'code-verifier',
     promptAsync: promptAsyncMock,
-    makeAuthUrlAsync: jest.fn(),
-    parseReturnUrl: jest.fn(),
+    makeAuthUrlAsync: jest.fn().mockResolvedValue('https://accounts.google.com/auth'),
+    parseReturnUrl: parseReturnUrlMock,
   }));
 
   const exchangeCodeAsyncMock = jest.fn().mockResolvedValue(exchangeResult);
@@ -44,7 +53,7 @@ function loadModule({
       AuthRequest: AuthRequestMock,
       ResponseType: { Code: 'code', Token: 'token' },
       makeRedirectUri: makeRedirectUriMock,
-      getDefaultReturnUrl: jest.fn(),
+      getDefaultReturnUrl: getDefaultReturnUrlMock,
       exchangeCodeAsync: exchangeCodeAsyncMock,
       refreshAsync: jest.fn(),
     }),
@@ -54,7 +63,7 @@ function loadModule({
     'expo-web-browser',
     () => ({
       maybeCompleteAuthSession: jest.fn(),
-      openAuthSessionAsync: jest.fn(),
+      openAuthSessionAsync: openAuthSessionAsyncMock,
     }),
     { virtual: true }
   );
@@ -62,8 +71,13 @@ function loadModule({
     'expo-constants',
     () => ({
       __esModule: true,
+      appOwnership,
+      expoConfig: {
+        owner: 'boudy7168',
+        slug: 'campus-guide',
+      },
       default: {
-        appOwnership: 'standalone',
+        appOwnership,
         expoConfig: {
           owner: 'boudy7168',
           slug: 'campus-guide',
@@ -85,7 +99,10 @@ function loadModule({
     moduleApi,
     secureStoreMock,
     exchangeCodeAsyncMock,
+    openAuthSessionAsyncMock,
     promptAsyncMock,
+    getDefaultReturnUrlMock,
+    parseReturnUrlMock,
   };
 }
 
@@ -137,5 +154,71 @@ describe('googleCalendarAuth OAuth flows', () => {
 
     const result = await moduleApi.authenticateWithGoogle();
     expect(result).toEqual({ success: false, error: 'oauth boom' });
+  });
+
+  it('returns an auth error when success does not include a code', async () => {
+    const { moduleApi } = loadModule({
+      promptAsyncResult: {
+        type: 'success',
+        params: { error: 'access_denied', error_description: 'Access denied' },
+      },
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+    expect(result).toEqual({
+      success: false,
+      error: 'Access denied',
+    });
+  });
+
+  it('uses the web redirect flow on web', async () => {
+    const {
+      moduleApi,
+      exchangeCodeAsyncMock,
+      promptAsyncMock,
+    } = loadModule({
+      platformOS: 'web',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(promptAsyncMock).toHaveBeenCalled();
+    expect(exchangeCodeAsyncMock).toHaveBeenCalled();
+  });
+
+  it('returns a configuration error when no client id is configured', async () => {
+    const { moduleApi } = loadModule({
+      webClientId: '',
+      iosClientId: '',
+      androidClientId: '',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({
+      success: false,
+      error:
+        'Google OAuth is not configured. Add the EXPO_PUBLIC_GOOGLE_OAUTH client ID variables to your .env file.',
+    });
+  });
+
+  it('logs the oauth error response payload when present on an exception', async () => {
+    const { moduleApi, promptAsyncMock } = loadModule();
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    promptAsyncMock.mockRejectedValueOnce({
+      message: 'oauth boom',
+      response: { status: 400, data: 'bad request' },
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: false, error: 'oauth boom' });
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[Auth] Exception response:',
+      JSON.stringify({ status: 400, data: 'bad request' })
+    );
+
+    consoleErrorSpy.mockRestore();
   });
 });

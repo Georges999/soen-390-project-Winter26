@@ -63,6 +63,56 @@ describe('googleCalendarService', () => {
         JSON.stringify(['primary'])
       );
     });
+
+    it('keeps a stored valid calendar selection and uses summaryOverride', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      SecureStore.getItemAsync.mockResolvedValue(JSON.stringify(['team']));
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            { id: 'blocked', summary: 'Blocked', accessRole: 'none' },
+            {
+              id: 'team',
+              summary: 'Team',
+              summaryOverride: 'Study Group',
+              accessRole: 'reader',
+              primary: false,
+            },
+          ],
+        }),
+      });
+
+      const result = await fetchGoogleCalendars();
+
+      expect(result).toEqual({
+        success: true,
+        calendars: [
+          {
+            id: 'team',
+            name: 'Study Group',
+            primary: false,
+            selected: true,
+          },
+        ],
+      });
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+        'google_calendar_selected_ids',
+        JSON.stringify(['team'])
+      );
+    });
+
+    it('returns an API failure when calendar list fetch is not ok', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch.mockResolvedValue({ ok: false, status: 403 });
+
+      const result = await fetchGoogleCalendars();
+
+      expect(result).toEqual({
+        success: false,
+        error: 'API error: 403',
+      });
+    });
   });
 
   describe('fetchCalendarEvents', () => {
@@ -113,6 +163,50 @@ describe('googleCalendarService', () => {
       expect(result.events[0].calendarId).toBe('primary');
       expect(result.events[1].calendarId).toBe('team');
     });
+
+    it('uses stored calendar ids and normalizes untitled all-day events', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      SecureStore.getItemAsync.mockResolvedValue(JSON.stringify(['team']));
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: 'untitled',
+              start: { date: '2026-03-13' },
+              end: { date: '2026-03-14' },
+            },
+          ],
+        }),
+      });
+
+      const result = await fetchCalendarEvents(new Date('2026-03-13T00:00:00Z'));
+
+      expect(result.success).toBe(true);
+      expect(global.fetch.mock.calls[0][0]).toContain('/calendars/team/events?');
+      expect(result.events[0]).toEqual(
+        expect.objectContaining({
+          calendarId: 'team',
+          title: 'Untitled Event',
+          summary: 'Untitled Event',
+          startTime: '2026-03-13',
+          endTime: '2026-03-14',
+          location: null,
+        })
+      );
+    });
+
+    it('returns a failure when an event fetch request is not ok', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch.mockResolvedValue({ ok: false, status: 500 });
+
+      const result = await fetchCalendarEvents(['primary'], new Date('2026-03-13T00:00:00Z'));
+
+      expect(result).toEqual({
+        success: false,
+        error: 'API error: 500',
+      });
+    });
   });
 
   describe('getUpcomingEvents', () => {
@@ -155,6 +249,26 @@ describe('googleCalendarService', () => {
 
       const result = await getNextClassEvent(['primary']);
       expect(result.summary).toBe('SOEN 390');
+    });
+
+    it('returns null when there is no upcoming class event', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              id: '1',
+              summary: 'Lunch',
+              start: { dateTime: new Date(Date.now() + 1800000).toISOString() },
+              end: { dateTime: new Date(Date.now() + 3600000).toISOString() },
+            },
+          ],
+        }),
+      });
+
+      const result = await getNextClassEvent(['primary']);
+      expect(result).toBeNull();
     });
   });
 

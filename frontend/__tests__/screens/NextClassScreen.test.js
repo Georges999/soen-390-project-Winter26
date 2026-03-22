@@ -37,6 +37,31 @@ describe('NextClassScreen', () => {
     });
   });
 
+  it('should show a loading subtitle while calendar data is loading', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: null,
+      isLoading: true,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(getByText('Loading your Google Calendar')).toBeTruthy();
+    });
+  });
+
+  it('should show connected empty state when there is no next class', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(getByText('No upcoming classes found in your selected Google calendars')).toBeTruthy();
+    });
+  });
+
   it('should show "Go to My Next Class" when a next class exists', async () => {
     googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
     useNextClass.mockReturnValue({
@@ -96,6 +121,32 @@ describe('NextClassScreen', () => {
     expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
       nextClassLocation: 'H 961',
       nextClassSummary: 'SOEN 390',
+    });
+  });
+
+  it('should fall back to title and start.dateTime when detecting a class', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        title: 'COMP 346',
+        location: 'EV 3.309',
+        start: {
+          dateTime: new Date(Date.now() + 3600000).toISOString(),
+        },
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => expect(getByText('Go to My Next Class')).toBeTruthy());
+    fireEvent.press(getByText('Go to My Next Class'));
+    fireEvent.press(getByText('Get Directions'));
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
+      nextClassLocation: 'EV 3.309',
+      nextClassSummary: 'COMP 346',
     });
   });
 });

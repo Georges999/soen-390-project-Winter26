@@ -3,15 +3,17 @@ export default ({ config }) => {
   const slug = config.slug ?? 'campus-guide';
   const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY ?? '';
   const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID ?? '';
+  const configuredScheme = config.scheme;
   const googleClientPrefix = googleIosClientId.replace(/\.apps\.googleusercontent\.com$/, '');
   const googleIosRedirectScheme = googleClientPrefix
     ? `com.googleusercontent.apps.${googleClientPrefix}`
     : null;
-  const configuredSchemes = Array.isArray(config.scheme)
-    ? config.scheme
-    : config.scheme
-    ? [config.scheme]
-    : [];
+  let configuredSchemes = [];
+  if (Array.isArray(configuredScheme)) {
+    configuredSchemes = configuredScheme;
+  } else if (configuredScheme) {
+    configuredSchemes = [configuredScheme];
+  }
   const scheme = Array.from(
     new Set(
       [

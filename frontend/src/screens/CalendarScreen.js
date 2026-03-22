@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   View,
   Text,
@@ -45,7 +46,7 @@ function getWeekRange(referenceDate) {
   const weekDays = getWeekDays(referenceDate);
   return {
     timeMin: getStartOfDay(weekDays[0]),
-    timeMax: getEndOfDay(weekDays[weekDays.length - 1]),
+    timeMax: getEndOfDay(weekDays.at(-1)),
   };
 }
 
@@ -142,6 +143,9 @@ export default function CalendarScreen({ navigation, route }) {
   const todaysClasses = routeCalendars
     ? getLegacyClassesForDate(routeCalendars, selectedDate)
     : getLiveClassesForDate(events, selectedDate);
+  const emptySubtext = !routeCalendars && !isConnected
+    ? 'Connect Google Calendar from Profile to see your schedule.'
+    : error || null;
 
   function formatTime(dateString) {
     const date = new Date(dateString);
@@ -235,13 +239,7 @@ export default function CalendarScreen({ navigation, route }) {
           <View style={styles.emptyState}>
             <MaterialIcons name="event-busy" size={48} color="#CCC" />
             <Text style={styles.emptyText}>No classes scheduled for this day</Text>
-            {!routeCalendars && !isConnected ? (
-              <Text style={styles.emptySubtext}>
-                Connect Google Calendar from Profile to see your schedule.
-              </Text>
-            ) : error ? (
-              <Text style={styles.emptySubtext}>{error}</Text>
-            ) : null}
+            {emptySubtext ? <Text style={styles.emptySubtext}>{emptySubtext}</Text> : null}
           </View>
         ) : (
           todaysClasses.map((event, index) => (
@@ -450,3 +448,28 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
 });
+
+CalendarScreen.propTypes = {
+  navigation: PropTypes.shape({
+    addListener: PropTypes.func,
+    goBack: PropTypes.func.isRequired,
+    navigate: PropTypes.func.isRequired,
+  }).isRequired,
+  route: PropTypes.shape({
+    params: PropTypes.shape({
+      calendars: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.string,
+          name: PropTypes.string,
+          selected: PropTypes.bool,
+          events: PropTypes.arrayOf(PropTypes.object),
+        })
+      ),
+      selectedCalendarIds: PropTypes.arrayOf(PropTypes.string),
+    }),
+  }),
+};
+
+CalendarScreen.defaultProps = {
+  route: undefined,
+};

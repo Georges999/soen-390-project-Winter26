@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import CalendarScreen from '../../src/screens/CalendarScreen';
 import * as googleCalendarAuth from '../../src/services/googleCalendarAuth';
 import * as googleCalendarService from '../../src/services/googleCalendarService';
@@ -55,6 +55,30 @@ describe('CalendarScreen', () => {
     });
   });
 
+  it('should show an error when live event loading fails', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    googleCalendarService.fetchCalendarEvents.mockResolvedValue({
+      success: false,
+      error: 'Calendar API failed',
+    });
+
+    const { getByText } = render(
+      <CalendarScreen
+        navigation={mockNavigation}
+        route={{ params: { selectedCalendarIds: ['team'] } }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(getByText('Calendar API failed')).toBeTruthy();
+    });
+    expect(googleCalendarService.fetchCalendarEvents).toHaveBeenCalledWith(
+      ['team'],
+      expect.any(Date),
+      expect.any(Date)
+    );
+  });
+
   it('should render live events from Google Calendar services', async () => {
     googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
     googleCalendarService.fetchCalendarEvents.mockResolvedValue({
@@ -108,6 +132,23 @@ describe('CalendarScreen', () => {
     });
   });
 
+  it('should reload events when the screen regains focus', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+
+    render(<CalendarScreen navigation={mockNavigation} route={mockRoute} />);
+
+    await waitFor(() => {
+      expect(googleCalendarService.fetchCalendarEvents).toHaveBeenCalledTimes(1);
+    });
+
+    const focusHandler = mockNavigation.addListener.mock.calls[0][1];
+    await act(async () => {
+      await focusHandler();
+    });
+
+    expect(googleCalendarService.fetchCalendarEvents).toHaveBeenCalledTimes(2);
+  });
+
   it('should still support legacy calendar route params', () => {
     const routeCalendars = [
       {
@@ -134,5 +175,33 @@ describe('CalendarScreen', () => {
     );
 
     expect(getByText('COMP 346')).toBeTruthy();
+  });
+
+  it('should show empty state for legacy calendars with no matching recurrence', () => {
+    const routeCalendars = [
+      {
+        id: 'test',
+        name: 'Test Calendar',
+        selected: true,
+        events: [
+          {
+            summary: 'COMP 346',
+            location: 'EV 3.309',
+            start: { dateTime: '2026-02-22T14:00:00' },
+            end: { dateTime: '2026-02-22T15:30:00' },
+            recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=ZZ'],
+          },
+        ],
+      },
+    ];
+
+    const { getByText } = render(
+      <CalendarScreen
+        navigation={mockNavigation}
+        route={{ params: { calendars: routeCalendars } }}
+      />
+    );
+
+    expect(getByText('No classes scheduled for this day')).toBeTruthy();
   });
 });

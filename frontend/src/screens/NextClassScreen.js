@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   View,
   Text,
@@ -47,10 +48,16 @@ export default function NextClassScreen({ navigation }) {
   }
 
   const shouldShowDetected = showDetected && nextClass !== null;
+  let noClassSubtitle = 'Connect Google Calendar from Profile to see your next class';
+  if (isLoading) {
+    noClassSubtitle = 'Loading your Google Calendar';
+  } else if (isConnected) {
+    noClassSubtitle = 'No upcoming classes found in your selected Google calendars';
+  }
 
   function getMinutesUntil(event) {
     const startTime = event.startTime || event.start?.dateTime;
-    const mins = Math.floor((new Date(startTime) - new Date()) / 1000 / 60);
+    const mins = Math.floor((new Date(startTime).getTime() - Date.now()) / 1000 / 60);
     return Math.max(0, mins);
   }
 
@@ -91,13 +98,7 @@ export default function NextClassScreen({ navigation }) {
           <View style={styles.noClassCard}>
             <MaterialIcons name={isLoading ? 'schedule' : 'event-busy'} size={40} color="#CCC" />
             <Text style={styles.noClassTitle}>No upcoming classes today</Text>
-            <Text style={styles.noClassSubtitle}>
-              {isLoading
-                ? 'Loading your Google Calendar'
-                : isConnected
-                ? 'No upcoming classes found in your selected Google calendars'
-                : 'Connect Google Calendar from Profile to see your next class'}
-            </Text>
+            <Text style={styles.noClassSubtitle}>{noClassSubtitle}</Text>
             <Pressable
               style={styles.profileButton}
               onPress={() => navigation.navigate('Profile')}
@@ -292,3 +293,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+
+NextClassScreen.propTypes = {
+  navigation: PropTypes.shape({
+    addListener: PropTypes.func,
+    navigate: PropTypes.func.isRequired,
+  }).isRequired,
+};

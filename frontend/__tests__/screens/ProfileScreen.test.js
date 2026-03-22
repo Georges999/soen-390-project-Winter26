@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import ProfileScreen from '../../src/screens/ProfileScreen';
 import * as googleCalendarAuth from '../../src/services/googleCalendarAuth';
 import * as googleCalendarService from '../../src/services/googleCalendarService';
@@ -17,6 +18,14 @@ const mockCalendars = [
 ];
 
 describe('ProfileScreen', () => {
+  beforeAll(() => {
+    jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
+  });
+
+  afterAll(() => {
+    Alert.alert.mockRestore();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     googleCalendarAuth.isAuthenticated.mockResolvedValue(false);
@@ -56,6 +65,23 @@ describe('ProfileScreen', () => {
     expect(googleCalendarService.fetchGoogleCalendars).toHaveBeenCalled();
   });
 
+  it('should show an error alert when connect fails', async () => {
+    googleCalendarAuth.authenticateWithGoogle.mockResolvedValue({
+      success: false,
+      error: 'oauth failed',
+    });
+
+    const { getByText } = render(<ProfileScreen navigation={mockNavigation} />);
+
+    await waitFor(() => expect(getByText('Connect')).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(getByText('Connect'));
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith('Connection Failed', 'oauth failed');
+  });
+
   it('should show connected calendars after a successful connect', async () => {
     const { getByText } = render(<ProfileScreen navigation={mockNavigation} />);
 
@@ -69,6 +95,30 @@ describe('ProfileScreen', () => {
       expect(getByText('Connected Calendars')).toBeTruthy();
       expect(getByText('Primary Calendar')).toBeTruthy();
     });
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Calendar Connected',
+      'Google Calendar connected successfully'
+    );
+  });
+
+  it('should show an empty-calendar alert when connect succeeds without calendars', async () => {
+    googleCalendarService.fetchGoogleCalendars.mockResolvedValue({
+      success: true,
+      calendars: [],
+    });
+
+    const { getByText } = render(<ProfileScreen navigation={mockNavigation} />);
+
+    await waitFor(() => expect(getByText('Connect')).toBeTruthy());
+
+    await act(async () => {
+      fireEvent.press(getByText('Connect'));
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Calendar Connected',
+      'Google Calendar connected, but no calendars were returned for this account.'
+    );
   });
 
   it('should load calendars when initially authenticated', async () => {
@@ -79,6 +129,20 @@ describe('ProfileScreen', () => {
     await waitFor(() => {
       expect(getByText('Disconnect')).toBeTruthy();
       expect(getByText('Primary Calendar')).toBeTruthy();
+    });
+  });
+
+  it('should show an empty calendars state when calendar loading fails', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    googleCalendarService.fetchGoogleCalendars.mockResolvedValue({
+      success: false,
+      error: 'fetch failed',
+    });
+
+    const { getByText } = render(<ProfileScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(getByText('No Google calendars found.')).toBeTruthy();
     });
   });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import {
   View,
   Text,
@@ -110,6 +111,15 @@ export default function ProfileScreen({ navigation }) {
     });
   }
 
+  const connectTitle = isConnected ? 'Google Calendar Connected' : 'Connect Google Calendar';
+  const connectSubtitle = isConnected ? 'Syncing Your Class' : 'Sync Your Class';
+  let connectButtonLabel = 'Connect';
+  if (isLoading) {
+    connectButtonLabel = 'Loading...';
+  } else if (isConnected) {
+    connectButtonLabel = 'Disconnect';
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -127,21 +137,15 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
           <View style={styles.connectText}>
-            <Text style={styles.connectTitle}>
-              {isConnected ? 'Google Calendar Connected' : 'Connect Google Calendar'}
-            </Text>
-            <Text style={styles.connectSubtitle}>
-              {isConnected ? 'Syncing Your Class' : 'Sync Your Class'}
-            </Text>
+            <Text style={styles.connectTitle}>{connectTitle}</Text>
+            <Text style={styles.connectSubtitle}>{connectSubtitle}</Text>
           </View>
           <Pressable
             style={styles.connectButton}
             onPress={isConnected ? handleDisconnect : handleConnect}
             disabled={isLoading}
           >
-            <Text style={styles.connectButtonText}>
-              {isLoading ? 'Loading...' : isConnected ? 'Disconnect' : 'Connect'}
-            </Text>
+            <Text style={styles.connectButtonText}>{connectButtonLabel}</Text>
           </Pressable>
         </View>
 
@@ -310,3 +314,9 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
 });
+
+ProfileScreen.propTypes = {
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func.isRequired,
+  }).isRequired,
+};
