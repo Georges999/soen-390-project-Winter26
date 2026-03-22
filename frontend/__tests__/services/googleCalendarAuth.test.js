@@ -270,7 +270,11 @@ describe('googleCalendarAuth', () => {
 
   describe('isAuthenticated', () => {
     it('should return true when tokens exist', async () => {
-      SecureStore.getItemAsync.mockResolvedValue(JSON.stringify({ accessToken: 'abc' }));
+      SecureStore.getItemAsync.mockResolvedValue(JSON.stringify({
+        accessToken: 'abc',
+        expiresIn: 3600,
+        issuedAt: Date.now(),
+      }));
       const result = await isAuthenticated();
       expect(result).toBe(true);
     });
