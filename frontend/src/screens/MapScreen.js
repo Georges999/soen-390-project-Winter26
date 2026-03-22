@@ -745,7 +745,7 @@ export default function MapScreen({ route }) {
     speechEnabled,
   });
 
-  const { handleGoPress, handleSimulatePress } = useMapRoutingActions({
+  const { handleSimulatePress } = useMapRoutingActions({
     startCoord,
     destCoord,
     setFollowUser,
