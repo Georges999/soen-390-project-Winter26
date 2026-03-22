@@ -105,6 +105,23 @@ describe('MapScreen coverage-focused interactions', () => {
     fireEvent.press(getByText('Shuttle'));
   };
 
+  const openPoiPanelWithResults = async (utils, results) => {
+    const { getByTestId, getByText } = utils;
+
+    fetchNearbyPOIs.mockResolvedValueOnce(results);
+
+    fireEvent.press(getByTestId('poi-button'));
+    await waitFor(() => {
+      expect(getByTestId('poi-panel')).toBeTruthy();
+    });
+
+    fireEvent.press(getByText('Show on map'));
+
+    await waitFor(() => {
+      expect(getByText(results[0].name)).toBeTruthy();
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseDirectionsRoute.mockImplementation(() => ({
@@ -258,20 +275,9 @@ describe('MapScreen coverage-focused interactions', () => {
       distance: 175,
     };
 
-    fetchNearbyPOIs.mockImplementationOnce(async () => [testPOI]);
-
     const { getByTestId, getByText } = render(<MapScreen />);
 
-    fireEvent.press(getByTestId('poi-button'));
-    await waitFor(() => {
-      expect(getByTestId('poi-panel')).toBeTruthy();
-    });
-
-    fireEvent.press(getByText('Show on map'));
-
-    await waitFor(() => {
-      expect(getByText('Bottom Branch POI')).toBeTruthy();
-    });
+    await openPoiPanelWithResults({ getByTestId, getByText }, [testPOI]);
 
     fireEvent.press(getByText('Bottom Branch POI'));
 
