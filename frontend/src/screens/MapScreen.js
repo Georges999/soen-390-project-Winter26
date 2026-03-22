@@ -763,22 +763,35 @@ export default function MapScreen({ route }) {
 
   // Ensure Go uses the user's origin input when available. Only fall back
   // to device location if the origin input is completely empty.
-  const handleGo = () =>
-    handleGoLogic({
-      startCoord,
-      startText,
-      userCoord,
-      destCoord,
-      routeInfo,
-      speechEnabled,
-      routeCoords,
-      mapRef,
-      Speech,
-      stripHtml,
-      setFollowUser,
-      setNavActive,
-      setCurrentStepIndex,
-    });
+  const handleGo = () => {
+    // If the user left the origin field empty, default to device location.
+    const effectiveStart =
+      startCoord ?? (startText && startText !== "" ? null : userCoord);
+
+    if (!effectiveStart || !destCoord) return;
+
+    setFollowUser(true);
+    setNavActive(true);
+    setCurrentStepIndex(0);
+
+    const firstInstruction = routeInfo?.steps?.[0]?.instruction;
+    if (firstInstruction && speechEnabled) {
+      Speech?.stop?.();
+      Speech?.speak?.(stripHtml(firstInstruction));
+    }
+
+    if (routeCoords.length > 1) {
+      mapRef.current?.fitToCoordinates(routeCoords, {
+        edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+        animated: true,
+      });
+    } else if (effectiveStart) {
+      mapRef.current?.animateToRegion(
+        { ...effectiveStart, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+        500,
+      );
+    }
+  };
 
   const canShowDirectionsPanel = Boolean(
     showDirectionsPanel && startCoord && destCoord && !selectedPOI,
@@ -807,7 +820,7 @@ export default function MapScreen({ route }) {
           <Pressable
             onPress={() => {
               setSelectedPOI(poi);
-              setIsPOIPanelOpen(alse);
+              setIsPOIPanelOpen(false);
             }}
             style={{
               flexDirection: "row",
