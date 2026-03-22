@@ -303,7 +303,7 @@ export default function DirectionsPanel({
               </Text>
             </Pressable>
 
-            <Pressable style={styles.goBtn} onPress={onGo}>
+            <Pressable style={styles.goBtn} onPress={onGo} testID="go-btn">
               <Text style={styles.goBtnText}>GO</Text>
             </Pressable>
           </View>

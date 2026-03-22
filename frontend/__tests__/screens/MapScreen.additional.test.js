@@ -430,6 +430,32 @@ describe('MapScreen - Additional Coverage', () => {
         expect(getByTestId('dest-input').props.value).toBe('');
       });
     });
+
+    it('should prefill destination when route code is unknown (covers line 479)', async () => {
+      const route = {
+        params: {
+          nextClassLocation: 'ZZZ 999',
+          nextClassSummary: 'UNKNOWN',
+        },
+      };
+      const { getByTestId } = render(<MapScreen route={route} />);
+      await waitFor(() => {
+        expect(getByTestId('dest-input').props.value).toBe('ZZZ 999');
+      });
+    });
+
+    it('should prefill destination when route location has no code token (covers line 482)', async () => {
+      const route = {
+        params: {
+          nextClassLocation: '   ',
+          nextClassSummary: 'BLANK',
+        },
+      };
+      const { getByTestId } = render(<MapScreen route={route} />);
+      await waitFor(() => {
+        expect(getByTestId('dest-input').props.value).toBe('   ');
+      });
+    });
   });
 
   // ── Cross-campus transit ────────────────────────────────────────────────
