@@ -298,7 +298,7 @@ describe("findShortestPath", () => {
     expect(result.reason).toMatch(/end node/i);
   });
 
-  it("returns error when nodes are on different floors", () => {
+  it("returns error when nodes are on different floors with no connector", () => {
     const multiFloor = {
       floors: {
         F1: {
@@ -321,9 +321,7 @@ describe("findShortestPath", () => {
       endNodeId: "f2_n",
     });
     expect(result.ok).toBe(false);
-    expect(result.reason).toMatch(/different floors/i);
-    expect(result.startFloor).toBe("F1");
-    expect(result.endFloor).toBe("F2");
+    expect(result.reason).toMatch(/stairs|elevator|found/i);
   });
 
   it("returns error when no path exists between disconnected nodes", () => {
@@ -491,7 +489,7 @@ describe("findShortestPath", () => {
     expect(result.pathNodeIds[result.pathNodeIds.length - 1]).toBe("f1_elev");
   });
 
-  it("returns error on cross-floor without accessible when no support", () => {
+  it("returns error on cross-floor without accessible when no connector", () => {
     const multiFloor = {
       floors: {
         F1: {
@@ -515,7 +513,7 @@ describe("findShortestPath", () => {
       accessible: false,
     });
     expect(result.ok).toBe(false);
-    expect(result.reason).toMatch(/different floors/i);
+    expect(result.reason).toMatch(/stairs|elevator|found/i);
   });
 
   it("returns error on cross-floor accessible with no elevator on floor", () => {

@@ -653,7 +653,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           </ScrollView>
         )}
 
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}}>
+        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Outdoor segment card */}
           {segmentResults.length > 0 && segmentResults[activeSegmentIndex]?.segment?.type === "outdoor" && (
             <View style={styles.outdoorCard}>
