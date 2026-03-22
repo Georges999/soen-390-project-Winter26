@@ -3,6 +3,8 @@ const ORIGINAL_ENV = { ...process.env };
 function loadModule({
   platformOS = 'ios',
   appOwnership = 'standalone',
+  owner = 'boudy7168',
+  slug = 'campus-guide',
   exchangeResult = {
     accessToken: 'exchanged_access',
     refreshToken: 'refresh_token',
@@ -73,14 +75,14 @@ function loadModule({
       __esModule: true,
       appOwnership,
       expoConfig: {
-        owner: 'boudy7168',
-        slug: 'campus-guide',
+        owner,
+        slug,
       },
       default: {
         appOwnership,
         expoConfig: {
-          owner: 'boudy7168',
-          slug: 'campus-guide',
+          owner,
+          slug,
         },
       },
     }),
@@ -98,7 +100,9 @@ function loadModule({
   return {
     moduleApi,
     secureStoreMock,
+    AuthRequestMock,
     exchangeCodeAsyncMock,
+    makeRedirectUriMock,
     openAuthSessionAsyncMock,
     promptAsyncMock,
     getDefaultReturnUrlMock,
@@ -174,7 +178,9 @@ describe('googleCalendarAuth OAuth flows', () => {
   it('uses the web redirect flow on web', async () => {
     const {
       moduleApi,
+      AuthRequestMock,
       exchangeCodeAsyncMock,
+      makeRedirectUriMock,
       promptAsyncMock,
     } = loadModule({
       platformOS: 'web',
@@ -185,6 +191,121 @@ describe('googleCalendarAuth OAuth flows', () => {
     expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
     expect(promptAsyncMock).toHaveBeenCalled();
     expect(exchangeCodeAsyncMock).toHaveBeenCalled();
+    expect(makeRedirectUriMock).toHaveBeenCalledWith({ path: 'oauthredirect' });
+    expect(AuthRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: 'web_client_id',
+        redirectUri: 'com.concordia.campusguide://oauthredirect',
+      })
+    );
+  });
+
+  it('uses the Expo Go proxy flow with an anonymous project name', async () => {
+    const {
+      moduleApi,
+      AuthRequestMock,
+      openAuthSessionAsyncMock,
+      getDefaultReturnUrlMock,
+      parseReturnUrlMock,
+    } = loadModule({
+      appOwnership: 'expo',
+      owner: null,
+      slug: null,
+      parseReturnUrlResult: { type: 'success', params: { code: 'proxy-code' } },
+      webClientId: 'expo_web_client_id',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(AuthRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: 'expo_web_client_id',
+        redirectUri: 'https://auth.expo.io/@anonymous/campus-guide',
+      })
+    );
+    expect(getDefaultReturnUrlMock).toHaveBeenCalled();
+    expect(openAuthSessionAsyncMock).toHaveBeenCalledWith(
+      expect.stringContaining('https://auth.expo.io/@anonymous/campus-guide/start?'),
+      'exp://127.0.0.1'
+    );
+    expect(parseReturnUrlMock).toHaveBeenCalled();
+  });
+
+  it('builds a native redirect URI from a Google client id on Android', async () => {
+    const {
+      moduleApi,
+      AuthRequestMock,
+      makeRedirectUriMock,
+    } = loadModule({
+      platformOS: 'android',
+      androidClientId: 'android123.apps.googleusercontent.com',
+      webClientId: 'web_client_id',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(makeRedirectUriMock).toHaveBeenCalledWith({
+      native: 'com.googleusercontent.apps.android123:/oauthredirect',
+    });
+    expect(AuthRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: 'android123.apps.googleusercontent.com',
+        redirectUri: 'com.concordia.campusguide://oauthredirect',
+      })
+    );
+  });
+
+  it('falls back to the web client id when Android client id is missing', async () => {
+    const { moduleApi, AuthRequestMock } = loadModule({
+      platformOS: 'android',
+      androidClientId: '',
+      webClientId: 'android_fallback_web_client_id',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(AuthRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: 'android_fallback_web_client_id',
+      })
+    );
+  });
+
+  it('uses the owner slug when Expo Go project metadata is present', async () => {
+    const { moduleApi, AuthRequestMock } = loadModule({
+      appOwnership: 'expo',
+      owner: 'boudy7168',
+      slug: 'campus-guide',
+      webClientId: 'expo_web_client_id',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(AuthRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        redirectUri: 'https://auth.expo.io/@boudy7168/campus-guide',
+      })
+    );
+  });
+
+  it('falls back to the web client id on unsupported native platforms', async () => {
+    const { moduleApi, AuthRequestMock } = loadModule({
+      platformOS: 'windows',
+      webClientId: 'fallback_web_client_id',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(AuthRequestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientId: 'fallback_web_client_id',
+      })
+    );
   });
 
   it('returns a configuration error when no client id is configured', async () => {
