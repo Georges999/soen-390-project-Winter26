@@ -195,6 +195,29 @@ export default function MapScreen({ route }) {
   const getPOIFetchRadius = (mode = poiFilterMode, radius = poiRadius) =>
     mode === "range" ? radius : Math.max(radius, 2000);
 
+  const setOriginDetails = (text, coords, campusId) => {
+    setStartText(text);
+    if (coords) setStartCoord(coords);
+    if (campusId !== undefined) setStartCampusId(campusId);
+  };
+
+  const setDestinationDetails = (text, coords, campusId) => {
+    setDestText(text);
+    if (coords) setDestCoord(coords);
+    if (campusId !== undefined) setDestCampusId(campusId);
+  };
+
+  const setOriginToUserLocation = (coords) => {
+    setHasInteracted(true);
+    setOriginDetails("My location", coords, null);
+  };
+
+  const clearDestinationDetails = () => {
+    setDestText("");
+    setDestCoord(null);
+    setDestCampusId(null);
+  };
+
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
     () => campusList.find((campus) => campus.id === selectedCampusId),
@@ -252,18 +275,14 @@ export default function MapScreen({ route }) {
 
     //Only fill if user explicitly selected a field first
     if (activeField === "start") {
-      setStartText(name);
-      if (center) setStartCoord(center);
-      setStartCampusId(building.__campusId ?? selectedCampus?.id ?? null);
+      setOriginDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
       setActiveField(null); //resetting to false so next tap doesn't also change start
       Keyboard.dismiss();
       return;
     }
 
     if (activeField === "dest") {
-      setDestText(name);
-      if (center) setDestCoord(center);
-      setDestCampusId(building.__campusId ?? selectedCampus?.id ?? null);
+      setDestinationDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
       setActiveField(null);
       Keyboard.dismiss();
       return;
@@ -303,13 +322,9 @@ export default function MapScreen({ route }) {
     const center = getPolygonCenter(building.coordinates);
 
     if (field === "start") {
-      setStartText(name);
-      if (center) setStartCoord(center);
-      setStartCampusId(building.__campusId ?? null);
+      setOriginDetails(name, center, building.__campusId ?? null);
     } else if (field === "dest") {
-      setDestText(name);
-      if (center) setDestCoord(center);
-      setDestCampusId(building.__campusId ?? null);
+      setDestinationDetails(name, center, building.__campusId ?? null);
     }
 
     setActiveField(null);
@@ -322,13 +337,9 @@ export default function MapScreen({ route }) {
     if (!coords) return;
 
     if (field === "start") {
-      setStartText("My location");
-      setStartCoord(coords);
-      setStartCampusId(null);
+      setOriginToUserLocation(coords);
     } else if (field === "dest") {
-      setDestText("My location");
-      setDestCoord(coords);
-      setDestCampusId(null);
+      setDestinationDetails("My location", coords, null);
     }
 
     setActiveField(null);
@@ -378,11 +389,9 @@ export default function MapScreen({ route }) {
     const summary = route?.params?.nextClassSummary;
     if (!location) return;
 
-    setDestText(location);
-    setStartText("My location");
-    setHasInteracted(true);
+    setDestinationDetails(location);
+    setOriginToUserLocation(userCoord);
     setShowDirectionsPanel(true);
-    if (userCoord) setStartCoord(userCoord);
 
     const code = String(location).trim().split(/\s+/)[0];
     if (code) {
@@ -403,9 +412,7 @@ export default function MapScreen({ route }) {
     const name = getBuildingName(selectedBuilding);
     const center = getPolygonCenter(selectedBuilding.coordinates);
 
-    setDestText(name);
-    if (center) setDestCoord(center);
-    setDestCampusId(selectedBuilding.__campusId ?? selectedCampus?.id ?? null);
+    setDestinationDetails(name, center, selectedBuilding.__campusId ?? selectedCampus?.id ?? null);
 
     setSelectedBuilding(null);
     setShowDirectionsPanel(true);
@@ -806,9 +813,7 @@ export default function MapScreen({ route }) {
     // When a POI card is shown, hide the bottom directions panel so
     // the two are never visible at the same time.
     setShowDirectionsPanel(false);
-    setDestText(selectedPOI.name);
-    setDestCoord(selectedPOI.coords);
-    setDestCampusId(null);
+    setDestinationDetails(selectedPOI.name, selectedPOI.coords, null);
   }, [selectedPOI]);
 
   //Without this comment,we'd need to write a unit test specifically to force a missing config scenario to achieve 100% test coverage
@@ -870,7 +875,7 @@ export default function MapScreen({ route }) {
             setHasInteracted(true);
             setDestText(t);
             setDestCoord(null);
-            if (!t) setDestCampusId(null);
+            if (!t) clearDestinationDetails();
             if (!t) setShowDirectionsPanel(false);
           }}
           onStartFocus={() => {
@@ -886,8 +891,7 @@ export default function MapScreen({ route }) {
             setStartCoord(null);
           }}
           onClearDest={() => {
-            setDestText("");
-            setDestCoord(null);
+            clearDestinationDetails();
           }}
           onSwap={handleSwapStartDest}
           onSelectMyLocation={selectMyLocationForField}
