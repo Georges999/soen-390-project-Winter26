@@ -1,23 +1,23 @@
 const ORIGINAL_ENV = { ...process.env };
 
 function loadModule({
-  platformOS = "ios",
-  dev = true,
+  platformOS = 'ios',
   exchangeResult = {
-    accessToken: "exchanged_access",
-    refreshToken: "refresh_token",
+    accessToken: 'exchanged_access',
+    refreshToken: 'refresh_token',
     expiresIn: 3600,
   },
-  openAuthResult = { type: "success", url: "exp://127.0.0.1#ok" },
-  parseReturnUrlResult = { type: "success", params: { access_token: "proxy_access", expires_in: "3600" } },
+  promptAsyncResult = { type: 'success', params: { code: 'native-code' } },
 } = {}) {
   jest.resetModules();
   process.env = {
     ...ORIGINAL_ENV,
-    EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH: "false",
-    EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: "web_client_id",
+    EXPO_PUBLIC_USE_MOCK_GOOGLE_AUTH: 'false',
+    EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID: 'web_client_id',
+    EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID: 'ios_client_id',
+    EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID: 'android_client_id',
   };
-  global.__DEV__ = dev;
+  global.__DEV__ = true;
 
   const secureStoreMock = {
     setItemAsync: jest.fn().mockResolvedValue(),
@@ -25,159 +25,117 @@ function loadModule({
     deleteItemAsync: jest.fn().mockResolvedValue(),
   };
 
-  const makeAuthUrlAsyncMock = jest.fn().mockResolvedValue("https://accounts.google.com/auth");
-  const parseReturnUrlMock = jest.fn().mockReturnValue(parseReturnUrlResult);
-  const getDefaultReturnUrlMock = jest.fn().mockReturnValue("exp://127.0.0.1");
-  const makeRedirectUriMock = jest.fn().mockReturnValue("https://redirect.example/oauthredirect");
+  const promptAsyncMock = jest.fn().mockResolvedValue(promptAsyncResult);
+  const makeRedirectUriMock = jest.fn().mockReturnValue('com.concordia.campusguide://oauthredirect');
 
   const AuthRequestMock = jest.fn().mockImplementation(() => ({
-    codeVerifier: "code-verifier",
-    promptAsync: jest.fn(),
-    makeAuthUrlAsync: makeAuthUrlAsyncMock,
-    parseReturnUrl: parseReturnUrlMock,
+    codeVerifier: 'code-verifier',
+    promptAsync: promptAsyncMock,
+    makeAuthUrlAsync: jest.fn(),
+    parseReturnUrl: jest.fn(),
   }));
 
   const exchangeCodeAsyncMock = jest.fn().mockResolvedValue(exchangeResult);
-  const openAuthSessionAsyncMock = jest.fn().mockResolvedValue(openAuthResult);
 
-  jest.doMock("expo-secure-store", () => secureStoreMock, { virtual: true });
+  jest.doMock('expo-secure-store', () => secureStoreMock, { virtual: true });
   jest.doMock(
-    "expo-auth-session",
+    'expo-auth-session',
     () => ({
       AuthRequest: AuthRequestMock,
-      ResponseType: { Code: "code", Token: "token" },
+      ResponseType: { Code: 'code', Token: 'token' },
       makeRedirectUri: makeRedirectUriMock,
-      getDefaultReturnUrl: getDefaultReturnUrlMock,
+      getDefaultReturnUrl: jest.fn(),
       exchangeCodeAsync: exchangeCodeAsyncMock,
       refreshAsync: jest.fn(),
     }),
-    { virtual: true },
+    { virtual: true }
   );
   jest.doMock(
-    "expo-web-browser",
+    'expo-web-browser',
     () => ({
       maybeCompleteAuthSession: jest.fn(),
-      openAuthSessionAsync: openAuthSessionAsyncMock,
+      openAuthSessionAsync: jest.fn(),
     }),
-    { virtual: true },
+    { virtual: true }
   );
   jest.doMock(
-    "expo-constants",
+    'expo-constants',
     () => ({
-      expoConfig: {
-        owner: "boudy7168",
-        slug: "campus-guide",
+      __esModule: true,
+      default: {
+        appOwnership: 'standalone',
+        expoConfig: {
+          owner: 'boudy7168',
+          slug: 'campus-guide',
+        },
       },
     }),
-    { virtual: true },
+    { virtual: true }
   );
   jest.doMock(
-    "react-native",
+    'react-native',
     () => ({
       Platform: { OS: platformOS },
     }),
-    { virtual: true },
+    { virtual: true }
   );
 
-  const moduleApi = require("../../src/services/googleCalendarAuth");
+  const moduleApi = require('../../src/services/googleCalendarAuth');
   return {
     moduleApi,
     secureStoreMock,
     exchangeCodeAsyncMock,
-    openAuthSessionAsyncMock,
-    getDefaultReturnUrlMock,
-    makeRedirectUriMock,
-    parseReturnUrlMock,
+    promptAsyncMock,
   };
 }
 
-describe("googleCalendarAuth OAuth flows", () => {
+describe('googleCalendarAuth OAuth flows', () => {
   afterAll(() => {
     process.env = ORIGINAL_ENV;
   });
 
-  it("authenticates via authorization code exchange", async () => {
-    const { moduleApi, exchangeCodeAsyncMock, secureStoreMock } = loadModule({
-      platformOS: "ios",
-      parseReturnUrlResult: { type: "success", params: { code: "abc123" } },
-    });
+  it('authenticates via authorization code exchange', async () => {
+    const { moduleApi, exchangeCodeAsyncMock, secureStoreMock, promptAsyncMock } = loadModule();
 
     const result = await moduleApi.authenticateWithGoogle();
-    expect(result).toEqual({ success: true, accessToken: "exchanged_access" });
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(promptAsyncMock).toHaveBeenCalled();
     expect(exchangeCodeAsyncMock).toHaveBeenCalled();
     expect(secureStoreMock.setItemAsync).toHaveBeenCalled();
   });
 
-  it("authenticates when direct access token is returned", async () => {
-    const { moduleApi, exchangeCodeAsyncMock, secureStoreMock } = loadModule({
-      platformOS: "ios",
-      parseReturnUrlResult: {
-        type: "success",
-        params: { access_token: "direct_token", expires_in: "1800" },
-      },
-    });
-
-    const result = await moduleApi.authenticateWithGoogle();
-    expect(result).toEqual({ success: true, accessToken: "direct_token" });
-    expect(exchangeCodeAsyncMock).not.toHaveBeenCalled();
-
-    const payload = JSON.parse(secureStoreMock.setItemAsync.mock.calls[0][1]);
-    expect(payload.refreshToken).toBeNull();
-    expect(payload.expiresIn).toBe(1800);
-  });
-
-  it("returns cancel error when user cancels", async () => {
+  it('returns cancel error when user cancels', async () => {
     const { moduleApi } = loadModule({
-      platformOS: "ios",
-      openAuthResult: { type: "cancel" },
+      promptAsyncResult: { type: 'cancel' },
     });
 
     const result = await moduleApi.authenticateWithGoogle();
     expect(result).toEqual({
       success: false,
-      error: "User cancelled authentication",
+      error: 'User cancelled authentication',
     });
   });
 
-  it("returns oauth error description for unknown result type", async () => {
+  it('returns oauth error description for unknown result type', async () => {
     const { moduleApi } = loadModule({
-      platformOS: "ios",
-      parseReturnUrlResult: {
-        type: "error",
-        params: { error: "redirect_uri_mismatch", error_description: "Redirect URI mismatch" },
+      promptAsyncResult: {
+        type: 'error',
+        params: { error: 'redirect_uri_mismatch', error_description: 'Redirect URI mismatch' },
       },
     });
 
     const result = await moduleApi.authenticateWithGoogle();
     expect(result).toEqual({
       success: false,
-      error: "Redirect URI mismatch",
+      error: 'Redirect URI mismatch',
     });
   });
 
-  it("uses expo proxy flow on native platforms", async () => {
-    const { moduleApi, openAuthSessionAsyncMock, getDefaultReturnUrlMock, parseReturnUrlMock } =
-      loadModule({
-        platformOS: "ios",
-        openAuthResult: { type: "success", url: "exp://127.0.0.1#access_token=proxy_access" },
-        parseReturnUrlResult: {
-          type: "success",
-          params: { access_token: "proxy_access", expires_in: "3600" },
-        },
-      });
+  it('returns failure when promptAsync throws', async () => {
+    const { moduleApi, promptAsyncMock } = loadModule();
+    promptAsyncMock.mockRejectedValueOnce(new Error('oauth boom'));
 
     const result = await moduleApi.authenticateWithGoogle();
-    expect(result).toEqual({ success: true, accessToken: "proxy_access" });
-    expect(getDefaultReturnUrlMock).toHaveBeenCalled();
-    expect(openAuthSessionAsyncMock).toHaveBeenCalled();
-    expect(parseReturnUrlMock).toHaveBeenCalled();
-  });
-
-  it("returns failure when auth session throws", async () => {
-    const { moduleApi, openAuthSessionAsyncMock } = loadModule({ platformOS: "ios" });
-    openAuthSessionAsyncMock.mockRejectedValueOnce(new Error("oauth boom"));
-
-    const result = await moduleApi.authenticateWithGoogle();
-    expect(result).toEqual({ success: false, error: "oauth boom" });
+    expect(result).toEqual({ success: false, error: 'oauth boom' });
   });
 });

@@ -1,10 +1,16 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import CalendarScreen from '../../src/screens/CalendarScreen';
+import * as googleCalendarAuth from '../../src/services/googleCalendarAuth';
+import * as googleCalendarService from '../../src/services/googleCalendarService';
+
+jest.mock('../../src/services/googleCalendarAuth');
+jest.mock('../../src/services/googleCalendarService');
 
 const mockNavigation = {
   goBack: jest.fn(),
   navigate: jest.fn(),
+  addListener: jest.fn(),
 };
 
 const mockRoute = {
@@ -12,11 +18,19 @@ const mockRoute = {
 };
 
 describe('CalendarScreen', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockNavigation.addListener.mockReturnValue(jest.fn());
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(false);
+    googleCalendarService.fetchCalendarEvents.mockResolvedValue({
+      success: true,
+      events: [],
+    });
+  });
 
   it('should render Calendar title', () => {
     const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
+      <CalendarScreen navigation={mockNavigation} route={{ params: { calendars: [] } }} />
     );
     expect(getByText('Calendar')).toBeTruthy();
   });
@@ -25,123 +39,80 @@ describe('CalendarScreen', () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-02-23T12:00:00Z'));
     const today = new Date();
     const { getAllByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
+      <CalendarScreen navigation={mockNavigation} route={{ params: { calendars: [] } }} />
     );
     expect(getAllByText(String(today.getDate())).length).toBeGreaterThan(0);
     jest.useRealTimers();
   });
 
-  it('should display Time and Course headers', () => {
+  it('should show empty auth state when not connected', async () => {
     const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
+      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
     );
-    expect(getByText('Time')).toBeTruthy();
-    expect(getByText('Course')).toBeTruthy();
-  });
 
-  it('should navigate back when back button pressed', () => {
-    const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
-    );
-    // There's a back button with chevron-left icon and Calendar title
-    // Let's find the pressable near the chevron icon
-    expect(getByText('Calendar')).toBeTruthy();
-  });
-
-  it('should show week days', () => {
-    const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
-    );
-    // At least one of Mon-Sat should be visible
-    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const found = dayLabels.some((label) => {
-      try {
-        getByText(label);
-        return true;
-      } catch {
-        return false;
-      }
+    await waitFor(() => {
+      expect(getByText('Connect Google Calendar from Profile to see your schedule.')).toBeTruthy();
     });
-    expect(found).toBe(true);
   });
 
-  it('should allow selecting a different day', () => {
-    const { getAllByText, getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
+  it('should render live events from Google Calendar services', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    googleCalendarService.fetchCalendarEvents.mockResolvedValue({
+      success: true,
+      events: [
+        {
+          id: '1',
+          title: 'COMP 346',
+          summary: 'COMP 346',
+          location: 'EV 3.309',
+          startTime: new Date().toISOString(),
+        },
+      ],
+    });
+
+    const { getByText } = render(
+      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
     );
-    // The week view renders dates as numbers, try pressing one
-    const today = new Date();
-    const weekDay = new Date(today);
-    weekDay.setDate(today.getDate() + 1);
-    try {
-      const dayButton = getByText(String(weekDay.getDate()));
-      fireEvent.press(dayButton);
-    } catch {
-      // Day might not be rendered if at week boundary
-    }
-    expect(getByText('Calendar')).toBeTruthy();
+
+    await waitFor(() => {
+      expect(getByText('COMP 346')).toBeTruthy();
+      expect(getByText('EV 3.309')).toBeTruthy();
+    });
   });
 
-  it('should handle route with calendar params', () => {
-    const mockCalendars = [
+  it('should navigate to Map from live event directions button', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    googleCalendarService.fetchCalendarEvents.mockResolvedValue({
+      success: true,
+      events: [
+        {
+          id: '1',
+          title: 'SOEN 390',
+          summary: 'SOEN 390',
+          location: 'H 961',
+          startTime: new Date().toISOString(),
+        },
+      ],
+    });
+
+    const { getByText } = render(
+      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
+    );
+
+    await waitFor(() => expect(getByText('Get Directions')).toBeTruthy());
+    fireEvent.press(getByText('Get Directions'));
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
+      nextClassLocation: 'H 961',
+      nextClassSummary: 'SOEN 390',
+    });
+  });
+
+  it('should still support legacy calendar route params', () => {
+    const routeCalendars = [
       {
         id: 'test',
         name: 'Test Calendar',
-        selected: true,
-        events: [
-          {
-            summary: 'SOEN 390',
-            location: 'H 961',
-            start: { dateTime: '2026-02-22T10:00:00' },
-            end: { dateTime: '2026-02-22T11:30:00' },
-            recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'],
-          },
-        ],
-      },
-    ];
-    const { getByText } = render(
-      <CalendarScreen
-        navigation={mockNavigation}
-        route={{ params: { calendars: mockCalendars } }}
-      />,
-    );
-    expect(getByText('Calendar')).toBeTruthy();
-  });
-
-  it('should show empty state when no classes for selected day', () => {
-    const mockCalendars = [
-      {
-        id: 'test',
-        name: 'Test',
-        selected: true,
-        events: [
-          {
-            summary: 'SOEN 390',
-            location: 'H 961',
-            start: { dateTime: '2026-02-22T10:00:00' },
-            end: { dateTime: '2026-02-22T11:30:00' },
-            recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=ZZ'], // Invalid day - no match
-          },
-        ],
-      },
-    ];
-    const { getByText } = render(
-      <CalendarScreen
-        navigation={mockNavigation}
-        route={{ params: { calendars: mockCalendars } }}
-      />,
-    );
-    expect(getByText('No classes scheduled for this day')).toBeTruthy();
-  });
-
-  it('should show classes matching current day of week', () => {
-    const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-    const todayCode = dayMap[new Date().getDay()];
-
-    const mockCalendars = [
-      {
-        id: 'test',
-        name: 'Test',
         selected: true,
         events: [
           {
@@ -149,28 +120,19 @@ describe('CalendarScreen', () => {
             location: 'EV 3.309',
             start: { dateTime: '2026-02-22T14:00:00' },
             end: { dateTime: '2026-02-22T15:30:00' },
-            recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${todayCode}`],
+            recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU'],
           },
         ],
       },
     ];
+
     const { getByText } = render(
       <CalendarScreen
         navigation={mockNavigation}
-        route={{ params: { calendars: mockCalendars } }}
-      />,
+        route={{ params: { calendars: routeCalendars } }}
+      />
     );
-    expect(getByText('COMP 346')).toBeTruthy();
-    expect(getByText('EV 3.309')).toBeTruthy();
-  });
 
-  it('should display month and year', () => {
-    const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
-    );
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const now = new Date();
-    const expected = `${months[now.getMonth()]} ${now.getFullYear()}`;
-    expect(getByText(expected)).toBeTruthy();
+    expect(getByText('COMP 346')).toBeTruthy();
   });
 });
