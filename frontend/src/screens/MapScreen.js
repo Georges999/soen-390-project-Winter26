@@ -786,6 +786,7 @@ export default function MapScreen({ route }) {
         keyExtractor={(poi) => String(poi.id ?? poi.name)}
         renderItem={({ item: poi }) => (
           <Pressable
+            testID="poi-list-item"
             onPress={() => {
               setSelectedPOI(poi);
               setIsPOIPanelOpen(false);
