@@ -129,6 +129,13 @@ describe('MapScreen - Additional Coverage', () => {
       });
       expect(destInput.props.value).toBe('My location');
     });
+
+    it('should show "not found" message when searching for a non-existent building', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+      const startInput = getByTestId('start-input');
+      await focusAndType(startInput, 'XYZABC Building');
+      expect(getByText(/No buildings found/)).toBeTruthy();
+    });
   });
 
   // ── Building press (polygon tap) → Bottom Sheet → Directions ────────────
