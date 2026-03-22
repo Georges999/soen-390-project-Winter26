@@ -352,7 +352,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   setSearchQuery(startText);
                 }}
                 onBlur={() => {
-                  if (!searchResults.length) setActiveField(null);
+                  setActiveField(null);
                 }}
               />
               {startText.length > 0 && (
@@ -384,7 +384,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   setSearchQuery(destText);
                 }}
                 onBlur={() => {
-                  if (!searchResults.length) setActiveField(null);
+                  setActiveField(null);
                 }}
               />
               {destText.length > 0 && (
