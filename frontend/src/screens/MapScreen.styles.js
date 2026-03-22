@@ -100,6 +100,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  noResultsContainer: {
+    marginTop: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: "center",
+  },
+  noResultsText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#fff",
+    textAlign: "center",
+    opacity: 0.8,
+  },
   clearBtn: {
     width: 24,
     height: 24,

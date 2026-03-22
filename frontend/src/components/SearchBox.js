@@ -92,6 +92,16 @@ export default function SearchBox({
           ))}
         </View>
       )}
+
+      {/* Show "not found" message when searching for invalid buildings */}
+      {activeField && (activeField === "start" ? startText : destText).trim().length > 0 && !shouldShowMyLocationOption && searchResults.length === 0 && (
+        <View style={styles.noResultsContainer}>
+          <MaterialIcons name="search-off" size={24} color="#999" />
+          <Text style={styles.noResultsText}>
+            No buildings found. Please try again.
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
