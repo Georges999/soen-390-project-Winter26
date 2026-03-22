@@ -163,6 +163,13 @@ describe('CalendarScreen', () => {
             end: { dateTime: '2026-02-22T15:30:00' },
             recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU'],
           },
+          {
+            summary: 'SOEN 390',
+            location: 'H 961',
+            start: { dateTime: '2026-02-22T09:00:00' },
+            end: { dateTime: '2026-02-22T10:30:00' },
+            recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU'],
+          },
         ],
       },
     ];
@@ -174,6 +181,7 @@ describe('CalendarScreen', () => {
       />
     );
 
+    expect(getByText('SOEN 390')).toBeTruthy();
     expect(getByText('COMP 346')).toBeTruthy();
   });
 
@@ -203,5 +211,39 @@ describe('CalendarScreen', () => {
     );
 
     expect(getByText('No classes scheduled for this day')).toBeTruthy();
+  });
+
+  it('should sort live events by their start time', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    googleCalendarService.fetchCalendarEvents.mockResolvedValue({
+      success: true,
+      events: [
+        {
+          id: 'late',
+          title: 'COMP 346',
+          summary: 'COMP 346',
+          location: 'EV 3.309',
+          startTime: '2026-02-23T16:00:00.000Z',
+        },
+        {
+          id: 'early',
+          title: 'SOEN 390',
+          summary: 'SOEN 390',
+          location: 'H 961',
+          startTime: '2026-02-23T09:00:00.000Z',
+        },
+      ],
+    });
+
+    jest.useFakeTimers().setSystemTime(new Date('2026-02-23T12:00:00Z'));
+    const { getAllByText } = render(
+      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
+    );
+
+    await waitFor(() => {
+      const names = getAllByText(/SOEN 390|COMP 346/).map((node) => node.props.children);
+      expect(names).toEqual(['SOEN 390', 'COMP 346']);
+    });
+    jest.useRealTimers();
   });
 });

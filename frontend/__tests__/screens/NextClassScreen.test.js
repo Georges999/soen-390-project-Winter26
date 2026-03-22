@@ -37,6 +37,26 @@ describe('NextClassScreen', () => {
     });
   });
 
+  it('should refresh connection state when the screen regains focus', async () => {
+    const refresh = jest.fn();
+    useNextClass.mockReturnValue({
+      nextClass: null,
+      isLoading: false,
+      refresh,
+    });
+
+    render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(googleCalendarAuth.isAuthenticated).toHaveBeenCalledTimes(1);
+    });
+
+    const focusHandler = mockNavigation.addListener.mock.calls[0][1];
+    await focusHandler();
+
+    expect(googleCalendarAuth.isAuthenticated).toHaveBeenCalledTimes(2);
+  });
+
   it('should show a loading subtitle while calendar data is loading', async () => {
     googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
     useNextClass.mockReturnValue({

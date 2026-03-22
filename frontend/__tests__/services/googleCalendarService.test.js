@@ -13,9 +13,11 @@ const SecureStore = require('expo-secure-store');
 const {
   fetchGoogleCalendars,
   fetchCalendarEvents,
+  getSelectedCalendarIds,
   getUpcomingEvents,
   getNextClassEvent,
   parseBuildingFromLocation,
+  saveSelectedCalendarIds,
 } = require('../../src/services/googleCalendarService');
 
 describe('googleCalendarService', () => {
@@ -113,6 +115,32 @@ describe('googleCalendarService', () => {
         error: 'API error: 403',
       });
     });
+
+    it('falls back to the first calendar when there is no stored or primary calendar', async () => {
+      getValidAccessToken.mockResolvedValue('token');
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          items: [
+            { id: 'team', summary: 'Team', accessRole: 'reader', primary: false },
+            { id: 'personal', summary: 'Personal', accessRole: 'reader', primary: false },
+          ],
+        }),
+      });
+
+      const result = await fetchGoogleCalendars();
+
+      expect(result.calendars[0]).toEqual({
+        id: 'personal',
+        name: 'Personal',
+        primary: false,
+        selected: true,
+      });
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+        'google_calendar_selected_ids',
+        JSON.stringify(['personal'])
+      );
+    });
   });
 
   describe('fetchCalendarEvents', () => {
@@ -209,6 +237,22 @@ describe('googleCalendarService', () => {
     });
   });
 
+  describe('calendar selection storage helpers', () => {
+    it('returns an empty array when reading selected ids fails', async () => {
+      SecureStore.getItemAsync.mockRejectedValue(new Error('read error'));
+
+      const result = await getSelectedCalendarIds();
+
+      expect(result).toEqual([]);
+    });
+
+    it('does not throw when saving selected ids fails', async () => {
+      SecureStore.setItemAsync.mockRejectedValue(new Error('write error'));
+
+      await expect(saveSelectedCalendarIds(['primary'])).resolves.toBeUndefined();
+    });
+  });
+
   describe('getUpcomingEvents', () => {
     it('delegates to fetchCalendarEvents for selected calendars', async () => {
       getValidAccessToken.mockResolvedValue('token');
@@ -293,6 +337,43 @@ describe('googleCalendarService', () => {
 
     it('should return null for unrecognized location', () => {
       expect(parseBuildingFromLocation('Starbucks')).toBeNull();
+    });
+  });
+
+  describe('mock calendar mode', () => {
+    const originalEnv = process.env;
+
+    afterEach(() => {
+      process.env = originalEnv;
+      jest.resetModules();
+    });
+
+    it('returns mock events when mock calendar mode is enabled', async () => {
+      process.env = {
+        ...originalEnv,
+        EXPO_PUBLIC_USE_MOCK_CALENDAR: 'true',
+      };
+      jest.resetModules();
+
+      jest.doMock('../../src/services/googleCalendarAuth', () => ({
+        getValidAccessToken: jest.fn(),
+      }));
+      jest.doMock('expo-secure-store', () => ({
+        setItemAsync: jest.fn(),
+        getItemAsync: jest.fn(),
+        deleteItemAsync: jest.fn(),
+      }), { virtual: true });
+
+      const mockModule = require('../../src/services/googleCalendarService');
+      const result = await mockModule.fetchCalendarEvents();
+
+      expect(result.success).toBe(true);
+      expect(result.events).toHaveLength(3);
+      expect(result.events[0]).toEqual(
+        expect.objectContaining({
+          calendarId: 'primary',
+        })
+      );
     });
   });
 });
