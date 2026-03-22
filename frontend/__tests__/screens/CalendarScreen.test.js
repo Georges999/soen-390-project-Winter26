@@ -17,6 +17,10 @@ const mockRoute = {
   params: undefined,
 };
 
+function renderCalendarScreen(route = mockRoute) {
+  return render(<CalendarScreen navigation={mockNavigation} route={route} />);
+}
+
 describe('CalendarScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -29,26 +33,20 @@ describe('CalendarScreen', () => {
   });
 
   it('should render Calendar title', () => {
-    const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={{ params: { calendars: [] } }} />
-    );
+    const { getByText } = renderCalendarScreen({ params: { calendars: [] } });
     expect(getByText('Calendar')).toBeTruthy();
   });
 
   it('should display current date number', () => {
     jest.useFakeTimers().setSystemTime(new Date('2026-02-23T12:00:00Z'));
     const today = new Date();
-    const { getAllByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={{ params: { calendars: [] } }} />
-    );
+    const { getAllByText } = renderCalendarScreen({ params: { calendars: [] } });
     expect(getAllByText(String(today.getDate())).length).toBeGreaterThan(0);
     jest.useRealTimers();
   });
 
   it('should show empty auth state when not connected', async () => {
-    const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
-    );
+    const { getByText } = renderCalendarScreen();
 
     await waitFor(() => {
       expect(getByText('Connect Google Calendar from Profile to see your schedule.')).toBeTruthy();
@@ -62,12 +60,9 @@ describe('CalendarScreen', () => {
       error: 'Calendar API failed',
     });
 
-    const { getByText } = render(
-      <CalendarScreen
-        navigation={mockNavigation}
-        route={{ params: { selectedCalendarIds: ['team'] } }}
-      />
-    );
+    const { getByText } = renderCalendarScreen({
+      params: { selectedCalendarIds: ['team'] },
+    });
 
     await waitFor(() => {
       expect(getByText('Calendar API failed')).toBeTruthy();
@@ -94,9 +89,7 @@ describe('CalendarScreen', () => {
       ],
     });
 
-    const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
-    );
+    const { getByText } = renderCalendarScreen();
 
     await waitFor(() => {
       expect(getByText('COMP 346')).toBeTruthy();
@@ -119,9 +112,7 @@ describe('CalendarScreen', () => {
       ],
     });
 
-    const { getByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
-    );
+    const { getByText } = renderCalendarScreen();
 
     await waitFor(() => expect(getByText('Get Directions')).toBeTruthy());
     fireEvent.press(getByText('Get Directions'));
@@ -135,7 +126,7 @@ describe('CalendarScreen', () => {
   it('should reload events when the screen regains focus', async () => {
     googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
 
-    render(<CalendarScreen navigation={mockNavigation} route={mockRoute} />);
+    renderCalendarScreen();
 
     await waitFor(() => {
       expect(googleCalendarService.fetchCalendarEvents).toHaveBeenCalledTimes(1);
@@ -174,12 +165,9 @@ describe('CalendarScreen', () => {
       },
     ];
 
-    const { getByText } = render(
-      <CalendarScreen
-        navigation={mockNavigation}
-        route={{ params: { calendars: routeCalendars } }}
-      />
-    );
+    const { getByText } = renderCalendarScreen({
+      params: { calendars: routeCalendars },
+    });
 
     expect(getByText('SOEN 390')).toBeTruthy();
     expect(getByText('COMP 346')).toBeTruthy();
@@ -203,12 +191,9 @@ describe('CalendarScreen', () => {
       },
     ];
 
-    const { getByText } = render(
-      <CalendarScreen
-        navigation={mockNavigation}
-        route={{ params: { calendars: routeCalendars } }}
-      />
-    );
+    const { getByText } = renderCalendarScreen({
+      params: { calendars: routeCalendars },
+    });
 
     expect(getByText('No classes scheduled for this day')).toBeTruthy();
   });
@@ -236,9 +221,7 @@ describe('CalendarScreen', () => {
     });
 
     jest.useFakeTimers().setSystemTime(new Date('2026-02-23T12:00:00Z'));
-    const { getAllByText } = render(
-      <CalendarScreen navigation={mockNavigation} route={mockRoute} />
-    );
+    const { getAllByText } = renderCalendarScreen();
 
     await waitFor(() => {
       const names = getAllByText(/SOEN 390|COMP 346/).map((node) => node.props.children);
