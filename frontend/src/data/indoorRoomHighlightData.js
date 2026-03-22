@@ -1,13 +1,19 @@
 const hallMappings = require("../../../Floor_Mapping/indoor/Json_Files/Hall9thMapping.json");
+const hall1stMappings = require("../../../Floor_Mapping/indoor/Json_Files/Hall1stMapping.json");
+const hall2ndMappings = require("../../../Floor_Mapping/indoor/Json_Files/Hall2ndMapping.json");
 const mbFloor1Mapping = require("../../../Floor_Mapping/indoor/Json_Files/floorplan-MP1.json");
 const mbBasementMapping = require("../../../Floor_Mapping/indoor/Json_Files/floorplan-MBS2.json");
 const loyolaMappings = require("../../../Floor_Mapping/indoor/Json_Files/VLF2-Floor-Plan.json");
+const cc1Mapping = require("../../../Floor_Mapping/indoor/Json_Files/CC1-FloorPlan.json");
 
 const FLOOR_ID_ALIASES = {
+  "Hall-1-Red": "Hall-1",
+  "Hall-2-Red": "Hall-2",
   "Hall-8": "Hall-8",
   "Hall-9": "Hall-9",
   "MB-1-annotated": "MB-1",
   "MB-S2-copy": "MB-S2",
+  "CC1-red": "CC-1",
   "VL-1-annotated": "VL-1",
   "VL-2-annotated": "VL-2",
   "VE-2-annotated": "VE-2",
@@ -15,9 +21,12 @@ const FLOOR_ID_ALIASES = {
 
 const MAPPING_SOURCES = [
   hallMappings,
+  hall1stMappings,
+  hall2ndMappings,
   mbFloor1Mapping,
   mbBasementMapping,
   loyolaMappings,
+  cc1Mapping,
 ];
 
 function normalizeRoomLabel(label = "") {
@@ -57,6 +66,12 @@ function formatRoomLabel(floorId, label = "") {
     return numeric || raw;
   }
 
+  if (floorId.startsWith("CC-")) {
+    const withoutPrefix = raw.replace(/^CC1-?red-?/i, "").replace(/^CC-?/i, "");
+    const numeric = extractNumericLabel(withoutPrefix);
+    return numeric || raw;
+  }
+
   return raw;
 }
 
@@ -80,6 +95,13 @@ function getRoomAliases(floorId, label) {
     const veMatch = /^VE\D*(\d{3,})/.exec(String(label).toUpperCase());
     if (veMatch) {
       aliases.push(`VE${veMatch[1]}`, veMatch[1]);
+    }
+  }
+
+  if (floorId.startsWith("CC-")) {
+    const ccMatch = /\d{3,}/.exec(String(label));
+    if (ccMatch) {
+      aliases.push(`CC${ccMatch[0]}`, ccMatch[0]);
     }
   }
 
