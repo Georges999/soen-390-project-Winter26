@@ -158,5 +158,41 @@ describe('crossFloorRouter', () => {
       const types = segments.map((s) => s.type);
       expect(types).toContain('outdoor');
     });
+
+    it('walks directly on ground floor when dest is on ground floor (cross-building)', () => {
+      // Hall-1 IS the ground floor for Hall (lowest floorNumber = 1).
+      // Routing from MB to Hall-1 should hit the else branch: no vertical
+      // transition needed on the destination side — just walk to the room.
+      const segments = buildRouteSegments(
+        { id: 'MB1.210', floor: 'MB-1' },
+        { id: 'H110', floor: 'Hall-1' },
+        'stairs'
+      );
+      const types = segments.map((s) => s.type);
+      expect(types).toContain('outdoor');
+      // The last indoor segment should be on Hall-1 (ground floor walk)
+      const lastIndoor = [...segments].reverse().find((s) => s.type === 'indoor');
+      expect(lastIndoor).toBeDefined();
+      expect(lastIndoor.floorId).toBe('Hall-1');
+      // There should be NO vertical segment targeting Hall (dest side)
+      const destVerticals = segments.filter(
+        (s) => s.type === 'vertical' && s.buildingId === 'hall'
+      );
+      // If MB has vertical segments (going to ground floor) that's fine,
+      // but Hall side should have none because dest is already on ground floor
+      expect(destVerticals).toHaveLength(0);
+    });
+
+    it('uses elevator preference for cross-building route', () => {
+      const segments = buildRouteSegments(
+        { id: 'H837', floor: 'Hall-8' },
+        { id: 'MB1.210', floor: 'MB-1' },
+        'elevator'
+      );
+      const verticals = segments.filter((s) => s.type === 'vertical');
+      verticals.forEach((v) => {
+        expect(v.transitionType).toBe('elevator');
+      });
+    });
   });
 });

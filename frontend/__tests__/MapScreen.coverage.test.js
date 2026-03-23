@@ -846,4 +846,48 @@ describe('MapScreen coverage-focused interactions', () => {
     });
   });
 
+  it('pre-fills outdoor route from indoor cross-building navigation', async () => {
+    const outdoorRoute = {
+      startName: 'Hall Building',
+      destName: 'MB Building',
+      startCoords: { latitude: 45.4973, longitude: -73.5789 },
+      destCoords: { latitude: 45.4953, longitude: -73.5788 },
+    };
+    const { getByTestId } = render(
+      <MapScreen route={{ params: { outdoorRoute } }} />
+    );
+    await waitFor(() => {
+      expect(getByTestId('start-input').props.value).toBe('Hall Building');
+      expect(getByTestId('dest-input').props.value).toBe('MB Building');
+    });
+  });
+
+  it('pre-fills outdoor route with partial data (no coords)', async () => {
+    const outdoorRoute = {
+      startName: 'Hall Building',
+      destName: 'MB Building',
+    };
+    const { getByTestId } = render(
+      <MapScreen route={{ params: { outdoorRoute } }} />
+    );
+    await waitFor(() => {
+      expect(getByTestId('start-input').props.value).toBe('Hall Building');
+      expect(getByTestId('dest-input').props.value).toBe('MB Building');
+    });
+  });
+
+  it('pre-fills outdoor route with missing names (fallback to empty string)', async () => {
+    const outdoorRoute = {
+      startCoords: { latitude: 45.4973, longitude: -73.5789 },
+      destCoords: { latitude: 45.4953, longitude: -73.5788 },
+    };
+    const { getByTestId } = render(
+      <MapScreen route={{ params: { outdoorRoute } }} />
+    );
+    await waitFor(() => {
+      expect(getByTestId('start-input').props.value).toBe('');
+      expect(getByTestId('dest-input').props.value).toBe('');
+    });
+  });
+
 });
