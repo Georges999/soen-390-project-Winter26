@@ -1,8 +1,9 @@
 import React from "react";
 import { View, Text, Pressable, TextInput, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import PropTypes from "prop-types";
 
-export default function SearchBox({
+function SearchBox({
   styles,
   startText,
   destText,
@@ -105,3 +106,45 @@ export default function SearchBox({
     </View>
   );
 }
+
+const stylePropType = PropTypes.oneOfType([
+  PropTypes.object,
+  PropTypes.array,
+  PropTypes.number,
+]);
+
+SearchBox.propTypes = {
+  styles: PropTypes.shape({
+    redBox: stylePropType,
+    inputRow: stylePropType,
+    searchIcon: stylePropType,
+    input: stylePropType,
+    inputPlaceholder: stylePropType,
+    clearBtn: stylePropType,
+    clearBtnText: stylePropType,
+    swapBtn: stylePropType,
+    searchResults: stylePropType,
+    searchResultRow: stylePropType,
+    searchResultText: stylePropType,
+    noResultsContainer: stylePropType,
+    noResultsText: stylePropType,
+  }).isRequired,
+  startText: PropTypes.string.isRequired,
+  destText: PropTypes.string.isRequired,
+  activeField: PropTypes.string,
+  searchResults: PropTypes.arrayOf(PropTypes.object).isRequired,
+  shouldShowMyLocationOption: PropTypes.bool.isRequired,
+  getBuildingKey: PropTypes.func.isRequired,
+  getBuildingName: PropTypes.func.isRequired,
+  onStartChange: PropTypes.func.isRequired,
+  onDestChange: PropTypes.func.isRequired,
+  onStartFocus: PropTypes.func.isRequired,
+  onDestFocus: PropTypes.func.isRequired,
+  onClearStart: PropTypes.func.isRequired,
+  onClearDest: PropTypes.func.isRequired,
+  onSwap: PropTypes.func.isRequired,
+  onSelectMyLocation: PropTypes.func.isRequired,
+  onSelectBuilding: PropTypes.func.isRequired,
+};
+
+export default SearchBox;
