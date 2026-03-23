@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import {
   View,
   Text,
@@ -73,7 +74,7 @@ const getRoomSelectionIndexes = (campusBuildings, room) => {
   return { buildingIdx, floorIdx };
 };
 
-export default function IndoorMapScreen({ navigation }) {
+function IndoorMapScreen({ navigation }) {
   // Campus toggle: "sgw" or "loyola"
   const [selectedCampus, setSelectedCampus] = useState("sgw");
   // Currently selected building index within campus
@@ -450,6 +451,15 @@ export default function IndoorMapScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
+IndoorMapScreen.propTypes = {
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func.isRequired,
+    goBack: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
+export default IndoorMapScreen;
 
 const styles = StyleSheet.create({
   safeArea: {
