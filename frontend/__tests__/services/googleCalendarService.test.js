@@ -433,11 +433,17 @@ describe('googleCalendarService – production mode', () => {
     expect(result.events).toHaveLength(1);
     expect(result.events[0]).toEqual({
       id: '1',
+      googleEventId: '1',
+      calendarId: 'primary',
       title: 'SOEN 390',
+      summary: 'SOEN 390',
       location: 'H 501',
+      start: { dateTime: '2025-06-18T14:00:00Z' },
+      end: { dateTime: '2025-06-18T15:30:00Z' },
       startTime: '2025-06-18T14:00:00Z',
       endTime: '2025-06-18T15:30:00Z',
       description: 'Lecture',
+      recurrence: [],
     });
   });
 
