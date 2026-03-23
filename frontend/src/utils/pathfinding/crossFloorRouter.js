@@ -14,11 +14,8 @@
  */
 
 import {
-  buildings,
   FLOOR_META,
   BUILDING_META,
-  getBuildingById,
-  getFloorGraphData,
   getAllNodesForFloor,
 } from "../../data/indoorFloorData";
 

@@ -149,7 +149,7 @@ const fitMapToRoute = (mapRef, routeCoords) => {
   });
 };
 
-export default function MapScreen({ route }) {
+export default function MapScreen({ route }) { // eslint-disable-line react/prop-types
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
   const [hasInteracted, setHasInteracted] = useState(false);
 

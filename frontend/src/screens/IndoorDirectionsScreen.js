@@ -23,11 +23,100 @@ const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// ── Step-text helpers (extracted to reduce cognitive complexity) ──
+
+const NODE_TYPE_TEXT = {
+  elevator: "Pass the elevator",
+  stairs: "Pass the stairs",
+  washroom: "Pass the washroom on your right",
+  escalator: "Pass the escalator",
+  hallway: "Continue through the hallway",
+};
+
+function nodeStepText(node) {
+  return NODE_TYPE_TEXT[node.type] || "Continue along the corridor";
+}
+
+function buildSegmentIcon(method) {
+  return method === "elevator" ? "elevator" : "stairs";
+}
+
+/** Build direction steps for cross-floor / cross-building routes. */
+function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
+  const steps = [];
+  let stepNum = 1;
+
+  steps.push({ step: stepNum++, text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
+
+  for (let si = 0; si < segmentResults.length; si++) {
+    const { segment, pathResult: segPath } = segmentResults[si];
+
+    if (segment.type === "indoor" && segPath?.ok) {
+      const coords = segPath.pathCoords || [];
+      const floorMeta = FLOOR_META[segment.floorId];
+      const floorLabel = floorMeta?.floorLabel || segment.floorId;
+
+      if (si > 0) {
+        steps.push({ step: stepNum++, text: `Continue on Floor ${floorLabel}`, icon: "layers" });
+      }
+
+      for (let i = 1; i < coords.length - 1; i++) {
+        steps.push({ step: stepNum++, text: nodeStepText(coords[i]) });
+      }
+    } else if (segment.type === "vertical") {
+      const fromLabel = FLOOR_META[segment.fromFloor]?.floorLabel || segment.fromFloor;
+      const toLabel = FLOOR_META[segment.toFloor]?.floorLabel || segment.toFloor;
+      const method = segment.transitionType === "elevator" ? "elevator" : "stairs";
+      steps.push({
+        step: stepNum++,
+        text: `Take the ${method} from Floor ${fromLabel} to Floor ${toLabel}`,
+        icon: buildSegmentIcon(method),
+      });
+    } else if (segment.type === "outdoor") {
+      steps.push({
+        step: stepNum++,
+        text: `Walk outside to the ${segment.toBuildingId?.toUpperCase() || "destination"} building`,
+        icon: "directions-walk",
+      });
+    }
+  }
+
+  steps.push({ step: stepNum, text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
+  return steps;
+}
+
+/** Build direction steps for same-floor routes. */
+function buildSameFloorSteps(coords, startRoom, destRoom) {
+  if (coords.length < 2) return [];
+
+  const steps = [{
+    step: 1,
+    text: `Start at ${startRoom?.label || 'starting point'}`,
+    distance: null,
+  }];
+
+  for (let i = 1; i < coords.length - 1; i++) {
+    steps.push({
+      step: i + 1,
+      text: nodeStepText(coords[i]),
+      distance: null,
+    });
+  }
+
+  steps.push({
+    step: coords.length,
+    text: `Arrive at ${destRoom?.label || 'destination'}`,
+    distance: null,
+  });
+
+  return steps;
+}
+
 // Map image dimensions
 const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
 
-export default function IndoorDirectionsScreen({ route, navigation }) {
+export default function IndoorDirectionsScreen({ route, navigation }) { // eslint-disable-line react/prop-types
   const params = route?.params || {};
 
   // Start and destination rooms
@@ -205,54 +294,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const directionSteps = useMemo(() => {
     // Cross-floor / cross-building: combine all segments into unified steps
     if (segmentResults.length > 0) {
-      const steps = [];
-      let stepNum = 1;
-
-      steps.push({ step: stepNum++, text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
-
-      for (let si = 0; si < segmentResults.length; si++) {
-        const { segment, pathResult: segPath } = segmentResults[si];
-
-        if (segment.type === "indoor" && segPath?.ok) {
-          const coords = segPath.pathCoords || [];
-          const floorMeta = FLOOR_META[segment.floorId];
-          const floorLabel = floorMeta?.floorLabel || segment.floorId;
-
-          if (si > 0) {
-            steps.push({ step: stepNum++, text: `Continue on Floor ${floorLabel}`, icon: "layers" });
-          }
-
-          for (let i = 1; i < coords.length - 1; i++) {
-            const node = coords[i];
-            let stepText = "Continue along the corridor";
-            if (node.type === "elevator") stepText = "Pass the elevator";
-            else if (node.type === "stairs") stepText = "Pass the stairs";
-            else if (node.type === "washroom") stepText = "Pass the washroom";
-            else if (node.type === "escalator") stepText = "Pass the escalator";
-            steps.push({ step: stepNum++, text: stepText });
-          }
-        } else if (segment.type === "vertical") {
-          const fromMeta = FLOOR_META[segment.fromFloor];
-          const toMeta = FLOOR_META[segment.toFloor];
-          const fromLabel = fromMeta?.floorLabel || segment.fromFloor;
-          const toLabel = toMeta?.floorLabel || segment.toFloor;
-          const method = segment.transitionType === "elevator" ? "elevator" : "stairs";
-          steps.push({
-            step: stepNum++,
-            text: `Take the ${method} from Floor ${fromLabel} to Floor ${toLabel}`,
-            icon: method === "elevator" ? "elevator" : "stairs",
-          });
-        } else if (segment.type === "outdoor") {
-          steps.push({
-            step: stepNum++,
-            text: `Walk outside to the ${segment.toBuildingId?.toUpperCase() || "destination"} building`,
-            icon: "directions-walk",
-          });
-        }
-      }
-
-      steps.push({ step: stepNum, text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
-      return steps;
+      return buildMultiSegmentSteps(segmentResults, startRoom, destRoom);
     }
 
     // Same-floor: original logic
@@ -260,47 +302,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       return [];
     }
 
-    const steps = [];
-    const coords = pathResult.pathCoords;
-
-    if (coords.length >= 2) {
-      steps.push({
-        step: 1,
-        text: `Start at ${startRoom?.label || 'starting point'}`,
-        distance: null
-      });
-
-      for (let i = 1; i < coords.length - 1; i++) {
-        const node = coords[i];
-        let stepText = "Continue along the corridor";
-        
-        if (node.type === 'elevator') {
-          stepText = "Pass the elevator";
-        } else if (node.type === 'stairs') {
-          stepText = "Pass the stairs";
-        } else if (node.type === 'washroom') {
-          stepText = "Pass the washroom on your right";
-        } else if (node.type === 'hallway') {
-          stepText = "Continue through the hallway";
-        } else if (node.type === 'escalator') {
-          stepText = "Pass the escalator";
-        }
-
-        steps.push({
-          step: i + 1,
-          text: stepText,
-          distance: null
-        });
-      }
-
-      steps.push({
-        step: coords.length,
-        text: `Arrive at ${destRoom?.label || 'destination'}`,
-        distance: null
-      });
-    }
-
-    return steps;
+    return buildSameFloorSteps(pathResult.pathCoords, startRoom, destRoom);
   }, [pathResult, startRoom, destRoom, segmentResults]);
 
   // Route stats - calculate actual distance
@@ -628,7 +630,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               if (seg.type === "indoor") {
                 const meta = FLOOR_META[seg.floorId];
                 label = meta ? `Floor ${meta.floorLabel}` : seg.floorId;
-                icon = "layers";
               } else if (seg.type === "vertical") {
                 label = seg.transitionType === "elevator" ? "Elevator" : "Stairs";
                 icon = seg.transitionType === "elevator" ? "elevator" : "stairs";
@@ -638,7 +639,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               }
               return (
                 <Pressable
-                  key={idx}
+                  key={`${seg.type}-${seg.floorId || seg.fromFloor || "out"}-${idx}`}
                   style={[styles.segmentTab, idx === activeSegmentIndex && styles.segmentTabActive]}
                   onPress={() => setActiveSegmentIndex(idx)}
                 >
