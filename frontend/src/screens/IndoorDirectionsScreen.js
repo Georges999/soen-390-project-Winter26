@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import PropTypes from "prop-types";
 import {
   View,
   Text,
@@ -116,7 +117,29 @@ function buildSameFloorSteps(coords, startRoom, destRoom) {
 const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
 
-export default function IndoorDirectionsScreen({ route, navigation }) { // eslint-disable-line react/prop-types
+/** Resolve a single route segment into { segment, pathResult }. */
+function resolveSegmentPath(seg, accessible) {
+  if (seg.type !== "indoor") return { segment: seg, pathResult: null };
+
+  const buildingObj = getBuildingById(seg.buildingId);
+  if (!buildingObj) return { segment: seg, pathResult: { ok: false, reason: "Building not found" } };
+
+  const floorsData = { floors: {} };
+  buildingObj.floors.forEach((floor) => {
+    const fd = getFloorGraphData(buildingObj.id, floor.id);
+    floorsData.floors[floor.id] = { label: floor.label, nodes: fd.nodes, rooms: fd.rooms, pois: fd.pois, edges: fd.edges };
+  });
+
+  const result = findShortestPath({
+    floorsData,
+    startNodeId: seg.fromNodeId,
+    endNodeId: seg.toNodeId,
+    accessible,
+  });
+  return { segment: seg, pathResult: result };
+}
+
+export default function IndoorDirectionsScreen({ route, navigation }) {
   const params = route?.params || {};
 
   // Start and destination rooms
@@ -212,26 +235,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) { // eslin
   // Multi-segment path results (cross-floor)
   const segmentResults = useMemo(() => {
     if (!routeSegments.length) return [];
-    return routeSegments.map((seg) => {
-      if (seg.type !== "indoor") return { segment: seg, pathResult: null };
-
-      const buildingObj = getBuildingById(seg.buildingId);
-      if (!buildingObj) return { segment: seg, pathResult: { ok: false, reason: "Building not found" } };
-
-      const floorsData = { floors: {} };
-      buildingObj.floors.forEach((floor) => {
-        const fd = getFloorGraphData(buildingObj.id, floor.id);
-        floorsData.floors[floor.id] = { label: floor.label, nodes: fd.nodes, rooms: fd.rooms, pois: fd.pois, edges: fd.edges };
-      });
-
-      const result = findShortestPath({
-        floorsData,
-        startNodeId: seg.fromNodeId,
-        endNodeId: seg.toNodeId,
-        accessible: accessibleRoute,
-      });
-      return { segment: seg, pathResult: result };
-    });
+    return routeSegments.map((seg) => resolveSegmentPath(seg, accessibleRoute));
   }, [routeSegments, accessibleRoute]);
 
   // Filtered search results
@@ -1413,3 +1417,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+
+IndoorDirectionsScreen.propTypes = {
+  route: PropTypes.shape({
+    params: PropTypes.object,
+  }),
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func,
+    goBack: PropTypes.func,
+  }),
+};

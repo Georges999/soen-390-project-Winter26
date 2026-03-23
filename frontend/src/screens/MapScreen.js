@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { View, Text, Pressable, Keyboard, FlatList } from "react-native";
 import MapView, { Polygon, Marker } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -149,7 +150,7 @@ const fitMapToRoute = (mapRef, routeCoords) => {
   });
 };
 
-export default function MapScreen({ route }) { // eslint-disable-line react/prop-types
+export default function MapScreen({ route }) {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -1403,3 +1404,17 @@ export default function MapScreen({ route }) { // eslint-disable-line react/prop
     </View>
   );
 }
+
+MapScreen.propTypes = {
+  route: PropTypes.shape({
+    params: PropTypes.shape({
+      outdoorRoute: PropTypes.shape({
+        startName: PropTypes.string,
+        destName: PropTypes.string,
+        startCoords: PropTypes.object,
+        destCoords: PropTypes.object,
+      }),
+      nextClassLocation: PropTypes.string,
+    }),
+  }),
+};
