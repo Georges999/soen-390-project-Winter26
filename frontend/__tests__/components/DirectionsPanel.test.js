@@ -240,6 +240,8 @@ describe('DirectionsPanel', () => {
     expect(queryByText(/\(ETA/)).toBeNull();
   });
 
+  // Infinity duration can occur when routing APIs return incomplete or invalid ETA values.
+  // This ensures the component safely handles non-finite durations without crashing.
   it('should not render ETA suffix when durationValue is not finite', () => {
     const routeOptions = [
       {
