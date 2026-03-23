@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import PropTypes from 'prop-types';
 
-export default function NextClassCard({ nextClass, buildingCode, onNavigate }) {
+function NextClassCard({ nextClass, buildingCode, onNavigate }) {
   if (!nextClass) return null;
 
   const startTime = new Date(nextClass.startTime);
@@ -44,6 +45,21 @@ export default function NextClassCard({ nextClass, buildingCode, onNavigate }) {
     </Pressable>
   );
 }
+
+NextClassCard.propTypes = {
+  nextClass: PropTypes.shape({
+    startTime: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.instanceOf(Date),
+    ]),
+    title: PropTypes.string,
+  }),
+  buildingCode: PropTypes.string,
+  onNavigate: PropTypes.func,
+};
+
+export default NextClassCard;
 
 const styles = StyleSheet.create({
   card: {
