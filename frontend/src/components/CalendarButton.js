@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import PropTypes from 'prop-types';
 import {
   authenticateWithGoogle,
   disconnectCalendar,
@@ -35,7 +36,8 @@ export default function CalendarButton({ onConnectionChange }) {
         handleAuthError(result.error);
       }
     } catch (error) {
-      handleAuthError(error.message);
+      console.error('Failed to connect calendar:', error);
+      handleAuthError(error?.message || 'unknown error');
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +60,7 @@ export default function CalendarButton({ onConnectionChange }) {
               onConnectionChange?.(false);
               Alert.alert('Disconnected', 'Calendar has been disconnected');
             } catch (error) {
+              console.error('Failed to disconnect calendar:', error);
               Alert.alert('Error', 'Failed to disconnect calendar');
             } finally {
               setIsLoading(false);
@@ -85,6 +88,18 @@ export default function CalendarButton({ onConnectionChange }) {
     ]);
   }
 
+  function getButtonLabel() {
+    if (isLoading) {
+      return 'Connecting...';
+    }
+
+    if (isConnected) {
+      return 'Calendar Connected';
+    }
+
+    return 'Connect Calendar';
+  }
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -101,15 +116,15 @@ export default function CalendarButton({ onConnectionChange }) {
         color={isConnected ? '#FFF' : '#95223D'}
       />
       <Text style={[styles.buttonText, isConnected && styles.buttonTextConnected]}>
-        {isLoading
-          ? 'Connecting...'
-          : isConnected
-          ? 'Calendar Connected'
-          : 'Connect Calendar'}
+        {getButtonLabel()}
       </Text>
     </Pressable>
   );
 }
+
+CalendarButton.propTypes = {
+  onConnectionChange: PropTypes.func,
+};
 
 const styles = StyleSheet.create({
   button: {

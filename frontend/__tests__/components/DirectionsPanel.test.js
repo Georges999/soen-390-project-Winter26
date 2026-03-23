@@ -1,6 +1,16 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
+
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+
+  return {
+    MaterialIcons: ({ name }) => <Text>{name}</Text>,
+  };
+});
+
 import DirectionsPanel from '../../src/components/DirectionsPanel';
 
 const mockStyles = StyleSheet.create({
@@ -205,5 +215,121 @@ describe('DirectionsPanel', () => {
     );
     // When collapsed, the route list should not show
     expect(getByText('Showing 3 shortest public transit routes.')).toBeTruthy();
+  });
+
+  it('should not render ETA suffix when durationValue is missing', () => {
+    const routeOptions = [
+      {
+        durationText: '25 mins',
+        transitLines: ['Green'],
+        transitVehicles: ['SUBWAY'],
+      },
+    ];
+
+    const { getByText, getAllByText, queryByText } = render(
+      <DirectionsPanel
+        {...baseProps}
+        travelMode="transit"
+        isCrossCampusTrip={true}
+        transitSubMode="public"
+        routeOptions={routeOptions}
+      />,
+    );
+
+    expect(getByText('25 mins')).toBeTruthy();
+    expect(queryByText(/\(ETA/)).toBeNull();
+  });
+
+  // Infinity duration can occur when routing APIs return incomplete or invalid ETA values.
+  // This ensures the component safely handles non-finite durations without crashing.
+  it('should not render ETA suffix when durationValue is not finite', () => {
+    const routeOptions = [
+      {
+        durationText: '30 mins',
+        durationValue: Infinity,
+        transitLines: ['Orange'],
+        transitVehicles: ['BUS'],
+      },
+    ];
+
+    const { getByText, getAllByText, queryByText } = render(
+      <DirectionsPanel
+        {...baseProps}
+        travelMode="transit"
+        isCrossCampusTrip={true}
+        transitSubMode="public"
+        routeOptions={routeOptions}
+      />,
+    );
+
+    expect(getByText('30 mins')).toBeTruthy();
+    expect(queryByText(/\(ETA/)).toBeNull();
+  });
+
+  it('should safely render a non-transit selected step with missing instruction data', () => {
+    const routeOptions = [
+      {
+        durationText: '8 mins',
+        durationValue: 480,
+        transitLines: [],
+        transitVehicles: [],
+      },
+    ];
+
+    const { getByText, getAllByText, queryByText } = render(
+      <DirectionsPanel
+        {...baseProps}
+        travelMode="transit"
+        isCrossCampusTrip={true}
+        transitSubMode="public"
+        routeOptions={routeOptions}
+        transitRouteIndex={0}
+        routeInfo={{ durationText: '8 mins', distanceText: '0.5 km', steps: [{ travelMode: 'WALKING' }] }}
+      />,
+    );
+
+    expect(getByText('Tap to view details')).toBeTruthy();
+    expect(getAllByText('directions-walk').length).toBeGreaterThan(0);
+    expect(queryByText(/stops/i)).toBeNull();
+  });
+
+  it('should render arrival stop and number of stops for selected transit step details', () => {
+    const routeOptions = [
+      {
+        durationText: '20 mins',
+        durationValue: 1200,
+        transitLines: ['24'],
+        transitVehicles: ['BUS'],
+      },
+    ];
+
+    const { getByText } = render(
+      <DirectionsPanel
+        {...baseProps}
+        travelMode="transit"
+        isCrossCampusTrip={true}
+        transitSubMode="public"
+        routeOptions={routeOptions}
+        transitRouteIndex={0}
+        routeInfo={{
+          durationText: '20 mins',
+          distanceText: '4 km',
+          steps: [
+            {
+              travelMode: 'TRANSIT',
+              transitDetails: {
+                lineShortName: '24',
+                arrivalStop: 'Stop B',
+                numStops: 3,
+                vehicleType: 'BUS',
+              },
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(getByText(/Stop B/)).toBeTruthy();
+    expect(getByText(/3 stops/)).toBeTruthy();
   });
 });
