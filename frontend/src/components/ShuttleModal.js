@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, Modal, Pressable, Image } from "react-native";
+import PropTypes from "prop-types";
 
-export default function ShuttleModal({
+function ShuttleModal({
   styles,
   isOpen,
   onClose,
@@ -82,3 +83,54 @@ export default function ShuttleModal({
     </Modal>
   );
 }
+
+const stylePropType = PropTypes.oneOfType([
+  PropTypes.object,
+  PropTypes.array,
+  PropTypes.number,
+]);
+
+const shuttleWindowPropType = PropTypes.shape({
+  intervalMin: PropTypes.number,
+  start: PropTypes.string,
+  end: PropTypes.string,
+});
+
+ShuttleModal.propTypes = {
+  styles: PropTypes.shape({
+    modalBackdrop: stylePropType,
+    modalCard: stylePropType,
+    modalHeader: stylePropType,
+    modalTitle: stylePropType,
+    modalClose: stylePropType,
+    modalCloseText: stylePropType,
+    modalSection: stylePropType,
+    modalSubtitle: stylePropType,
+    modalAddress: stylePropType,
+    modalSchedule: stylePropType,
+    modalScheduleTitle: stylePropType,
+    modalScheduleText: stylePropType,
+    modalDepartures: stylePropType,
+    modalEmpty: stylePropType,
+    departureRow: stylePropType,
+    departureIcon: stylePropType,
+    departureTime: stylePropType,
+    departureEta: stylePropType,
+  }).isRequired,
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  filteredShuttleSchedules: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      campus: PropTypes.string,
+      stop: PropTypes.string,
+      address: PropTypes.string,
+      estimatedTravelMin: PropTypes.number,
+      weekday: shuttleWindowPropType,
+      friday: shuttleWindowPropType,
+    })
+  ).isRequired,
+  getShuttleDepartures: PropTypes.func.isRequired,
+};
+
+export default ShuttleModal;
