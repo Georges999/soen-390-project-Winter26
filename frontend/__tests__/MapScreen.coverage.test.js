@@ -105,6 +105,23 @@ describe('MapScreen coverage-focused interactions', () => {
     fireEvent.press(getByText('Shuttle'));
   };
 
+  const openPoiPanelWithResults = async (utils, results) => {
+    const { getByTestId, getByText } = utils;
+
+    fetchNearbyPOIs.mockResolvedValueOnce(results);
+
+    fireEvent.press(getByTestId('poi-button'));
+    await waitFor(() => {
+      expect(getByTestId('poi-panel')).toBeTruthy();
+    });
+
+    fireEvent.press(getByText('Show on map'));
+
+    await waitFor(() => {
+      expect(getByText(results[0].name)).toBeTruthy();
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseDirectionsRoute.mockImplementation(() => ({
@@ -245,6 +262,27 @@ describe('MapScreen coverage-focused interactions', () => {
 
     await waitFor(() => {
       expect(getByTestId('dest-input').props.value).toBe('Library POI');
+    });
+  });
+
+  it('covers POI info card bottom positioning when the panel is open', async () => {
+    // Branch: selectedPOI renders the POI info card.
+    const testPOI = {
+      id: 'poi-bottom-1',
+      name: 'Bottom Branch POI',
+      coords: { latitude: 45.501, longitude: -73.57 },
+      address: '456 Bottom St',
+      distance: 175,
+    };
+
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    await openPoiPanelWithResults({ getByTestId, getByText }, [testPOI]);
+
+    fireEvent.press(getByText('Bottom Branch POI'));
+
+    await waitFor(() => {
+      expect(getByTestId('poi-info-card')).toBeTruthy();
     });
   });
 
@@ -583,7 +621,10 @@ describe('MapScreen coverage-focused interactions', () => {
     // Verify the POI info card is displayed with the POI details
     expect(getByText('Get Directions')).toBeTruthy();
     
-    // Press the Get Directions button (lines 928-933)
+    fireEvent.changeText(getByTestId('start-input'), '');
+    expect(getByTestId('start-input').props.value).toBe('');
+
+    // Press the Get Directions button (lines 928-933 and 990-993 fallback start)
     fireEvent.press(getByText('Get Directions'));
     
     // Verify that the destination has been set to the POI's name
@@ -591,10 +632,11 @@ describe('MapScreen coverage-focused interactions', () => {
       const destInput = getByTestId('dest-input');
       // The destination should now be set to the POI name
       expect(destInput.props.value).toBeTruthy();
+      expect(getByTestId('start-input').props.value).toBe('My location');
     }, { timeout: 1000 });
   });
 
-  it('covers POI info card close button (line 910)', async () => {
+  it('covers POI info card close button (line 964)', async () => {
     // This test covers the close button on the POI info card that calls:
     // onPress={() => setSelectedPOI(null)}
     const testPOI = {
@@ -607,7 +649,7 @@ describe('MapScreen coverage-focused interactions', () => {
     
     fetchNearbyPOIs.mockImplementationOnce(async () => [testPOI]);
     
-    const { getByTestId, getByText, getAllByTestId } = render(<MapScreen />);
+    const { getByTestId, getByText, getAllByTestId, getByLabelText, queryByText } = render(<MapScreen />);
     
     // Open POI panel and show on map
     fireEvent.press(getByTestId('poi-button'));
@@ -637,10 +679,11 @@ describe('MapScreen coverage-focused interactions', () => {
       expect(getByText('Get Directions')).toBeTruthy();
     }, { timeout: 1000 });
     
-    // The close button should be present (it's the MaterialIcons clear button)
-    // Pressing it should clear the selectedPOI and hide the card
-    // We can verify this by checking if the POI name is still visible
-    expect(getByText('Get Directions')).toBeTruthy();
+    fireEvent.press(getByLabelText('Dismiss POI info card'));
+
+    await waitFor(() => {
+      expect(queryByText('Test Close Button POI')).toBeNull();
+    }, { timeout: 1000 });
   });
 
   describe('Shuttle filtering - untested branch coverage', () => {
@@ -738,7 +781,69 @@ describe('MapScreen coverage-focused interactions', () => {
     });
   });
 
+  it('covers loyola->sgw shuttle filtering branch (line 193)', async () => {
+    const { getByTestId, getByText, queryByText } = render(<MapScreen />);
+
+    fireEvent(getByTestId('start-input'), 'focus');
+    fireEvent.changeText(getByTestId('start-input'), 'Administration');
+    await waitFor(() => expect(getByText('Administration Building')).toBeTruthy());
+    fireEvent.press(getByText('Administration Building')); // loyola
+
+    fireEvent(getByTestId('dest-input'), 'focus');
+    fireEvent.press(getByTestId('building-sgw-b')); // sgw
+
+    await waitFor(() => expect(getByText('Transit')).toBeTruthy());
+    fireEvent.press(getByText('Transit'));
+    fireEvent.press(getByText('Shuttle'));
+
+    await waitFor(() => {
+      expect(getByText('Concordia Shuttle')).toBeTruthy();
+      expect(getByText(/Loyola Chapel/)).toBeTruthy();
+      expect(queryByText(/Henry F\. Hall Building front doors/)).toBeNull();
+    });
+  });
+
+  it('covers GO fitToCoordinates branch (line 608)', async () => {
+    mockUseDirectionsRoute.mockImplementation(() => ({
+      routeCoords: [
+        { latitude: 45.497, longitude: -73.579 },
+        { latitude: 45.498, longitude: -73.578 },
+      ],
+      routeInfo: {
+        steps: [{ instruction: 'Walk north' }],
+        durationText: '5 mins',
+        distanceText: '400 m',
+      },
+      routeOptions: [],
+    }));
+
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    fireEvent(getByTestId('start-input'), 'focus');
+    fireEvent.press(getByTestId('building-sgw-b'));
+    fireEvent(getByTestId('dest-input'), 'focus');
+    fireEvent.press(getByTestId('building-sgw-mb'));
+
+    await waitFor(() => expect(getByText('GO')).toBeTruthy());
+    fireEvent.press(getByText('GO'));
+
+    await waitFor(() => {
+      expect(__mapMocks.fitToCoordinatesMock).toHaveBeenCalledWith(
+        expect.any(Array),
+        expect.objectContaining({ animated: true }),
+      );
+    });
+  });
+
+  it('covers other-campus polygon onPress branch (line 887)', async () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-loyola-loyola-ad'));
+
+    await waitFor(() => {
+      expect(getByText('Directions')).toBeTruthy();
+      expect(getByText('Amenities')).toBeTruthy();
+    });
+  });
+
 });
-
-
-

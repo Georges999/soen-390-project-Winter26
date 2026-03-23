@@ -214,7 +214,7 @@ export default function DirectionsPanel({
                               </View>
                               <Text style={styles.transitMeta}>
                                 {opt.durationText || "--"}
-                                {opt.durationValue && isFinite(opt.durationValue)
+                                {opt.durationValue && Number.isFinite(opt.durationValue)
                                   ? ` (ETA ${(() => {
                                       const now = new Date();
                                       const mins = Math.round(opt.durationValue / 60);
@@ -303,7 +303,7 @@ export default function DirectionsPanel({
               </Text>
             </Pressable>
 
-            <Pressable style={styles.goBtn} onPress={onGo}>
+            <Pressable style={styles.goBtn} onPress={onGo} testID="go-btn">
               <Text style={styles.goBtnText}>GO</Text>
             </Pressable>
           </View>

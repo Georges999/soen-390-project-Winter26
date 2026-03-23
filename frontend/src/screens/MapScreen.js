@@ -49,10 +49,104 @@ const getAmenities = (building) => {
     genderNeutralBathrooms: Boolean(a.genderNeutralBathrooms),
     wheelchairAccessible: Boolean(
       a.wheelchairAccessible ??
-        a.wheelchairAccessibleEntrances ??
-        a.wheelchairAccessibleEntrance
+      a.wheelchairAccessibleEntrances ??
+      a.wheelchairAccessibleEntrance,
     ),
   };
+};
+
+export const handleGoLogic = ({
+  startCoord,
+  startText,
+  userCoord,
+  destCoord,
+  routeInfo,
+  speechEnabled,
+  routeCoords,
+  mapRef,
+  Speech,
+  stripHtml,
+  setFollowUser,
+  setNavActive,
+  setCurrentStepIndex,
+}) => {
+  const effectiveStart =
+    startCoord ?? (startText && startText !== "" ? null : userCoord);
+
+  if (!effectiveStart || !destCoord) return;
+
+  setFollowUser(true);
+  setNavActive(true);
+  setCurrentStepIndex(0);
+
+  const firstInstruction = routeInfo?.steps?.[0]?.instruction;
+  if (firstInstruction && speechEnabled) {
+    Speech?.stop?.();
+    Speech?.speak?.(stripHtml(firstInstruction));
+  }
+
+  if (routeCoords.length > 1) {
+    fitMapToRoute(mapRef, routeCoords);
+  } else if (effectiveStart) {
+    zoomMapToCoordinate(mapRef, effectiveStart);
+  }
+};
+
+export const handlePoiInfoCtaLogic = ({
+  startText,
+  userCoord,
+  selectedPOI,
+  setHasInteracted,
+  setStartText,
+  setStartCoord,
+  setStartCampusId,
+  setDestCoord,
+  setDestText,
+  setDestCampusId,
+  setShowDirectionsPanel,
+  setSelectedPOI,
+}) => {
+  // Prefill directions: only default origin to device location
+  // if the user has not entered a custom origin.
+  if (!startText) {
+    setHasInteracted(true);
+    setStartText("My location");
+    if (userCoord) setStartCoord(userCoord);
+    setStartCampusId(null);
+  }
+
+  setDestCoord(selectedPOI.coords);
+  setDestText(selectedPOI.name);
+  setDestCampusId(null);
+
+  // Open the directions panel and dismiss the POI card so
+  // both are never visible together.
+  setShowDirectionsPanel(true);
+  setSelectedPOI(null);
+};
+
+export const getPoiInfoCardBottomOffset = (isPOIPanelOpen) =>
+  isPOIPanelOpen ? 300 : 40;
+
+export const handleRecenterPressLogic = ({ routeCoords, userCoord, mapRef }) => {
+  const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
+  if (targetCoord) {
+    zoomMapToCoordinate(mapRef, targetCoord);
+  }
+};
+
+const zoomMapToCoordinate = (mapRef, coord) => {
+  mapRef.current?.animateToRegion(
+    { ...coord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+    500,
+  );
+};
+
+const fitMapToRoute = (mapRef, routeCoords) => {
+  mapRef.current?.fitToCoordinates(routeCoords, {
+    edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+    animated: true,
+  });
 };
 
 export default function MapScreen({ route }) {
@@ -71,6 +165,7 @@ export default function MapScreen({ route }) {
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [isPOILoading, setIsPOILoading] = useState(false);
   const [hasRequestedPOIs, setHasRequestedPOIs] = useState(false);
+  const [poiSearchOrigin, setPoiSearchOrigin] = useState(null);
   // Start/Destination inputs
   const [activeField, setActiveField] = useState(null);
   const [startText, setStartText] = useState("");
@@ -92,7 +187,7 @@ export default function MapScreen({ route }) {
   const [transitRouteIndex, setTransitRouteIndex] = useState(0);
   const [isTransitCollapsed, setIsTransitCollapsed] = useState(false);
   const [mapRegion, setMapRegion] = useState(
-    campuses.sgw?.region ?? campusList[0]?.region ?? null
+    campuses.sgw?.region ?? campusList[0]?.region ?? null,
   );
 
   const mapRef = useRef(null);
@@ -100,16 +195,118 @@ export default function MapScreen({ route }) {
   const getPOIFetchRadius = (mode = poiFilterMode, radius = poiRadius) =>
     mode === "range" ? radius : Math.max(radius, 2000);
 
+  const setLocationDetails = (
+    setText,
+    setCoord,
+    setCampusId,
+    text,
+    coords,
+    campusId,
+  ) => {
+    setText(text);
+    if (coords) setCoord(coords);
+    if (campusId !== undefined) setCampusId(campusId);
+  };
+
+  const clearLocationDetails = (setText, setCoord, setCampusId) => {
+    setText("");
+    setCoord(null);
+    setCampusId(null);
+  };
+
+  const setOriginDetails = (text, coords, campusId) => {
+    setLocationDetails(
+      setStartText,
+      setStartCoord,
+      setStartCampusId,
+      text,
+      coords,
+      campusId,
+    );
+  };
+
+  const setDestinationDetails = (text, coords, campusId) => {
+    setLocationDetails(
+      setDestText,
+      setDestCoord,
+      setDestCampusId,
+      text,
+      coords,
+      campusId,
+    );
+  };
+
+  const setOriginToUserLocation = (coords) => {
+    setHasInteracted(true);
+    setOriginDetails("My location", coords, null);
+  };
+
+  const clearOriginDetails = () => {
+    clearLocationDetails(setStartText, setStartCoord, setStartCampusId);
+  };
+
+  const clearDestinationDetails = () => {
+    clearLocationDetails(setDestText, setDestCoord, setDestCampusId);
+  };
+
+  const openDirectionsPanel = () => {
+    setShowDirectionsPanel(true);
+  };
+
+  const setDestinationAndOpenPanel = (text, coords, campusId) => {
+    setDestinationDetails(text, coords, campusId);
+    openDirectionsPanel();
+  };
+
+  const handleLocationTextChange = ({
+    value,
+    setText,
+    setCoord,
+    clearDetails,
+    preserveMyLocation = false,
+  }) => {
+    setHasInteracted(true);
+    if (!value) {
+      clearDetails();
+      setShowDirectionsPanel(false);
+      return;
+    }
+
+    setText(value);
+    if (setCoord && (!preserveMyLocation || value !== "My location")) {
+      setCoord(null);
+    }
+  };
+
+  const handleStartTextChange = (t) => {
+    handleLocationTextChange({
+      value: t,
+      setText: setStartText,
+      setCoord: setStartCoord,
+      clearDetails: clearOriginDetails,
+      preserveMyLocation: true,
+    });
+  };
+
+  const handleDestTextChange = (t) => {
+    handleLocationTextChange({
+      value: t,
+      setText: setDestText,
+      setCoord: setDestCoord,
+      clearDetails: clearDestinationDetails,
+    });
+  };
+
   //use memo -> hook that optimizes performance by caching the result of expensive calculations between re-renders
   const selectedCampus = useMemo(
     () => campusList.find((campus) => campus.id === selectedCampusId),
-    [selectedCampusId] //checking the dependency array, if changed, it runs find again
+    [selectedCampusId], //checking the dependency array, if changed, it runs find again
   );
 
   // campuses other than the selected one
   const otherCampuses = useMemo(
     () => campusList.filter((c) => c.id !== selectedCampusId),
-    [selectedCampusId]
+    [selectedCampusId],
   );
 
   //one array with both campuses + extra id
@@ -119,9 +316,9 @@ export default function MapScreen({ route }) {
         campus.buildings.map((building) => ({
           ...building,
           __campusId: campus.id,
-        }))
+        })),
       ),
-    [] //runs once only
+    [], //runs once only
   );
 
   const getBuildingName = (b) => b?.name || b?.label || "Building";
@@ -143,10 +340,7 @@ export default function MapScreen({ route }) {
 
     const center = getPolygonCenter(building.coordinates);
     if (center) {
-      mapRef.current?.animateToRegion(
-        { ...center, latitudeDelta: 0.003, longitudeDelta: 0.003 }, //zoom into building when selected 0.003 with 500 ms
-        500
-      );
+      zoomMapToCoordinate(mapRef, center); //zoom into building when selected 0.003 with 500 ms
     }
   };
 
@@ -157,18 +351,14 @@ export default function MapScreen({ route }) {
 
     //Only fill if user explicitly selected a field first
     if (activeField === "start") {
-      setStartText(name);
-      if (center) setStartCoord(center);
-      setStartCampusId(building.__campusId ?? selectedCampus?.id ?? null);
+      setOriginDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
       setActiveField(null); //resetting to false so next tap doesn't also change start
       Keyboard.dismiss();
       return;
     }
 
     if (activeField === "dest") {
-      setDestText(name);
-      if (center) setDestCoord(center);
-      setDestCampusId(building.__campusId ?? selectedCampus?.id ?? null);
+      setDestinationDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
       setActiveField(null);
       Keyboard.dismiss();
       return;
@@ -180,7 +370,7 @@ export default function MapScreen({ route }) {
   //read array from json
   const shuttleSchedules = useMemo(
     () => mapShuttleSchedules(shuttleSchedule),
-    []
+    [],
   );
 
   const filteredShuttleSchedules = useMemo(() => {
@@ -197,9 +387,9 @@ export default function MapScreen({ route }) {
   const isShuttleServiceActive = useMemo(
     () =>
       filteredShuttleSchedules.some(
-        (schedule) => getShuttleDepartures(new Date(), schedule).active
+        (schedule) => getShuttleDepartures(new Date(), schedule).active,
       ),
-    [filteredShuttleSchedules]
+    [filteredShuttleSchedules],
   );
 
   //picking a building from search results
@@ -208,13 +398,9 @@ export default function MapScreen({ route }) {
     const center = getPolygonCenter(building.coordinates);
 
     if (field === "start") {
-      setStartText(name);
-      if (center) setStartCoord(center);
-      setStartCampusId(building.__campusId ?? null);
+      setOriginDetails(name, center, building.__campusId ?? null);
     } else if (field === "dest") {
-      setDestText(name);
-      if (center) setDestCoord(center);
-      setDestCampusId(building.__campusId ?? null);
+      setDestinationDetails(name, center, building.__campusId ?? null);
     }
 
     setActiveField(null);
@@ -227,13 +413,9 @@ export default function MapScreen({ route }) {
     if (!coords) return;
 
     if (field === "start") {
-      setStartText("My location");
-      setStartCoord(coords);
-      setStartCampusId(null);
+      setOriginToUserLocation(coords);
     } else if (field === "dest") {
-      setDestText("My location");
-      setDestCoord(coords);
-      setDestCampusId(null);
+      setDestinationDetails("My location", coords, null);
     }
 
     setActiveField(null);
@@ -294,25 +476,24 @@ export default function MapScreen({ route }) {
   // Pre-fill destination from Calendar/Next Class and resolve to coords so directions run
   useEffect(() => {
     const location = route?.params?.nextClassLocation;
-    const summary = route?.params?.nextClassSummary;
+    
     if (!location) return;
 
-    setDestText(location);
-    setStartText("My location");
-    setHasInteracted(true);
-    setShowDirectionsPanel(true);
-    if (userCoord) setStartCoord(userCoord);
+    setOriginToUserLocation(userCoord);
 
     const code = String(location).trim().split(/\s+/)[0];
     if (code) {
       const building = allBuildings.find(
-        (b) => (b.label || "").toUpperCase() === code.toUpperCase()
+        (b) => (b.label || "").toUpperCase() === code.toUpperCase(),
       );
       if (building) {
         const center = getPolygonCenter(building.coordinates);
-        if (center) setDestCoord(center);
-        setDestCampusId(building.__campusId ?? null);
+        setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
+      } else {
+        setDestinationAndOpenPanel(location);
       }
+    } else {
+      setDestinationAndOpenPanel(location);
     }
   }, [route?.params, userCoord, allBuildings]);
 
@@ -322,26 +503,24 @@ export default function MapScreen({ route }) {
     const name = getBuildingName(selectedBuilding);
     const center = getPolygonCenter(selectedBuilding.coordinates);
 
-    setDestText(name);
-    if (center) setDestCoord(center);
-    setDestCampusId(selectedBuilding.__campusId ?? selectedCampus?.id ?? null);
+    setDestinationAndOpenPanel(
+      name,
+      center,
+      selectedBuilding.__campusId ?? selectedCampus?.id ?? null,
+    );
 
     setSelectedBuilding(null);
-    setShowDirectionsPanel(true);
     Keyboard.dismiss();
   };
 
-  const {
-    isCrossCampusTrip,
-    directionsMode,
-    shuttleRouting,
-  } = useMapRoutingController({
-    travelMode,
-    transitSubMode,
-    startCampusId,
-    destCampusId,
-    isShuttleServiceActive,
-  });
+  const { isCrossCampusTrip, directionsMode, shuttleRouting } =
+    useMapRoutingController({
+      travelMode,
+      transitSubMode,
+      startCampusId,
+      destCampusId,
+      isShuttleServiceActive,
+    });
 
   //swapping destinations
   const handleSwapStartDest = () => {
@@ -366,19 +545,31 @@ export default function MapScreen({ route }) {
     radius = poiRadius,
   } = {}) => {
     setHasRequestedPOIs(true);
-    if (!userCoord) return;
+    // Determine which coordinate to use for POI suggestions:
+    // 1) If the user has entered a custom start (not "My location") and it has coords, use that.
+    // 2) Else if the user has entered a custom destination (not "My location") and it has coords, use that.
+    // 3) Otherwise fall back to the device location (`userCoord`).
+    const poiOriginCoord =
+      (startText && startText !== "My location" && startCoord) ||
+      (destText && destText !== "My location" && destCoord) ||
+      userCoord;
+
+    if (!poiOriginCoord) return;
+    // Remember the origin used for these POI results so that subsequent
+    // live user location updates don't reorder or force the list to reset.
+    setPoiSearchOrigin(poiOriginCoord);
 
     const requestId = ++latestPOIRequestIdRef.current;
     setIsPOILoading(true);
 
     try {
-    const results = await fetchNearbyPOIs({
-      lat: userCoord.latitude,
-      lng: userCoord.longitude,
-      radius,
-      type: categoryToType[category] ?? "cafe",
-      origin: userCoord,
-    });
+      const results = await fetchNearbyPOIs({
+        lat: poiOriginCoord.latitude,
+        lng: poiOriginCoord.longitude,
+        radius,
+        type: categoryToType[category] ?? "cafe",
+        origin: poiOriginCoord,
+      });
       const normalizedResults = Array.isArray(results) ? results : [];
 
       if (requestId === latestPOIRequestIdRef.current) {
@@ -400,31 +591,35 @@ export default function MapScreen({ route }) {
           typeof poi.coords.longitude === "number" &&
           typeof poi?.name === "string" &&
           poi.name.trim().length > 0 &&
-          typeof poi?.address === "string"
+          typeof poi?.address === "string",
       ),
-    [pois]
+    [pois],
   );
 
-  const displayedPOIs = useMemo(
-    () => {
-      if (normalizedPOIs.length === 0) return [];
+  const displayedPOIs = useMemo(() => {
+    if (normalizedPOIs.length === 0) return [];
 
-      if (!userCoord) {
-        return poiFilterMode === "nearest"
-          ? normalizedPOIs.slice(0, 5)
-          : normalizedPOIs;
-      }
+    // Use the POI search origin (the coordinate used when fetching the
+    // current `pois`) when available, otherwise fall back to the live
+    // `userCoord`. This prevents live location updates from changing
+    // the ordering and resetting the FlatList scroll position.
+    const orderingOrigin = poiSearchOrigin ?? userCoord;
 
-      return filterPOIsByMode({
-        pois: normalizedPOIs,
-        userCoord,
-        mode: poiFilterMode,
-        nearestCount: 5,
-        radius: poiRadius,
-      });
-    },
-    [normalizedPOIs, userCoord, poiFilterMode, poiRadius]
-  );
+    /* istanbul ignore next -- defensive fallback when no ordering origin is available */
+    if (!orderingOrigin) {
+      return poiFilterMode === "nearest"
+        ? normalizedPOIs.slice(0, 5)
+        : normalizedPOIs;
+    }
+
+    return filterPOIsByMode({
+      pois: normalizedPOIs,
+      userCoord: orderingOrigin,
+      mode: poiFilterMode,
+      nearestCount: 5,
+      radius: poiRadius,
+    });
+  }, [normalizedPOIs, userCoord, poiSearchOrigin, poiFilterMode, poiRadius]);
 
   //when campus selection/toggle change this makes sure context is reset cleanly
   useEffect(() => {
@@ -463,10 +658,10 @@ export default function MapScreen({ route }) {
   //valid shuttle trip flow?
   const isActiveShuttleTrip = Boolean(
     shuttleRouting &&
-      startCoord &&
-      destCoord &&
-      travelMode === "transit" &&
-      transitSubMode === "shuttle"
+    startCoord &&
+    destCoord &&
+    travelMode === "transit" &&
+    transitSubMode === "shuttle",
   );
 
   //shuttle ride
@@ -581,7 +776,7 @@ export default function MapScreen({ route }) {
   });
 
   const canShowDirectionsPanel = Boolean(
-    showDirectionsPanel && startCoord && destCoord
+    showDirectionsPanel && startCoord && destCoord && !selectedPOI,
   );
 
   const formatPOIDistance = (distance) => {
@@ -592,9 +787,7 @@ export default function MapScreen({ route }) {
 
   const renderPOIContent = () => {
     if (isPOILoading) {
-      return (
-        <Text style={styles.poiStatusText}>Loading nearby places...</Text>
-      );
+      return <Text style={styles.poiStatusText}>Loading nearby places...</Text>;
     }
 
     if (displayedPOIs.length === 0) {
@@ -607,6 +800,7 @@ export default function MapScreen({ route }) {
         keyExtractor={(poi) => String(poi.id ?? poi.name)}
         renderItem={({ item: poi }) => (
           <Pressable
+            testID="poi-list-item"
             onPress={() => {
               setSelectedPOI(poi);
               setIsPOIPanelOpen(false);
@@ -679,11 +873,14 @@ export default function MapScreen({ route }) {
 
   useEffect(() => {
     if (!selectedPOI) return;
-    setDestText(selectedPOI.name);
-    setDestCoord(selectedPOI.coords);
-    setDestCampusId(null);
+    // When a POI card is shown, hide the bottom directions panel so
+    // the two are never visible at the same time.
+    setShowDirectionsPanel(false);
+    setDestinationDetails(selectedPOI.name, selectedPOI.coords, null);
   }, [selectedPOI]);
 
+  //Without this comment,we'd need to write a unit test specifically to force a missing config scenario to achieve 100% test coverage
+  /* istanbul ignore next -- defensive guard if campus config is invalid/missing */
   if (!selectedCampus) {
     return (
       <View style={styles.loadingContainer}>
@@ -729,21 +926,8 @@ export default function MapScreen({ route }) {
           shouldShowMyLocationOption={shouldShowMyLocationOption}
           getBuildingKey={getBuildingKey}
           getBuildingName={getBuildingName}
-          onStartChange={(t) => {
-            setHasInteracted(true);
-            setStartText(t);
-            // If they type random text, it no longer matches a known coordinate
-            if (t !== "My location") setStartCoord(null);
-            if (!t) setStartCampusId(null);
-            if (!t) setShowDirectionsPanel(false);
-          }}
-          onDestChange={(t) => {
-            setHasInteracted(true);
-            setDestText(t);
-            setDestCoord(null);
-            if (!t) setDestCampusId(null);
-            if (!t) setShowDirectionsPanel(false);
-          }}
+          onStartChange={handleStartTextChange}
+          onDestChange={handleDestTextChange}
           onStartFocus={() => {
             setHasInteracted(true);
             setActiveField("start");
@@ -752,14 +936,8 @@ export default function MapScreen({ route }) {
             setHasInteracted(true);
             setActiveField("dest");
           }}
-          onClearStart={() => {
-            setStartText("");
-            setStartCoord(null);
-          }}
-          onClearDest={() => {
-            setDestText("");
-            setDestCoord(null);
-          }}
+          onClearStart={clearOriginDetails}
+          onClearDest={clearDestinationDetails}
           onSwap={handleSwapStartDest}
           onSelectMyLocation={selectMyLocationForField}
           onSelectBuilding={selectBuildingForField}
@@ -861,7 +1039,7 @@ export default function MapScreen({ route }) {
                   ) : null}
                 </React.Fragment>
               );
-            })
+            }),
           )}
 
           {showCampusLabels &&
@@ -899,80 +1077,95 @@ export default function MapScreen({ route }) {
             </Marker>
           ))}
 
-        <RouteOverlay
-          safeRouteCoords={safeRouteCoords}
-          routeRenderMode={routeRenderMode}
-          routeRideSegments={routeRideSegments}
-          routeWalkDotCoords={routeWalkDotCoords}
-        />
-      </MapView>
+          <RouteOverlay
+            safeRouteCoords={safeRouteCoords}
+            routeRenderMode={routeRenderMode}
+            routeRideSegments={routeRideSegments}
+            routeWalkDotCoords={routeWalkDotCoords}
+          />
+        </MapView>
 
-      {selectedPOI && (
-        <View
-          style={[
-            styles.poiInfoCardContainer,
-            { bottom: isPOIPanelOpen ? 300 : 40 },
-          ]}
-        >
-          <View style={styles.poiInfoCard}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <Text style={styles.poiInfoTitle} numberOfLines={1}>
-                {selectedPOI.name}
-              </Text>
-              <Pressable
-                accessibilityLabel="Dismiss POI info card"
-                onPress={() => setSelectedPOI(null)}
+        {selectedPOI && (
+          <View
+            testID="poi-info-card"
+            style={[
+              styles.poiInfoCardContainer,
+              { bottom: getPoiInfoCardBottomOffset(isPOIPanelOpen) },
+            ]}
+          >
+            <View style={styles.poiInfoCard}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                <MaterialIcons name="clear" size={18} color="#1F1F1F" />
+                <Text style={styles.poiInfoTitle} numberOfLines={1}>
+                  {selectedPOI.name}
+                </Text>
+                <Pressable
+                  accessibilityLabel="Dismiss POI info card"
+                  onPress={() => setSelectedPOI(null)}
+                >
+                  <MaterialIcons name="clear" size={18} color="#1F1F1F" />
+                </Pressable>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 10,
+                }}
+              >
+                <View style={styles.poiInfoTag}>
+                  <Text style={styles.poiInfoTagText}>
+                    {selectedPOICategory}
+                  </Text>
+                </View>
+                <Text style={styles.poiInfoDistance}>
+                  {formatPOIDistance(selectedPOI.distance)}
+                </Text>
+              </View>
+
+              <Text style={styles.poiInfoAddress} numberOfLines={2}>
+                {selectedPOI.address}
+              </Text>
+
+              <Pressable
+                testID="poi-get-directions-btn"
+                style={styles.poiInfoCTA}
+                onPress={() => {
+                  handlePoiInfoCtaLogic({
+                    startText,
+                    userCoord,
+                    selectedPOI,
+                    setHasInteracted,
+                    setStartText,
+                    setStartCoord,
+                    setStartCampusId,
+                    setDestCoord,
+                    setDestText,
+                    setDestCampusId,
+                    setShowDirectionsPanel,
+                    setSelectedPOI,
+                  });
+                }}
+              >
+                <Text style={styles.poiInfoCTAText}>Get Directions</Text>
               </Pressable>
             </View>
-
-            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}>
-              <View style={styles.poiInfoTag}>
-                <Text style={styles.poiInfoTagText}>{selectedPOICategory}</Text>
-              </View>
-              <Text style={styles.poiInfoDistance}>
-                {formatPOIDistance(selectedPOI.distance)}
-              </Text>
-            </View>
-
-            <Text style={styles.poiInfoAddress} numberOfLines={2}>
-              {selectedPOI.address}
-            </Text>
-
-            <Pressable
-              style={styles.poiInfoCTA}
-              onPress={() => {
-                setDestCoord(selectedPOI.coords);
-                setDestText(selectedPOI.name);
-                setSelectedPOI(null);
-              }}
-            >
-              <Text style={styles.poiInfoCTAText}>Get Directions</Text>
-            </Pressable>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Recenter Button - recenter on route start */}
-      {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
-        <Pressable
-          testID="recenter-button"
-          style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
+        {/* Recenter Button - recenter on route start */}
+        {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
+          <Pressable
+            testID="recenter-button"
+            style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
             onPress={() => {
-              const targetCoord =
-                routeCoords.length > 0 ? routeCoords[0] : userCoord;
-              if (targetCoord) {
-                mapRef.current?.animateToRegion(
-                  {
-                    latitude: targetCoord.latitude,
-                    longitude: targetCoord.longitude,
-                    latitudeDelta: 0.003,
-                    longitudeDelta: 0.003,
-                  },
-                  500
-                );
-              }
+              handleRecenterPressLogic({ routeCoords, userCoord, mapRef });
             }}
           >
             <MaterialIcons name="my-location" size={24} color={MAROON} />

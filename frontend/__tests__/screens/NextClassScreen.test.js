@@ -1,136 +1,172 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
-
-// Fix system time to Wednesday June 18, 2025 at 10:00 AM for deterministic tests.
-// This ensures the mock events below always match "today" (Wednesday) and are
-// always in the future (14:00 > 10:00).
-beforeAll(() => {
-  jest.useFakeTimers();
-  jest.setSystemTime(new Date(2025, 5, 18, 10, 0, 0));
-});
-afterAll(() => jest.useRealTimers());
-
-// Deterministic mock calendars. One selected calendar with a Wednesday class at
-// 14:00, events with no BYDAY and no recurrence to exercise getByDay guards,
-// and one unselected calendar to verify filter logic.
-jest.mock('../../src/data/mockCalendars.json', () => ({
-  calendars: [
-    {
-      selected: true,
-      events: [
-        {
-          summary: 'SOEN 390 - Software Engineering',
-          location: 'H 501',
-          recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=WE'],
-          start: { dateTime: '2025-06-18T14:00:00' },
-          end: { dateTime: '2025-06-18T15:30:00' },
-        },
-        {
-          summary: 'Daily Standup',
-          location: 'H 101',
-          recurrence: ['RRULE:FREQ=DAILY'],
-          start: { dateTime: '2025-06-18T15:00:00' },
-          end: { dateTime: '2025-06-18T15:30:00' },
-        },
-        {
-          summary: 'No Recurrence',
-          location: 'H 201',
-          start: { dateTime: '2025-06-18T16:00:00' },
-          end: { dateTime: '2025-06-18T17:00:00' },
-        },
-      ],
-    },
-    {
-      selected: false,
-      events: [
-        {
-          summary: 'COMP 346',
-          location: 'EV 3.309',
-          recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=WE'],
-          start: { dateTime: '2025-06-18T16:00:00' },
-        },
-      ],
-    },
-  ],
-}));
-
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import NextClassScreen from '../../src/screens/NextClassScreen';
+import * as googleCalendarAuth from '../../src/services/googleCalendarAuth';
+import { useNextClass } from '../../src/hooks/useNextClass';
 
-const mockNavigation = { navigate: jest.fn() };
+jest.mock('../../src/services/googleCalendarAuth');
+jest.mock('../../src/hooks/useNextClass');
 
-describe('NextClassScreen – upcoming class', () => {
+const mockNavigation = {
+  navigate: jest.fn(),
+  addListener: jest.fn(),
+};
+
+describe('NextClassScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.setSystemTime(new Date(2025, 5, 18, 10, 0, 0)); // Wed 10 AM
+    mockNavigation.addListener.mockReturnValue(jest.fn());
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(false);
+    useNextClass.mockReturnValue({
+      nextClass: null,
+      isLoading: false,
+      refresh: jest.fn(),
+    });
   });
 
-  it('renders the map view', () => {
+  it('should render the map view', () => {
     const { toJSON } = render(<NextClassScreen navigation={mockNavigation} />);
     expect(toJSON()).toBeTruthy();
   });
 
-  it('shows Go to My Next Class button', () => {
+  it('should show connect guidance when not connected', async () => {
     const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    expect(getByText('Go to My Next Class')).toBeTruthy();
-  });
 
-  it('displays subtitle', () => {
-    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    expect(getByText('Based on your schedule')).toBeTruthy();
-  });
-
-  it('shows detected card after pressing button', () => {
-    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    fireEvent.press(getByText('Go to My Next Class'));
-    expect(getByText('Next Class Detected')).toBeTruthy();
-    expect(getByText('SOEN 390 - Software Engineering')).toBeTruthy();
-    expect(getByText('H 501')).toBeTruthy();
-  });
-
-  it('shows minutes until class after detection', () => {
-    const { getByText, queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    fireEvent.press(getByText('Go to My Next Class'));
-    expect(queryByText(/Starts in/)).toBeTruthy();
-    // 10:00 → 14:00 = 240 min
-    expect(queryByText(/240 min/)).toBeTruthy();
-  });
-
-  it('Get Directions navigates to Map with class info', () => {
-    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    fireEvent.press(getByText('Go to My Next Class'));
-    fireEvent.press(getByText('Get Directions'));
-    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
-      nextClassLocation: 'H 501',
-      nextClassSummary: 'SOEN 390 - Software Engineering',
+    await waitFor(() => {
+      expect(getByText('Connect Google Calendar from Profile to see your next class')).toBeTruthy();
     });
   });
 
-  it('excludes events from unselected calendars', () => {
-    const { getByText, queryByText } = render(<NextClassScreen navigation={mockNavigation} />);
+  it('should refresh connection state when the screen regains focus', async () => {
+    const refresh = jest.fn();
+    useNextClass.mockReturnValue({
+      nextClass: null,
+      isLoading: false,
+      refresh,
+    });
+
+    render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(googleCalendarAuth.isAuthenticated).toHaveBeenCalledTimes(1);
+    });
+
+    const focusHandler = mockNavigation.addListener.mock.calls[0][1];
+    await focusHandler();
+
+    expect(googleCalendarAuth.isAuthenticated).toHaveBeenCalledTimes(2);
+  });
+
+  it('should show a loading subtitle while calendar data is loading', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: null,
+      isLoading: true,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(getByText('Loading your Google Calendar')).toBeTruthy();
+    });
+  });
+
+  it('should show connected empty state when there is no next class', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(getByText('No upcoming classes found in your selected Google calendars')).toBeTruthy();
+    });
+  });
+
+  it('should show "Go to My Next Class" when a next class exists', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        summary: 'SOEN 390',
+        location: 'H 961',
+        startTime: new Date(Date.now() + 3600000).toISOString(),
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => {
+      expect(getByText('Go to My Next Class')).toBeTruthy();
+    });
+  });
+
+  it('should show next class detected when pressed', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        summary: 'SOEN 390',
+        location: 'H 961',
+        startTime: new Date(Date.now() + 3600000).toISOString(),
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => expect(getByText('Go to My Next Class')).toBeTruthy());
     fireEvent.press(getByText('Go to My Next Class'));
-    expect(queryByText('COMP 346')).toBeNull();
-  });
-});
-
-describe('NextClassScreen – no upcoming class', () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it('shows no class on a non-matching day (Sunday)', () => {
-    jest.setSystemTime(new Date(2025, 5, 22, 10, 0, 0)); // Sunday
-    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    expect(getByText('No upcoming classes today')).toBeTruthy();
+    expect(getByText('Next Class Detected')).toBeTruthy();
   });
 
-  it('shows no class when all events have passed', () => {
-    jest.setSystemTime(new Date(2025, 5, 18, 23, 0, 0)); // 11 PM Wed
+  it('should navigate to Map when Get Directions is pressed', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        summary: 'SOEN 390',
+        location: 'H 961',
+        startTime: new Date(Date.now() + 3600000).toISOString(),
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
     const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    expect(getByText('No upcoming classes today')).toBeTruthy();
+
+    await waitFor(() => expect(getByText('Go to My Next Class')).toBeTruthy());
+    fireEvent.press(getByText('Go to My Next Class'));
+    fireEvent.press(getByText('Get Directions'));
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
+      nextClassLocation: 'H 961',
+      nextClassSummary: 'SOEN 390',
+    });
   });
 
-  it('navigates to Profile on View Schedule', () => {
-    jest.setSystemTime(new Date(2025, 5, 22, 10, 0, 0)); // Sunday - no class
+  it('should fall back to title and start.dateTime when detecting a class', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(true);
+    useNextClass.mockReturnValue({
+      nextClass: {
+        title: 'COMP 346',
+        location: 'EV 3.309',
+        start: {
+          dateTime: new Date(Date.now() + 3600000).toISOString(),
+        },
+      },
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
     const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
-    fireEvent.press(getByText('View Schedule'));
-    expect(mockNavigation.navigate).toHaveBeenCalledWith('Profile');
+
+    await waitFor(() => expect(getByText('Go to My Next Class')).toBeTruthy());
+    fireEvent.press(getByText('Go to My Next Class'));
+    fireEvent.press(getByText('Get Directions'));
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
+      nextClassLocation: 'EV 3.309',
+      nextClassSummary: 'COMP 346',
+    });
   });
 });

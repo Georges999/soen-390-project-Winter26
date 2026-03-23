@@ -30,7 +30,7 @@ const MAPPING_SOURCES = [
 ];
 
 function normalizeRoomLabel(label = "") {
-  return label.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return label.toUpperCase().replaceAll(/[^A-Z0-9]/g, "");
 }
 
 function extractNumericLabel(rawLabel = "") {
@@ -43,15 +43,15 @@ function formatRoomLabel(floorId, label = "") {
   const raw = String(label).trim();
 
   if (floorId.startsWith("Hall-")) {
-    return raw.replace(/-/g, "");
+    return raw.replaceAll(/-/g, "");
   }
 
   if (floorId === "MB-1") {
-    return raw.replace(/\s+/g, "");
+    return raw.replaceAll(/\s+/g, "");
   }
 
   if (floorId === "MB-S2") {
-    return raw.startsWith("S2") ? `MB${raw}` : raw.replace(/\s+/g, "");
+    return raw.startsWith("S2") ? `MB${raw}` : raw.replaceAll(/\s+/g, "");
   }
 
   if (floorId.startsWith("VL-")) {
