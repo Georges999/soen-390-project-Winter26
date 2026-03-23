@@ -1,6 +1,8 @@
 // Mock floor-map assets before importing data module.
 jest.mock('../../assets/floor-maps/Hall-8-F.png', () => 'hall8img', { virtual: true });
 jest.mock('../../assets/floor-maps/Hall-9-F.png', () => 'hall9img', { virtual: true });
+jest.mock('../../assets/floor-maps/Hall-1-F.png', () => 'hall1img', { virtual: true });
+jest.mock('../../assets/floor-maps/Hall-2-F.png', () => 'hall2img', { virtual: true });
 jest.mock('../../assets/floor-maps/MB-1.png', () => 'mb1img', { virtual: true });
 jest.mock('../../assets/floor-maps/MB-S2.png', () => 'mbs2img', { virtual: true });
 jest.mock('../../assets/floor-maps/VE-2-F.png', () => 've2img', { virtual: true });
@@ -14,6 +16,9 @@ import {
   getFloorGraphData,
   getRoomsForFloor,
   getAllNodesForFloor,
+  FLOOR_META,
+  BUILDING_META,
+  getBuildingById,
 } from '../../src/data/indoorFloorData';
 
 describe('indoorFloorData', () => {
@@ -118,5 +123,45 @@ describe('indoorFloorData', () => {
   it('exports buildings as default export', () => {
     const defaultExport = require('../../src/data/indoorFloorData').default;
     expect(defaultExport).toEqual(buildings);
+  });
+
+  it('includes new floors (Hall-1, Hall-2, CC-1) in buildings', () => {
+    const hall = buildings.sgw.find((b) => b.id === 'hall');
+    expect(hall.floors.some((f) => f.id === 'Hall-1')).toBe(true);
+    expect(hall.floors.some((f) => f.id === 'Hall-2')).toBe(true);
+    const cc = buildings.loyola.find((b) => b.id === 'cc');
+    expect(cc).toBeDefined();
+    expect(cc.floors.some((f) => f.id === 'CC-1')).toBe(true);
+  });
+
+  it('includes new floors in floorImages', () => {
+    expect(floorImages['Hall-1']).toBeDefined();
+    expect(floorImages['Hall-2']).toBeDefined();
+    expect('CC-1' in floorImages).toBe(true); // CC-1 may be null
+  });
+
+  it('exports FLOOR_META with entries for new floors', () => {
+    expect(FLOOR_META['Hall-1']).toBeDefined();
+    expect(FLOOR_META['Hall-1'].buildingId).toBe('hall');
+    expect(FLOOR_META['Hall-2']).toBeDefined();
+    expect(FLOOR_META['CC-1']).toBeDefined();
+    expect(FLOOR_META['CC-1'].campus).toBe('loyola');
+  });
+
+  it('exports BUILDING_META with floor lists', () => {
+    expect(BUILDING_META.hall.floors).toContain('Hall-1');
+    expect(BUILDING_META.hall.floors).toContain('Hall-8');
+    expect(BUILDING_META.cc.floors).toContain('CC-1');
+  });
+
+  it('getBuildingById returns building object', () => {
+    const hall = getBuildingById('hall');
+    expect(hall).toBeDefined();
+    expect(hall.id).toBe('hall');
+    expect(hall.floors.length).toBeGreaterThan(0);
+  });
+
+  it('getBuildingById returns null for unknown id', () => {
+    expect(getBuildingById('nope')).toBeNull();
   });
 });

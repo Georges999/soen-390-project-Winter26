@@ -229,4 +229,48 @@ describe('CalendarScreen', () => {
     });
     jest.useRealTimers();
   });
+
+  it('should navigate back when pressing back button', () => {
+    const { getByText } = render(
+      <CalendarScreen navigation={mockNavigation} route={mockRoute} />,
+    );
+    // MaterialIcons renders as Text with icon name in test env
+    fireEvent.press(getByText('chevron-left'));
+    expect(mockNavigation.goBack).toHaveBeenCalled();
+  });
+
+  it('should call handleGetDirections when pressing Get Directions on a class', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-02-24T09:00:00Z'));
+    const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+    const todayCode = dayMap[new Date().getDay()];
+
+    const mockCalendars = [
+      {
+        id: 'test',
+        name: 'Test',
+        selected: true,
+        events: [
+          {
+            summary: 'ENGR 301',
+            location: 'H 110',
+            start: { dateTime: '2026-02-24T10:00:00' },
+            end: { dateTime: '2026-02-24T11:30:00' },
+            recurrence: [`RRULE:FREQ=WEEKLY;BYDAY=${todayCode}`],
+          },
+        ],
+      },
+    ];
+    const { getByText } = render(
+      <CalendarScreen
+        navigation={mockNavigation}
+        route={{ params: { calendars: mockCalendars } }}
+      />,
+    );
+    fireEvent.press(getByText('Get Directions'));
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', {
+      nextClassLocation: 'H 110',
+      nextClassSummary: 'ENGR 301',
+    });
+    jest.useRealTimers();
+  });
 });

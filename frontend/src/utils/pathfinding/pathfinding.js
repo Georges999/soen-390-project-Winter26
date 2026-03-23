@@ -120,6 +120,38 @@ function findNearestElevator(nodes, fromNodeId, floorId) {
   return nearest;
 }
 
+/**
+ * Find the nearest stairs or elevator node on a given floor (non-accessible mode).
+ * Prefers stairs but falls back to elevator if no stairs exist.
+ */
+function findNearestConnector(nodes, fromNodeId, floorId) {
+  const fromNode = nodes.get(fromNodeId);
+  if (!fromNode) return null;
+
+  let nearestStairs = null;
+  let minStairsDist = Infinity;
+  let nearestElevator = null;
+  let minElevatorDist = Infinity;
+
+  nodes.forEach((node, nodeId) => {
+    if (node.floor !== floorId) return;
+    const dist = euclideanDistance(fromNode, node);
+    if (node.type === 'stairs' || node.type === 'escalator') {
+      if (dist < minStairsDist) {
+        minStairsDist = dist;
+        nearestStairs = nodeId;
+      }
+    } else if (node.type === 'elevator') {
+      if (dist < minElevatorDist) {
+        minElevatorDist = dist;
+        nearestElevator = nodeId;
+      }
+    }
+  });
+
+  return nearestStairs || nearestElevator;
+}
+
 function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'astar', accessible = false }) {
   if (!floorsData) return { ok: false, reason: 'floorsData is required' };
   if (!startNodeId) return { ok: false, reason: 'startNodeId is required' };
@@ -134,16 +166,18 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
   const startFloor = getNodeFloor(startNodeId, floorMap);
   const endFloor = getNodeFloor(endNodeId, floorMap);
 
-  // Cross-floor: when accessible, reroute destination to nearest elevator
+  // Cross-floor routing: route to the nearest vertical connector on the start floor
   let effectiveEndNodeId = endNodeId;
   if (startFloor !== endFloor) {
-    if (accessible) {
-      const elevatorId = findNearestElevator(nodes, startNodeId, startFloor);
-      if (!elevatorId) return { ok: false, reason: 'no accessible elevator found on this floor' };
-      effectiveEndNodeId = elevatorId;
-    } else {
-      return { ok: false, reason: 'different floors not supported yet', startFloor, endFloor };
+    // Find nearest stairs or elevator on the start floor to guide user there
+    const connectorId = accessible
+      ? findNearestElevator(nodes, startNodeId, startFloor)
+      : findNearestConnector(nodes, startNodeId, startFloor);
+
+    if (!connectorId) {
+      return { ok: false, reason: accessible ? 'No elevator found on this floor' : 'No stairs or elevator found on this floor' };
     }
+    effectiveEndNodeId = connectorId;
   }
 
   const normalizedAlgorithm = typeof algorithm === 'string' ? algorithm.toLowerCase() : '';
@@ -167,4 +201,4 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
   return { ok: true, algorithm: algorithmUsed, totalWeight: result.totalWeight, pathNodeIds: result.pathNodeIds, pathCoords, accessible };
 }
 
-export { dijkstra, aStar, findShortestPath };
+export { dijkstra, aStar, findShortestPath, findNearestElevator, findNearestConnector };

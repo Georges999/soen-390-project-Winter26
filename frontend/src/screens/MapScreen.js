@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { View, Text, Pressable, Keyboard, FlatList } from "react-native";
 import MapView, { Polygon, Marker } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -457,6 +458,20 @@ export default function MapScreen({ route }) {
     const normalized = normalizeText(query);
     return normalized.startsWith("my");
   }, [activeField, startText, destText]);
+
+  // Pre-fill outdoor route when navigating from indoor cross-building directions
+  useEffect(() => {
+    const outdoor = route?.params?.outdoorRoute;
+    if (!outdoor) return;
+
+    setStartText(outdoor.startName || "");
+    setDestText(outdoor.destName || "");
+    setHasInteracted(true);
+    setShowDirectionsPanel(true);
+
+    if (outdoor.startCoords) setStartCoord(outdoor.startCoords);
+    if (outdoor.destCoords) setDestCoord(outdoor.destCoords);
+  }, [route?.params?.outdoorRoute]);
 
   //building open and user selects “Directions”
   // Pre-fill destination from Calendar/Next Class and resolve to coords so directions run
@@ -1389,3 +1404,17 @@ export default function MapScreen({ route }) {
     </View>
   );
 }
+
+MapScreen.propTypes = {
+  route: PropTypes.shape({
+    params: PropTypes.shape({
+      outdoorRoute: PropTypes.shape({
+        startName: PropTypes.string,
+        destName: PropTypes.string,
+        startCoords: PropTypes.object,
+        destCoords: PropTypes.object,
+      }),
+      nextClassLocation: PropTypes.string,
+    }),
+  }),
+};

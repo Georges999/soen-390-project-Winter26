@@ -26,4 +26,41 @@ describe('useUserLocation', () => {
       expect(setHasLocationPerm).toHaveBeenCalledWith(true);
     });
   });
+
+  it('sets location perm to false when watchUserCoords throws', async () => {
+    locationService.getUserCoords.mockResolvedValue(null);
+    locationService.watchUserCoords.mockRejectedValue(new Error('Location denied'));
+
+    const setHasLocationPerm = jest.fn();
+    renderHook(() => useUserLocation({ setHasLocationPerm }));
+
+    await waitFor(() => {
+      expect(setHasLocationPerm).toHaveBeenCalledWith(false);
+    });
+  });
+
+  it('sets location perm to false when subscription is null', async () => {
+    locationService.getUserCoords.mockResolvedValue(null);
+    locationService.watchUserCoords.mockResolvedValue(null);
+
+    const setHasLocationPerm = jest.fn();
+    renderHook(() => useUserLocation({ setHasLocationPerm }));
+
+    await waitFor(() => {
+      expect(setHasLocationPerm).toHaveBeenCalledWith(false);
+    });
+  });
+
+  it('calls remove on subscription during cleanup', async () => {
+    const removeFn = jest.fn();
+    locationService.getUserCoords.mockResolvedValue(null);
+    locationService.watchUserCoords.mockResolvedValue({ remove: removeFn });
+
+    const setHasLocationPerm = jest.fn();
+    const { unmount } = renderHook(() => useUserLocation({ setHasLocationPerm }));
+
+    await waitFor(() => expect(locationService.watchUserCoords).toHaveBeenCalled());
+    unmount();
+    expect(removeFn).toHaveBeenCalled();
+  });
 });
