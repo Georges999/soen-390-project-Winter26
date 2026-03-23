@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Pressable, Text, StyleSheet } from 'react-native';
+import PropTypes from 'prop-types';
 
 export default function CampusToggle({ campuses, selectedId, onSelect }) {
+  const campusList = Array.isArray(campuses) ? campuses : [];
+
   return (
     <View style={styles.container}>
-      {campuses.map((campus) => {
+      {campusList.map((campus) => {
         const isSelected = campus.id === selectedId;
         return (
           <Pressable
@@ -21,6 +24,17 @@ export default function CampusToggle({ campuses, selectedId, onSelect }) {
     </View>
   );
 }
+
+CampusToggle.propTypes = {
+  campuses: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  selectedId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onSelect: PropTypes.func.isRequired,
+};
 
 const styles = StyleSheet.create({
   container: {
