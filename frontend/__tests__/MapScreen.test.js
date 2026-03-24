@@ -13,7 +13,6 @@ jest.mock('../src/services/poiService', () => {
     fetchNearbyPOIs: jest.fn(),
   };
 });
-console.log('fetchNearbyPOIs mock created:', typeof fetchNearbyPOIs);
 
 jest.mock('expo-speech', () => ({
   speak: jest.fn(),
@@ -30,8 +29,9 @@ describe('MapScreen', () => {
       latitude: 45.4973,
       longitude: -73.5789,
     });
-    locationService.watchUserCoords.mockResolvedValue({
-      remove: jest.fn(),
+    locationService.watchUserCoords.mockImplementation((cb) => {
+      cb({ latitude: 45.4973, longitude: -73.5789 });
+      return Promise.resolve({ remove: jest.fn() });
     });
     process.env.EXPO_PUBLIC_GOOGLE_API_KEY = 'test-key';
     fetchNearbyPOIs.mockResolvedValue([]);
@@ -1538,9 +1538,13 @@ describe('MapScreen', () => {
     });
 
     it('should skip POI fetch when poiOriginCoord is null (line 364 early return)', async () => {
-      // Tests early return from loadNearbyPOIs when no origin coord
+      // No GPS + no custom start/dest → loadNearbyPOIs returns before requesting POIs;
+      // panel stays on the filter form (empty list is not shown).
       jest.clearAllMocks();
       locationService.getUserCoords.mockResolvedValue(null);
+      locationService.watchUserCoords.mockImplementation(() =>
+        Promise.resolve({ remove: jest.fn() }),
+      );
       fetchNearbyPOIs.mockResolvedValue([]);
 
       const { getByTestId, getByText } = render(<MapScreen />);
@@ -1548,12 +1552,8 @@ describe('MapScreen', () => {
       await waitFor(() => expect(getByTestId('poi-panel')).toBeTruthy());
 
       fireEvent.press(getByText('Show on map'));
-      await waitFor(() =>
-        expect(getByText('No nearby POIs found.')).toBeTruthy(),
-        { timeout: 3000 }
-      );
+      await waitFor(() => expect(getByText('Show on map')).toBeTruthy());
 
-      // fetchNearbyPOIs should not be called due to early return
       expect(fetchNearbyPOIs).not.toHaveBeenCalled();
     });
 
