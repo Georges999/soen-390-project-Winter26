@@ -469,18 +469,20 @@ export default function MapScreen({ route }) {
     setHasInteracted(true);
     setShowDirectionsPanel(true);
 
-    if (outdoor.startCoords) setStartCoord(outdoor.startCoords);
-    if (outdoor.destCoords) setDestCoord(outdoor.destCoords);
+    setStartCoord(outdoor.startCoords ?? null);
+    setDestCoord(outdoor.destCoords ?? null);
   }, [route?.params?.outdoorRoute]);
 
-  //building open and user selects “Directions”
-  // Pre-fill destination from Calendar/Next Class and resolve to coords so directions run
+  // Pre-fill from Calendar/Next Class when params change (not on every GPS tick)
   useEffect(() => {
     const location = route?.params?.nextClassLocation;
-    
-    if (!location) return;
+    const summary = route?.params?.nextClassSummary;
+    if (!location || summary == null || summary === "") return;
 
-    setOriginToUserLocation(userCoord);
+    setHasInteracted(true);
+    setStartText("My location");
+    setStartCampusId(null);
+    setStartCoord(userCoord ?? null);
 
     const code = String(location).trim().split(/\s+/)[0];
     if (code) {
@@ -491,12 +493,30 @@ export default function MapScreen({ route }) {
         const center = getPolygonCenter(building.coordinates);
         setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
       } else {
-        setDestinationAndOpenPanel(location);
+        setDestText(location);
+        setDestCoord(null);
+        setDestCampusId(null);
+        openDirectionsPanel();
       }
     } else {
-      setDestinationAndOpenPanel(location);
+      setDestText(location);
+      setDestCoord(null);
+      setDestCampusId(null);
+      openDirectionsPanel();
     }
-  }, [route?.params, userCoord, allBuildings]);
+  }, [
+    route?.params?.nextClassLocation,
+    route?.params?.nextClassSummary,
+    allBuildings,
+  ]);
+
+  // If Map opened before GPS was ready, set start once when location arrives
+  useEffect(() => {
+    if (!route?.params?.nextClassLocation) return;
+    if (startText !== "My location") return;
+    if (!userCoord) return;
+    setStartCoord((prev) => prev ?? userCoord);
+  }, [userCoord, route?.params?.nextClassLocation, startText]);
 
   const setDestinationToSelectedBuilding = () => {
     if (!selectedBuilding) return;
@@ -1356,13 +1376,21 @@ export default function MapScreen({ route }) {
         {/* POI Button */}
         <Pressable
           testID="poi-button"
+          accessibilityLabel="Outdoor points of interest"
+          hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
           onPress={() => {
             setHasRequestedPOIs(false);
             setIsPOIPanelOpen(true);
           }}
-          style={[styles.poiButton, isPOIPanelOpen && styles.poiButtonActive]}
+          style={[
+            styles.poiButton,
+            isPOIPanelOpen && styles.poiButtonActive,
+            isPOIPanelOpen &&
+              !hasRequestedPOIs &&
+              styles.poiButtonClearFilterPanel,
+          ]}
         >
-          <MaterialIcons name="info" size={44} style={styles.poiButtonIcon} />
+          <MaterialIcons name="info-outline" size={22} style={styles.poiButtonIcon} />
         </Pressable>
 
         {canShowDirectionsPanel && (
