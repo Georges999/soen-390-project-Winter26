@@ -1376,13 +1376,21 @@ export default function MapScreen({ route }) {
         {/* POI Button */}
         <Pressable
           testID="poi-button"
+          accessibilityLabel="Outdoor points of interest"
+          hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
           onPress={() => {
             setHasRequestedPOIs(false);
             setIsPOIPanelOpen(true);
           }}
-          style={[styles.poiButton, isPOIPanelOpen && styles.poiButtonActive]}
+          style={[
+            styles.poiButton,
+            isPOIPanelOpen && styles.poiButtonActive,
+            isPOIPanelOpen &&
+              !hasRequestedPOIs &&
+              styles.poiButtonClearFilterPanel,
+          ]}
         >
-          <MaterialIcons name="info" size={44} style={styles.poiButtonIcon} />
+          <MaterialIcons name="info-outline" size={22} style={styles.poiButtonIcon} />
         </Pressable>
 
         {canShowDirectionsPanel && (
