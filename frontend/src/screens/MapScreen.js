@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { View, Text, Pressable, Keyboard, ScrollView } from "react-native";
 import MapView, { Polygon, Marker } from "react-native-maps";
@@ -11,6 +11,7 @@ import BuildingBottomSheet from "../components/BuildingBottomSheet";
 import DirectionsPanel from "../components/DirectionsPanel";
 import ShuttleModal from "../components/ShuttleModal";
 import RouteOverlay from "../components/RouteOverlay";
+import OutdoorPoiFilterForm from "../components/OutdoorPoiFilterForm";
 import campuses from "../data/campuses.json";
 import shuttleSchedule from "../data/shuttleSchedule.json";
 import { filterPOIsByMode } from "../utils/poiFilter";
@@ -160,10 +161,13 @@ export default function MapScreen({ route }) {
   // outdoorPOI info
   const [isPOIPanelOpen, setIsPOIPanelOpen] = useState(false);
   const [pois, setPois] = useState([]);
-  const [selectedPOICategory, setSelectedPOICategory] = useState("Coffee");
-  const [poiFilterMode, setPOIFilterMode] = useState("nearest");
-  const [poiRadius, setPOIRadius] = useState(1000);
   const [selectedPOI, setSelectedPOI] = useState(null);
+  /** Snapshot from last “Show on map” — list filtering must not use live chip state (that lives in OutdoorPoiFilterForm). */
+  const [poiDisplayFilters, setPoiDisplayFilters] = useState({
+    mode: "nearest",
+    radius: 1000,
+  });
+  const [lastPoiCategory, setLastPoiCategory] = useState("Coffee");
   const [isPOILoading, setIsPOILoading] = useState(false);
   const [hasRequestedPOIs, setHasRequestedPOIs] = useState(false);
   const [poiSearchOrigin, setPoiSearchOrigin] = useState(null);
@@ -193,9 +197,6 @@ export default function MapScreen({ route }) {
 
   const mapRef = useRef(null);
   const latestPOIRequestIdRef = useRef(0);
-  const getPOIFetchRadius = (mode = poiFilterMode, radius = poiRadius) =>
-    mode === "range" ? radius : Math.max(radius, 2000);
-
   const setLocationDetails = (
     setText,
     setCoord,
@@ -510,14 +511,6 @@ export default function MapScreen({ route }) {
     allBuildings,
   ]);
 
-  // If Map opened before GPS was ready, set start once when location arrives
-  useEffect(() => {
-    if (!route?.params?.nextClassLocation) return;
-    if (startText !== "My location") return;
-    if (!userCoord) return;
-    setStartCoord((prev) => prev ?? userCoord);
-  }, [userCoord, route?.params?.nextClassLocation, startText]);
-
   const setDestinationToSelectedBuilding = () => {
     if (!selectedBuilding) return;
 
@@ -559,89 +552,6 @@ export default function MapScreen({ route }) {
     setStartCampusId(nextStartCampusId);
     setDestCampusId(nextDestCampusId);
   };
-
-  // load nearby POIs based on category and radius
-  const loadNearbyPOIs = async ({
-    category = selectedPOICategory,
-    radius = poiRadius,
-  } = {}) => {
-    // Determine which coordinate to use for POI suggestions:
-    // 1) If the user has entered a custom start (not "My location") and it has coords, use that.
-    // 2) Else if the user has entered a custom destination (not "My location") and it has coords, use that.
-    // 3) Otherwise fall back to the device location (`userCoord`).
-    const poiOriginCoord =
-      (startText && startText !== "My location" && startCoord) ||
-      (destText && destText !== "My location" && destCoord) ||
-      userCoord;
-
-    if (!poiOriginCoord) return;
-
-    setHasRequestedPOIs(true);
-    // Remember the origin used for these POI results so that subsequent
-    // live user location updates don't reorder or force the list to reset.
-    setPoiSearchOrigin(poiOriginCoord);
-
-    const requestId = ++latestPOIRequestIdRef.current;
-    setIsPOILoading(true);
-
-    try {
-      const results = await fetchNearbyPOIs({
-        lat: poiOriginCoord.latitude,
-        lng: poiOriginCoord.longitude,
-        radius,
-        type: categoryToType[category] ?? "cafe",
-        origin: poiOriginCoord,
-      });
-      const normalizedResults = Array.isArray(results) ? results : [];
-
-      if (requestId === latestPOIRequestIdRef.current) {
-        setPois(normalizedResults);
-      }
-    } finally {
-      if (requestId === latestPOIRequestIdRef.current) {
-        setIsPOILoading(false);
-      }
-    }
-  };
-
-  const normalizedPOIs = useMemo(
-    () =>
-      (Array.isArray(pois) ? pois : []).filter(
-        (poi) =>
-          poi?.coords &&
-          typeof poi.coords.latitude === "number" &&
-          typeof poi.coords.longitude === "number" &&
-          typeof poi?.name === "string" &&
-          poi.name.trim().length > 0 &&
-          typeof poi?.address === "string",
-      ),
-    [pois],
-  );
-
-  const displayedPOIs = useMemo(() => {
-    if (normalizedPOIs.length === 0) return [];
-
-    // Use the POI search origin (the coordinate used when fetching the
-    // current `pois`) when available, otherwise fall back to the live
-    // `userCoord`. This prevents live location updates from changing
-    // the ordering and resetting the FlatList scroll position.
-    const orderingOrigin = poiSearchOrigin ?? userCoord;
-
-    /* istanbul ignore next -- defensive fallback when no ordering origin is available */
-    if (!orderingOrigin) {
-      return poiFilterMode === "nearest"
-        ? normalizedPOIs.slice(0, 5)
-        : normalizedPOIs;
-    }
-
-    return filterPOIsByMode({
-      pois: normalizedPOIs,
-      userCoord: orderingOrigin,
-      mode: poiFilterMode,
-      nearestCount: 5,
-      radius: poiRadius,
-    });
-  }, [normalizedPOIs, userCoord, poiSearchOrigin, poiFilterMode, poiRadius]);
 
   //when campus selection/toggle change this makes sure context is reset cleanly
   useEffect(() => {
@@ -759,6 +669,105 @@ export default function MapScreen({ route }) {
 
   const userCoord =
     isSimulating && simulatedCoord ? simulatedCoord : liveUserCoord;
+
+  // If Map opened before GPS was ready, set start once when location arrives
+  useEffect(() => {
+    if (!route?.params?.nextClassLocation) return;
+    if (startText !== "My location") return;
+    if (!userCoord) return;
+    setStartCoord((prev) => prev ?? userCoord);
+  }, [userCoord, route?.params?.nextClassLocation, startText]);
+
+  const normalizedPOIs = useMemo(
+    () =>
+      (Array.isArray(pois) ? pois : []).filter(
+        (poi) =>
+          poi?.coords &&
+          typeof poi.coords.latitude === "number" &&
+          typeof poi.coords.longitude === "number" &&
+          typeof poi?.name === "string" &&
+          poi.name.trim().length > 0 &&
+          typeof poi?.address === "string",
+      ),
+    [pois],
+  );
+
+  const displayedPOIs = useMemo(() => {
+    if (normalizedPOIs.length === 0) return [];
+
+    // Use the POI search origin (the coordinate used when fetching the
+    // current `pois`) when available, otherwise fall back to the live
+    // `userCoord`. This prevents live location updates from changing
+    // the ordering and resetting the POI list scroll position.
+    const orderingOrigin = poiSearchOrigin ?? userCoord;
+
+    /* istanbul ignore next -- defensive fallback when no ordering origin is available */
+    if (!orderingOrigin) {
+      return poiDisplayFilters.mode === "nearest"
+        ? normalizedPOIs.slice(0, 5)
+        : normalizedPOIs;
+    }
+
+    return filterPOIsByMode({
+      pois: normalizedPOIs,
+      userCoord: orderingOrigin,
+      mode: poiDisplayFilters.mode,
+      nearestCount: 5,
+      radius: poiDisplayFilters.radius,
+    });
+  }, [normalizedPOIs, userCoord, poiSearchOrigin, poiDisplayFilters]);
+
+  // load nearby POIs based on category and radius (after userCoord exists)
+  const loadNearbyPOIs = useCallback(
+    async ({
+      category = "Coffee",
+      mode = "nearest",
+      radius = 1000,
+      fetchRadius,
+    } = {}) => {
+      const poiOriginCoord =
+        (startText && startText !== "My location" && startCoord) ||
+        (destText && destText !== "My location" && destCoord) ||
+        userCoord;
+
+      if (!poiOriginCoord) return;
+
+      setPoiDisplayFilters({ mode, radius });
+      setLastPoiCategory(category);
+      setHasRequestedPOIs(true);
+      setPoiSearchOrigin(poiOriginCoord);
+
+      const requestId = ++latestPOIRequestIdRef.current;
+      setIsPOILoading(true);
+
+      const apiRadius =
+        typeof fetchRadius === "number" && Number.isFinite(fetchRadius)
+          ? fetchRadius
+          : mode === "range"
+            ? radius
+            : Math.max(radius, 2000);
+
+      try {
+        const results = await fetchNearbyPOIs({
+          lat: poiOriginCoord.latitude,
+          lng: poiOriginCoord.longitude,
+          radius: apiRadius,
+          type: categoryToType[category] ?? "cafe",
+          origin: poiOriginCoord,
+        });
+        const normalizedResults = Array.isArray(results) ? results : [];
+
+        if (requestId === latestPOIRequestIdRef.current) {
+          setPois(normalizedResults);
+        }
+      } finally {
+        if (requestId === latestPOIRequestIdRef.current) {
+          setIsPOILoading(false);
+        }
+      }
+    },
+    [startText, startCoord, destText, destCoord, userCoord],
+  );
 
   // Resolve the building currently containing the effective user coordinate
   const { currentBuilding } = useCurrentBuilding({
@@ -979,6 +988,7 @@ export default function MapScreen({ route }) {
           showsUserLocation={hasLocationPerm}
           showsCompass
           showsScale
+          removeClippedSubviews={false}
           onPress={() => setActiveField(null)}
           onRegionChangeComplete={(region) => setMapRegion(region)}
         >
@@ -1090,6 +1100,8 @@ export default function MapScreen({ route }) {
             <Marker
               key={`poi-mkr-${String(poi.id ?? idx)}-${idx}`}
               coordinate={poi.coords}
+              tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 0.5 }}
               onPress={() => {
                 setSelectedPOI(poi);
                 setIsPOIPanelOpen(false);
@@ -1097,7 +1109,7 @@ export default function MapScreen({ route }) {
               }}
               testID="poi-marker"
             >
-              <View style={styles.poiMarker} />
+              <View style={styles.poiMarker} collapsable={false} />
             </Marker>
           ))}
 
@@ -1145,7 +1157,7 @@ export default function MapScreen({ route }) {
               >
                 <View style={styles.poiInfoTag}>
                   <Text style={styles.poiInfoTagText}>
-                    {selectedPOICategory}
+                    {lastPoiCategory}
                   </Text>
                 </View>
                 <Text style={styles.poiInfoDistance}>
@@ -1246,122 +1258,11 @@ export default function MapScreen({ route }) {
             </View>
 
             {!hasRequestedPOIs ? (
-              <>
-                <Text style={styles.poiPanelSectionLabel}>Find nearby</Text>
-
-                <View style={styles.poiCategoryRow}>
-                  {["nearest", "range"].map((mode) => {
-                    const isSelected = poiFilterMode === mode;
-                    return (
-                      <Pressable
-                        key={mode}
-                        onPress={() => setPOIFilterMode(mode)}
-                        style={[
-                          styles.poiCategoryChip,
-                          isSelected && styles.poiCategoryChipActive,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.poiCategoryChipText,
-                            isSelected && styles.poiCategoryChipTextActive,
-                          ]}
-                        >
-                          {mode === "nearest" ? "Nearest" : "Range"}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-
-                <Text style={styles.poiPanelSectionLabel}>
-                  {poiFilterMode === "nearest"
-                    ? "Show nearest"
-                    : "Range (meters)"}
-                </Text>
-
-                {poiFilterMode === "range" ? (
-                  <View style={styles.poiRadiusRow}>
-                    <Pressable
-                      onPress={() => {
-                        const nextRadius = Math.max(100, poiRadius - 100);
-                        setPOIRadius(nextRadius);
-                      }}
-                      style={styles.poiRadiusButton}
-                    >
-                      <Text style={styles.poiRadiusButtonText}>-</Text>
-                    </Pressable>
-
-                    <View style={styles.poiRadiusValueBox}>
-                      <Text style={styles.poiRadiusValueText}>{poiRadius}</Text>
-                    </View>
-
-                    <Pressable
-                      onPress={() => {
-                        const nextRadius = poiRadius + 100;
-                        setPOIRadius(nextRadius);
-                      }}
-                      style={styles.poiRadiusButton}
-                    >
-                      <Text style={styles.poiRadiusButtonText}>+</Text>
-                    </Pressable>
-                  </View>
-                ) : null}
-
-                <Text style={styles.poiPanelSectionLabel}>Category</Text>
-
-                <View style={styles.poiCategoryRow}>
-                  {Object.keys(categoryToType).map((category) => {
-                    const isSelected = selectedPOICategory === category;
-                    return (
-                      <Pressable
-                        key={category}
-                        onPress={() => setSelectedPOICategory(category)}
-                        style={[
-                          styles.poiCategoryChip,
-                          isSelected && styles.poiCategoryChipActive,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.poiCategoryChipText,
-                            isSelected && styles.poiCategoryChipTextActive,
-                          ]}
-                        >
-                          {category}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-
-                <Pressable
-                  onPress={() =>
-                    loadNearbyPOIs({
-                      category: selectedPOICategory,
-                      radius: getPOIFetchRadius(poiFilterMode, poiRadius),
-                    })
-                  }
-                  style={{
-                    backgroundColor: MAROON,
-                    borderRadius: 14,
-                    paddingVertical: 14,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginTop: 12,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "white",
-                      fontWeight: "700",
-                      fontSize: 15,
-                    }}
-                  >
-                    Show on map
-                  </Text>
-                </Pressable>
-              </>
+              <OutdoorPoiFilterForm
+                styles={styles}
+                maroon={MAROON}
+                onShowOnMap={loadNearbyPOIs}
+              />
             ) : (
               <View
                 style={{
