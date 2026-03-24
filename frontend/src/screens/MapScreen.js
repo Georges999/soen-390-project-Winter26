@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { View, Text, Pressable, Keyboard, FlatList } from "react-native";
+import { View, Text, Pressable, Keyboard, ScrollView } from "react-native";
 import MapView, { Polygon, Marker } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
@@ -565,7 +565,6 @@ export default function MapScreen({ route }) {
     category = selectedPOICategory,
     radius = poiRadius,
   } = {}) => {
-    setHasRequestedPOIs(true);
     // Determine which coordinate to use for POI suggestions:
     // 1) If the user has entered a custom start (not "My location") and it has coords, use that.
     // 2) Else if the user has entered a custom destination (not "My location") and it has coords, use that.
@@ -576,6 +575,8 @@ export default function MapScreen({ route }) {
       userCoord;
 
     if (!poiOriginCoord) return;
+
+    setHasRequestedPOIs(true);
     // Remember the origin used for these POI results so that subsequent
     // live user location updates don't reorder or force the list to reset.
     setPoiSearchOrigin(poiOriginCoord);
@@ -816,11 +817,15 @@ export default function MapScreen({ route }) {
     }
 
     return (
-      <FlatList
-        data={displayedPOIs}
-        keyExtractor={(poi) => String(poi.id ?? poi.name)}
-        renderItem={({ item: poi }) => (
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+      >
+        {displayedPOIs.map((poi, index) => (
           <Pressable
+            key={`poi-row-${String(poi.id ?? "x")}-${index}`}
             testID="poi-list-item"
             onPress={() => {
               setSelectedPOI(poi);
@@ -852,10 +857,8 @@ export default function MapScreen({ route }) {
               {formatPOIDistance(poi.distance)}
             </Text>
           </Pressable>
-        )}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
+        ))}
+      </ScrollView>
     );
   };
 
@@ -1083,9 +1086,9 @@ export default function MapScreen({ route }) {
               </Marker>
             ))}
 
-          {displayedPOIs.map((poi) => (
+          {displayedPOIs.map((poi, idx) => (
             <Marker
-              key={poi.id}
+              key={`poi-mkr-${String(poi.id ?? idx)}-${idx}`}
               coordinate={poi.coords}
               onPress={() => {
                 setSelectedPOI(poi);
@@ -1379,6 +1382,7 @@ export default function MapScreen({ route }) {
           accessibilityLabel="Outdoor points of interest"
           hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
           onPress={() => {
+            setSelectedPOI(null);
             setHasRequestedPOIs(false);
             setIsPOIPanelOpen(true);
           }}
