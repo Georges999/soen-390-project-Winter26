@@ -197,6 +197,8 @@ export default function MapScreen({ route }) {
 
   const mapRef = useRef(null);
   const latestPOIRequestIdRef = useRef(0);
+  /** Restore directions panel after closing POI sheet if it was visible when POI opened. */
+  const directionsVisibleBeforePoiRef = useRef(false);
   const setLocationDetails = (
     setText,
     setCoord,
@@ -1252,7 +1254,20 @@ export default function MapScreen({ route }) {
           >
             <View style={styles.poiPanelHeader}>
               <Text style={styles.poiPanelTitle}>Outdoor POIs</Text>
-              <Pressable onPress={() => setIsPOIPanelOpen(false)}>
+              <Pressable
+                onPress={() => {
+                  setIsPOIPanelOpen(false);
+                  if (
+                    directionsVisibleBeforePoiRef.current &&
+                    startCoord &&
+                    destCoord &&
+                    !selectedPOI
+                  ) {
+                    setShowDirectionsPanel(true);
+                  }
+                  directionsVisibleBeforePoiRef.current = false;
+                }}
+              >
                 <MaterialIcons name="close" size={20} color="#1F1F1F" />
               </Pressable>
             </View>
@@ -1283,6 +1298,12 @@ export default function MapScreen({ route }) {
           accessibilityLabel="Outdoor points of interest"
           hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
           onPress={() => {
+            directionsVisibleBeforePoiRef.current = Boolean(
+              showDirectionsPanel && startCoord && destCoord && !selectedPOI,
+            );
+            if (directionsVisibleBeforePoiRef.current) {
+              setShowDirectionsPanel(false);
+            }
             setSelectedPOI(null);
             setHasRequestedPOIs(false);
             setIsPOIPanelOpen(true);
