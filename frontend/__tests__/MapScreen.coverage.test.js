@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, within } from '@testing-library/react-native';
 import MapScreen from '../src/screens/MapScreen';
 import { fetchNearbyPOIs } from '../src/services/poiService';
 import * as geoUtils from '../src/utils/geoUtils';
@@ -233,6 +233,37 @@ describe('MapScreen coverage-focused interactions', () => {
 
     fireEvent.press(getAllByText('close')[0]);
 
+    await waitFor(() => {
+      expect(queryByTestId('poi-panel')).toBeNull();
+    });
+  });
+
+  it('hides directions panel when opening POI and restores it after POI close', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent(getByTestId('start-input'), 'focus');
+    fireEvent.press(getByTestId('building-sgw-b'));
+    fireEvent(getByTestId('dest-input'), 'focus');
+    fireEvent.press(getByTestId('building-sgw-mb'));
+
+    await waitFor(() => {
+      expect(getByTestId('go-btn')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('poi-button'));
+    await waitFor(() => {
+      expect(getByTestId('poi-panel')).toBeTruthy();
+    });
+    await waitFor(() => {
+      expect(queryByTestId('go-btn')).toBeNull();
+    });
+
+    const panel = getByTestId('poi-panel');
+    fireEvent.press(within(panel).getByText('close'));
+
+    await waitFor(() => {
+      expect(getByTestId('go-btn')).toBeTruthy();
+    });
     await waitFor(() => {
       expect(queryByTestId('poi-panel')).toBeNull();
     });

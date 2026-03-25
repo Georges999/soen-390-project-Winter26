@@ -23,7 +23,7 @@ function getWeekDays(referenceDate) {
   const day = referenceDate.getDay();
   const monday = new Date(referenceDate);
   monday.setDate(referenceDate.getDate() - (day === 0 ? 6 : day - 1));
-  return Array.from({ length: 6 }, (_, i) => {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
     return d;
@@ -199,7 +199,9 @@ export default function CalendarScreen({ navigation, route }) {
       <View style={styles.weekDays}>
         {weekDays.map((date) => {
           const dayIdx = date.getDay();
-          const dayLabel = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(dayIdx === 0 ? 7 : dayIdx) - 1];
+          const dayLabel = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][
+            (dayIdx === 0 ? 7 : dayIdx) - 1
+          ];
           const isSelected = date.toDateString() === selectedDate.toDateString();
           return (
             <Pressable

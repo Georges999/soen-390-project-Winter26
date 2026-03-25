@@ -45,6 +45,15 @@ describe('CalendarScreen', () => {
     jest.useRealTimers();
   });
 
+  it('should show seven weekday chips including Sunday in the week strip', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-02-23T12:00:00Z'));
+    const { getByText } = renderCalendarScreen({ params: { calendars: [] } });
+    // Week of Mon Feb 23, 2026 includes Sun Mar 1 — strip uses Mon..Sun labels.
+    expect(getByText('Sun')).toBeTruthy();
+    expect(getByText('Sat')).toBeTruthy();
+    jest.useRealTimers();
+  });
+
   it('should show empty auth state when not connected', async () => {
     const { getByText } = renderCalendarScreen();
 
