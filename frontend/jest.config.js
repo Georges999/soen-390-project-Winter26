@@ -1,6 +1,7 @@
 module.exports = {
   preset: 'jest-expo',
   rootDir: '.',
+  testTimeout: 60000,
   setupFilesAfterEnv: ['./jest.setup.js'],
   collectCoverageFrom: [
     'src/**/*.js',

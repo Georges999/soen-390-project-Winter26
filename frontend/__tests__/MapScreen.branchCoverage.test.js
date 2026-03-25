@@ -26,8 +26,9 @@ describe('MapScreen – Branch Coverage for Uncovered Scenarios', () => {
       latitude: 45.4973,
       longitude: -73.5789,
     });
-    locationService.watchUserCoords.mockResolvedValue({
-      remove: jest.fn(),
+    locationService.watchUserCoords.mockImplementation((cb) => {
+      cb({ latitude: 45.4973, longitude: -73.5789 });
+      return Promise.resolve({ remove: jest.fn() });
     });
     process.env.EXPO_PUBLIC_GOOGLE_API_KEY = 'test-key';
     fetchNearbyPOIs.mockResolvedValue([]);

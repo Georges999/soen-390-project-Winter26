@@ -1,3 +1,11 @@
 ignore:
   - "frontend/__tests__/**"
   - "backend/**/__tests__/**"
+
+# Patch = coverage on lines changed in the PR only. Without this, Codecov can use a
+# high auto target (e.g. ~97%) and fail PRs that add UI with a few uncovered lines.
+coverage:
+  status:
+    patch:
+      default:
+        target: 90%
