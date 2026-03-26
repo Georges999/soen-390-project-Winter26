@@ -465,6 +465,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
         <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
+        <View style={styles.searchColumnWrapper}>
         {/* Search Inputs with Map Selection Buttons */}
         <View style={styles.searchSection}>
           {/* Start Input */}
@@ -555,19 +556,28 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         {searchQuery.trim().length > 0 && activeField && (
           <View style={styles.searchResultsContainer}>
             {searchResults.length > 0 ? (
-              <View>
+              <ScrollView
+                nestedScrollEnabled
+                keyboardShouldPersistTaps="handled"
+                style={styles.searchResultsScroll}
+                showsVerticalScrollIndicator
+              >
                 {searchResults.slice(0, 6).map((item) => (
                   <Pressable
                     key={item.id}
                     style={styles.searchResultItem}
                     onPress={() => handleSelectRoom(item)}
                   >
-                    <Text style={styles.searchResultText}>
+                    <Text
+                      style={styles.searchResultText}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
                       {item.label}, Floor {item.floor?.split("-")[1] || item.floor} · {item.buildingName}
                     </Text>
                   </Pressable>
                 ))}
-              </View>
+              </ScrollView>
             ) : (
               <View style={styles.noResultsContainer}>
                 <MaterialIcons name="search-off" size={24} color="#999" />
@@ -578,6 +588,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             )}
           </View>
         )}
+        </View>
 
         {/* Walking Mode Indicator (Walking Only) */}
         <View style={styles.transportContainer}>
@@ -944,6 +955,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontStyle: "italic",
   },
+  // Keeps search + dropdown above the Walking chip (Android elevation draw order).
+  searchColumnWrapper: {
+    zIndex: 1000,
+    elevation: 20,
+    backgroundColor: "#fff",
+  },
   searchSection: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -1031,12 +1048,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     maxHeight: 180,
-    elevation: 5,
+    overflow: "hidden",
+    elevation: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     zIndex: 100,
+  },
+  searchResultsScroll: {
+    maxHeight: 180,
   },
   searchResultItem: {
     paddingVertical: 12,
@@ -1052,6 +1073,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     paddingVertical: 8,
+    zIndex: 0,
+    elevation: 0,
   },
   transportChip: {
     flexDirection: "row",
@@ -1063,6 +1086,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     gap: 6,
+    elevation: 0,
   },
   transportChipActive: {
     backgroundColor: MAROON,
