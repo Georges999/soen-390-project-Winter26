@@ -291,19 +291,28 @@ function IndoorMapScreen({ navigation }) {
         {searchQuery.trim().length > 0 && (
           <View style={styles.searchResultsContainer}>
             {searchResults.length > 0 ? (
-              <View>
+              <ScrollView
+                nestedScrollEnabled
+                keyboardShouldPersistTaps="handled"
+                style={styles.searchResultsScroll}
+                showsVerticalScrollIndicator
+              >
                 {searchResults.slice(0, 8).map((item) => (
                   <Pressable
                     key={item.id}
                     style={styles.searchResultItem}
                     onPress={() => handleRoomSelect(item)}
                   >
-                    <Text style={styles.searchResultText}>
+                    <Text
+                      style={styles.searchResultText}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
                       {item.label} · {item.buildingName}
                     </Text>
                   </Pressable>
                 ))}
-              </View>
+              </ScrollView>
             ) : (
               <View style={styles.noResultsContainer}>
                 <MaterialIcons name="search-off" size={24} color="#999" />
@@ -548,11 +557,15 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     zIndex: 100,
     maxHeight: 200,
+    overflow: "hidden",
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
+  },
+  searchResultsScroll: {
+    maxHeight: 200,
   },
   searchResultItem: {
     paddingVertical: 12,
