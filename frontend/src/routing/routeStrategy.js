@@ -39,7 +39,7 @@ const snapShuttleSegments = ({
   if (walkTo.length > 0 && ride.length > 0)
     walkTo[walkTo.length - 1] = ride[0];
   if (walkFrom.length > 0 && ride.length > 0) {
-    walkFrom[0] = ride[ride.length - 1];
+    walkFrom[0] = ride.at(-1);
   }
 
   return { walkTo, ride, walkFrom };
@@ -54,7 +54,7 @@ const mergeShuttleSegments = ({ walkTo, ride, walkFrom }) => {
   const merged = [];
   chunks.forEach((chunk) => {
     chunk.forEach((point) => {
-      const prev = merged[merged.length - 1];
+      const prev = merged.at(-1);
       if (
         prev &&
         prev.latitude === point.latitude &&
