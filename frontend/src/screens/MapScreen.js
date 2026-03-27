@@ -787,7 +787,7 @@ export default function MapScreen({ route }) {
     }
   }, [startText, currentBuilding]);
 
-  const { currentStepIndex, setCurrentStepIndex } = useNavigationSteps({
+  const { setCurrentStepIndex } = useNavigationSteps({
     navActive,
     userCoord,
     routeInfo,
