@@ -32,6 +32,37 @@ function IndoorStack() {
   );
 }
 
+const TAB_SCREENS = [
+  {
+    name: "Map",
+    component: MapScreen,
+    testID: "tab-map",
+    label: "Map",
+    icon: "map",
+  },
+  {
+    name: "NextClass",
+    component: NextClassScreen,
+    testID: "tab-next-class",
+    label: "Next Class",
+    icon: "event",
+  },
+  {
+    name: "Indoor",
+    component: IndoorStack,
+    testID: "tab-indoor",
+    label: "Indoor",
+    icon: "domain",
+  },
+  {
+    name: "Profile",
+    component: ProfileStack,
+    testID: "tab-profile",
+    label: "Profile",
+    icon: "person",
+  },
+];
+
 export default function MainNavigator() {
   return (
     <Tab.Navigator
@@ -52,51 +83,21 @@ export default function MainNavigator() {
         },
       }}
     >
-      <Tab.Screen
-        name="Map"
-        component={MapScreen}
-        options={{
-          tabBarTestID: "tab-map",
-          tabBarAccessibilityLabel: "tab-map",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="map" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="NextClass"
-        component={NextClassScreen}
-        options={{
-          tabBarTestID: "tab-next-class",
-          tabBarLabel: "Next Class",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="event" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Indoor"
-        component={IndoorStack}
-        options={{
-          tabBarTestID: "tab-indoor",
-          tabBarAccessibilityLabel: "tab-indoor",
-          tabBarLabel: "Indoor",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="domain" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileStack}
-        options={{
-          tabBarTestID: "tab-profile",
-          tabBarAccessibilityLabel: "tab-profile",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
-          ),
-        }}
-      />
+      {TAB_SCREENS.map((tab) => (
+        <Tab.Screen
+          key={tab.name}
+          name={tab.name}
+          component={tab.component}
+          options={{
+            tabBarTestID: tab.testID,
+            tabBarAccessibilityLabel: tab.testID,
+            tabBarLabel: tab.label,
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name={tab.icon} size={size} color={color} />
+            ),
+          }}
+        />
+      ))}
     </Tab.Navigator>
   );
 }
