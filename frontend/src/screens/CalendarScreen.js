@@ -245,8 +245,12 @@ export default function CalendarScreen({ navigation, route }) {
             {emptySubtext ? <Text style={styles.emptySubtext}>{emptySubtext}</Text> : null}
           </View>
         ) : (
-          todaysClasses.map((event, index) => (
-            <View key={index} style={styles.classCard}>
+          todaysClasses.map((event, index) => {
+            const stepKey =
+              event.id ||
+              `${event.startTime || event.start?.dateTime || event.start?.date}-${event.summary || event.title || 'class'}-${index}`;
+            return (
+              <View key={stepKey} style={styles.classCard}>
               <View style={styles.classTime}>
                 <Text style={styles.timeText}>
                   {formatTime(event.startTime || event.start?.dateTime)}
@@ -270,7 +274,8 @@ export default function CalendarScreen({ navigation, route }) {
                 </Pressable>
               </View>
             </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </View>
