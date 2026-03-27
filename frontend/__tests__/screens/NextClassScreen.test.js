@@ -169,4 +169,20 @@ describe('NextClassScreen', () => {
       nextClassSummary: 'COMP 346',
     });
   });
+
+  it('should navigate to Profile when View Schedule is pressed', async () => {
+    googleCalendarAuth.isAuthenticated.mockResolvedValue(false);
+    useNextClass.mockReturnValue({
+      nextClass: null,
+      isLoading: false,
+      refresh: jest.fn(),
+    });
+
+    const { getByText } = render(<NextClassScreen navigation={mockNavigation} />);
+
+    await waitFor(() => expect(getByText('View Schedule')).toBeTruthy());
+    fireEvent.press(getByText('View Schedule'));
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Profile');
+  });
 });
