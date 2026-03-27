@@ -742,12 +742,14 @@ export default function MapScreen({ route }) {
       const requestId = ++latestPOIRequestIdRef.current;
       setIsPOILoading(true);
 
-      const apiRadius =
-        typeof fetchRadius === "number" && Number.isFinite(fetchRadius)
-          ? fetchRadius
-          : mode === "range"
-            ? radius
-            : Math.max(radius, 2000);
+      let apiRadius;
+      if (typeof fetchRadius === "number" && Number.isFinite(fetchRadius)) {
+        apiRadius = fetchRadius;
+      } else if (mode === "range") {
+        apiRadius = radius;
+      } else {
+        apiRadius = Math.max(radius, 2000);
+      }
 
       try {
         const results = await fetchNearbyPOIs({
@@ -1369,6 +1371,7 @@ MapScreen.propTypes = {
         destCoords: PropTypes.object,
       }),
       nextClassLocation: PropTypes.string,
+      nextClassSummary: PropTypes.string,
     }),
   }),
 };
