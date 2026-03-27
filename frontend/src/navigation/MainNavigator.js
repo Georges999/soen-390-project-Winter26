@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,6 +18,12 @@ const MAROON = "#95223D";
 function TabIcon({ name, color, size }) {
   return <MaterialIcons name={name} size={size} color={color} />;
 }
+
+TabIcon.propTypes = {
+  name: PropTypes.string.isRequired,
+  color: PropTypes.string,
+  size: PropTypes.number,
+};
 
 function getTabScreenOptions(tab) {
   return {
