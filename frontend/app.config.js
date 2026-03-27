@@ -35,7 +35,7 @@ export default ({ config }) => {
       ...config.ios,
 
       infoPlist: {
-        ...(config.ios?.infoPlist ?? {}),
+        ...config.ios?.infoPlist,
         NSLocationWhenInUseUsageDescription:
           'We use your location to show where you are on campus.',
       },
