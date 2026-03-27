@@ -1274,13 +1274,7 @@ export default function MapScreen({ route }) {
               </Pressable>
             </View>
 
-            {!hasRequestedPOIs ? (
-              <OutdoorPoiFilterForm
-                styles={styles}
-                maroon={MAROON}
-                onShowOnMap={loadNearbyPOIs}
-              />
-            ) : (
+            {hasRequestedPOIs ? (
               <View
                 style={{
                   marginTop: 8,
@@ -1290,6 +1284,12 @@ export default function MapScreen({ route }) {
               >
                 {renderPOIContent()}
               </View>
+            ) : (
+              <OutdoorPoiFilterForm
+                styles={styles}
+                maroon={MAROON}
+                onShowOnMap={loadNearbyPOIs}
+              />
             )}
           </View>
         )}
