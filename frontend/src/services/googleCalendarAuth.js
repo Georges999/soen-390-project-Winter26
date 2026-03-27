@@ -242,7 +242,7 @@ export async function clearTokens() {
 }
 
 export async function isTokenExpired(tokens) {
-  if (!tokens || !tokens.expiresIn || !tokens.issuedAt) {
+  if (!tokens?.expiresIn || !tokens?.issuedAt) {
     return true;
   }
   
@@ -257,7 +257,7 @@ export async function refreshAccessToken() {
   try {
     const tokens = await getStoredTokens();
     
-    if (!tokens || !tokens.refreshToken) {
+    if (!tokens?.refreshToken) {
       throw new Error('No refresh token available');
     }
 
@@ -318,7 +318,7 @@ export async function disconnectCalendar() {
   try {
     const tokens = await getStoredTokens();
     
-    if (tokens && tokens.accessToken) {
+    if (tokens?.accessToken) {
       await fetch(discovery.revocationEndpoint, {
         method: 'POST',
         headers: {
