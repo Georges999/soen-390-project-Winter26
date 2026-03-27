@@ -15,6 +15,12 @@ import { useNextClass } from '../hooks/useNextClass';
 const MAROON = '#95223D';
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 
+function getMinutesUntil(event) {
+  const startTime = event.startTime || event.start?.dateTime;
+  const mins = Math.floor((new Date(startTime).getTime() - Date.now()) / 1000 / 60);
+  return Math.max(0, mins);
+}
+
 export default function NextClassScreen({ navigation }) {
   const [isConnected, setIsConnected] = useState(false);
   const [showDetected, setShowDetected] = useState(false);
@@ -53,12 +59,6 @@ export default function NextClassScreen({ navigation }) {
     noClassSubtitle = 'Loading your Google Calendar';
   } else if (isConnected) {
     noClassSubtitle = 'No upcoming classes found in your selected Google calendars';
-  }
-
-  function getMinutesUntil(event) {
-    const startTime = event.startTime || event.start?.dateTime;
-    const mins = Math.floor((new Date(startTime).getTime() - Date.now()) / 1000 / 60);
-    return Math.max(0, mins);
   }
 
   function handleGetDirections() {
