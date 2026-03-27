@@ -94,28 +94,7 @@ export default function NextClassScreen({ navigation }) {
       </MapView>
 
       <View style={styles.bottomCard}>
-        {!nextClass ? (
-          <View style={styles.noClassCard}>
-            <MaterialIcons name={isLoading ? 'schedule' : 'event-busy'} size={40} color="#CCC" />
-            <Text style={styles.noClassTitle}>No upcoming classes today</Text>
-            <Text style={styles.noClassSubtitle}>{noClassSubtitle}</Text>
-            <Pressable
-              style={styles.profileButton}
-              onPress={() => navigation.navigate('Profile')}
-            >
-              <Text style={styles.profileButtonText}>View Schedule</Text>
-            </Pressable>
-          </View>
-        ) : !shouldShowDetected ? (
-          <Pressable style={styles.goToClassCard} onPress={handleGoToNextClass}>
-            <MaterialIcons name="event-note" size={32} color={MAROON} />
-            <View style={styles.goToClassText}>
-              <Text style={styles.goToClassTitle}>Go to My Next Class</Text>
-              <Text style={styles.goToClassSubtitle}>Based on your schedule</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={28} color={MAROON} />
-          </Pressable>
-        ) : (
+        {nextClass ? shouldShowDetected ? (
           <View style={styles.nextClassCard}>
             <View style={styles.detectedRow}>
               <MaterialIcons name="check-box" size={24} color={MAROON} />
@@ -142,6 +121,27 @@ export default function NextClassScreen({ navigation }) {
                 <Text style={styles.directionsText}>Get Directions</Text>
               </Pressable>
             </View>
+          </View>
+        ) : (
+          <Pressable style={styles.goToClassCard} onPress={handleGoToNextClass}>
+            <MaterialIcons name="event-note" size={32} color={MAROON} />
+            <View style={styles.goToClassText}>
+              <Text style={styles.goToClassTitle}>Go to My Next Class</Text>
+              <Text style={styles.goToClassSubtitle}>Based on your schedule</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={28} color={MAROON} />
+          </Pressable>
+        ) : (
+          <View style={styles.noClassCard}>
+            <MaterialIcons name={isLoading ? 'schedule' : 'event-busy'} size={40} color="#CCC" />
+            <Text style={styles.noClassTitle}>No upcoming classes today</Text>
+            <Text style={styles.noClassSubtitle}>{noClassSubtitle}</Text>
+            <Pressable
+              style={styles.profileButton}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <Text style={styles.profileButtonText}>View Schedule</Text>
+            </Pressable>
           </View>
         )}
       </View>
