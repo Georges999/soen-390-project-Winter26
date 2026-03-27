@@ -465,80 +465,81 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
         <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
+        <View style={styles.searchColumnWrapper}>
         {/* Search Inputs with Map Selection Buttons */}
         <View style={styles.searchSection}>
-          {/* Start Input */}
-          <View style={styles.inputRowContainer}>
-            <View style={[styles.inputRow, selectionMode === "start" && styles.inputRowActive]}>
-              <MaterialIcons name="trip-origin" size={18} color={GREEN} />
-              <TextInput
-                style={styles.input}
-                placeholder="Tap map or search start"
-                placeholderTextColor="#999"
-                value={activeField === "start" ? searchQuery : startText}
-                onChangeText={handleFieldChange}
-                onFocus={() => {
-                  setActiveField("start");
-                  setSearchQuery(startText);
-                }}
-                onBlur={() => {
-                  setActiveField(null);
-                }}
-              />
-              {startText.length > 0 && (
-                <Pressable onPress={() => { setStartRoom(null); setStartText(""); setSearchQuery(""); }} hitSlop={10}>
-                  <MaterialIcons name="close" size={16} color="#999" />
-                </Pressable>
-              )}
+          <View style={styles.searchInputsBlock}>
+            {/* Start Input */}
+            <View style={[styles.inputRowContainer, styles.inputRowContainerStart]}>
+              <View style={[styles.inputRow, selectionMode === "start" && styles.inputRowActive]}>
+                <MaterialIcons name="trip-origin" size={18} color={GREEN} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Tap map or search start"
+                  placeholderTextColor="#999"
+                  value={activeField === "start" ? searchQuery : startText}
+                  onChangeText={handleFieldChange}
+                  onFocus={() => {
+                    setActiveField("start");
+                    setSearchQuery(startText);
+                  }}
+                  onBlur={() => {
+                    setActiveField(null);
+                  }}
+                />
+                {startText.length > 0 && (
+                  <Pressable onPress={() => { setStartRoom(null); setStartText(""); setSearchQuery(""); }} hitSlop={10}>
+                    <MaterialIcons name="close" size={16} color="#999" />
+                  </Pressable>
+                )}
+              </View>
+              <Pressable
+                style={[styles.mapSelectButton, selectionMode === "start" && styles.mapSelectButtonActive]}
+                onPress={() => toggleSelectionMode("start")}
+              >
+                <MaterialIcons name="my-location" size={20} color={selectionMode === "start" ? "#fff" : MAROON} />
+              </Pressable>
             </View>
-            <Pressable 
-              style={[styles.mapSelectButton, selectionMode === "start" && styles.mapSelectButtonActive]}
-              onPress={() => toggleSelectionMode("start")}
+
+            <View style={[styles.inputRowContainer, styles.inputRowContainerDest]}>
+              <View style={[styles.inputRow, selectionMode === "dest" && styles.inputRowActive]}>
+                <MaterialIcons name="place" size={18} color={MAROON} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Tap map or search destination"
+                  placeholderTextColor="#999"
+                  value={activeField === "dest" ? searchQuery : destText}
+                  onChangeText={handleFieldChange}
+                  onFocus={() => {
+                    setActiveField("dest");
+                    setSearchQuery(destText);
+                  }}
+                  onBlur={() => {
+                    setActiveField(null);
+                  }}
+                />
+                {destText.length > 0 && (
+                  <Pressable onPress={() => { setDestRoom(null); setDestText(""); setSearchQuery(""); }} hitSlop={10}>
+                    <MaterialIcons name="close" size={16} color="#999" />
+                  </Pressable>
+                )}
+              </View>
+              <Pressable
+                style={[styles.mapSelectButton, selectionMode === "dest" && styles.mapSelectButtonActive]}
+                onPress={() => toggleSelectionMode("dest")}
+              >
+                <MaterialIcons name="place" size={20} color={selectionMode === "dest" ? "#fff" : MAROON} />
+              </Pressable>
+            </View>
+
+            <Pressable
+              testID="swap-direction-toggle"
+              style={styles.swapButton}
+              onPress={handleSwap}
             >
-              <MaterialIcons name="my-location" size={20} color={selectionMode === "start" ? "#fff" : MAROON} />
+              <MaterialIcons name="swap-vert" size={20} color={MAROON} />
             </Pressable>
           </View>
-
-          {/* Destination Input */}
-          <View style={styles.inputRowContainer}>
-            <View style={[styles.inputRow, selectionMode === "dest" && styles.inputRowActive]}>
-              <MaterialIcons name="place" size={18} color={MAROON} />
-              <TextInput
-                style={styles.input}
-                placeholder="Tap map or search destination"
-                placeholderTextColor="#999"
-                value={activeField === "dest" ? searchQuery : destText}
-                onChangeText={handleFieldChange}
-                onFocus={() => {
-                  setActiveField("dest");
-                  setSearchQuery(destText);
-                }}
-                onBlur={() => {
-                  setActiveField(null);
-                }}
-              />
-              {destText.length > 0 && (
-                <Pressable onPress={() => { setDestRoom(null); setDestText(""); setSearchQuery(""); }} hitSlop={10}>
-                  <MaterialIcons name="close" size={16} color="#999" />
-                </Pressable>
-              )}
-            </View>
-            <Pressable 
-              style={[styles.mapSelectButton, selectionMode === "dest" && styles.mapSelectButtonActive]}
-              onPress={() => toggleSelectionMode("dest")}
-            >
-              <MaterialIcons name="place" size={20} color={selectionMode === "dest" ? "#fff" : MAROON} />
-            </Pressable>
-          </View>
-
-          {/* Swap Button */}
-          <Pressable
-            testID="swap-direction-toggle"
-            style={styles.swapButton}
-            onPress={handleSwap}
-          >
-            <MaterialIcons name="swap-vert" size={20} color={MAROON} />
-          </Pressable>
         </View>
 
         {/* Selection Mode Indicator */}
@@ -555,19 +556,28 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         {searchQuery.trim().length > 0 && activeField && (
           <View style={styles.searchResultsContainer}>
             {searchResults.length > 0 ? (
-              <View>
+              <ScrollView
+                nestedScrollEnabled
+                keyboardShouldPersistTaps="handled"
+                style={styles.searchResultsScroll}
+                showsVerticalScrollIndicator
+              >
                 {searchResults.slice(0, 6).map((item) => (
                   <Pressable
                     key={item.id}
                     style={styles.searchResultItem}
                     onPress={() => handleSelectRoom(item)}
                   >
-                    <Text style={styles.searchResultText}>
+                    <Text
+                      style={styles.searchResultText}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
                       {item.label}, Floor {item.floor?.split("-")[1] || item.floor} · {item.buildingName}
                     </Text>
                   </Pressable>
                 ))}
-              </View>
+              </ScrollView>
             ) : (
               <View style={styles.noResultsContainer}>
                 <MaterialIcons name="search-off" size={24} color="#999" />
@@ -578,6 +588,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             )}
           </View>
         )}
+        </View>
 
         {/* Walking Mode Indicator (Walking Only) */}
         <View style={styles.transportContainer}>
@@ -944,15 +955,30 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontStyle: "italic",
   },
+  // Keeps search + dropdown above the Walking chip (Android elevation draw order).
+  searchColumnWrapper: {
+    zIndex: 1000,
+    elevation: 20,
+    backgroundColor: "#fff",
+  },
   searchSection: {
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  /** Only the two field rows + swap; swap top % is relative to this so it stays centered in the gap */
+  searchInputsBlock: {
     position: "relative",
+    marginBottom: 8,
   },
   inputRowContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+  },
+  inputRowContainerStart: {
+    marginBottom: 14,
+  },
+  inputRowContainerDest: {
+    marginBottom: 0,
   },
   inputRow: {
     flex: 1,
@@ -992,8 +1018,9 @@ const styles = StyleSheet.create({
   },
   swapButton: {
     position: "absolute",
-    right: 70,
+    right: 44,
     top: "50%",
+    marginTop: -16,
     backgroundColor: "#fff",
     borderRadius: 16,
     width: 32,
@@ -1031,12 +1058,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     maxHeight: 180,
-    elevation: 5,
+    overflow: "hidden",
+    elevation: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     zIndex: 100,
+  },
+  searchResultsScroll: {
+    maxHeight: 180,
   },
   searchResultItem: {
     paddingVertical: 12,
@@ -1052,6 +1083,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     paddingVertical: 8,
+    zIndex: 0,
+    elevation: 0,
   },
   transportChip: {
     flexDirection: "row",
@@ -1063,6 +1096,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     gap: 6,
+    elevation: 0,
   },
   transportChipActive: {
     backgroundColor: MAROON,
