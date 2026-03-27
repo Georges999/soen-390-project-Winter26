@@ -12,7 +12,7 @@ function NextClassCard({ nextClass, buildingCode, onNavigate }) {
     minute: '2-digit',
   });
 
-  const minutesUntil = Math.floor((startTime - new Date.now()) / 1000 / 60);
+  const minutesUntil = Math.floor((startTime.getTime() - Date.now()) / 1000 / 60);
   const isUpcoming = minutesUntil > 0 && minutesUntil <= 60;
 
   return (
