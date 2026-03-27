@@ -14,6 +14,21 @@ const Stack = createStackNavigator();
 
 const MAROON = "#95223D";
 
+function TabIcon({ name, color, size }) {
+  return <MaterialIcons name={name} size={size} color={color} />;
+}
+
+function getTabScreenOptions(tab) {
+  return {
+    tabBarTestID: tab.testID,
+    tabBarAccessibilityLabel: tab.testID,
+    tabBarLabel: tab.label,
+    tabBarIcon: ({ color, size }) => (
+      <TabIcon name={tab.icon} color={color} size={size} />
+    ),
+  };
+}
+
 function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -88,14 +103,7 @@ export default function MainNavigator() {
           key={tab.name}
           name={tab.name}
           component={tab.component}
-          options={{
-            tabBarTestID: tab.testID,
-            tabBarAccessibilityLabel: tab.testID,
-            tabBarLabel: tab.label,
-            tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name={tab.icon} size={size} color={color} />
-            ),
-          }}
+          options={getTabScreenOptions(tab)}
         />
       ))}
     </Tab.Navigator>
