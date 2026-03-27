@@ -43,7 +43,7 @@ function formatRoomLabel(floorId, label = "") {
   const raw = String(label).trim();
 
   if (floorId.startsWith("Hall-")) {
-    return raw.replaceAll(/-/g, "");
+    return raw.replaceAll("-", "");
   }
 
   if (floorId === "MB-1") {
