@@ -15,6 +15,12 @@ import { useNextClass } from '../hooks/useNextClass';
 const MAROON = '#95223D';
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 
+function getMinutesUntil(event) {
+  const startTime = event.startTime || event.start?.dateTime;
+  const mins = Math.floor((new Date(startTime).getTime() - Date.now()) / 1000 / 60);
+  return Math.max(0, mins);
+}
+
 export default function NextClassScreen({ navigation }) {
   const [isConnected, setIsConnected] = useState(false);
   const [showDetected, setShowDetected] = useState(false);
@@ -55,12 +61,6 @@ export default function NextClassScreen({ navigation }) {
     noClassSubtitle = 'No upcoming classes found in your selected Google calendars';
   }
 
-  function getMinutesUntil(event) {
-    const startTime = event.startTime || event.start?.dateTime;
-    const mins = Math.floor((new Date(startTime).getTime() - Date.now()) / 1000 / 60);
-    return Math.max(0, mins);
-  }
-
   function handleGetDirections() {
     navigation.navigate('Map', {
       nextClassLocation: nextClass?.location,
@@ -94,28 +94,7 @@ export default function NextClassScreen({ navigation }) {
       </MapView>
 
       <View style={styles.bottomCard}>
-        {!nextClass ? (
-          <View style={styles.noClassCard}>
-            <MaterialIcons name={isLoading ? 'schedule' : 'event-busy'} size={40} color="#CCC" />
-            <Text style={styles.noClassTitle}>No upcoming classes today</Text>
-            <Text style={styles.noClassSubtitle}>{noClassSubtitle}</Text>
-            <Pressable
-              style={styles.profileButton}
-              onPress={() => navigation.navigate('Profile')}
-            >
-              <Text style={styles.profileButtonText}>View Schedule</Text>
-            </Pressable>
-          </View>
-        ) : !shouldShowDetected ? (
-          <Pressable style={styles.goToClassCard} onPress={handleGoToNextClass}>
-            <MaterialIcons name="event-note" size={32} color={MAROON} />
-            <View style={styles.goToClassText}>
-              <Text style={styles.goToClassTitle}>Go to My Next Class</Text>
-              <Text style={styles.goToClassSubtitle}>Based on your schedule</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={28} color={MAROON} />
-          </Pressable>
-        ) : (
+        {nextClass ? shouldShowDetected ? (
           <View style={styles.nextClassCard}>
             <View style={styles.detectedRow}>
               <MaterialIcons name="check-box" size={24} color={MAROON} />
@@ -142,6 +121,27 @@ export default function NextClassScreen({ navigation }) {
                 <Text style={styles.directionsText}>Get Directions</Text>
               </Pressable>
             </View>
+          </View>
+        ) : (
+          <Pressable style={styles.goToClassCard} onPress={handleGoToNextClass}>
+            <MaterialIcons name="event-note" size={32} color={MAROON} />
+            <View style={styles.goToClassText}>
+              <Text style={styles.goToClassTitle}>Go to My Next Class</Text>
+              <Text style={styles.goToClassSubtitle}>Based on your schedule</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={28} color={MAROON} />
+          </Pressable>
+        ) : (
+          <View style={styles.noClassCard}>
+            <MaterialIcons name={isLoading ? 'schedule' : 'event-busy'} size={40} color="#CCC" />
+            <Text style={styles.noClassTitle}>No upcoming classes today</Text>
+            <Text style={styles.noClassSubtitle}>{noClassSubtitle}</Text>
+            <Pressable
+              style={styles.profileButton}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <Text style={styles.profileButtonText}>View Schedule</Text>
+            </Pressable>
           </View>
         )}
       </View>

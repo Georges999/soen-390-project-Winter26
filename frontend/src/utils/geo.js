@@ -10,7 +10,7 @@ export function isPointInPolygon(point, polygonCoords) {
 
     const intersect =
       (yi > y) !== (yj > y) &&
-      x < ((xj - xi) * (y - yi)) / (yj - yi + 0.0) + xi;
+      x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
 
     if (intersect) inside = !inside;
   }
