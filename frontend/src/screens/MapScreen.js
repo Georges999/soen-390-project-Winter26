@@ -43,6 +43,16 @@ const defaultCampusId = campuses.sgw?.id ?? campusList[0]?.id;
 
 const MAROON = "#95223D";
 
+export const getPoiApiRadius = (fetchRadius, mode, radius) => {
+  if (typeof fetchRadius === "number" && Number.isFinite(fetchRadius)) {
+    return fetchRadius;
+  }
+  if (mode === "range") {
+    return radius;
+  }
+  return Math.max(radius, 2000);
+};
+
 const getAmenities = (building) => {
   const a = building?.amenities ?? {}; //empty when building is missing or amentites dont exist
   return {
@@ -742,14 +752,7 @@ export default function MapScreen({ route }) {
       const requestId = ++latestPOIRequestIdRef.current;
       setIsPOILoading(true);
 
-      let apiRadius;
-      if (typeof fetchRadius === "number" && Number.isFinite(fetchRadius)) {
-        apiRadius = fetchRadius;
-      } else if (mode === "range") {
-        apiRadius = radius;
-      } else {
-        apiRadius = Math.max(radius, 2000);
-      }
+      const apiRadius = getPoiApiRadius(fetchRadius, mode, radius);
 
       try {
         const results = await fetchNearbyPOIs({
