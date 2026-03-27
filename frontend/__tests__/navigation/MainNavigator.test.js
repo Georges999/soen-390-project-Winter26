@@ -19,8 +19,9 @@ jest.mock('@react-navigation/bottom-tabs', () => {
               {tabs.map((tab) => {
                 const options = tab.props.options || {};
                 const label = options.tabBarLabel || tab.props.name;
+                let icon = null;
                 if (typeof options.tabBarIcon === 'function') {
-                  options.tabBarIcon({ color: '#111', size: 18 });
+                  icon = options.tabBarIcon({ color: '#111', size: 18 });
                 }
                 return (
                   <Pressable
@@ -28,6 +29,7 @@ jest.mock('@react-navigation/bottom-tabs', () => {
                     testID={`tab-${tab.props.name}`}
                     onPress={() => setActiveTab(tab.props.name)}
                   >
+                    {icon}
                     <Text>{label}</Text>
                   </Pressable>
                 );

@@ -43,6 +43,16 @@ const defaultCampusId = campuses.sgw?.id ?? campusList[0]?.id;
 
 const MAROON = "#95223D";
 
+export const getPoiApiRadius = (fetchRadius, mode, radius) => {
+  if (typeof fetchRadius === "number" && Number.isFinite(fetchRadius)) {
+    return fetchRadius;
+  }
+  if (mode === "range") {
+    return radius;
+  }
+  return Math.max(radius, 2000);
+};
+
 const getAmenities = (building) => {
   const a = building?.amenities ?? {}; //empty when building is missing or amentites dont exist
   return {
@@ -742,12 +752,7 @@ export default function MapScreen({ route }) {
       const requestId = ++latestPOIRequestIdRef.current;
       setIsPOILoading(true);
 
-      const apiRadius =
-        typeof fetchRadius === "number" && Number.isFinite(fetchRadius)
-          ? fetchRadius
-          : mode === "range"
-            ? radius
-            : Math.max(radius, 2000);
+      const apiRadius = getPoiApiRadius(fetchRadius, mode, radius);
 
       try {
         const results = await fetchNearbyPOIs({
@@ -785,7 +790,7 @@ export default function MapScreen({ route }) {
     }
   }, [startText, currentBuilding]);
 
-  const { currentStepIndex, setCurrentStepIndex } = useNavigationSteps({
+  const { setCurrentStepIndex } = useNavigationSteps({
     navActive,
     userCoord,
     routeInfo,
@@ -1272,13 +1277,7 @@ export default function MapScreen({ route }) {
               </Pressable>
             </View>
 
-            {!hasRequestedPOIs ? (
-              <OutdoorPoiFilterForm
-                styles={styles}
-                maroon={MAROON}
-                onShowOnMap={loadNearbyPOIs}
-              />
-            ) : (
+            {hasRequestedPOIs ? (
               <View
                 style={{
                   marginTop: 8,
@@ -1288,6 +1287,12 @@ export default function MapScreen({ route }) {
               >
                 {renderPOIContent()}
               </View>
+            ) : (
+              <OutdoorPoiFilterForm
+                styles={styles}
+                maroon={MAROON}
+                onShowOnMap={loadNearbyPOIs}
+              />
             )}
           </View>
         )}
@@ -1369,6 +1374,7 @@ MapScreen.propTypes = {
         destCoords: PropTypes.object,
       }),
       nextClassLocation: PropTypes.string,
+      nextClassSummary: PropTypes.string,
     }),
   }),
 };

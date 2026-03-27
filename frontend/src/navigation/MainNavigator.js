@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -13,6 +14,27 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const MAROON = "#95223D";
+
+function TabIcon({ name, color, size }) {
+  return <MaterialIcons name={name} size={size} color={color} />;
+}
+
+TabIcon.propTypes = {
+  name: PropTypes.string.isRequired,
+  color: PropTypes.string,
+  size: PropTypes.number,
+};
+
+function getTabScreenOptions(tab) {
+  return {
+    tabBarTestID: tab.testID,
+    tabBarAccessibilityLabel: tab.testID,
+    tabBarLabel: tab.label,
+    tabBarIcon: ({ color, size }) => (
+      <TabIcon name={tab.icon} color={color} size={size} />
+    ),
+  };
+}
 
 function ProfileStack() {
   return (
@@ -31,6 +53,37 @@ function IndoorStack() {
     </Stack.Navigator>
   );
 }
+
+const TAB_SCREENS = [
+  {
+    name: "Map",
+    component: MapScreen,
+    testID: "tab-map",
+    label: "Map",
+    icon: "map",
+  },
+  {
+    name: "NextClass",
+    component: NextClassScreen,
+    testID: "tab-next-class",
+    label: "Next Class",
+    icon: "event",
+  },
+  {
+    name: "Indoor",
+    component: IndoorStack,
+    testID: "tab-indoor",
+    label: "Indoor",
+    icon: "domain",
+  },
+  {
+    name: "Profile",
+    component: ProfileStack,
+    testID: "tab-profile",
+    label: "Profile",
+    icon: "person",
+  },
+];
 
 export default function MainNavigator() {
   return (
@@ -52,51 +105,14 @@ export default function MainNavigator() {
         },
       }}
     >
-      <Tab.Screen
-        name="Map"
-        component={MapScreen}
-        options={{
-          tabBarTestID: "tab-map",
-          tabBarAccessibilityLabel: "tab-map",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="map" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="NextClass"
-        component={NextClassScreen}
-        options={{
-          tabBarTestID: "tab-next-class",
-          tabBarLabel: "Next Class",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="event" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Indoor"
-        component={IndoorStack}
-        options={{
-          tabBarTestID: "tab-indoor",
-          tabBarAccessibilityLabel: "tab-indoor",
-          tabBarLabel: "Indoor",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="domain" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileStack}
-        options={{
-          tabBarTestID: "tab-profile",
-          tabBarAccessibilityLabel: "tab-profile",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
-          ),
-        }}
-      />
+      {TAB_SCREENS.map((tab) => (
+        <Tab.Screen
+          key={tab.name}
+          name={tab.name}
+          component={tab.component}
+          options={getTabScreenOptions(tab)}
+        />
+      ))}
     </Tab.Navigator>
   );
 }
