@@ -3,7 +3,18 @@ import { render, fireEvent } from '@testing-library/react-native';
 import NextClassCard from '../../src/components/NextClassCard';
 
 describe('NextClassCard', () => {
-  const futureTime = new Date(Date.now() + 30 * 60 * 1000); // 30 mins from now
+  const fixedNow = new Date('2026-03-27T12:00:00.000Z').getTime();
+
+  beforeAll(() => {
+    jest.useFakeTimers('modern');
+    jest.setSystemTime(fixedNow);
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  const futureTime = new Date(fixedNow + 30 * 60 * 1000); // 30 mins from fixed now
 
   const mockClass = {
     title: 'SOEN 390',
@@ -64,7 +75,7 @@ describe('NextClassCard', () => {
   it('should show upcoming time for class within 60 minutes', () => {
     const soonClass = {
       title: 'COMP 346',
-      startTime: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      startTime: new Date(fixedNow + 15 * 60 * 1000).toISOString(),
     };
     const { getByText } = render(
       <NextClassCard nextClass={soonClass} buildingCode="H" onNavigate={jest.fn()} />,
@@ -76,7 +87,7 @@ describe('NextClassCard', () => {
   it('should not show upcoming for class more than 60 min away', () => {
     const farClass = {
       title: 'ENGR 301',
-      startTime: new Date(Date.now() + 120 * 60 * 1000).toISOString(),
+      startTime: new Date(fixedNow + 125 * 60 * 1000).toISOString(),
     };
     const { queryByText } = render(
       <NextClassCard nextClass={farClass} buildingCode="H" onNavigate={jest.fn()} />,

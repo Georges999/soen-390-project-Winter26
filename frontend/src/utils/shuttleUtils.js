@@ -18,7 +18,7 @@ const getShuttleDepartures = (now = new Date(), schedule) => {
   //friday schedule is different
   const isFriday = day === 5;
   const parseTime = (t) => {
-    const [h, m] = t.split(":").map((v) => parseInt(v, 10));
+    const [h, m] = t.split(":").map((v) => Number.parseInt(v, 10));
     return h * 60 + m;
   };
   const startMinutes = isFriday

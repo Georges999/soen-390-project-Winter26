@@ -92,12 +92,13 @@ export default function DirectionsPanel({
     );
   };
 
-  const renderTransitStep = (step, stepIdx) => {
+  const renderTransitStep = (step) => {
     const icon = getStepIcon(step);
     const instruction = getStepInstruction(step, stripHtml);
+    const stepKey = `${step.instruction || "unknown"}|${step.distanceText || ""}|${step.durationText || ""}`;
 
     return (
-      <View key={`step-${stepIdx}`} style={styles.transitStepRow}>
+      <View key={stepKey} style={styles.transitStepRow}>
         <MaterialIcons name={icon} size={16} color="#111" />
         <Text style={styles.transitStepText}>
           {instruction}
@@ -166,9 +167,10 @@ export default function DirectionsPanel({
                     ) : (
                       routeOptions.slice(0, 3).map((opt, idx) => {
                         const isSelected = idx === transitRouteIndex;
+                        const routeKey = `${opt.durationValue || "0"}-${opt.distanceText || ""}-${(opt.transitLines || []).join("|")}-${(opt.transitVehicles || []).join("|")}`;
                         return (
                           <Pressable
-                            key={`route-${idx}`}
+                            key={routeKey}
                             onPress={() => setTransitRouteIndex(idx)}
                             style={[
                               styles.transitRow,
@@ -185,8 +187,9 @@ export default function DirectionsPanel({
                                         ? "subway"
                                         : "directions-bus";
                                     const line = opt.transitLines?.[vIdx] || "Transit";
+                                    const vehicleKey = `${line}-${vehicle || ""}`;
                                     return (
-                                      <View key={`veh-${idx}-${vIdx}`} style={styles.transitBadge}>
+                                      <View key={`veh-${vehicleKey}`} style={styles.transitBadge}>
                                         <MaterialIcons
                                           name={icon}
                                           size={14}

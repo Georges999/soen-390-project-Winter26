@@ -5,7 +5,7 @@
 function euclideanDistance(nodeA, nodeB) {
   const dx = nodeA.x - nodeB.x;
   const dy = nodeA.y - nodeB.y;
-  return Math.sqrt(dx * dx + dy * dy);
+  return Math.hypot(dx, dy);
 }
 
 function mergeAllNodes(floorData) {
