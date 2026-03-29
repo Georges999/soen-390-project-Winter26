@@ -24,6 +24,46 @@ const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+export function buildAllRooms() {
+  return Object.entries(buildings).flatMap(([campusId, campusBuildings]) =>
+    (campusBuildings || []).flatMap((building) =>
+      (building.rooms || []).map((room) => ({
+        ...room,
+        campusId,
+        buildingName: building.name,
+        buildingId: building.id,
+      }))
+    )
+  );
+}
+
+export function getSelectionForLocation(buildingId, floorId, fallbackCampus = "sgw") {
+  const matchedCampus =
+    Object.entries(buildings).find(([, campusBuildings]) =>
+      (campusBuildings || []).some((building) => building.id === buildingId)
+    )?.[0] || fallbackCampus;
+
+  const campusBuildings = buildings[matchedCampus] || [];
+  const buildingIdx = campusBuildings.findIndex((building) => building.id === buildingId);
+  const resolvedBuildingIdx = Math.max(buildingIdx, 0);
+  const resolvedBuilding = campusBuildings[resolvedBuildingIdx] || campusBuildings[0];
+  const floorIdx = resolvedBuilding?.floors?.findIndex((floor) => floor.id === floorId) ?? 0;
+
+  return {
+    campusId: matchedCampus,
+    buildingIdx: resolvedBuildingIdx,
+    floorIdx: Math.max(floorIdx, 0),
+  };
+}
+
+export function getInitialSelection(params) {
+  const preferredRoom = params.destinationRoom || params.startRoom;
+  const buildingId = preferredRoom?.buildingId || params.building?.id || buildings.sgw?.[0]?.id;
+  const floorId = preferredRoom?.floor || params.floor?.id || buildings.sgw?.[0]?.floors?.[0]?.id;
+
+  return getSelectionForLocation(buildingId, floorId);
+}
+
 // ── Step-text helpers (extracted to reduce cognitive complexity) ──
 
 const NODE_TYPE_TEXT = {
@@ -141,6 +181,7 @@ function resolveSegmentPath(seg, accessible) {
 
 export default function IndoorDirectionsScreen({ route, navigation }) {
   const params = route?.params || {};
+  const initialSelection = getInitialSelection(params);
 
   // Start and destination rooms
   const [startRoom, setStartRoom] = useState(params.startRoom || null);
@@ -163,9 +204,19 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const [showTransitionModal, setShowTransitionModal] = useState(false);
   const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
 
-  // Current floor being displayed
-  const selectedBuilding = params.building || buildings.sgw[1]; // Default to MB building
-  const [selectedFloor] = useState(params.floor || selectedBuilding?.floors?.[0]);
+  const [selectedCampus, setSelectedCampus] = useState(initialSelection.campusId);
+  const [selectedBuildingIdx, setSelectedBuildingIdx] = useState(initialSelection.buildingIdx);
+  const [selectedFloorIdx, setSelectedFloorIdx] = useState(initialSelection.floorIdx);
+
+  const campusBuildings = useMemo(
+    () => buildings[selectedCampus] || [],
+    [selectedCampus]
+  );
+
+  // Current building and floor being displayed while browsing
+  const selectedBuilding = campusBuildings[selectedBuildingIdx] || campusBuildings[0];
+  const selectedFloor =
+    selectedBuilding?.floors?.[selectedFloorIdx] || selectedBuilding?.floors?.[0] || null;
 
   // Get current floor dimensions from the floor data
   const floorDimensions = useMemo(() => {
@@ -176,32 +227,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   }, [selectedFloor]);
 
   // All rooms for search (with coordinates from JSON data)
-  const allRooms = useMemo(() => {
-    const rooms = [];
-    // SGW campus
-    const sgwBuildings = buildings.sgw || [];
-    sgwBuildings.forEach((building) => {
-      building.rooms.forEach((room) => {
-        rooms.push({ 
-          ...room, 
-          buildingName: building.name, 
-          buildingId: building.id 
-        });
-      });
-    });
-    // Loyola campus
-    const loyolaBuildings = buildings.loyola || [];
-    loyolaBuildings.forEach((building) => {
-      building.rooms.forEach((room) => {
-        rooms.push({ 
-          ...room, 
-          buildingName: building.name, 
-          buildingId: building.id 
-        });
-      });
-    });
-    return rooms;
-  }, []);
+  const allRooms = useMemo(() => buildAllRooms(), []);
 
   // Current floor rooms and nodes for map interaction
   const currentFloorData = useMemo(() => {
@@ -267,13 +293,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     }
     
     // Same-floor: build floors data from the selected building
+    const routeBuilding =
+      getBuildingById(startRoom.buildingId || destRoom.buildingId || params.building?.id) ||
+      selectedBuilding;
     const floorsData = {
       floors: {}
     };
     
-    if (selectedBuilding?.floors) {
-      selectedBuilding.floors.forEach((floor) => {
-        const floorGraphData = getFloorGraphData(selectedBuilding.id, floor.id);
+    if (routeBuilding?.floors) {
+      routeBuilding.floors.forEach((floor) => {
+        const floorGraphData = getFloorGraphData(routeBuilding.id, floor.id);
         floorsData.floors[floor.id] = {
           label: floor.label,
           nodes: floorGraphData.nodes,
@@ -292,7 +321,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     });
 
     return result;
-  }, [startRoom, destRoom, selectedBuilding, accessibleRoute, routeSegments, segmentResults, activeSegmentIndex]);
+  }, [startRoom, destRoom, params.building?.id, selectedBuilding, accessibleRoute, routeSegments, segmentResults, activeSegmentIndex]);
 
   // Generate step-by-step directions from path (supports multi-segment)
   const directionSteps = useMemo(() => {
@@ -340,8 +369,30 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         if (floor) return floor;
       }
     }
+
+    if (
+      (routeType === "same-floor" || routeType === "same-room") &&
+      startRoom?.floor &&
+      startRoom.floor === destRoom?.floor
+    ) {
+      const routeBuilding =
+        getBuildingById(startRoom.buildingId || destRoom?.buildingId || params.building?.id) ||
+        selectedBuilding;
+      const routeFloor = routeBuilding?.floors?.find((floor) => floor.id === startRoom.floor);
+      if (routeFloor) return routeFloor;
+    }
+
     return selectedFloor;
-  }, [segmentResults, activeSegmentIndex, selectedFloor]);
+  }, [
+    segmentResults,
+    activeSegmentIndex,
+    routeType,
+    startRoom,
+    destRoom,
+    params.building?.id,
+    selectedBuilding,
+    selectedFloor,
+  ]);
 
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
@@ -369,12 +420,51 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   }, [pathResult, displayedFloor, floorDimensions]);
 
   const handleFieldChange = (text) => {
+    if (activeField === "start" && startRoom) {
+      setStartRoom(null);
+      setTransitionPref(null);
+      setShowTransitionModal(false);
+      setActiveSegmentIndex(0);
+    }
+
+    if (activeField === "dest" && destRoom) {
+      setDestRoom(null);
+      setTransitionPref(null);
+      setShowTransitionModal(false);
+      setActiveSegmentIndex(0);
+    }
+
     setSearchQuery(text);
     if (activeField === "start") {
       setStartText(text);
     } else {
       setDestText(text);
     }
+  };
+
+  const syncSelectionToLocation = useCallback((buildingId, floorId, campusId) => {
+    const nextSelection = getSelectionForLocation(buildingId, floorId, campusId);
+    setSelectedCampus(nextSelection.campusId);
+    setSelectedBuildingIdx(nextSelection.buildingIdx);
+    setSelectedFloorIdx(nextSelection.floorIdx);
+  }, []);
+
+  const handleCampusChange = (campusId) => {
+    setSelectedCampus(campusId);
+    setSelectedBuildingIdx(0);
+    setSelectedFloorIdx(0);
+    setSelectionMode(null);
+  };
+
+  const handleBuildingChange = (index) => {
+    setSelectedBuildingIdx(index);
+    setSelectedFloorIdx(0);
+    setSelectionMode(null);
+  };
+
+  const handleFloorChange = (index) => {
+    setSelectedFloorIdx(index);
+    setSelectionMode(null);
   };
 
   const handleSelectRoom = (room) => {
@@ -386,6 +476,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       setDestRoom(room);
       setDestText(room.label + ", Floor " + floorLabel);
     }
+    syncSelectionToLocation(room.buildingId, room.floor, room.campusId);
     setSearchQuery("");
     setActiveField(null);
     setSelectionMode(null);
@@ -452,6 +543,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     return { x: x * scaleX, y: y * scaleY };
   }, [floorDimensions]);
 
+  const browsingLocked = Boolean(startRoom && destRoom);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -464,6 +557,78 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         </View>
 
         <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
+        <View style={styles.explorerPanel}>
+          <View style={styles.campusToggleContainer}>
+            <Pressable
+              style={[
+                styles.campusButton,
+                selectedCampus === "sgw" && styles.campusButtonActive,
+                browsingLocked && styles.selectorDisabled,
+              ]}
+              disabled={browsingLocked}
+              onPress={() => handleCampusChange("sgw")}
+            >
+              <Text
+                style={[
+                  styles.campusButtonText,
+                  selectedCampus === "sgw" && styles.campusButtonTextActive,
+                ]}
+              >
+                SGW
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.campusButton,
+                selectedCampus === "loyola" && styles.campusButtonActive,
+                browsingLocked && styles.selectorDisabled,
+              ]}
+              disabled={browsingLocked}
+              onPress={() => handleCampusChange("loyola")}
+            >
+              <Text
+                style={[
+                  styles.campusButtonText,
+                  selectedCampus === "loyola" && styles.campusButtonTextActive,
+                ]}
+              >
+                Loyola
+              </Text>
+            </Pressable>
+          </View>
+
+          {campusBuildings.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.buildingSelectorContent}
+              style={styles.buildingSelectorContainer}
+            >
+              {campusBuildings.map((building, idx) => (
+                <Pressable
+                  key={building.id}
+                  style={[
+                    styles.buildingChip,
+                    selectedBuildingIdx === idx && styles.buildingChipActive,
+                    browsingLocked && styles.selectorDisabled,
+                  ]}
+                  disabled={browsingLocked}
+                  onPress={() => handleBuildingChange(idx)}
+                >
+                  <Text
+                    style={[
+                      styles.buildingChipText,
+                      selectedBuildingIdx === idx && styles.buildingChipTextActive,
+                    ]}
+                  >
+                    {building.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
+        </View>
 
         <View style={styles.searchColumnWrapper}>
         {/* Search Inputs with Map Selection Buttons */}
@@ -718,6 +883,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
           {/* Floor Plan with Route */}
           <View 
+            testID="indoor-floor-plan-container"
             style={styles.floorPlanContainer}
             {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
           >
@@ -817,6 +983,37 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             )}
           </View>
 
+          {selectedBuilding?.floors?.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.floorSelectorContent}
+              style={styles.floorSelectorContainer}
+            >
+              {selectedBuilding.floors.map((floor, idx) => (
+                <Pressable
+                  key={floor.id}
+                  style={[
+                    styles.floorButton,
+                    selectedFloorIdx === idx && styles.floorButtonActive,
+                    browsingLocked && styles.selectorDisabled,
+                  ]}
+                  disabled={browsingLocked}
+                  onPress={() => handleFloorChange(idx)}
+                >
+                  <Text
+                    style={[
+                      styles.floorButtonText,
+                      selectedFloorIdx === idx && styles.floorButtonTextActive,
+                    ]}
+                  >
+                    {floor.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
+
           {/* Route Stats Bar */}
           {startRoom && destRoom ? (
             <>
@@ -891,12 +1088,13 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
         {/* Transition Preference Modal (stairs vs elevator) */}
         <Modal
+          testID="transition-preference-modal"
           visible={showTransitionModal}
           transparent
           animationType="fade"
           onRequestClose={() => setShowTransitionModal(false)}
         >
-          <Pressable style={styles.modalOverlay} onPress={() => setShowTransitionModal(false)}>
+          <Pressable testID="transition-modal-overlay" style={styles.modalOverlay} onPress={() => setShowTransitionModal(false)}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>How would you like to change floors?</Text>
               <Pressable
@@ -954,6 +1152,106 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     fontStyle: "italic",
+  },
+  explorerPanel: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 4,
+    padding: 16,
+    borderRadius: 18,
+    backgroundColor: "#f7f1f3",
+    borderWidth: 1,
+    borderColor: "#ead7dd",
+  },
+  campusToggleContainer: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  campusButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#dcc3cb",
+    alignItems: "center",
+  },
+  campusButtonActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  campusButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: MAROON,
+  },
+  campusButtonTextActive: {
+    color: "#fff",
+  },
+  buildingSelectorContainer: {
+    marginTop: 14,
+  },
+  buildingSelectorContent: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  buildingChip: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e4d7db",
+  },
+  buildingChipActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  buildingChipText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#654c54",
+  },
+  buildingChipTextActive: {
+    color: "#fff",
+  },
+  floorSelectorContainer: {
+    marginHorizontal: 12,
+    marginTop: 2,
+    marginBottom: 8,
+  },
+  floorSelectorContent: {
+    gap: 10,
+    paddingHorizontal: 16,
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  floorButton: {
+    minWidth: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#dccfd3",
+    paddingHorizontal: 12,
+  },
+  floorButtonActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  floorButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#654c54",
+  },
+  floorButtonTextActive: {
+    color: "#fff",
+  },
+  selectorDisabled: {
+    opacity: 0.55,
   },
   // Keeps search + dropdown above the Walking chip (Android elevation draw order).
   searchColumnWrapper: {

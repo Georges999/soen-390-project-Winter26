@@ -1,6 +1,12 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import IndoorDirectionsScreen from '../../src/screens/IndoorDirectionsScreen';
+import { Dimensions } from 'react-native';
+import IndoorDirectionsScreen, {
+  buildAllRooms,
+  getSelectionForLocation,
+  getInitialSelection,
+} from '../../src/screens/IndoorDirectionsScreen';
+import { buildings } from '../../src/data/indoorFloorData';
 
 // Mock the floor plan images
 jest.mock('../../assets/floor-maps/Hall-1-F.png', () => 'hall1img', { virtual: true });
@@ -78,9 +84,112 @@ const mockRouteWithRooms = {
   },
 };
 
+const mockRouteBrowseHall8 = {
+  params: {
+    building: {
+      id: 'hall',
+      label: 'H',
+      name: 'Hall Building',
+      floors: [
+        { id: 'Hall-1', label: '1', floorNumber: 1, image: 'hall1img', nodes: [], pois: [], edges: [], width: 1952, height: 1979 },
+        { id: 'Hall-2', label: '2', floorNumber: 2, image: 'hall2img', nodes: [], pois: [], edges: [], width: 1000, height: 1000 },
+        { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 1000 },
+        { id: 'Hall-9', label: '9', floorNumber: 9, image: 'hall9img', nodes: [], pois: [], edges: [], width: 1000, height: 1000 },
+      ],
+      rooms: [],
+    },
+    floor: { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 1000 },
+  },
+};
+
+const originalSgwBuildings = buildings.sgw;
+const originalLoyolaBuildings = buildings.loyola;
+
 describe('IndoorDirectionsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    delete buildings.emptyCampus;
+    delete buildings.emptyArrayCampus;
+    buildings.sgw = originalSgwBuildings;
+    buildings.loyola = originalLoyolaBuildings;
+  });
+
+  it('buildAllRooms should tolerate campuses without room arrays', () => {
+    buildings.emptyCampus = undefined;
+    buildings.emptyArrayCampus = [{ id: 'ghost', name: 'Ghost Building' }];
+
+    const rooms = buildAllRooms();
+
+    expect(Array.isArray(rooms)).toBe(true);
+  });
+
+  it('getSelectionForLocation should fall back to the provided campus when a building is unknown', () => {
+    buildings.emptyCampus = undefined;
+
+    const selection = getSelectionForLocation('missing-building', 'missing-floor', 'emptyCampus');
+
+    expect(selection).toEqual({
+      campusId: 'emptyCampus',
+      buildingIdx: 0,
+      floorIdx: 0,
+    });
+  });
+
+  it('getSelectionForLocation should reset to the first floor when the floor id is unknown', () => {
+    const selection = getSelectionForLocation('hall', 'missing-floor');
+
+    expect(selection.campusId).toBe('sgw');
+    expect(selection.buildingIdx).toBe(0);
+    expect(selection.floorIdx).toBe(0);
+  });
+
+  it('getInitialSelection should use startRoom when destinationRoom is missing', () => {
+    const selection = getInitialSelection({
+      startRoom: { buildingId: 'mb', floor: 'MB-1' },
+    });
+
+    expect(selection.campusId).toBe('sgw');
+    expect(selection.buildingIdx).toBe(1);
+    expect(selection.floorIdx).toBe(1);
+  });
+
+  it('should render safely when the selected campus data is unavailable', () => {
+    buildings.sgw = undefined;
+
+    const { getByText } = render(
+      <IndoorDirectionsScreen
+        route={{
+          params: {
+            startRoom: { id: 'start-room', label: 'Start', floor: 'Unknown-Floor' },
+            destinationRoom: { id: 'dest-room', label: 'Dest', floor: 'Unknown-Floor' },
+          },
+        }}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByText('Indoor Directions')).toBeTruthy();
+  });
+
+  it('should fall back to the currently selected floor when a same-floor route uses an unknown floor id', () => {
+    mockClassifyRoute.mockReturnValue('same-floor');
+
+    const { getByTestId } = render(
+      <IndoorDirectionsScreen
+        route={{
+          params: {
+            startRoom: { id: 'start-room', label: 'Start', floor: 'Unknown-Floor' },
+            destinationRoom: { id: 'dest-room', label: 'Dest', floor: 'Unknown-Floor' },
+          },
+        }}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByTestId('indoor-route-overlay')).toBeTruthy();
   });
 
   // --- Rendering ---
@@ -105,6 +214,55 @@ describe('IndoorDirectionsScreen', () => {
     );
     expect(getByPlaceholderText('Tap map or search start')).toBeTruthy();
     expect(getByPlaceholderText('Tap map or search destination')).toBeTruthy();
+  });
+
+  it('should render campus, building, and floor browsing controls', () => {
+    const { getByText, getAllByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    expect(getByText('SGW')).toBeTruthy();
+    expect(getByText('Loyola')).toBeTruthy();
+    expect(getAllByText('Hall Building')[0]).toBeTruthy();
+    expect(getAllByText('John Molson Building')[0]).toBeTruthy();
+    expect(getAllByText('1')[0]).toBeTruthy();
+    expect(getAllByText('8')[0]).toBeTruthy();
+  });
+
+  it('should switch campus and update building chips on the same page', () => {
+    const { getByText, getAllByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    fireEvent.press(getByText('Loyola'));
+    expect(getByText('Vanier Library')).toBeTruthy();
+    expect(getAllByText('Central Building')[0]).toBeTruthy();
+    expect(queryByText('Hall Building')).toBeNull();
+  });
+
+  it('should switch back to SGW after browsing Loyola', () => {
+    const { getByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    fireEvent.press(getByText('Loyola'));
+    fireEvent.press(getByText('SGW'));
+    expect(getByText('Hall Building')).toBeTruthy();
+    expect(queryByText('Vanier Library')).toBeNull();
+  });
+
+  it('should switch buildings from the top selector', () => {
+    const { getByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    fireEvent.press(getByText('John Molson Building'));
+    expect(getByText('S2')).toBeTruthy();
+    expect(queryByText('8')).toBeNull();
+  });
+
+  it('should switch floors from the selector under the map', () => {
+    const { getAllByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    fireEvent.press(getAllByText('9')[0]);
+    expect(getAllByText('9').length).toBeGreaterThan(0);
   });
 
   it('should render walking mode indicator', () => {
@@ -159,6 +317,14 @@ describe('IndoorDirectionsScreen', () => {
     expect(getByText('route')).toBeTruthy();
   });
 
+  it('should keep showing the routed floor for same-floor routes', () => {
+    mockClassifyRoute.mockReturnValue('same-floor');
+    const { getByTestId } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    expect(getByTestId('indoor-route-overlay')).toBeTruthy();
+  });
+
   it('should show STEP-BY-STEP DIRECTIONS section when both fields are filled', () => {
     const { getByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
@@ -176,12 +342,12 @@ describe('IndoorDirectionsScreen', () => {
   });
 
   it('should show step numbers', () => {
-    const { getByText } = render(
+    const { getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    expect(getByText('1')).toBeTruthy();
-    expect(getByText('2')).toBeTruthy();
-    expect(getByText('3')).toBeTruthy();
+    expect(getAllByText('1').length).toBeGreaterThan(0);
+    expect(getAllByText('2').length).toBeGreaterThan(0);
+    expect(getAllByText('3').length).toBeGreaterThan(0);
   });
 
   // --- Accessibility Toggle ---
@@ -210,6 +376,14 @@ describe('IndoorDirectionsScreen', () => {
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
     expect(getByText('♿')).toBeTruthy();
+  });
+
+  it('should toggle accessibility route from the stats bar button', () => {
+    const { getByTestId, getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+    fireEvent.press(getByTestId('accessibility-route-toggle'));
+    expect(getByText('Avoiding stairs')).toBeTruthy();
   });
 
   it('should toggle accessibility route when switch is toggled', () => {
@@ -355,6 +529,32 @@ describe('IndoorDirectionsScreen', () => {
     const closeIcons = getAllByText('close');
     fireEvent.press(closeIcons[1]);
     expect(() => getByDisplayValue('H861')).toThrow();
+  });
+
+  it('should let the user change a filled search field without leaving the screen', () => {
+    const { getByPlaceholderText, getAllByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+
+    const startInput = getByPlaceholderText('Tap map or search start');
+    fireEvent(startInput, 'focus');
+    fireEvent.changeText(startInput, 'MB1.210');
+
+    expect(getAllByText(/MB1\.210.*John Molson Building/).length).toBeGreaterThan(0);
+    expect(queryByText('STEP-BY-STEP DIRECTIONS')).toBeNull();
+  });
+
+  it('should let the user change a filled destination field without leaving the screen', () => {
+    const { getByPlaceholderText, getAllByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+
+    const destInput = getByPlaceholderText('Tap map or search destination');
+    fireEvent(destInput, 'focus');
+    fireEvent.changeText(destInput, 'MB1.210');
+
+    expect(getAllByText(/MB1\.210.*John Molson Building/).length).toBeGreaterThan(0);
+    expect(queryByText('STEP-BY-STEP DIRECTIONS')).toBeNull();
   });
 
   // --- No route params ---
@@ -581,6 +781,45 @@ describe('IndoorDirectionsScreen', () => {
     expect(getByText('Indoor Directions')).toBeTruthy();
   });
 
+  it('should select a start room from a map tap', () => {
+    const { getAllByText, getByTestId, getByDisplayValue } = render(
+      <IndoorDirectionsScreen route={mockRouteBrowseHall8} navigation={mockNavigation} />
+    );
+    const { width } = Dimensions.get('window');
+    const mapWidth = width - 32;
+    const mapHeight = width - 60;
+
+    fireEvent.press(getAllByText('my-location')[0]);
+    fireEvent(getByTestId('indoor-floor-plan-container'), 'responderRelease', {
+      nativeEvent: {
+        locationX: 369.29 * (mapWidth / 1000),
+        locationY: 154.82 * (mapHeight / 1000),
+      },
+    });
+
+    expect(getByDisplayValue('H837, Floor 8')).toBeTruthy();
+  });
+
+  it('should select a destination room from a map tap', () => {
+    const { getAllByText, getByTestId, getByDisplayValue } = render(
+      <IndoorDirectionsScreen route={mockRouteBrowseHall8} navigation={mockNavigation} />
+    );
+    const { width } = Dimensions.get('window');
+    const mapWidth = width - 32;
+    const mapHeight = width - 60;
+    const placeIcons = getAllByText('place');
+
+    fireEvent.press(placeIcons[placeIcons.length - 1]);
+    fireEvent(getByTestId('indoor-floor-plan-container'), 'responderRelease', {
+      nativeEvent: {
+        locationX: 868.72 * (mapWidth / 1000),
+        locationY: 689.76 * (mapHeight / 1000),
+      },
+    });
+
+    expect(getByDisplayValue('H861, Floor 8')).toBeTruthy();
+  });
+
   // ===================================================================
   // Cross-floor / cross-building tests
   // ===================================================================
@@ -665,6 +904,28 @@ describe('IndoorDirectionsScreen', () => {
       );
       fireEvent.press(getByText(/requires changing floors/));
       expect(getByText('How would you like to change floors?')).toBeTruthy();
+    });
+
+    it('should close the transition modal when the overlay is pressed', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText, getByTestId, queryByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      fireEvent.press(getByText(/requires changing floors/));
+      fireEvent.press(getByTestId('transition-modal-overlay'));
+      expect(queryByText('How would you like to change floors?')).toBeNull();
+    });
+
+    it('should close the transition modal when requestClose is triggered', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText, getByTestId, queryByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      fireEvent.press(getByText(/requires changing floors/));
+      fireEvent(getByTestId('transition-preference-modal'), 'requestClose');
+      expect(queryByText('How would you like to change floors?')).toBeNull();
     });
 
     it('should select stairs from the transition modal', () => {
@@ -857,6 +1118,39 @@ describe('IndoorDirectionsScreen', () => {
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
       expect(getByText(/Walk outside to the MB building/)).toBeTruthy();
+    });
+
+    it('should render an Outdoor segment tab in multi-segment cross-building routes', () => {
+      const indoorSeg = {
+        type: 'indoor',
+        floorId: 'Hall-8',
+        buildingId: 'hall',
+        fromNodeId: 'Hall8_classroom_002',
+        toNodeId: 'Hall8_hallway_001',
+      };
+      const destinationIndoorSeg = {
+        type: 'indoor',
+        floorId: 'MB-1',
+        buildingId: 'mb',
+        fromNodeId: 'MB1_hallway_001',
+        toNodeId: 'MB1_classroom_001',
+      };
+
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([indoorSeg, outdoorSeg, destinationIndoorSeg]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 200, y: 300, type: 'hallway' },
+        ],
+        totalWeight: 200,
+        reason: null,
+      });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
+      );
+      expect(getByText('Outdoor')).toBeTruthy();
     });
   });
 

@@ -107,7 +107,7 @@ describe('MainNavigator', () => {
     expect(getByText('NextClassScreen')).toBeTruthy();
 
     fireEvent.press(getByTestId('tab-Indoor'));
-    expect(getByText('IndoorMapScreen')).toBeTruthy();
+    expect(getByText('IndoorDirectionsScreen')).toBeTruthy();
 
     fireEvent.press(getByTestId('tab-Profile'));
     expect(getByText('ProfileScreen')).toBeTruthy();
