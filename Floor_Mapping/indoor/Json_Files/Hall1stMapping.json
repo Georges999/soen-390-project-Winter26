@@ -1,2281 +1,309 @@
 {
   "version": 2,
-  "exportedAt": "2026-03-20T05:58:33.852Z",
+  "exportedAt": "2026-03-25T02:42:32.712Z",
   "floors": {
     "Hall-1-Red": {
       "label": "Hall - Floor 1 (Annotated)",
       "image": "Hall-1-red.png",
-      "width": 1952,
-      "height": 1979,
+      "width": 2072,
+      "height": 2048,
       "nodes": [
-        {
-          "id": "Hall1Red_hallway_001",
-          "type": "hallway",
-          "x": 328.24,
-          "y": 1777.44,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_002",
-          "type": "hallway",
-          "x": 567.43,
-          "y": 1772.93,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_003",
-          "type": "hallway",
-          "x": 863.04,
-          "y": 1786.47,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_004",
-          "type": "hallway",
-          "x": 1059.36,
-          "y": 1725.54,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_005",
-          "type": "hallway",
-          "x": 1068.39,
-          "y": 1617.22,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_006",
-          "type": "hallway",
-          "x": 1075.16,
-          "y": 1547.27,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_007",
-          "type": "hallway",
-          "x": 1255.68,
-          "y": 1547.27,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_008",
-          "type": "hallway",
-          "x": 1436.21,
-          "y": 1542.76,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_009",
-          "type": "hallway",
-          "x": 1585.14,
-          "y": 1549.53,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_010",
-          "type": "hallway",
-          "x": 1582.88,
-          "y": 1637.53,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_011",
-          "type": "hallway",
-          "x": 1603.19,
-          "y": 1748.1,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_012",
-          "type": "hallway",
-          "x": 1589.65,
-          "y": 1842.88,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_013",
-          "type": "hallway",
-          "x": 1467.8,
-          "y": 1836.11,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_014",
-          "type": "hallway",
-          "x": 1341.43,
-          "y": 1836.11,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_015",
-          "type": "hallway",
-          "x": 1048.08,
-          "y": 1436.7,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_016",
-          "type": "hallway",
-          "x": 1032.28,
-          "y": 1312.59,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_017",
-          "type": "hallway",
-          "x": 1032.28,
-          "y": 1188.48,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_018",
-          "type": "hallway",
-          "x": 951.05,
-          "y": 1127.55,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_019",
-          "type": "hallway",
-          "x": 869.81,
-          "y": 1125.29,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_020",
-          "type": "hallway",
-          "x": 869.81,
-          "y": 1041.8,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_021",
-          "type": "hallway",
-          "x": 752.47,
-          "y": 1030.52,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_022",
-          "type": "hallway",
-          "x": 1007.46,
-          "y": 987.64,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_023",
-          "type": "hallway",
-          "x": 1075.16,
-          "y": 1039.55,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_024",
-          "type": "hallway",
-          "x": 1149.62,
-          "y": 994.41,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_025",
-          "type": "hallway",
-          "x": 905.91,
-          "y": 895.13,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_026",
-          "type": "hallway",
-          "x": 903.66,
-          "y": 789.07,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_027",
-          "type": "hallway",
-          "x": 799.86,
-          "y": 761.99,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_028",
-          "type": "hallway",
-          "x": 675.75,
-          "y": 757.48,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_029",
-          "type": "hallway",
-          "x": 569.69,
-          "y": 755.22,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_030",
-          "type": "hallway",
-          "x": 434.29,
-          "y": 732.65,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_031",
-          "type": "hallway",
-          "x": 599.02,
-          "y": 592.75,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_032",
-          "type": "hallway",
-          "x": 849.5,
-          "y": 599.52,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_033",
-          "type": "hallway",
-          "x": 1115.77,
-          "y": 599.52,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_034",
-          "type": "hallway",
-          "x": 1314.35,
-          "y": 595,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_035",
-          "type": "hallway",
-          "x": 1515.18,
-          "y": 610.8,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_036",
-          "type": "hallway",
-          "x": 1756.64,
-          "y": 597.26,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_037",
-          "type": "hallway",
-          "x": 1885.26,
-          "y": 599.52,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_038",
-          "type": "hallway",
-          "x": 1903.31,
-          "y": 664.96,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_039",
-          "type": "hallway",
-          "x": 1901.06,
-          "y": 741.68,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_040",
-          "type": "hallway",
-          "x": 1903.31,
-          "y": 838.71,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_041",
-          "type": "hallway",
-          "x": 1907.83,
-          "y": 899.64,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_042",
-          "type": "hallway",
-          "x": 188.33,
-          "y": 1786.47,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_043",
-          "type": "hallway",
-          "x": 80.01,
-          "y": 1784.21,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_044",
-          "type": "hallway",
-          "x": 91.3,
-          "y": 1630.76,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_045",
-          "type": "hallway",
-          "x": 70.99,
-          "y": 1382.54,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_046",
-          "type": "hallway",
-          "x": 66.48,
-          "y": 1202.02,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_047",
-          "type": "hallway",
-          "x": 57.45,
-          "y": 935.74,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_048",
-          "type": "hallway",
-          "x": 50.68,
-          "y": 680.75,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_049",
-          "type": "hallway",
-          "x": 50.68,
-          "y": 500.23,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_050",
-          "type": "hallway",
-          "x": 544.87,
-          "y": 838.83,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_051",
-          "type": "hallway",
-          "x": 549.22,
-          "y": 910.17,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_052",
-          "type": "hallway",
-          "x": 547.48,
-          "y": 990.21,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_053",
-          "type": "hallway",
-          "x": 676.24,
-          "y": 992.82,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_054",
-          "type": "hallway",
-          "x": 1887.31,
-          "y": 1002.36,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_055",
-          "type": "hallway",
-          "x": 1777.23,
-          "y": 1030.24,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_056",
-          "type": "hallway",
-          "x": 1769.89,
-          "y": 1112.44,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_057",
-          "type": "hallway",
-          "x": 1849.15,
-          "y": 1281.22,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_058",
-          "type": "hallway",
-          "x": 1884.37,
-          "y": 1457.34,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_059",
-          "type": "hallway",
-          "x": 1884.37,
-          "y": 1599.71,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_060",
-          "type": "hallway",
-          "x": 1891.71,
-          "y": 1705.38,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_061",
-          "type": "hallway",
-          "x": 1893.18,
-          "y": 1816.93,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_062",
-          "type": "hallway",
-          "x": 1802.18,
-          "y": 1841.88,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_063",
-          "type": "hallway",
-          "x": 982.99,
-          "y": 610.59,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_064",
-          "type": "hallway",
-          "x": 719.01,
-          "y": 590.14,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_065",
-          "type": "hallway",
-          "x": 1199.84,
-          "y": 1900.4,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_hallway_066",
-          "type": "hallway",
-          "x": 946.4,
-          "y": 1874.18,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        }
+        { "id": "Hall1Red_hallway_001", "type": "hallway", "x": 328.24, "y": 1777.44, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_002", "type": "hallway", "x": 567.43, "y": 1772.93, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_003", "type": "hallway", "x": 863.04, "y": 1786.47, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_004", "type": "hallway", "x": 1059.36, "y": 1725.54, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_005", "type": "hallway", "x": 1068.39, "y": 1617.22, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_006", "type": "hallway", "x": 1075.16, "y": 1547.27, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_007", "type": "hallway", "x": 1255.68, "y": 1547.27, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_008", "type": "hallway", "x": 1436.21, "y": 1542.76, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_009", "type": "hallway", "x": 1585.14, "y": 1549.53, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_010", "type": "hallway", "x": 1582.88, "y": 1637.53, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_011", "type": "hallway", "x": 1603.19, "y": 1748.1, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_012", "type": "hallway", "x": 1589.65, "y": 1842.88, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_013", "type": "hallway", "x": 1467.8, "y": 1836.11, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_014", "type": "hallway", "x": 1341.43, "y": 1836.11, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_015", "type": "hallway", "x": 1048.08, "y": 1436.7, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_016", "type": "hallway", "x": 1032.28, "y": 1312.59, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_017", "type": "hallway", "x": 1032.28, "y": 1188.48, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_018", "type": "hallway", "x": 951.05, "y": 1127.55, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_019", "type": "hallway", "x": 869.81, "y": 1125.29, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_020", "type": "hallway", "x": 869.81, "y": 1041.8, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_021", "type": "hallway", "x": 752.47, "y": 1030.52, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_022", "type": "hallway", "x": 1007.46, "y": 987.64, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_023", "type": "hallway", "x": 1075.16, "y": 1039.55, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_024", "type": "hallway", "x": 1149.62, "y": 994.41, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_025", "type": "hallway", "x": 905.91, "y": 895.13, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_026", "type": "hallway", "x": 903.66, "y": 789.07, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_027", "type": "hallway", "x": 799.86, "y": 761.99, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_028", "type": "hallway", "x": 675.75, "y": 757.48, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_029", "type": "hallway", "x": 569.69, "y": 755.22, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_030", "type": "hallway", "x": 434.29, "y": 732.65, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_031", "type": "hallway", "x": 599.02, "y": 592.75, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_032", "type": "hallway", "x": 849.5, "y": 599.52, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_033", "type": "hallway", "x": 1115.77, "y": 599.52, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_034", "type": "hallway", "x": 1314.35, "y": 595, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_035", "type": "hallway", "x": 1515.18, "y": 610.8, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_036", "type": "hallway", "x": 1756.64, "y": 597.26, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_037", "type": "hallway", "x": 1885.26, "y": 599.52, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_038", "type": "hallway", "x": 1903.31, "y": 664.96, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_039", "type": "hallway", "x": 1901.06, "y": 741.68, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_040", "type": "hallway", "x": 1903.31, "y": 838.71, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_041", "type": "hallway", "x": 1907.83, "y": 899.64, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_042", "type": "hallway", "x": 188.33, "y": 1786.47, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_043", "type": "hallway", "x": 80.01, "y": 1784.21, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_044", "type": "hallway", "x": 91.3, "y": 1630.76, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_045", "type": "hallway", "x": 70.99, "y": 1382.54, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_046", "type": "hallway", "x": 66.48, "y": 1202.02, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_047", "type": "hallway", "x": 57.45, "y": 935.74, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_048", "type": "hallway", "x": 50.68, "y": 680.75, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_049", "type": "hallway", "x": 50.68, "y": 500.23, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_050", "type": "hallway", "x": 544.87, "y": 838.83, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_051", "type": "hallway", "x": 549.22, "y": 910.17, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_052", "type": "hallway", "x": 547.48, "y": 990.21, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_053", "type": "hallway", "x": 676.24, "y": 992.82, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_054", "type": "hallway", "x": 1887.31, "y": 1002.36, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_055", "type": "hallway", "x": 1777.23, "y": 1030.24, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_056", "type": "hallway", "x": 1769.89, "y": 1112.44, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_057", "type": "hallway", "x": 1849.15, "y": 1281.22, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_058", "type": "hallway", "x": 1884.37, "y": 1457.34, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_059", "type": "hallway", "x": 1884.37, "y": 1599.71, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_060", "type": "hallway", "x": 1891.71, "y": 1705.38, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_061", "type": "hallway", "x": 1893.18, "y": 1816.93, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_062", "type": "hallway", "x": 1802.18, "y": 1841.88, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_063", "type": "hallway", "x": 982.99, "y": 610.59, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_064", "type": "hallway", "x": 719.01, "y": 590.14, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_065", "type": "hallway", "x": 1199.84, "y": 1900.4, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_hallway_066", "type": "hallway", "x": 946.4, "y": 1874.18, "label": "", "nodeSize": 8, "labelSize": 13 }
       ],
       "edges": [
-        {
-          "from": "Hall1Red_hallway_049",
-          "to": "Hall1Red_hallway_048",
-          "weight": 180.52
-        },
-        {
-          "from": "Hall1Red_classroom_010",
-          "to": "Hall1Red_hallway_048",
-          "weight": 82.04
-        },
-        {
-          "from": "Hall1Red_hallway_048",
-          "to": "Hall1Red_hallway_047",
-          "weight": 255.08
-        },
-        {
-          "from": "Hall1Red_hallway_047",
-          "to": "Hall1Red_classroom_009",
-          "weight": 67.32
-        },
-        {
-          "from": "Hall1Red_hallway_047",
-          "to": "Hall1Red_hallway_046",
-          "weight": 266.43
-        },
-        {
-          "from": "Hall1Red_stairs_002",
-          "to": "Hall1Red_hallway_046",
-          "weight": 140.32
-        },
-        {
-          "from": "Hall1Red_hallway_046",
-          "to": "Hall1Red_hallway_045",
-          "weight": 180.58
-        },
-        {
-          "from": "Hall1Red_hallway_045",
-          "to": "Hall1Red_hallway_044",
-          "weight": 249.05
-        },
-        {
-          "from": "Hall1Red_classroom_007",
-          "to": "Hall1Red_hallway_044",
-          "weight": 181.15
-        },
-        {
-          "from": "Hall1Red_hallway_043",
-          "to": "Hall1Red_hallway_042",
-          "weight": 108.34
-        },
-        {
-          "from": "Hall1Red_hallway_042",
-          "to": "Hall1Red_hallway_001",
-          "weight": 140.2
-        },
-        {
-          "from": "Hall1Red_hallway_001",
-          "to": "Hall1Red_hallway_002",
-          "weight": 239.23
-        },
-        {
-          "from": "Hall1Red_hallway_002",
-          "to": "Hall1Red_classroom_003",
-          "weight": 127.35
-        },
-        {
-          "from": "Hall1Red_hallway_002",
-          "to": "Hall1Red_hallway_004",
-          "weight": 494.21
-        },
-        {
-          "from": "Hall1Red_escalator_001",
-          "to": "Hall1Red_hallway_004",
-          "weight": 100.28
-        },
-        {
-          "from": "Hall1Red_hallway_004",
-          "to": "Hall1Red_hallway_005",
-          "weight": 108.7
-        },
-        {
-          "from": "Hall1Red_classroom_036",
-          "to": "Hall1Red_hallway_005",
-          "weight": 74.37
-        },
-        {
-          "from": "Hall1Red_hallway_005",
-          "to": "Hall1Red_hallway_006",
-          "weight": 70.28
-        },
-        {
-          "from": "Hall1Red_hallway_006",
-          "to": "Hall1Red_washroom_002",
-          "weight": 91.28
-        },
-        {
-          "from": "Hall1Red_hallway_006",
-          "to": "Hall1Red_hallway_015",
-          "weight": 113.84
-        },
-        {
-          "from": "Hall1Red_hallway_015",
-          "to": "Hall1Red_hallway_016",
-          "weight": 125.11
-        },
-        {
-          "from": "Hall1Red_classroom_043",
-          "to": "Hall1Red_hallway_016",
-          "weight": 59.04
-        },
-        {
-          "from": "Hall1Red_hallway_016",
-          "to": "Hall1Red_hallway_017",
-          "weight": 124.11
-        },
-        {
-          "from": "Hall1Red_hallway_017",
-          "to": "Hall1Red_washroom_001",
-          "weight": 47.59
-        },
-        {
-          "from": "Hall1Red_hallway_006",
-          "to": "Hall1Red_hallway_007",
-          "weight": 180.52
-        },
-        {
-          "from": "Hall1Red_classroom_042",
-          "to": "Hall1Red_hallway_007",
-          "weight": 112.74
-        },
-        {
-          "from": "Hall1Red_hallway_007",
-          "to": "Hall1Red_hallway_008",
-          "weight": 180.59
-        },
-        {
-          "from": "Hall1Red_hallway_008",
-          "to": "Hall1Red_classroom_041",
-          "weight": 70.7
-        },
-        {
-          "from": "Hall1Red_hallway_008",
-          "to": "Hall1Red_hallway_009",
-          "weight": 149.08
-        },
-        {
-          "from": "Hall1Red_classroom_040",
-          "to": "Hall1Red_hallway_009",
-          "weight": 87.71
-        },
-        {
-          "from": "Hall1Red_hallway_009",
-          "to": "Hall1Red_hallway_010",
-          "weight": 88.03
-        },
-        {
-          "from": "Hall1Red_hallway_010",
-          "to": "Hall1Red_hallway_011",
-          "weight": 112.42
-        },
-        {
-          "from": "Hall1Red_stairs_001",
-          "to": "Hall1Red_hallway_010",
-          "weight": 92.08
-        },
-        {
-          "from": "Hall1Red_hallway_011",
-          "to": "Hall1Red_hallway_012",
-          "weight": 95.74
-        },
-        {
-          "from": "Hall1Red_hallway_012",
-          "to": "Hall1Red_hallway_013",
-          "weight": 122.04
-        },
-        {
-          "from": "Hall1Red_hallway_012",
-          "to": "Hall1Red_hallway_062",
-          "weight": 212.53
-        },
-        {
-          "from": "Hall1Red_hallway_062",
-          "to": "Hall1Red_hallway_061",
-          "weight": 94.36
-        },
-        {
-          "from": "Hall1Red_hallway_061",
-          "to": "Hall1Red_hallway_060",
-          "weight": 111.56
-        },
-        {
-          "from": "Hall1Red_hallway_060",
-          "to": "Hall1Red_hallway_059",
-          "weight": 105.92
-        },
-        {
-          "from": "Hall1Red_hallway_058",
-          "to": "Hall1Red_hallway_059",
-          "weight": 142.37
-        },
-        {
-          "from": "Hall1Red_hallway_058",
-          "to": "Hall1Red_hallway_057",
-          "weight": 179.61
-        },
-        {
-          "from": "Hall1Red_hallway_057",
-          "to": "Hall1Red_hallway_056",
-          "weight": 186.46
-        },
-        {
-          "from": "Hall1Red_hallway_056",
-          "to": "Hall1Red_classroom_049",
-          "weight": 99.15
-        },
-        {
-          "from": "Hall1Red_hallway_055",
-          "to": "Hall1Red_hallway_056",
-          "weight": 82.53
-        },
-        {
-          "from": "Hall1Red_hallway_055",
-          "to": "Hall1Red_hallway_054",
-          "weight": 113.56
-        },
-        {
-          "from": "Hall1Red_hallway_054",
-          "to": "Hall1Red_hallway_041",
-          "weight": 104.75
-        },
-        {
-          "from": "Hall1Red_hallway_041",
-          "to": "Hall1Red_classroom_048",
-          "weight": 82.27
-        },
-        {
-          "from": "Hall1Red_classroom_047",
-          "to": "Hall1Red_hallway_040",
-          "weight": 73.88
-        },
-        {
-          "from": "Hall1Red_hallway_040",
-          "to": "Hall1Red_hallway_041",
-          "weight": 61.1
-        },
-        {
-          "from": "Hall1Red_hallway_040",
-          "to": "Hall1Red_hallway_039",
-          "weight": 97.06
-        },
-        {
-          "from": "Hall1Red_hallway_039",
-          "to": "Hall1Red_classroom_046",
-          "weight": 107.31
-        },
-        {
-          "from": "Hall1Red_hallway_039",
-          "to": "Hall1Red_hallway_038",
-          "weight": 76.75
-        },
-        {
-          "from": "Hall1Red_hallway_038",
-          "to": "Hall1Red_hallway_037",
-          "weight": 67.88
-        },
-        {
-          "from": "Hall1Red_hallway_037",
-          "to": "Hall1Red_hallway_036",
-          "weight": 128.64
-        },
-        {
-          "from": "Hall1Red_hallway_036",
-          "to": "Hall1Red_classroom_023",
-          "weight": 100.63
-        },
-        {
-          "from": "Hall1Red_hallway_036",
-          "to": "Hall1Red_hallway_035",
-          "weight": 241.84
-        },
-        {
-          "from": "Hall1Red_hallway_036",
-          "to": "Hall1Red_classroom_022",
-          "weight": 134.05
-        },
-        {
-          "from": "Hall1Red_classroom_021",
-          "to": "Hall1Red_hallway_035",
-          "weight": 135.24
-        },
-        {
-          "from": "Hall1Red_hallway_035",
-          "to": "Hall1Red_classroom_020",
-          "weight": 112.82
-        },
-        {
-          "from": "Hall1Red_hallway_034",
-          "to": "Hall1Red_hallway_035",
-          "weight": 201.45
-        },
-        {
-          "from": "Hall1Red_classroom_019",
-          "to": "Hall1Red_hallway_034",
-          "weight": 122.31
-        },
-        {
-          "from": "Hall1Red_hallway_034",
-          "to": "Hall1Red_classroom_018",
-          "weight": 97.27
-        },
-        {
-          "from": "Hall1Red_hallway_034",
-          "to": "Hall1Red_classroom_017",
-          "weight": 112.24
-        },
-        {
-          "from": "Hall1Red_hallway_034",
-          "to": "Hall1Red_hallway_033",
-          "weight": 198.63
-        },
-        {
-          "from": "Hall1Red_hallway_033",
-          "to": "Hall1Red_classroom_016",
-          "weight": 121.52
-        },
-        {
-          "from": "Hall1Red_hallway_033",
-          "to": "Hall1Red_hallway_032",
-          "weight": 266.27
-        },
-        {
-          "from": "Hall1Red_hallway_033",
-          "to": "Hall1Red_hallway_063",
-          "weight": 133.24
-        },
-        {
-          "from": "Hall1Red_hallway_063",
-          "to": "Hall1Red_hallway_032",
-          "weight": 133.95
-        },
-        {
-          "from": "Hall1Red_hallway_063",
-          "to": "Hall1Red_classroom_015",
-          "weight": 116
-        },
-        {
-          "from": "Hall1Red_hallway_032",
-          "to": "Hall1Red_hallway_064",
-          "weight": 130.83
-        },
-        {
-          "from": "Hall1Red_hallway_064",
-          "to": "Hall1Red_hallway_031",
-          "weight": 120.02
-        },
-        {
-          "from": "Hall1Red_hallway_031",
-          "to": "Hall1Red_classroom_014",
-          "weight": 94.81
-        },
-        {
-          "from": "Hall1Red_hallway_031",
-          "to": "Hall1Red_stairs_003",
-          "weight": 231.69
-        },
-        {
-          "from": "Hall1Red_hallway_031",
-          "to": "Hall1Red_hallway_030",
-          "weight": 216.12
-        },
-        {
-          "from": "Hall1Red_hallway_030",
-          "to": "Hall1Red_classroom_012",
-          "weight": 64.97
-        },
-        {
-          "from": "Hall1Red_hallway_030",
-          "to": "Hall1Red_hallway_029",
-          "weight": 137.27
-        },
-        {
-          "from": "Hall1Red_hallway_029",
-          "to": "Hall1Red_hallway_050",
-          "weight": 87.22
-        },
-        {
-          "from": "Hall1Red_classroom_024",
-          "to": "Hall1Red_hallway_050",
-          "weight": 53.1
-        },
-        {
-          "from": "Hall1Red_hallway_050",
-          "to": "Hall1Red_hallway_051",
-          "weight": 71.47
-        },
-        {
-          "from": "Hall1Red_hallway_051",
-          "to": "Hall1Red_hallway_052",
-          "weight": 80.06
-        },
-        {
-          "from": "Hall1Red_hallway_051",
-          "to": "Hall1Red_classroom_025",
-          "weight": 27.32
-        },
-        {
-          "from": "Hall1Red_hallway_052",
-          "to": "Hall1Red_classroom_026",
-          "weight": 44.64
-        },
-        {
-          "from": "Hall1Red_hallway_052",
-          "to": "Hall1Red_hallway_053",
-          "weight": 128.79
-        },
-        {
-          "from": "Hall1Red_hallway_053",
-          "to": "Hall1Red_classroom_027",
-          "weight": 26.11
-        },
-        {
-          "from": "Hall1Red_hallway_053",
-          "to": "Hall1Red_classroom_011",
-          "weight": 49.22
-        },
-        {
-          "from": "Hall1Red_hallway_053",
-          "to": "Hall1Red_hallway_021",
-          "weight": 85.04
-        },
-        {
-          "from": "Hall1Red_hallway_021",
-          "to": "Hall1Red_classroom_028",
-          "weight": 55.46
-        },
-        {
-          "from": "Hall1Red_hallway_021",
-          "to": "Hall1Red_hallway_020",
-          "weight": 117.88
-        },
-        {
-          "from": "Hall1Red_hallway_020",
-          "to": "Hall1Red_hallway_019",
-          "weight": 83.49
-        },
-        {
-          "from": "Hall1Red_hallway_019",
-          "to": "Hall1Red_classroom_006",
-          "weight": 66.41
-        },
-        {
-          "from": "Hall1Red_hallway_019",
-          "to": "Hall1Red_hallway_018",
-          "weight": 81.27
-        },
-        {
-          "from": "Hall1Red_hallway_018",
-          "to": "Hall1Red_hallway_017",
-          "weight": 101.54
-        },
-        {
-          "from": "Hall1Red_hallway_017",
-          "to": "Hall1Red_hallway_023",
-          "weight": 154.98
-        },
-        {
-          "from": "Hall1Red_hallway_023",
-          "to": "Hall1Red_hallway_022",
-          "weight": 85.31
-        },
-        {
-          "from": "Hall1Red_hallway_022",
-          "to": "Hall1Red_classroom_031",
-          "weight": 49.63
-        },
-        {
-          "from": "Hall1Red_hallway_022",
-          "to": "Hall1Red_hallway_024",
-          "weight": 142.32
-        },
-        {
-          "from": "Hall1Red_hallway_024",
-          "to": "Hall1Red_hallway_023",
-          "weight": 87.07
-        },
-        {
-          "from": "Hall1Red_hallway_024",
-          "to": "Hall1Red_classroom_034",
-          "weight": 88.55
-        },
-        {
-          "from": "Hall1Red_hallway_024",
-          "to": "Hall1Red_classroom_035",
-          "weight": 61.88
-        },
-        {
-          "from": "Hall1Red_hallway_024",
-          "to": "Hall1Red_classroom_045",
-          "weight": 83.63
-        },
-        {
-          "from": "Hall1Red_hallway_023",
-          "to": "Hall1Red_classroom_044",
-          "weight": 79.19
-        },
-        {
-          "from": "Hall1Red_hallway_020",
-          "to": "Hall1Red_hallway_022",
-          "weight": 147.92
-        },
-        {
-          "from": "Hall1Red_hallway_020",
-          "to": "Hall1Red_hallway_025",
-          "weight": 151.05
-        },
-        {
-          "from": "Hall1Red_hallway_025",
-          "to": "Hall1Red_hallway_026",
-          "weight": 106.08
-        },
-        {
-          "from": "Hall1Red_hallway_026",
-          "to": "Hall1Red_hallway_027",
-          "weight": 107.27
-        },
-        {
-          "from": "Hall1Red_hallway_027",
-          "to": "Hall1Red_hallway_028",
-          "weight": 124.19
-        },
-        {
-          "from": "Hall1Red_hallway_029",
-          "to": "Hall1Red_hallway_028",
-          "weight": 106.08
-        },
-        {
-          "from": "Hall1Red_hallway_028",
-          "to": "Hall1Red_hallway_064",
-          "weight": 172.84
-        },
-        {
-          "from": "Hall1Red_hallway_027",
-          "to": "Hall1Red_hallway_032",
-          "weight": 169.88
-        },
-        {
-          "from": "Hall1Red_hallway_026",
-          "to": "Hall1Red_hallway_063",
-          "weight": 195.32
-        },
-        {
-          "from": "Hall1Red_hallway_026",
-          "to": "Hall1Red_classroom_032",
-          "weight": 88.71
-        },
-        {
-          "from": "Hall1Red_classroom_033",
-          "to": "Hall1Red_hallway_033",
-          "weight": 111.05
-        },
-        {
-          "from": "Hall1Red_hallway_014",
-          "to": "Hall1Red_hallway_012",
-          "weight": 248.31
-        },
-        {
-          "from": "Hall1Red_classroom_038",
-          "to": "Hall1Red_hallway_014",
-          "weight": 96.42
-        },
-        {
-          "from": "Hall1Red_hallway_003",
-          "to": "Hall1Red_hallway_066",
-          "weight": 121
-        },
-        {
-          "from": "Hall1Red_hallway_066",
-          "to": "Hall1Red_hallway_065",
-          "weight": 254.79
-        },
-        {
-          "from": "Hall1Red_hallway_003",
-          "to": "Hall1Red_hallway_002",
-          "weight": 295.92
-        },
-        {
-          "from": "Hall1Red_hallway_003",
-          "to": "Hall1Red_hallway_004",
-          "weight": 205.56
-        },
-        {
-          "from": "Hall1Red_hallway_014",
-          "to": "Hall1Red_hallway_065",
-          "weight": 155.5
-        }
+        { "from": "Hall1Red_hallway_049", "to": "Hall1Red_hallway_048", "weight": 180.52 },
+        { "from": "Hall1Red_classroom_010", "to": "Hall1Red_hallway_048", "weight": 82.04 },
+        { "from": "Hall1Red_hallway_048", "to": "Hall1Red_hallway_047", "weight": 255.08 },
+        { "from": "Hall1Red_hallway_047", "to": "Hall1Red_classroom_009", "weight": 67.32 },
+        { "from": "Hall1Red_hallway_047", "to": "Hall1Red_hallway_046", "weight": 266.43 },
+        { "from": "Hall1Red_stairs_002", "to": "Hall1Red_hallway_046", "weight": 140.32 },
+        { "from": "Hall1Red_hallway_046", "to": "Hall1Red_hallway_045", "weight": 180.58 },
+        { "from": "Hall1Red_hallway_045", "to": "Hall1Red_hallway_044", "weight": 249.05 },
+        { "from": "Hall1Red_classroom_007", "to": "Hall1Red_hallway_044", "weight": 181.15 },
+        { "from": "Hall1Red_hallway_043", "to": "Hall1Red_hallway_042", "weight": 108.34 },
+        { "from": "Hall1Red_hallway_042", "to": "Hall1Red_hallway_001", "weight": 140.2 },
+        { "from": "Hall1Red_hallway_001", "to": "Hall1Red_hallway_002", "weight": 239.23 },
+        { "from": "Hall1Red_hallway_002", "to": "Hall1Red_classroom_003", "weight": 127.35 },
+        { "from": "Hall1Red_hallway_002", "to": "Hall1Red_hallway_004", "weight": 494.21 },
+        { "from": "Hall1Red_escalator_001", "to": "Hall1Red_hallway_004", "weight": 100.28 },
+        { "from": "Hall1Red_hallway_004", "to": "Hall1Red_hallway_005", "weight": 108.7 },
+        { "from": "Hall1Red_classroom_036", "to": "Hall1Red_hallway_005", "weight": 74.37 },
+        { "from": "Hall1Red_hallway_005", "to": "Hall1Red_hallway_006", "weight": 70.28 },
+        { "from": "Hall1Red_hallway_006", "to": "Hall1Red_washroom_002", "weight": 91.28 },
+        { "from": "Hall1Red_hallway_006", "to": "Hall1Red_hallway_015", "weight": 113.84 },
+        { "from": "Hall1Red_hallway_015", "to": "Hall1Red_hallway_016", "weight": 125.11 },
+        { "from": "Hall1Red_classroom_043", "to": "Hall1Red_hallway_016", "weight": 59.04 },
+        { "from": "Hall1Red_hallway_016", "to": "Hall1Red_hallway_017", "weight": 124.11 },
+        { "from": "Hall1Red_hallway_017", "to": "Hall1Red_washroom_001", "weight": 47.59 },
+        { "from": "Hall1Red_hallway_006", "to": "Hall1Red_hallway_007", "weight": 180.52 },
+        { "from": "Hall1Red_classroom_042", "to": "Hall1Red_hallway_007", "weight": 112.74 },
+        { "from": "Hall1Red_hallway_007", "to": "Hall1Red_hallway_008", "weight": 180.59 },
+        { "from": "Hall1Red_hallway_008", "to": "Hall1Red_classroom_041", "weight": 70.7 },
+        { "from": "Hall1Red_hallway_008", "to": "Hall1Red_hallway_009", "weight": 149.08 },
+        { "from": "Hall1Red_classroom_040", "to": "Hall1Red_hallway_009", "weight": 87.71 },
+        { "from": "Hall1Red_hallway_009", "to": "Hall1Red_hallway_010", "weight": 88.03 },
+        { "from": "Hall1Red_hallway_010", "to": "Hall1Red_hallway_011", "weight": 112.42 },
+        { "from": "Hall1Red_stairs_001", "to": "Hall1Red_hallway_010", "weight": 92.08 },
+        { "from": "Hall1Red_hallway_011", "to": "Hall1Red_hallway_012", "weight": 95.74 },
+        { "from": "Hall1Red_hallway_012", "to": "Hall1Red_hallway_013", "weight": 122.04 },
+        { "from": "Hall1Red_hallway_012", "to": "Hall1Red_hallway_062", "weight": 212.53 },
+        { "from": "Hall1Red_hallway_062", "to": "Hall1Red_hallway_061", "weight": 94.36 },
+        { "from": "Hall1Red_hallway_061", "to": "Hall1Red_hallway_060", "weight": 111.56 },
+        { "from": "Hall1Red_hallway_060", "to": "Hall1Red_hallway_059", "weight": 105.92 },
+        { "from": "Hall1Red_hallway_058", "to": "Hall1Red_hallway_059", "weight": 142.37 },
+        { "from": "Hall1Red_hallway_058", "to": "Hall1Red_hallway_057", "weight": 179.61 },
+        { "from": "Hall1Red_hallway_057", "to": "Hall1Red_hallway_056", "weight": 186.46 },
+        { "from": "Hall1Red_hallway_056", "to": "Hall1Red_classroom_049", "weight": 99.15 },
+        { "from": "Hall1Red_hallway_055", "to": "Hall1Red_hallway_056", "weight": 82.53 },
+        { "from": "Hall1Red_hallway_055", "to": "Hall1Red_hallway_054", "weight": 113.56 },
+        { "from": "Hall1Red_hallway_054", "to": "Hall1Red_hallway_041", "weight": 104.75 },
+        { "from": "Hall1Red_hallway_041", "to": "Hall1Red_classroom_048", "weight": 82.27 },
+        { "from": "Hall1Red_classroom_047", "to": "Hall1Red_hallway_040", "weight": 73.88 },
+        { "from": "Hall1Red_hallway_040", "to": "Hall1Red_hallway_041", "weight": 61.1 },
+        { "from": "Hall1Red_hallway_040", "to": "Hall1Red_hallway_039", "weight": 97.06 },
+        { "from": "Hall1Red_hallway_039", "to": "Hall1Red_classroom_046", "weight": 107.31 },
+        { "from": "Hall1Red_hallway_039", "to": "Hall1Red_hallway_038", "weight": 76.75 },
+        { "from": "Hall1Red_hallway_038", "to": "Hall1Red_hallway_037", "weight": 67.88 },
+        { "from": "Hall1Red_hallway_037", "to": "Hall1Red_hallway_036", "weight": 128.64 },
+        { "from": "Hall1Red_hallway_036", "to": "Hall1Red_classroom_023", "weight": 100.63 },
+        { "from": "Hall1Red_hallway_036", "to": "Hall1Red_hallway_035", "weight": 241.84 },
+        { "from": "Hall1Red_hallway_036", "to": "Hall1Red_classroom_022", "weight": 134.05 },
+        { "from": "Hall1Red_classroom_021", "to": "Hall1Red_hallway_035", "weight": 135.24 },
+        { "from": "Hall1Red_hallway_035", "to": "Hall1Red_classroom_020", "weight": 112.82 },
+        { "from": "Hall1Red_hallway_034", "to": "Hall1Red_hallway_035", "weight": 201.45 },
+        { "from": "Hall1Red_classroom_019", "to": "Hall1Red_hallway_034", "weight": 122.31 },
+        { "from": "Hall1Red_hallway_034", "to": "Hall1Red_classroom_018", "weight": 97.27 },
+        { "from": "Hall1Red_hallway_034", "to": "Hall1Red_classroom_017", "weight": 112.24 },
+        { "from": "Hall1Red_hallway_034", "to": "Hall1Red_hallway_033", "weight": 198.63 },
+        { "from": "Hall1Red_hallway_033", "to": "Hall1Red_classroom_016", "weight": 121.52 },
+        { "from": "Hall1Red_hallway_033", "to": "Hall1Red_hallway_032", "weight": 266.27 },
+        { "from": "Hall1Red_hallway_033", "to": "Hall1Red_hallway_063", "weight": 133.24 },
+        { "from": "Hall1Red_hallway_063", "to": "Hall1Red_hallway_032", "weight": 133.95 },
+        { "from": "Hall1Red_hallway_063", "to": "Hall1Red_classroom_015", "weight": 116 },
+        { "from": "Hall1Red_hallway_032", "to": "Hall1Red_hallway_064", "weight": 130.83 },
+        { "from": "Hall1Red_hallway_064", "to": "Hall1Red_hallway_031", "weight": 120.02 },
+        { "from": "Hall1Red_hallway_031", "to": "Hall1Red_classroom_014", "weight": 94.81 },
+        { "from": "Hall1Red_hallway_031", "to": "Hall1Red_stairs_003", "weight": 231.69 },
+        { "from": "Hall1Red_hallway_031", "to": "Hall1Red_hallway_030", "weight": 216.12 },
+        { "from": "Hall1Red_hallway_030", "to": "Hall1Red_classroom_012", "weight": 64.97 },
+        { "from": "Hall1Red_hallway_030", "to": "Hall1Red_hallway_029", "weight": 137.27 },
+        { "from": "Hall1Red_hallway_029", "to": "Hall1Red_hallway_050", "weight": 87.22 },
+        { "from": "Hall1Red_classroom_024", "to": "Hall1Red_hallway_050", "weight": 53.1 },
+        { "from": "Hall1Red_hallway_050", "to": "Hall1Red_hallway_051", "weight": 71.47 },
+        { "from": "Hall1Red_hallway_051", "to": "Hall1Red_hallway_052", "weight": 80.06 },
+        { "from": "Hall1Red_hallway_051", "to": "Hall1Red_classroom_025", "weight": 27.32 },
+        { "from": "Hall1Red_hallway_052", "to": "Hall1Red_classroom_026", "weight": 44.64 },
+        { "from": "Hall1Red_hallway_052", "to": "Hall1Red_hallway_053", "weight": 128.79 },
+        { "from": "Hall1Red_hallway_053", "to": "Hall1Red_classroom_027", "weight": 26.11 },
+        { "from": "Hall1Red_hallway_053", "to": "Hall1Red_classroom_011", "weight": 49.22 },
+        { "from": "Hall1Red_hallway_053", "to": "Hall1Red_hallway_021", "weight": 85.04 },
+        { "from": "Hall1Red_hallway_021", "to": "Hall1Red_classroom_028", "weight": 55.46 },
+        { "from": "Hall1Red_hallway_021", "to": "Hall1Red_hallway_020", "weight": 117.88 },
+        { "from": "Hall1Red_hallway_020", "to": "Hall1Red_hallway_019", "weight": 83.49 },
+        { "from": "Hall1Red_hallway_019", "to": "Hall1Red_classroom_006", "weight": 66.41 },
+        { "from": "Hall1Red_hallway_019", "to": "Hall1Red_hallway_018", "weight": 81.27 },
+        { "from": "Hall1Red_hallway_018", "to": "Hall1Red_hallway_017", "weight": 101.54 },
+        { "from": "Hall1Red_hallway_017", "to": "Hall1Red_hallway_023", "weight": 154.98 },
+        { "from": "Hall1Red_hallway_023", "to": "Hall1Red_hallway_022", "weight": 85.31 },
+        { "from": "Hall1Red_hallway_022", "to": "Hall1Red_classroom_031", "weight": 49.63 },
+        { "from": "Hall1Red_hallway_022", "to": "Hall1Red_hallway_024", "weight": 142.32 },
+        { "from": "Hall1Red_hallway_024", "to": "Hall1Red_hallway_023", "weight": 87.07 },
+        { "from": "Hall1Red_hallway_024", "to": "Hall1Red_classroom_034", "weight": 88.55 },
+        { "from": "Hall1Red_hallway_024", "to": "Hall1Red_classroom_035", "weight": 61.88 },
+        { "from": "Hall1Red_hallway_024", "to": "Hall1Red_classroom_045", "weight": 83.63 },
+        { "from": "Hall1Red_hallway_023", "to": "Hall1Red_classroom_044", "weight": 79.19 },
+        { "from": "Hall1Red_hallway_020", "to": "Hall1Red_hallway_022", "weight": 147.92 },
+        { "from": "Hall1Red_hallway_020", "to": "Hall1Red_hallway_025", "weight": 151.05 },
+        { "from": "Hall1Red_hallway_025", "to": "Hall1Red_hallway_026", "weight": 106.08 },
+        { "from": "Hall1Red_hallway_026", "to": "Hall1Red_hallway_027", "weight": 107.27 },
+        { "from": "Hall1Red_hallway_027", "to": "Hall1Red_hallway_028", "weight": 124.19 },
+        { "from": "Hall1Red_hallway_029", "to": "Hall1Red_hallway_028", "weight": 106.08 },
+        { "from": "Hall1Red_hallway_028", "to": "Hall1Red_hallway_064", "weight": 172.84 },
+        { "from": "Hall1Red_hallway_027", "to": "Hall1Red_hallway_032", "weight": 169.88 },
+        { "from": "Hall1Red_hallway_026", "to": "Hall1Red_hallway_063", "weight": 195.32 },
+        { "from": "Hall1Red_hallway_026", "to": "Hall1Red_classroom_032", "weight": 88.71 },
+        { "from": "Hall1Red_classroom_033", "to": "Hall1Red_hallway_033", "weight": 111.05 },
+        { "from": "Hall1Red_hallway_014", "to": "Hall1Red_hallway_012", "weight": 248.31 },
+        { "from": "Hall1Red_classroom_038", "to": "Hall1Red_hallway_014", "weight": 96.42 },
+        { "from": "Hall1Red_hallway_003", "to": "Hall1Red_hallway_066", "weight": 121 },
+        { "from": "Hall1Red_hallway_066", "to": "Hall1Red_hallway_065", "weight": 254.79 },
+        { "from": "Hall1Red_hallway_003", "to": "Hall1Red_hallway_002", "weight": 295.92 },
+        { "from": "Hall1Red_hallway_003", "to": "Hall1Red_hallway_004", "weight": 205.56 },
+        { "from": "Hall1Red_hallway_014", "to": "Hall1Red_hallway_065", "weight": 155.5 },
+        { "from": "Hall1Red_hallway_007", "to": "Hall1Red_elevator_002", "weight": 47.08 },
+        { "from": "Hall1Red_entrance_001", "to": "Hall1Red_hallway_002", "weight": 188.07 },
+        { "from": "Hall1Red_hallway_044", "to": "Hall1Red_hallway_043", "weight": 153.86 }
       ],
       "rooms": [
-        {
-          "id": "Hall1Red_classroom_003",
-          "type": "classroom",
-          "x": 583.23,
-          "y": 1646.56,
-          "label": "H-110",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_006",
-          "type": "classroom",
-          "x": 804.37,
-          "y": 1114.01,
-          "label": "H-110-6",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_007",
-          "type": "classroom",
-          "x": 206.38,
-          "y": 1490.86,
-          "label": "H-109",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_009",
-          "type": "classroom",
-          "x": 109.35,
-          "y": 978.62,
-          "label": "H-125",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_010",
-          "type": "classroom",
-          "x": 120.63,
-          "y": 637.88,
-          "label": "H-127",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_011",
-          "type": "classroom",
-          "x": 650.92,
-          "y": 1035.03,
-          "label": "H-127-2",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_012",
-          "type": "classroom",
-          "x": 411.73,
-          "y": 793.58,
-          "label": "H-127-1",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_014",
-          "type": "classroom",
-          "x": 601.28,
-          "y": 497.97,
-          "label": "H-(0023)",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_015",
-          "type": "classroom",
-          "x": 966.84,
-          "y": 495.72,
-          "label": "H-131",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_016",
-          "type": "classroom",
-          "x": 1178.96,
-          "y": 495.72,
-          "label": "H-133",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_017",
-          "type": "classroom",
-          "x": 1257.94,
-          "y": 497.97,
-          "label": "H-133-2",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_018",
-          "type": "classroom",
-          "x": 1321.12,
-          "y": 497.97,
-          "label": "H-133-1",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_019",
-          "type": "classroom",
-          "x": 1388.82,
-          "y": 497.97,
-          "label": "H-135",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_020",
-          "type": "classroom",
-          "x": 1483.59,
-          "y": 502.49,
-          "label": "H-135-1",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_021",
-          "type": "classroom",
-          "x": 1573.86,
-          "y": 488.95,
-          "label": "H-137",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_022",
-          "type": "classroom",
-          "x": 1677.66,
-          "y": 488.95,
-          "label": "H-139",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_023",
-          "type": "classroom",
-          "x": 1790.48,
-          "y": 502.49,
-          "label": "H-141",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_024",
-          "type": "classroom",
-          "x": 595.33,
-          "y": 822.3,
-          "label": "H-120-3",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_025",
-          "type": "classroom",
-          "x": 570.97,
-          "y": 893.64,
-          "label": "H-120-1",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_026",
-          "type": "classroom",
-          "x": 571.84,
-          "y": 952.8,
-          "label": "H-120-4",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_027",
-          "type": "classroom",
-          "x": 677.11,
-          "y": 966.72,
-          "label": "H-120-21",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_028",
-          "type": "classroom",
-          "x": 767.59,
-          "y": 977.16,
-          "label": "H-120",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_029",
-          "type": "classroom",
-          "x": 868.51,
-          "y": 902.34,
-          "label": "H-120-7",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_031",
-          "type": "classroom",
-          "x": 972.91,
-          "y": 1023.27,
-          "label": "H-128-1",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_032",
-          "type": "classroom",
-          "x": 992.32,
-          "y": 786.19,
-          "label": "H-122",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_033",
-          "type": "classroom",
-          "x": 1091.84,
-          "y": 707.96,
-          "label": "H-149",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_034",
-          "type": "classroom",
-          "x": 1083.94,
-          "y": 935.02,
-          "label": "H-124",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_035",
-          "type": "classroom",
-          "x": 1166.99,
-          "y": 935.02,
-          "label": "H-126",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_036",
-          "type": "classroom",
-          "x": 1131.42,
-          "y": 1656.69,
-          "label": "H-196-1",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_038",
-          "type": "classroom",
-          "x": 1338.57,
-          "y": 1739.73,
-          "label": "H-196-3",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_040",
-          "type": "classroom",
-          "x": 1668.94,
-          "y": 1575.44,
-          "label": "H-198",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_041",
-          "type": "classroom",
-          "x": 1389.46,
-          "y": 1489.72,
-          "label": "H-118",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_042",
-          "type": "classroom",
-          "x": 1158.21,
-          "y": 1490.62,
-          "label": "H-116",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_043",
-          "type": "classroom",
-          "x": 1065.66,
-          "y": 1361.29,
-          "label": "H-115",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_044",
-          "type": "classroom",
-          "x": 1138.23,
-          "y": 1087.44,
-          "label": "H-128",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_045",
-          "type": "classroom",
-          "x": 1227.25,
-          "y": 1025.52,
-          "label": "H-150-1",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_046",
-          "type": "classroom",
-          "x": 1798.9,
-          "y": 708.85,
-          "label": "H-199",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_047",
-          "type": "classroom",
-          "x": 1829.53,
-          "y": 842.57,
-          "label": "H-175",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_048",
-          "type": "classroom",
-          "x": 1827.76,
-          "y": 918.56,
-          "label": "H-151",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_classroom_049",
-          "type": "classroom",
-          "x": 1710.9,
-          "y": 1192.13,
-          "label": "H-150",
-          "nodeSize": 8,
-          "labelSize": 13
-        }
+        { "id": "Hall1Red_classroom_003", "type": "classroom", "x": 583.23, "y": 1646.56, "label": "H-110", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_006", "type": "classroom", "x": 804.37, "y": 1114.01, "label": "H-110-6", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_007", "type": "classroom", "x": 206.38, "y": 1490.86, "label": "H-109", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_009", "type": "classroom", "x": 109.35, "y": 978.62, "label": "H-125", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_010", "type": "classroom", "x": 120.63, "y": 637.88, "label": "H-127", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_011", "type": "classroom", "x": 650.92, "y": 1035.03, "label": "H-127-2", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_012", "type": "classroom", "x": 411.73, "y": 793.58, "label": "H-127-1", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_014", "type": "classroom", "x": 601.28, "y": 497.97, "label": "H-(0023)", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_015", "type": "classroom", "x": 966.84, "y": 495.72, "label": "H-131", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_016", "type": "classroom", "x": 1178.96, "y": 495.72, "label": "H-133", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_017", "type": "classroom", "x": 1257.94, "y": 497.97, "label": "H-133-2", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_018", "type": "classroom", "x": 1321.12, "y": 497.97, "label": "H-133-1", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_019", "type": "classroom", "x": 1388.82, "y": 497.97, "label": "H-135", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_020", "type": "classroom", "x": 1483.59, "y": 502.49, "label": "H-135-1", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_021", "type": "classroom", "x": 1573.86, "y": 488.95, "label": "H-137", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_022", "type": "classroom", "x": 1677.66, "y": 488.95, "label": "H-139", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_023", "type": "classroom", "x": 1790.48, "y": 502.49, "label": "H-141", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_024", "type": "classroom", "x": 595.33, "y": 822.3, "label": "H-120-3", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_025", "type": "classroom", "x": 570.97, "y": 893.64, "label": "H-120-1", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_026", "type": "classroom", "x": 571.84, "y": 952.8, "label": "H-120-4", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_027", "type": "classroom", "x": 677.11, "y": 966.72, "label": "H-120-21", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_028", "type": "classroom", "x": 767.59, "y": 977.16, "label": "H-120", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_029", "type": "classroom", "x": 868.51, "y": 902.34, "label": "H-120-7", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_031", "type": "classroom", "x": 972.91, "y": 1023.27, "label": "H-128-1", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_032", "type": "classroom", "x": 992.32, "y": 786.19, "label": "H-122", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_033", "type": "classroom", "x": 1091.84, "y": 707.96, "label": "H-149", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_034", "type": "classroom", "x": 1083.94, "y": 935.02, "label": "H-124", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_035", "type": "classroom", "x": 1166.99, "y": 935.02, "label": "H-126", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_036", "type": "classroom", "x": 1131.42, "y": 1656.69, "label": "H-196-1", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_038", "type": "classroom", "x": 1338.57, "y": 1739.73, "label": "H-196-3", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_040", "type": "classroom", "x": 1668.94, "y": 1575.44, "label": "H-198", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_041", "type": "classroom", "x": 1389.46, "y": 1489.72, "label": "H-118", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_042", "type": "classroom", "x": 1158.21, "y": 1490.62, "label": "H-116", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_043", "type": "classroom", "x": 1065.66, "y": 1361.29, "label": "H-115", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_044", "type": "classroom", "x": 1138.23, "y": 1087.44, "label": "H-128", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_045", "type": "classroom", "x": 1227.25, "y": 1025.52, "label": "H-150-1", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_046", "type": "classroom", "x": 1798.9, "y": 708.85, "label": "H-199", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_047", "type": "classroom", "x": 1829.53, "y": 842.57, "label": "H-175", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_048", "type": "classroom", "x": 1827.76, "y": 918.56, "label": "H-151", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_classroom_049", "type": "classroom", "x": 1710.9, "y": 1192.13, "label": "H-150", "nodeSize": 8, "labelSize": 13 }
       ],
       "pois": [
-        {
-          "id": "Hall1Red_washroom_001",
-          "type": "washroom",
-          "x": 985.04,
-          "y": 1194.27,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_washroom_002",
-          "type": "washroom",
-          "x": 989.03,
-          "y": 1517.03,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_elevator_001",
-          "type": "elevator",
-          "x": 1315.77,
-          "y": 1591.41,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_stairs_001",
-          "type": "stairs",
-          "x": 1668.96,
-          "y": 1670.23,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_escalator_001",
-          "type": "escalator",
-          "x": 1126.13,
-          "y": 1800.36,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_stairs_002",
-          "type": "stairs",
-          "x": 202.21,
-          "y": 1166.44,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        },
-        {
-          "id": "Hall1Red_stairs_003",
-          "type": "stairs",
-          "x": 367.66,
-          "y": 605.02,
-          "label": "",
-          "nodeSize": 8,
-          "labelSize": 13
-        }
+        { "id": "Hall1Red_washroom_001", "type": "washroom", "x": 985.04, "y": 1194.27, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_washroom_002", "type": "washroom", "x": 989.03, "y": 1517.03, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_elevator_001", "type": "elevator", "x": 1315.77, "y": 1591.41, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_stairs_001", "type": "stairs", "x": 1668.96, "y": 1670.23, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_escalator_001", "type": "escalator", "x": 1126.13, "y": 1800.36, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_stairs_002", "type": "stairs", "x": 202.21, "y": 1166.44, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_stairs_003", "type": "stairs", "x": 367.66, "y": 605.02, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_elevator_002", "type": "elevator", "x": 1259.6, "y": 1594.19, "label": "", "nodeSize": 8, "labelSize": 13 },
+        { "id": "Hall1Red_entrance_001", "type": "entrance", "x": 570.75, "y": 1960.97, "label": "", "nodeSize": 8, "labelSize": 13 }
       ],
       "annotations": [
-        {
-          "id": "anno_1773984374525_gz0o",
-          "kind": "emoji",
-          "text": "🚻",
-          "x": 951,
-          "y": 1516,
-          "size": 28
-        },
-        {
-          "id": "anno_1773984376551_zlzh",
-          "kind": "emoji",
-          "text": "🚻",
-          "x": 956,
-          "y": 1207,
-          "size": 28
-        },
-        {
-          "id": "anno_1773984389823_oat3",
-          "kind": "emoji",
-          "text": "🛗",
-          "x": 1312.5131129631968,
-          "y": 1598,
-          "size": 28
-        },
-        {
-          "id": "anno_1773984563705_8f19",
-          "kind": "text",
-          "text": "H-110",
-          "x": 563,
-          "y": 1412,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984595459_zh0g",
-          "kind": "text",
-          "text": "H-109",
-          "x": 252,
-          "y": 1301,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984638363_mm7r",
-          "kind": "text",
-          "text": "H-190",
-          "x": 283,
-          "y": 1146,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984649418_kzzg",
-          "kind": "text",
-          "text": "H-112",
-          "x": 922,
-          "y": 1446,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984676958_n7i0",
-          "kind": "text",
-          "text": "H-114",
-          "x": 872,
-          "y": 1211,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984696513_0w1z",
-          "kind": "text",
-          "text": "H-110-6",
-          "x": 777,
-          "y": 1139,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984756955_rk8s",
-          "kind": "text",
-          "text": "H-125",
-          "x": 202,
-          "y": 970,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984762701_jmdt",
-          "kind": "text",
-          "text": "H-127-1",
-          "x": 421,
-          "y": 994,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984768530_vpso",
-          "kind": "text",
-          "text": "H-127",
-          "x": 191,
-          "y": 715,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984774171_4gf4",
-          "kind": "text",
-          "text": "H-129",
-          "x": 378,
-          "y": 559,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984785593_58zw",
-          "kind": "text",
-          "text": "H-(0023)",
-          "x": 452,
-          "y": 451,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984791956_bkv0",
-          "kind": "text",
-          "text": "H-131",
-          "x": 974,
-          "y": 455,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984799177_9au1",
-          "kind": "text",
-          "text": "H-133",
-          "x": 1224,
-          "y": 378,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984808152_nqx2",
-          "kind": "text",
-          "text": "H-133-2",
-          "x": 1253,
-          "y": 487,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984813137_qxxd",
-          "kind": "text",
-          "text": "H-133-1",
-          "x": 1317,
-          "y": 480,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984824032_z5bx",
-          "kind": "text",
-          "text": "H-135",
-          "x": 1380,
-          "y": 444,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984830571_qftz",
-          "kind": "text",
-          "text": "H-135-1",
-          "x": 1495,
-          "y": 453,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984837843_8tuh",
-          "kind": "text",
-          "text": "H-137",
-          "x": 1569,
-          "y": 473,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984844256_vv49",
-          "kind": "text",
-          "text": "H-139",
-          "x": 1682,
-          "y": 428,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984849903_3227",
-          "kind": "text",
-          "text": "H-141",
-          "x": 1790,
-          "y": 435,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984867721_zrsz",
-          "kind": "text",
-          "text": "H-120-3",
-          "x": 595,
-          "y": 830,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984873424_eqq8",
-          "kind": "text",
-          "text": "H-120-1",
-          "x": 592,
-          "y": 893,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984879978_3910",
-          "kind": "text",
-          "text": "H-120-4",
-          "x": 595,
-          "y": 945,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984887242_i6rf",
-          "kind": "text",
-          "text": "H-120-21",
-          "x": 676,
-          "y": 949,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984896648_j5wu",
-          "kind": "text",
-          "text": "H-120-2",
-          "x": 673,
-          "y": 868,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984903964_59ym",
-          "kind": "text",
-          "text": "H-120-7",
-          "x": 856,
-          "y": 902,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984910272_zfkf",
-          "kind": "text",
-          "text": "H-120",
-          "x": 761,
-          "y": 900,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984931034_y64h",
-          "kind": "text",
-          "text": "H-196",
-          "x": 1258,
-          "y": 1617,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984937611_ok8x",
-          "kind": "text",
-          "text": "H-196-1",
-          "x": 1161,
-          "y": 1635,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984944463_18ta",
-          "kind": "text",
-          "text": "H-196-2",
-          "x": 1168,
-          "y": 1775,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984949720_sq8u",
-          "kind": "text",
-          "text": "H-196-3",
-          "x": 1341,
-          "y": 1689,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984966717_sf4t",
-          "kind": "text",
-          "text": "H-118",
-          "x": 1414,
-          "y": 1428,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984975480_hxbk",
-          "kind": "text",
-          "text": "H-198",
-          "x": 1759,
-          "y": 1486,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984983958_6zef",
-          "kind": "text",
-          "text": "H-102-2",
-          "x": 1736,
-          "y": 1687,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773984991979_ksu5",
-          "kind": "text",
-          "text": "H-150",
-          "x": 1475,
-          "y": 1191,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985000873_0zvu",
-          "kind": "text",
-          "text": "H-115",
-          "x": 1123,
-          "y": 1267,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985006278_2fjj",
-          "kind": "text",
-          "text": "H-116",
-          "x": 1141,
-          "y": 1477,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985016688_96o3",
-          "kind": "text",
-          "text": "H-128",
-          "x": 1183,
-          "y": 1091,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985024744_m3ed",
-          "kind": "text",
-          "text": "H-150-1",
-          "x": 1276,
-          "y": 1012,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985031777_l2rl",
-          "kind": "text",
-          "text": "H-126",
-          "x": 1172,
-          "y": 870,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985040912_9042",
-          "kind": "text",
-          "text": "H-124",
-          "x": 1084,
-          "y": 875,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985045821_j9a3",
-          "kind": "text",
-          "text": "H-122",
-          "x": 1007,
-          "y": 845,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985051082_e6ol",
-          "kind": "text",
-          "text": "H-149",
-          "x": 1086,
-          "y": 733,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985059870_70vj",
-          "kind": "text",
-          "text": "H-151",
-          "x": 1777,
-          "y": 913,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985066877_a6ly",
-          "kind": "text",
-          "text": "H-175",
-          "x": 1784,
-          "y": 818,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985074173_56gf",
-          "kind": "text",
-          "text": "H-199",
-          "x": 1795,
-          "y": 706,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985084268_grvs",
-          "kind": "text",
-          "text": "H-128-1",
-          "x": 980,
-          "y": 1064,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        },
-        {
-          "id": "anno_1773985094997_31nn",
-          "kind": "text",
-          "text": "H-127-2",
-          "x": 606,
-          "y": 1049,
-          "size": 18,
-          "color": "#ffffff",
-          "bold": true,
-          "italic": false,
-          "bg": "none",
-          "rotation": 0
-        }
+        { "id": "anno_1773984374525_gz0o", "kind": "emoji", "text": "🚻", "x": 951, "y": 1516, "size": 28 },
+        { "id": "anno_1773984376551_zlzh", "kind": "emoji", "text": "🚻", "x": 956, "y": 1207, "size": 28 },
+        { "id": "anno_1773984389823_oat3", "kind": "emoji", "text": "🛗", "x": 1312.5131129631968, "y": 1598, "size": 28 },
+        { "id": "anno_1773984563705_8f19", "kind": "text", "text": "H-110", "x": 563, "y": 1412, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984595459_zh0g", "kind": "text", "text": "H-109", "x": 252, "y": 1301, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984638363_mm7r", "kind": "text", "text": "H-190", "x": 283, "y": 1146, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984649418_kzzg", "kind": "text", "text": "H-112", "x": 922, "y": 1446, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984676958_n7i0", "kind": "text", "text": "H-114", "x": 872, "y": 1211, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984696513_0w1z", "kind": "text", "text": "H-110-6", "x": 777, "y": 1139, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984756955_rk8s", "kind": "text", "text": "H-125", "x": 202, "y": 970, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984762701_jmdt", "kind": "text", "text": "H-127-1", "x": 421, "y": 994, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984768530_vpso", "kind": "text", "text": "H-127", "x": 191, "y": 715, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984774171_4gf4", "kind": "text", "text": "H-129", "x": 378, "y": 559, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984785593_58zw", "kind": "text", "text": "H-(0023)", "x": 452, "y": 451, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984791956_bkv0", "kind": "text", "text": "H-131", "x": 974, "y": 455, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984799177_9au1", "kind": "text", "text": "H-133", "x": 1224, "y": 378, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984808152_nqx2", "kind": "text", "text": "H-133-2", "x": 1253, "y": 487, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984813137_qxxd", "kind": "text", "text": "H-133-1", "x": 1317, "y": 480, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984824032_z5bx", "kind": "text", "text": "H-135", "x": 1380, "y": 444, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984830571_qftz", "kind": "text", "text": "H-135-1", "x": 1495, "y": 453, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984837843_8tuh", "kind": "text", "text": "H-137", "x": 1569, "y": 473, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984844256_vv49", "kind": "text", "text": "H-139", "x": 1682, "y": 428, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984849903_3227", "kind": "text", "text": "H-141", "x": 1790, "y": 435, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984867721_zrsz", "kind": "text", "text": "H-120-3", "x": 595, "y": 830, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984873424_eqq8", "kind": "text", "text": "H-120-1", "x": 592, "y": 893, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984879978_3910", "kind": "text", "text": "H-120-4", "x": 595, "y": 945, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984887242_i6rf", "kind": "text", "text": "H-120-21", "x": 676, "y": 949, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984896648_j5wu", "kind": "text", "text": "H-120-2", "x": 673, "y": 868, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984903964_59ym", "kind": "text", "text": "H-120-7", "x": 856, "y": 902, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984910272_zfkf", "kind": "text", "text": "H-120", "x": 761, "y": 900, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984931034_y64h", "kind": "text", "text": "H-196", "x": 1258, "y": 1617, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984937611_ok8x", "kind": "text", "text": "H-196-1", "x": 1161, "y": 1635, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984944463_18ta", "kind": "text", "text": "H-196-2", "x": 1168, "y": 1775, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984949720_sq8u", "kind": "text", "text": "H-196-3", "x": 1341, "y": 1689, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984966717_sf4t", "kind": "text", "text": "H-118", "x": 1414, "y": 1428, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984975480_hxbk", "kind": "text", "text": "H-198", "x": 1759, "y": 1486, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984983958_6zef", "kind": "text", "text": "H-102-2", "x": 1736, "y": 1687, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773984991979_ksu5", "kind": "text", "text": "H-150", "x": 1475, "y": 1191, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985000873_0zvu", "kind": "text", "text": "H-115", "x": 1123, "y": 1267, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985006278_2fjj", "kind": "text", "text": "H-116", "x": 1141, "y": 1477, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985016688_96o3", "kind": "text", "text": "H-128", "x": 1183, "y": 1091, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985024744_m3ed", "kind": "text", "text": "H-150-1", "x": 1276, "y": 1012, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985031777_l2rl", "kind": "text", "text": "H-126", "x": 1172, "y": 870, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985040912_9042", "kind": "text", "text": "H-124", "x": 1084, "y": 875, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985045821_j9a3", "kind": "text", "text": "H-122", "x": 1007, "y": 845, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985051082_e6ol", "kind": "text", "text": "H-149", "x": 1086, "y": 733, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985059870_70vj", "kind": "text", "text": "H-151", "x": 1777, "y": 913, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985066877_a6ly", "kind": "text", "text": "H-175", "x": 1784, "y": 818, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985074173_56gf", "kind": "text", "text": "H-199", "x": 1795, "y": 706, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985084268_grvs", "kind": "text", "text": "H-128-1", "x": 980, "y": 1064, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 },
+        { "id": "anno_1773985094997_31nn", "kind": "text", "text": "H-127-2", "x": 606, "y": 1049, "size": 18, "color": "#ffffff", "bold": true, "italic": false, "bg": "none", "rotation": 0 }
       ]
     }
   }
