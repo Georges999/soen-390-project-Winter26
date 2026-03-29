@@ -45,14 +45,14 @@ export function getSelectionForLocation(buildingId, floorId, fallbackCampus = "s
 
   const campusBuildings = buildings[matchedCampus] || [];
   const buildingIdx = campusBuildings.findIndex((building) => building.id === buildingId);
-  const resolvedBuildingIdx = buildingIdx >= 0 ? buildingIdx : 0;
+  const resolvedBuildingIdx = Math.max(buildingIdx, 0);
   const resolvedBuilding = campusBuildings[resolvedBuildingIdx] || campusBuildings[0];
   const floorIdx = resolvedBuilding?.floors?.findIndex((floor) => floor.id === floorId) ?? 0;
 
   return {
     campusId: matchedCampus,
     buildingIdx: resolvedBuildingIdx,
-    floorIdx: floorIdx >= 0 ? floorIdx : 0,
+    floorIdx: Math.max(floorIdx, 0),
   };
 }
 
