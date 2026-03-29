@@ -16,7 +16,7 @@ export default function IndoorPoiMarkers({
   testIdPrefix,
 }) {
   return pois.map((poi) => {
-    if (poi.x === undefined || poi.y === undefined) return null;
+    if (poi.x == null || poi.y == null) return null;
 
     const iconName = POI_ICONS[poi.type]?.icon || FALLBACK_POI_ICON;
 

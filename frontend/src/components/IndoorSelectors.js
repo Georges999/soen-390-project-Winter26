@@ -2,6 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
+const buildSelectorStyles = (baseStyle, activeStyle, isActive, disabledStyle, disabled) => [
+  baseStyle,
+  isActive && activeStyle,
+  disabled && disabledStyle,
+];
+
 export function IndoorCampusToggle({
   selectedCampus,
   onSelectCampus,
@@ -16,20 +22,23 @@ export function IndoorCampusToggle({
         return (
           <Pressable
             key={campusId}
-            style={[
+            style={buildSelectorStyles(
               styles.campusButton,
-              isSelected && styles.campusButtonActive,
-              disabled && styles.selectorDisabled,
-            ]}
+              styles.campusButtonActive,
+              isSelected,
+              styles.selectorDisabled,
+              disabled,
+            )}
             disabled={disabled}
             onPress={() => onSelectCampus(campusId)}
           >
-            <Text
-              style={[
-                styles.campusButtonText,
-                isSelected && styles.campusButtonTextActive,
-              ]}
-            >
+            <Text style={buildSelectorStyles(
+              styles.campusButtonText,
+              styles.campusButtonTextActive,
+              isSelected,
+              null,
+              false,
+            )}>
               {campusId === "sgw" ? "SGW" : "Loyola"}
             </Text>
           </Pressable>
@@ -59,20 +68,23 @@ export function IndoorBuildingSelector({
       {buildings.map((building, idx) => (
         <Pressable
           key={building.id}
-          style={[
+          style={buildSelectorStyles(
             styles.buildingChip,
-            selectedBuildingIdx === idx && styles.buildingChipActive,
-            disabled && styles.selectorDisabled,
-          ]}
+            styles.buildingChipActive,
+            selectedBuildingIdx === idx,
+            styles.selectorDisabled,
+            disabled,
+          )}
           disabled={disabled}
           onPress={() => onSelectBuilding(idx)}
         >
-          <Text
-            style={[
-              styles.buildingChipText,
-              selectedBuildingIdx === idx && styles.buildingChipTextActive,
-            ]}
-          >
+          <Text style={buildSelectorStyles(
+            styles.buildingChipText,
+            styles.buildingChipTextActive,
+            selectedBuildingIdx === idx,
+            null,
+            false,
+          )}>
             {building.name}
           </Text>
         </Pressable>
@@ -101,20 +113,23 @@ export function IndoorFloorSelector({
       {floors.map((floor, idx) => (
         <Pressable
           key={floor.id}
-          style={[
+          style={buildSelectorStyles(
             styles.floorButton,
-            selectedFloorIdx === idx && styles.floorButtonActive,
-            disabled && styles.selectorDisabled,
-          ]}
+            styles.floorButtonActive,
+            selectedFloorIdx === idx,
+            styles.selectorDisabled,
+            disabled,
+          )}
           disabled={disabled}
           onPress={() => onSelectFloor(idx)}
         >
-          <Text
-            style={[
-              styles.floorButtonText,
-              selectedFloorIdx === idx && styles.floorButtonTextActive,
-            ]}
-          >
+          <Text style={buildSelectorStyles(
+            styles.floorButtonText,
+            styles.floorButtonTextActive,
+            selectedFloorIdx === idx,
+            null,
+            false,
+          )}>
             {floor.label}
           </Text>
         </Pressable>
