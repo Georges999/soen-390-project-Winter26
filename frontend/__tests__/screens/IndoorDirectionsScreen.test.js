@@ -107,6 +107,28 @@ describe('IndoorDirectionsScreen', () => {
     expect(getByPlaceholderText('Tap map or search destination')).toBeTruthy();
   });
 
+  it('should render campus, building, and floor browsing controls', () => {
+    const { getByText, getAllByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    expect(getByText('SGW')).toBeTruthy();
+    expect(getByText('Loyola')).toBeTruthy();
+    expect(getAllByText('Hall Building')[0]).toBeTruthy();
+    expect(getAllByText('John Molson Building')[0]).toBeTruthy();
+    expect(getAllByText('1')[0]).toBeTruthy();
+    expect(getAllByText('8')[0]).toBeTruthy();
+  });
+
+  it('should switch campus and update building chips on the same page', () => {
+    const { getByText, getAllByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    fireEvent.press(getByText('Loyola'));
+    expect(getByText('Vanier Library')).toBeTruthy();
+    expect(getAllByText('Central Building')[0]).toBeTruthy();
+    expect(queryByText('Hall Building')).toBeNull();
+  });
+
   it('should render walking mode indicator', () => {
     const { getByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
@@ -176,12 +198,12 @@ describe('IndoorDirectionsScreen', () => {
   });
 
   it('should show step numbers', () => {
-    const { getByText } = render(
+    const { getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
-    expect(getByText('1')).toBeTruthy();
-    expect(getByText('2')).toBeTruthy();
-    expect(getByText('3')).toBeTruthy();
+    expect(getAllByText('1').length).toBeGreaterThan(0);
+    expect(getAllByText('2').length).toBeGreaterThan(0);
+    expect(getAllByText('3').length).toBeGreaterThan(0);
   });
 
   // --- Accessibility Toggle ---
@@ -355,6 +377,19 @@ describe('IndoorDirectionsScreen', () => {
     const closeIcons = getAllByText('close');
     fireEvent.press(closeIcons[1]);
     expect(() => getByDisplayValue('H861')).toThrow();
+  });
+
+  it('should let the user change a filled search field without leaving the screen', () => {
+    const { getByPlaceholderText, getAllByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+
+    const startInput = getByPlaceholderText('Tap map or search start');
+    fireEvent(startInput, 'focus');
+    fireEvent.changeText(startInput, 'MB1.210');
+
+    expect(getAllByText(/MB1\.210.*John Molson Building/).length).toBeGreaterThan(0);
+    expect(queryByText('STEP-BY-STEP DIRECTIONS')).toBeNull();
   });
 
   // --- No route params ---

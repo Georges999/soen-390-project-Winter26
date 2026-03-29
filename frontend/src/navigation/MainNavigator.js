@@ -48,8 +48,8 @@ function ProfileStack() {
 function IndoorStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="IndoorMap" component={IndoorMapScreen} />
       <Stack.Screen name="IndoorDirections" component={IndoorDirectionsScreen} />
+      <Stack.Screen name="IndoorMap" component={IndoorMapScreen} />
     </Stack.Navigator>
   );
 }
