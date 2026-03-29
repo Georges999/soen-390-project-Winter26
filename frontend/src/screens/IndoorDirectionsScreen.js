@@ -9,11 +9,11 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  SafeAreaView,
   Switch,
   Modal,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Circle } from "react-native-svg";
 import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor, getBuildingById, FLOOR_META, POI_ICONS } from "../data/indoorFloorData";
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
@@ -934,7 +934,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                       <MaterialIcons
                         testID={`directions-poi-marker-icon-${poi.id}`}
                         name={iconName}
-                        size={12}
+                        size={10}
                         color={MAROON}
                       />
                     </View>
@@ -1494,11 +1494,11 @@ const styles = StyleSheet.create({
   },
   poiMarker: {
     position: "absolute",
-    width: 26,
-    height: 26,
-    marginLeft: -13,
-    marginTop: -13,
-    borderRadius: 13,
+    width: 22,
+    height: 22,
+    marginLeft: -11,
+    marginTop: -11,
+    borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#fff",

@@ -9,9 +9,9 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  SafeAreaView,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { buildings, POI_ICONS } from "../data/indoorFloorData";
 import { getRoomHighlightPoint } from "../data/indoorRoomHighlightData";
 
@@ -203,7 +203,7 @@ function IndoorMapScreen({ navigation }) {
           <MaterialIcons
             testID={`poi-marker-icon-${poi.id}`}
             name={iconName}
-            size={12}
+            size={10}
             color={MAROON}
           />
         </View>
@@ -717,11 +717,11 @@ const styles = StyleSheet.create({
   },
   poiMarker: {
     position: "absolute",
-    width: 26,
-    height: 26,
-    marginLeft: -13,
-    marginTop: -13,
-    borderRadius: 13,
+    width: 22,
+    height: 22,
+    marginLeft: -11,
+    marginTop: -11,
+    borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#fff",
