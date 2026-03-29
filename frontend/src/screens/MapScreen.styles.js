@@ -442,9 +442,9 @@ const styles = StyleSheet.create({
   },
   poiInfoCTAText: { color: "#fff", fontWeight: "800", fontSize: 15 },
   poiMarker: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: MAROON,
     borderWidth: 2,
     borderColor: "#FFF",

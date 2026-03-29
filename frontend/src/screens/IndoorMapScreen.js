@@ -9,70 +9,34 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  SafeAreaView,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { buildings, POI_ICONS } from "../data/indoorFloorData";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { buildings } from "../data/indoorFloorData";
+import IndoorPoiLegend from "../components/IndoorPoiLegend";
+import IndoorPoiMarkers from "../components/IndoorPoiMarkers";
+import {
+  IndoorBuildingSelector,
+  IndoorCampusToggle,
+  IndoorFloorSelector,
+} from "../components/IndoorSelectors";
 import { getRoomHighlightPoint } from "../data/indoorRoomHighlightData";
+import {
+  buildAllRooms,
+  getFilteredRooms,
+  getRoomSelectionIndexes,
+  getSelectedRoomContext,
+} from "../utils/indoorMapUtils";
+import {
+  indoorPoiLegendStyles,
+  indoorPoiMarkerStyle,
+} from "../styles/indoorSharedStyles";
 
 const MAROON = "#912338";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
 const MAP_INSPECT_SCALE = 1.45;
-
-const buildAllRooms = (campusBuildings) => {
-  const rooms = [];
-  campusBuildings.forEach((building) => {
-    building.rooms.forEach((room) => {
-      rooms.push({ ...room, buildingName: building.name, buildingId: building.id });
-    });
-  });
-  return rooms;
-};
-
-const getFilteredRooms = (allRooms, searchQuery) => {
-  if (!searchQuery.trim()) return [];
-
-  const lowerQuery = searchQuery.toLowerCase();
-  const normalizedQuery = searchQuery.toUpperCase().replaceAll(/[^A-Z0-9]/g, "");
-
-  return allRooms.filter(
-    (room) =>
-      (room.label || "").toLowerCase().includes(lowerQuery) ||
-      (room.id || "").toLowerCase().includes(lowerQuery) ||
-      (room.buildingName || "").toLowerCase().includes(lowerQuery) ||
-      (room.searchKeys || []).some((key) => key.includes(normalizedQuery))
-  );
-};
-
-const getSelectedRoomContext = (campusBuildings, selectedRoom) => {
-  if (!selectedRoom) return null;
-
-  const building = campusBuildings.find((candidate) =>
-    candidate.rooms.some((room) => room.id === selectedRoom.id)
-  );
-  if (!building) return null;
-
-  const floor = building.floors.find(
-    (candidate) => candidate.id === selectedRoom.floor
-  );
-
-  return { building, floor };
-};
-
-const getRoomSelectionIndexes = (campusBuildings, room) => {
-  const buildingIdx = campusBuildings.findIndex(
-    (building) => building.id === room.buildingId
-  );
-  if (buildingIdx < 0) return null;
-
-  const floorIdx = campusBuildings[buildingIdx].floors.findIndex(
-    (floor) => floor.id === room.floor
-  );
-
-  return { buildingIdx, floorIdx };
-};
 
 function IndoorMapScreen({ navigation }) {
   // Campus toggle: "sgw" or "loyola"
@@ -181,6 +145,16 @@ function IndoorMapScreen({ navigation }) {
   const renderFloorPlanCanvas = (imageStyle) => (
     <View style={styles.floorPlanCanvas}>
       <Image source={currentFloor.image} style={imageStyle} resizeMode="contain" />
+      <IndoorPoiMarkers
+        pois={currentFloor?.pois || []}
+        markerStyle={styles.poiMarker}
+        positionForPoi={(poi) => ({
+          left: `${(poi.x / (currentFloor.width || 1000)) * 100}%`,
+          top: `${(poi.y / (currentFloor.height || 1000)) * 100}%`,
+        })}
+        testIdPrefix="poi-marker"
+        iconColor={MAROON}
+      />
       {renderRoomHighlightMarker()}
     </View>
   );
@@ -235,40 +209,11 @@ function IndoorMapScreen({ navigation }) {
         <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         {/* Campus Toggle */}
-        <View style={styles.campusToggleContainer}>
-          <Pressable
-            style={[
-              styles.campusButton,
-              selectedCampus === "sgw" && styles.campusButtonActive,
-            ]}
-            onPress={() => handleCampusToggle("sgw")}
-          >
-            <Text
-              style={[
-                styles.campusButtonText,
-                selectedCampus === "sgw" && styles.campusButtonTextActive,
-              ]}
-            >
-              SGW
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.campusButton,
-              selectedCampus === "loyola" && styles.campusButtonActive,
-            ]}
-            onPress={() => handleCampusToggle("loyola")}
-          >
-            <Text
-              style={[
-                styles.campusButtonText,
-                selectedCampus === "loyola" && styles.campusButtonTextActive,
-              ]}
-            >
-              Loyola
-            </Text>
-          </Pressable>
-        </View>
+        <IndoorCampusToggle
+          selectedCampus={selectedCampus}
+          onSelectCampus={handleCampusToggle}
+          styles={styles}
+        />
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -326,32 +271,12 @@ function IndoorMapScreen({ navigation }) {
 
         {/* Building Selector (if multiple buildings) */}
         {campusBuildings.length > 1 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.buildingSelectorContainer}
-            contentContainerStyle={styles.buildingSelectorContent}
-          >
-            {campusBuildings.map((building, idx) => (
-              <Pressable
-                key={building.id}
-                style={[
-                  styles.buildingChip,
-                  selectedBuildingIdx === idx && styles.buildingChipActive,
-                ]}
-                onPress={() => handleBuildingSelect(idx)}
-              >
-                <Text
-                  style={[
-                    styles.buildingChipText,
-                    selectedBuildingIdx === idx && styles.buildingChipTextActive,
-                  ]}
-                >
-                  {building.name}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+          <IndoorBuildingSelector
+            buildings={campusBuildings}
+            selectedBuildingIdx={selectedBuildingIdx}
+            onSelectBuilding={handleBuildingSelect}
+            styles={styles}
+          />
         )}
 
         {/* Floor Label */}
@@ -392,19 +317,7 @@ function IndoorMapScreen({ navigation }) {
         </View>
 
         {/* POI Legend */}
-        <ScrollView
-          horizontal
-          style={styles.poiLegendScroll}
-          contentContainerStyle={styles.poiLegend}
-          showsHorizontalScrollIndicator={false}
-        >
-          {Object.entries(POI_ICONS).map(([key, { icon, label }]) => (
-            <View key={key} style={styles.poiLegendItem}>
-              <MaterialIcons name={icon} size={18} color={MAROON} />
-              <Text style={styles.poiLabel}>{label}</Text>
-            </View>
-          ))}
-        </ScrollView>
+        <IndoorPoiLegend styles={styles} iconColor={MAROON} />
 
         {/* Selected Room + Get Directions */}
         {selectedRoom && (
@@ -426,33 +339,12 @@ function IndoorMapScreen({ navigation }) {
 
         {/* Floor Selector */}
         {currentBuilding?.floors && (
-          <View style={styles.floorSelectorContainer}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.floorSelectorContent}
-            >
-              {currentBuilding.floors.map((floor, idx) => (
-                <Pressable
-                  key={floor.id}
-                  style={[
-                    styles.floorButton,
-                    selectedFloorIdx === idx && styles.floorButtonActive,
-                  ]}
-                  onPress={() => handleFloorSelect(idx)}
-                >
-                  <Text
-                    style={[
-                      styles.floorButtonText,
-                      selectedFloorIdx === idx && styles.floorButtonTextActive,
-                    ]}
-                  >
-                    {floor.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
+          <IndoorFloorSelector
+            floors={currentBuilding.floors}
+            selectedFloorIdx={selectedFloorIdx}
+            onSelectFloor={handleFloorSelect}
+            styles={styles}
+          />
         )}
 
         </ScrollView>
@@ -681,6 +573,7 @@ const styles = StyleSheet.create({
   floorPlanCanvas: {
     position: "relative",
   },
+  poiMarker: indoorPoiMarkerStyle,
   roomHighlight: {
     position: "absolute",
     width: 18,
@@ -715,33 +608,7 @@ const styles = StyleSheet.create({
   },
 
   // POI Legend
-  poiLegendScroll: {
-    marginTop: 2,
-    marginBottom: 4,
-    alignSelf: "center",
-  },
-  poiLegend: {
-    flexDirection: "row",
-    paddingVertical: 2,
-    paddingHorizontal: 2,
-    gap: 8,
-    alignItems: "center",
-  },
-  poiLegendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderWidth: 1,
-    borderColor: "#e3d8dd",
-    borderRadius: 8,
-    backgroundColor: "#f7f2f4",
-  },
-  poiLabel: {
-    fontSize: 12,
-    color: "#666",
-  },
+  ...indoorPoiLegendStyles,
 
   // Selected Room
   selectedRoomBar: {

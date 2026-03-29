@@ -9,60 +9,41 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  SafeAreaView,
   Switch,
   Modal,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Circle } from "react-native-svg";
 import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor, getBuildingById, FLOOR_META } from "../data/indoorFloorData";
+import IndoorPoiLegend from "../components/IndoorPoiLegend";
+import IndoorPoiMarkers from "../components/IndoorPoiMarkers";
+import {
+  IndoorBuildingSelector,
+  IndoorCampusToggle,
+  IndoorFloorSelector,
+} from "../components/IndoorSelectors";
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
+import {
+  buildAllRooms,
+  getInitialSelection,
+  getSelectionForLocation,
+} from "../utils/indoorMapUtils";
+import {
+  indoorPoiLegendStyles,
+  indoorPoiMarkerStyle,
+} from "../styles/indoorSharedStyles";
+export {
+  buildAllRooms,
+  getInitialSelection,
+  getSelectionForLocation,
+} from "../utils/indoorMapUtils";
 
 const MAROON = "#912338";
 const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-export function buildAllRooms() {
-  return Object.entries(buildings).flatMap(([campusId, campusBuildings]) =>
-    (campusBuildings || []).flatMap((building) =>
-      (building.rooms || []).map((room) => ({
-        ...room,
-        campusId,
-        buildingName: building.name,
-        buildingId: building.id,
-      }))
-    )
-  );
-}
-
-export function getSelectionForLocation(buildingId, floorId, fallbackCampus = "sgw") {
-  const matchedCampus =
-    Object.entries(buildings).find(([, campusBuildings]) =>
-      (campusBuildings || []).some((building) => building.id === buildingId)
-    )?.[0] || fallbackCampus;
-
-  const campusBuildings = buildings[matchedCampus] || [];
-  const buildingIdx = campusBuildings.findIndex((building) => building.id === buildingId);
-  const resolvedBuildingIdx = Math.max(buildingIdx, 0);
-  const resolvedBuilding = campusBuildings[resolvedBuildingIdx] || campusBuildings[0];
-  const floorIdx = resolvedBuilding?.floors?.findIndex((floor) => floor.id === floorId) ?? 0;
-
-  return {
-    campusId: matchedCampus,
-    buildingIdx: resolvedBuildingIdx,
-    floorIdx: Math.max(floorIdx, 0),
-  };
-}
-
-export function getInitialSelection(params) {
-  const preferredRoom = params.destinationRoom || params.startRoom;
-  const buildingId = preferredRoom?.buildingId || params.building?.id || buildings.sgw?.[0]?.id;
-  const floorId = preferredRoom?.floor || params.floor?.id || buildings.sgw?.[0]?.floors?.[0]?.id;
-
-  return getSelectionForLocation(buildingId, floorId);
-}
 
 // ── Step-text helpers (extracted to reduce cognitive complexity) ──
 
@@ -394,6 +375,14 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     selectedFloor,
   ]);
 
+  const displayedFloorPois = useMemo(() => {
+    if (!displayedFloor?.id) return [];
+
+    return getAllNodesForFloor(displayedFloor.id).filter(
+      (node) => node.type !== "hallway" && node.type !== "classroom" && node.type !== "room"
+    );
+  }, [displayedFloor]);
+
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
     if (!pathResult?.ok || !pathResult.pathCoords || pathResult.pathCoords.length < 2) {
@@ -543,6 +532,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     return { x: x * scaleX, y: y * scaleY };
   }, [floorDimensions]);
 
+  const scaleDisplayedPoiCoord = useCallback((x, y) => {
+    const displayWidth = displayedFloor?.width || floorDimensions.width;
+    const displayHeight = displayedFloor?.height || floorDimensions.height;
+
+    return {
+      x: x * (MAP_IMAGE_WIDTH / displayWidth),
+      y: y * (MAP_IMAGE_HEIGHT / displayHeight),
+    };
+  }, [displayedFloor, floorDimensions]);
+
   const browsingLocked = Boolean(startRoom && destRoom);
 
   return (
@@ -559,75 +558,20 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         <View style={styles.explorerPanel}>
-          <View style={styles.campusToggleContainer}>
-            <Pressable
-              style={[
-                styles.campusButton,
-                selectedCampus === "sgw" && styles.campusButtonActive,
-                browsingLocked && styles.selectorDisabled,
-              ]}
-              disabled={browsingLocked}
-              onPress={() => handleCampusChange("sgw")}
-            >
-              <Text
-                style={[
-                  styles.campusButtonText,
-                  selectedCampus === "sgw" && styles.campusButtonTextActive,
-                ]}
-              >
-                SGW
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.campusButton,
-                selectedCampus === "loyola" && styles.campusButtonActive,
-                browsingLocked && styles.selectorDisabled,
-              ]}
-              disabled={browsingLocked}
-              onPress={() => handleCampusChange("loyola")}
-            >
-              <Text
-                style={[
-                  styles.campusButtonText,
-                  selectedCampus === "loyola" && styles.campusButtonTextActive,
-                ]}
-              >
-                Loyola
-              </Text>
-            </Pressable>
-          </View>
+          <IndoorCampusToggle
+            selectedCampus={selectedCampus}
+            onSelectCampus={handleCampusChange}
+            styles={styles}
+            disabled={browsingLocked}
+          />
 
-          {campusBuildings.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.buildingSelectorContent}
-              style={styles.buildingSelectorContainer}
-            >
-              {campusBuildings.map((building, idx) => (
-                <Pressable
-                  key={building.id}
-                  style={[
-                    styles.buildingChip,
-                    selectedBuildingIdx === idx && styles.buildingChipActive,
-                    browsingLocked && styles.selectorDisabled,
-                  ]}
-                  disabled={browsingLocked}
-                  onPress={() => handleBuildingChange(idx)}
-                >
-                  <Text
-                    style={[
-                      styles.buildingChipText,
-                      selectedBuildingIdx === idx && styles.buildingChipTextActive,
-                    ]}
-                  >
-                    {building.name}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          )}
+          <IndoorBuildingSelector
+            buildings={campusBuildings}
+            selectedBuildingIdx={selectedBuildingIdx}
+            onSelectBuilding={handleBuildingChange}
+            styles={styles}
+            disabled={browsingLocked}
+          />
         </View>
 
         <View style={styles.searchColumnWrapper}>
@@ -894,6 +838,19 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   style={styles.floorPlanImage}
                   resizeMode="contain"
                 />
+                <IndoorPoiMarkers
+                  pois={displayedFloorPois}
+                  markerStyle={styles.poiMarker}
+                  positionForPoi={(poi) => {
+                    const scaledPoi = scaleDisplayedPoiCoord(poi.x, poi.y);
+                    return {
+                      left: scaledPoi.x,
+                      top: scaledPoi.y,
+                    };
+                  }}
+                  testIdPrefix="directions-poi-marker"
+                  iconColor={MAROON}
+                />
                 {/* SVG Overlay for Route and Markers */}
                 <Svg
                   testID="indoor-route-overlay"
@@ -983,36 +940,15 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             )}
           </View>
 
-          {selectedBuilding?.floors?.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.floorSelectorContent}
-              style={styles.floorSelectorContainer}
-            >
-              {selectedBuilding.floors.map((floor, idx) => (
-                <Pressable
-                  key={floor.id}
-                  style={[
-                    styles.floorButton,
-                    selectedFloorIdx === idx && styles.floorButtonActive,
-                    browsingLocked && styles.selectorDisabled,
-                  ]}
-                  disabled={browsingLocked}
-                  onPress={() => handleFloorChange(idx)}
-                >
-                  <Text
-                    style={[
-                      styles.floorButtonText,
-                      selectedFloorIdx === idx && styles.floorButtonTextActive,
-                    ]}
-                  >
-                    {floor.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          )}
+          <IndoorPoiLegend styles={styles} iconColor={MAROON} />
+
+          <IndoorFloorSelector
+            floors={selectedBuilding?.floors}
+            selectedFloorIdx={selectedFloorIdx}
+            onSelectFloor={handleFloorChange}
+            styles={styles}
+            disabled={browsingLocked}
+          />
 
           {/* Route Stats Bar */}
           {startRoom && destRoom ? (
@@ -1432,6 +1368,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
+  poiMarker: indoorPoiMarkerStyle,
   noFloorPlan: {
     justifyContent: "center",
     alignItems: "center",
@@ -1580,6 +1517,7 @@ const styles = StyleSheet.create({
     color: "#999",
     textAlign: "center",
   },
+  ...indoorPoiLegendStyles,
   accessibilityRow: {
     flexDirection: "row",
     alignItems: "center",
