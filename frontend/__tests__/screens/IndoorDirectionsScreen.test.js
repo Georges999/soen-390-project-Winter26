@@ -827,6 +827,17 @@ describe('IndoorDirectionsScreen', () => {
       expect(queryByText('How would you like to change floors?')).toBeNull();
     });
 
+    it('should close the transition modal when requestClose is triggered', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([]);
+      const { getByText, getByTestId, queryByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+      fireEvent.press(getByText(/requires changing floors/));
+      fireEvent(getByTestId('transition-preference-modal'), 'requestClose');
+      expect(queryByText('How would you like to change floors?')).toBeNull();
+    });
+
     it('should select stairs from the transition modal', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([]);
@@ -1017,6 +1028,39 @@ describe('IndoorDirectionsScreen', () => {
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
       expect(getByText(/Walk outside to the MB building/)).toBeTruthy();
+    });
+
+    it('should render an Outdoor segment tab in multi-segment cross-building routes', () => {
+      const indoorSeg = {
+        type: 'indoor',
+        floorId: 'Hall-8',
+        buildingId: 'hall',
+        fromNodeId: 'Hall8_classroom_002',
+        toNodeId: 'Hall8_hallway_001',
+      };
+      const destinationIndoorSeg = {
+        type: 'indoor',
+        floorId: 'MB-1',
+        buildingId: 'mb',
+        fromNodeId: 'MB1_hallway_001',
+        toNodeId: 'MB1_classroom_001',
+      };
+
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([indoorSeg, outdoorSeg, destinationIndoorSeg]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 200, y: 300, type: 'hallway' },
+        ],
+        totalWeight: 200,
+        reason: null,
+      });
+      const { getByText } = render(
+        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
+      );
+      expect(getByText('Outdoor')).toBeTruthy();
     });
   });
 

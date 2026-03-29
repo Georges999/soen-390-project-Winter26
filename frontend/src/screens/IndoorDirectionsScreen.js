@@ -1088,6 +1088,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
         {/* Transition Preference Modal (stairs vs elevator) */}
         <Modal
+          testID="transition-preference-modal"
           visible={showTransitionModal}
           transparent
           animationType="fade"
