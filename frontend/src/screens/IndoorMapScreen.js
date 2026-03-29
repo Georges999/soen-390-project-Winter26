@@ -20,6 +20,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
 const MAP_INSPECT_SCALE = 1.45;
+const FALLBACK_POI_ICON = "place";
 
 const buildAllRooms = (campusBuildings) => {
   const rooms = [];
@@ -178,9 +179,42 @@ function IndoorMapScreen({ navigation }) {
     );
   };
 
+  const renderPoiMarkers = () => {
+    if (!currentFloor?.pois?.length) return null;
+
+    const floorWidth = currentFloor.width || 1000;
+    const floorHeight = currentFloor.height || 1000;
+
+    return currentFloor.pois.map((poi) => {
+      const iconName = POI_ICONS[poi.type]?.icon || FALLBACK_POI_ICON;
+
+      return (
+        <View
+          key={poi.id}
+          testID={`poi-marker-${poi.id}`}
+          style={[
+            styles.poiMarker,
+            {
+              left: `${(poi.x / floorWidth) * 100}%`,
+              top: `${(poi.y / floorHeight) * 100}%`,
+            },
+          ]}
+        >
+          <MaterialIcons
+            testID={`poi-marker-icon-${poi.id}`}
+            name={iconName}
+            size={12}
+            color={MAROON}
+          />
+        </View>
+      );
+    });
+  };
+
   const renderFloorPlanCanvas = (imageStyle) => (
     <View style={styles.floorPlanCanvas}>
       <Image source={currentFloor.image} style={imageStyle} resizeMode="contain" />
+      {renderPoiMarkers()}
       {renderRoomHighlightMarker()}
     </View>
   );
@@ -680,6 +714,25 @@ const styles = StyleSheet.create({
   },
   floorPlanCanvas: {
     position: "relative",
+  },
+  poiMarker: {
+    position: "absolute",
+    width: 26,
+    height: 26,
+    marginLeft: -13,
+    marginTop: -13,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1.25,
+    borderColor: "rgba(145, 35, 56, 0.22)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 1.5,
+    elevation: 1,
+    zIndex: 2,
   },
   roomHighlight: {
     position: "absolute",

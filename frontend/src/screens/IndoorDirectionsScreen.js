@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Svg, { Path, Circle } from "react-native-svg";
-import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor, getBuildingById, FLOOR_META } from "../data/indoorFloorData";
+import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor, getBuildingById, FLOOR_META, POI_ICONS } from "../data/indoorFloorData";
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
 
@@ -23,6 +23,7 @@ const MAROON = "#912338";
 const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const FALLBACK_POI_ICON = "place";
 
 export function buildAllRooms() {
   return Object.entries(buildings).flatMap(([campusId, campusBuildings]) =>
@@ -394,6 +395,14 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     selectedFloor,
   ]);
 
+  const displayedFloorPois = useMemo(() => {
+    if (!displayedFloor?.id) return [];
+
+    return getAllNodesForFloor(displayedFloor.id).filter(
+      (node) => node.type !== "hallway" && node.type !== "classroom" && node.type !== "room"
+    );
+  }, [displayedFloor]);
+
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
     if (!pathResult?.ok || !pathResult.pathCoords || pathResult.pathCoords.length < 2) {
@@ -542,6 +551,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const scaleY = MAP_IMAGE_HEIGHT / floorDimensions.height;
     return { x: x * scaleX, y: y * scaleY };
   }, [floorDimensions]);
+
+  const scaleDisplayedPoiCoord = useCallback((x, y) => {
+    const displayWidth = displayedFloor?.width || floorDimensions.width;
+    const displayHeight = displayedFloor?.height || floorDimensions.height;
+
+    return {
+      x: x * (MAP_IMAGE_WIDTH / displayWidth),
+      y: y * (MAP_IMAGE_HEIGHT / displayHeight),
+    };
+  }, [displayedFloor, floorDimensions]);
 
   const browsingLocked = Boolean(startRoom && destRoom);
 
@@ -894,6 +913,33 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   style={styles.floorPlanImage}
                   resizeMode="contain"
                 />
+                {displayedFloorPois.map((poi) => {
+                  if (poi.x === undefined || poi.y === undefined) return null;
+
+                  const scaledPoi = scaleDisplayedPoiCoord(poi.x, poi.y);
+                  const iconName = POI_ICONS[poi.type]?.icon || FALLBACK_POI_ICON;
+
+                  return (
+                    <View
+                      key={poi.id}
+                      testID={`directions-poi-marker-${poi.id}`}
+                      style={[
+                        styles.poiMarker,
+                        {
+                          left: scaledPoi.x,
+                          top: scaledPoi.y,
+                        },
+                      ]}
+                    >
+                      <MaterialIcons
+                        testID={`directions-poi-marker-icon-${poi.id}`}
+                        name={iconName}
+                        size={12}
+                        color={MAROON}
+                      />
+                    </View>
+                  );
+                })}
                 {/* SVG Overlay for Route and Markers */}
                 <Svg
                   testID="indoor-route-overlay"
@@ -982,6 +1028,20 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               </View>
             )}
           </View>
+
+          <ScrollView
+            horizontal
+            style={styles.poiLegendScroll}
+            contentContainerStyle={styles.poiLegend}
+            showsHorizontalScrollIndicator={false}
+          >
+            {Object.entries(POI_ICONS).map(([key, { icon, label }]) => (
+              <View key={key} style={styles.poiLegendItem}>
+                <MaterialIcons name={icon} size={18} color={MAROON} />
+                <Text style={styles.poiLabel}>{label}</Text>
+              </View>
+            ))}
+          </ScrollView>
 
           {selectedBuilding?.floors?.length > 0 && (
             <ScrollView
@@ -1432,6 +1492,25 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
+  poiMarker: {
+    position: "absolute",
+    width: 26,
+    height: 26,
+    marginLeft: -13,
+    marginTop: -13,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1.25,
+    borderColor: "rgba(145, 35, 56, 0.22)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 1.5,
+    elevation: 1,
+    zIndex: 2,
+  },
   noFloorPlan: {
     justifyContent: "center",
     alignItems: "center",
@@ -1579,6 +1658,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#999",
     textAlign: "center",
+  },
+  poiLegendScroll: {
+    marginTop: 2,
+    marginBottom: 4,
+    alignSelf: "center",
+  },
+  poiLegend: {
+    flexDirection: "row",
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+    gap: 8,
+    alignItems: "center",
+  },
+  poiLegendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderColor: "#e3d8dd",
+    borderRadius: 8,
+    backgroundColor: "#f7f2f4",
+  },
+  poiLabel: {
+    fontSize: 12,
+    color: "#666",
   },
   accessibilityRow: {
     flexDirection: "row",

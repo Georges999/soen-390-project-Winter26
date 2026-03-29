@@ -54,12 +54,17 @@ describe('IndoorMapScreen', () => {
   });
 
   it('should render POI vector icons', () => {
-    const { getByText } = render(<IndoorMapScreen navigation={mockNavigation} />);
+    const { getAllByText } = render(<IndoorMapScreen navigation={mockNavigation} />);
     // Vector icons render as text with the icon name in the mock
-    expect(getByText('wc')).toBeTruthy();
-    expect(getByText('water-drop')).toBeTruthy();
-    expect(getByText('stairs')).toBeTruthy();
-    expect(getByText('elevator')).toBeTruthy();
+    expect(getAllByText('wc').length).toBeGreaterThan(0);
+    expect(getAllByText('water-drop').length).toBeGreaterThan(0);
+    expect(getAllByText('stairs').length).toBeGreaterThan(0);
+    expect(getAllByText('elevator').length).toBeGreaterThan(0);
+  });
+
+  it('should render vector POI markers on the map itself', () => {
+    const { getByTestId } = render(<IndoorMapScreen navigation={mockNavigation} />);
+    expect(getByTestId('poi-marker-icon-Hall1Red_washroom_001')).toBeTruthy();
   });
 
   it('should render floor selector buttons', () => {
