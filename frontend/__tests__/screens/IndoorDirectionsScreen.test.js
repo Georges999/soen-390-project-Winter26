@@ -1,7 +1,12 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Dimensions } from 'react-native';
-import IndoorDirectionsScreen from '../../src/screens/IndoorDirectionsScreen';
+import IndoorDirectionsScreen, {
+  buildAllRooms,
+  getSelectionForLocation,
+  getInitialSelection,
+} from '../../src/screens/IndoorDirectionsScreen';
+import { buildings } from '../../src/data/indoorFloorData';
 
 // Mock the floor plan images
 jest.mock('../../assets/floor-maps/Hall-1-F.png', () => 'hall1img', { virtual: true });
@@ -97,9 +102,94 @@ const mockRouteBrowseHall8 = {
   },
 };
 
+const originalSgwBuildings = buildings.sgw;
+const originalLoyolaBuildings = buildings.loyola;
+
 describe('IndoorDirectionsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    delete buildings.emptyCampus;
+    delete buildings.emptyArrayCampus;
+    buildings.sgw = originalSgwBuildings;
+    buildings.loyola = originalLoyolaBuildings;
+  });
+
+  it('buildAllRooms should tolerate campuses without room arrays', () => {
+    buildings.emptyCampus = undefined;
+    buildings.emptyArrayCampus = [{ id: 'ghost', name: 'Ghost Building' }];
+
+    const rooms = buildAllRooms();
+
+    expect(Array.isArray(rooms)).toBe(true);
+  });
+
+  it('getSelectionForLocation should fall back to the provided campus when a building is unknown', () => {
+    buildings.emptyCampus = undefined;
+
+    const selection = getSelectionForLocation('missing-building', 'missing-floor', 'emptyCampus');
+
+    expect(selection).toEqual({
+      campusId: 'emptyCampus',
+      buildingIdx: 0,
+      floorIdx: 0,
+    });
+  });
+
+  it('getSelectionForLocation should reset to the first floor when the floor id is unknown', () => {
+    const selection = getSelectionForLocation('hall', 'missing-floor');
+
+    expect(selection.campusId).toBe('sgw');
+    expect(selection.buildingIdx).toBe(0);
+    expect(selection.floorIdx).toBe(0);
+  });
+
+  it('getInitialSelection should use startRoom when destinationRoom is missing', () => {
+    const selection = getInitialSelection({
+      startRoom: { buildingId: 'mb', floor: 'MB-1' },
+    });
+
+    expect(selection.campusId).toBe('sgw');
+    expect(selection.buildingIdx).toBe(1);
+    expect(selection.floorIdx).toBe(1);
+  });
+
+  it('should render safely when the selected campus data is unavailable', () => {
+    buildings.sgw = undefined;
+
+    const { getByText } = render(
+      <IndoorDirectionsScreen
+        route={{
+          params: {
+            startRoom: { id: 'start-room', label: 'Start', floor: 'Unknown-Floor' },
+            destinationRoom: { id: 'dest-room', label: 'Dest', floor: 'Unknown-Floor' },
+          },
+        }}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByText('Indoor Directions')).toBeTruthy();
+  });
+
+  it('should fall back to the currently selected floor when a same-floor route uses an unknown floor id', () => {
+    mockClassifyRoute.mockReturnValue('same-floor');
+
+    const { getByTestId } = render(
+      <IndoorDirectionsScreen
+        route={{
+          params: {
+            startRoom: { id: 'start-room', label: 'Start', floor: 'Unknown-Floor' },
+            destinationRoom: { id: 'dest-room', label: 'Dest', floor: 'Unknown-Floor' },
+          },
+        }}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByTestId('indoor-route-overlay')).toBeTruthy();
   });
 
   // --- Rendering ---

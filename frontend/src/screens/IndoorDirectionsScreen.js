@@ -24,7 +24,7 @@ const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-function buildAllRooms() {
+export function buildAllRooms() {
   return Object.entries(buildings).flatMap(([campusId, campusBuildings]) =>
     (campusBuildings || []).flatMap((building) =>
       (building.rooms || []).map((room) => ({
@@ -37,7 +37,7 @@ function buildAllRooms() {
   );
 }
 
-function getSelectionForLocation(buildingId, floorId, fallbackCampus = "sgw") {
+export function getSelectionForLocation(buildingId, floorId, fallbackCampus = "sgw") {
   const matchedCampus =
     Object.entries(buildings).find(([, campusBuildings]) =>
       (campusBuildings || []).some((building) => building.id === buildingId)
@@ -56,7 +56,7 @@ function getSelectionForLocation(buildingId, floorId, fallbackCampus = "sgw") {
   };
 }
 
-function getInitialSelection(params) {
+export function getInitialSelection(params) {
   const preferredRoom = params.destinationRoom || params.startRoom;
   const buildingId = preferredRoom?.buildingId || params.building?.id || buildings.sgw?.[0]?.id;
   const floorId = preferredRoom?.floor || params.floor?.id || buildings.sgw?.[0]?.floors?.[0]?.id;
@@ -442,8 +442,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     }
   };
 
-  const syncSelectionToLocation = useCallback((buildingId, floorId, fallbackCampus = "sgw") => {
-    const nextSelection = getSelectionForLocation(buildingId, floorId, fallbackCampus);
+  const syncSelectionToLocation = useCallback((buildingId, floorId, campusId) => {
+    const nextSelection = getSelectionForLocation(buildingId, floorId, campusId);
     setSelectedCampus(nextSelection.campusId);
     setSelectedBuildingIdx(nextSelection.buildingIdx);
     setSelectedFloorIdx(nextSelection.floorIdx);
