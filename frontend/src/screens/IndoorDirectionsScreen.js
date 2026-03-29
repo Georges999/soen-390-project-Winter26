@@ -883,6 +883,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
           {/* Floor Plan with Route */}
           <View 
+            testID="indoor-floor-plan-container"
             style={styles.floorPlanContainer}
             {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
           >
@@ -1092,7 +1093,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           animationType="fade"
           onRequestClose={() => setShowTransitionModal(false)}
         >
-          <Pressable style={styles.modalOverlay} onPress={() => setShowTransitionModal(false)}>
+          <Pressable testID="transition-modal-overlay" style={styles.modalOverlay} onPress={() => setShowTransitionModal(false)}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>How would you like to change floors?</Text>
               <Pressable
