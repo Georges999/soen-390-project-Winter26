@@ -129,7 +129,7 @@ export function getJourneyMapStage(stages = [], activeStageId = null) {
   return null;
 }
 
-export function buildJourneyStats(routeSegments = [], transitionPref, accessibleRoute) {
+export function buildJourneyStats(transitionPref, accessibleRoute, routeSegments = []) {
   const floorTransfers = routeSegments.filter((segment) => segment.type === "vertical").length;
   const outdoorTransfers = routeSegments.filter((segment) => segment.type === "outdoor").length;
   const activeTransition = getTransitionLabel(

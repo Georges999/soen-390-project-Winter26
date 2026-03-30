@@ -26,7 +26,6 @@ import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
 import {
   buildJourneyStages,
-  buildJourneyStats,
   getBuildingName,
   getDefaultJourneyStage,
   getFloorLabel,
@@ -164,39 +163,6 @@ function buildSameFloorSteps(coords, startRoom, destRoom) {
   return finalizeDirectionSteps(steps);
 }
 
-function buildRouteOverviewItems(routeSegments, startRoom, destRoom) {
-  if (!routeSegments.length || !startRoom || !destRoom) return [];
-
-  const items = [{
-    icon: "trip-origin",
-    text: `Start on Floor ${getFloorLabel(startRoom.floor)} in ${getBuildingName(startRoom.buildingId)}`,
-  }];
-
-  routeSegments.forEach((segment) => {
-    if (segment.type === "vertical") {
-      items.push({
-        icon: buildSegmentIcon(segment.transitionType),
-        text: `Change floors via ${segment.transitionType} to Floor ${getFloorLabel(segment.toFloor)}`,
-      });
-      return;
-    }
-
-    if (segment.type === "outdoor") {
-      items.push({
-        icon: "directions-walk",
-        text: `Walk outside from ${getBuildingName(segment.fromBuildingId)} to ${getBuildingName(segment.toBuildingId)}`,
-      });
-    }
-  });
-
-  items.push({
-    icon: "place",
-    text: `Finish at ${destRoom.label || "destination"} on Floor ${getFloorLabel(destRoom.floor)}`,
-  });
-
-  return items;
-}
-
 // Map image dimensions
 const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
@@ -328,10 +294,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     [journeyStages, activeJourneyStage]
   );
 
-  const journeyStats = useMemo(
-    () => buildJourneyStats(routeSegments, transitionPref, accessibleRoute),
-    [routeSegments, transitionPref, accessibleRoute]
-  );
+  const activeJourneyStepNumber = useMemo(() => {
+    if (!activeJourneyStage) return null;
+
+    const stageIndex = journeyStages.findIndex((stage) => stage.id === activeJourneyStage.id);
+    return stageIndex >= 0 ? stageIndex + 1 : null;
+  }, [journeyStages, activeJourneyStage]);
 
   // Filtered search results
   const searchResults = useMemo(
@@ -365,11 +333,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
     return segmentResults.find(({ segment }) => segment.type === "indoor") || null;
   }, [segmentResults, activeJourneyStage, mapJourneyStage, selectedFloor?.id, selectedBuilding?.id]);
-
-  const routeOverviewItems = useMemo(
-    () => buildRouteOverviewItems(routeSegments, startRoom, destRoom),
-    [routeSegments, startRoom, destRoom]
-  );
 
   const browsingLocked = Boolean(startRoom && destRoom);
 
@@ -1014,87 +977,54 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         </View>
 
         {(routeType === "cross-floor" || routeType === "cross-building") && startRoom && destRoom && (
-          <View style={styles.transferModeCard}>
-            <View style={styles.transferModeHeader}>
-              <View style={styles.transferModeCopy}>
-                <Text style={styles.transferModeEyebrow}>Between-floor route</Text>
-                <Text style={styles.transferModeTitle}>
-                  {accessibleRoute
-                    ? "Elevator routing is active for accessibility."
-                    : "Choose how you want to move between floors."}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.transferModeOptions}>
-              <Pressable
-                testID="transition-pref-stairs"
+          <View style={styles.transferModeOptionsStandalone}>
+            <Pressable
+              testID="transition-pref-stairs"
+              style={[
+                styles.transferModeOption,
+                resolvedTransitionPref === "stairs" && styles.transferModeOptionActive,
+                accessibleRoute && styles.selectorDisabled,
+              ]}
+              disabled={accessibleRoute}
+              onPress={() => setTransitionPref("stairs")}
+            >
+              <MaterialIcons
+                name="stairs"
+                size={18}
+                color={resolvedTransitionPref === "stairs" ? "#fff" : MAROON}
+              />
+              <Text
                 style={[
-                  styles.transferModeOption,
-                  resolvedTransitionPref === "stairs" && styles.transferModeOptionActive,
-                  accessibleRoute && styles.selectorDisabled,
+                  styles.transferModeOptionText,
+                  resolvedTransitionPref === "stairs" && styles.transferModeOptionTextActive,
                 ]}
-                disabled={accessibleRoute}
-                onPress={() => setTransitionPref("stairs")}
               >
-                <MaterialIcons
-                  name="stairs"
-                  size={18}
-                  color={resolvedTransitionPref === "stairs" ? "#fff" : MAROON}
-                />
-                <Text
-                  style={[
-                    styles.transferModeOptionText,
-                    resolvedTransitionPref === "stairs" && styles.transferModeOptionTextActive,
-                  ]}
-                >
-                  Stairs
-                </Text>
-              </Pressable>
-              <Pressable
-                testID="transition-pref-elevator"
+                Stairs
+              </Text>
+            </Pressable>
+            <Pressable
+              testID="transition-pref-elevator"
+              style={[
+                styles.transferModeOption,
+                resolvedTransitionPref === "elevator" && styles.transferModeOptionActiveBlue,
+              ]}
+              onPress={() => setTransitionPref("elevator")}
+            >
+              <MaterialIcons
+                name="elevator"
+                size={18}
+                color={resolvedTransitionPref === "elevator" ? "#fff" : BLUE}
+              />
+              <Text
                 style={[
-                  styles.transferModeOption,
-                  resolvedTransitionPref === "elevator" && styles.transferModeOptionActiveBlue,
+                  styles.transferModeOptionText,
+                  styles.transferModeOptionTextBlue,
+                  resolvedTransitionPref === "elevator" && styles.transferModeOptionTextActive,
                 ]}
-                onPress={() => setTransitionPref("elevator")}
               >
-                <MaterialIcons
-                  name="elevator"
-                  size={18}
-                  color={resolvedTransitionPref === "elevator" ? "#fff" : BLUE}
-                />
-                <Text
-                  style={[
-                    styles.transferModeOptionText,
-                    styles.transferModeOptionTextBlue,
-                    resolvedTransitionPref === "elevator" && styles.transferModeOptionTextActive,
-                  ]}
-                >
-                  Elevator
-                </Text>
-              </Pressable>
-            </View>
-            {journeyStats.length > 0 && (
-              <View style={styles.transferModeStats}>
-                {journeyStats.map((item) => (
-                  <View key={item} style={styles.transferModeChip}>
-                    <Text style={styles.transferModeChipText}>{item}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-
-        {routeOverviewItems.length > 0 && (
-          <View style={styles.routeOverviewCard}>
-            <Text style={styles.routeOverviewTitle}>Route Overview</Text>
-            {routeOverviewItems.map((item, index) => (
-              <View key={`${item.text}-${index}`} style={styles.routeOverviewRow}>
-                <MaterialIcons name={item.icon} size={18} color={MAROON} />
-                <Text style={styles.routeOverviewText}>{item.text}</Text>
-              </View>
-            ))}
+                Elevator
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -1109,7 +1039,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.journeyStageRow}
             >
-              {journeyStages.map((stage) => {
+              {journeyStages.map((stage, index) => {
                 const isActive = activeJourneyStage?.id === stage.id;
                 return (
                   <Pressable
@@ -1132,7 +1062,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                         isActive && styles.journeyStageLabelActive,
                       ]}
                     >
-                      {stage.shortLabel}
+                      {index + 1}
                     </Text>
                   <Text
                     style={[
@@ -1246,7 +1176,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   </Pressable>
                   {activeJourneyStage && (
                     <View style={styles.mapStageBadge}>
-                      <Text style={styles.mapStageBadgeText}>{activeJourneyStage.shortLabel}</Text>
+                      <Text style={styles.mapStageBadgeText}>Step {activeJourneyStepNumber}</Text>
                     </View>
                   )}
                 </View>
@@ -1607,33 +1537,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
-  routeOverviewCard: {
-    marginHorizontal: 12,
-    marginTop: 8,
-    padding: 16,
-    borderRadius: 14,
-    backgroundColor: "#f7f1f3",
-    borderWidth: 1,
-    borderColor: "#ead7dd",
-    gap: 10,
-  },
-  routeOverviewTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#7e5160",
-    letterSpacing: 0.6,
-  },
-  routeOverviewRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  routeOverviewText: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 14,
-    color: "#4b3640",
-    lineHeight: 20,
-  },
   floorPlanContainer: {
     marginHorizontal: 12,
     marginVertical: 8,
@@ -1829,37 +1732,9 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginRight: 10,
   },
-  transferModeCard: {
+  transferModeOptionsStandalone: {
     marginHorizontal: 12,
     marginTop: 8,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: "#fcf7f8",
-    borderWidth: 1,
-    borderColor: "#edd7dd",
-    gap: 12,
-  },
-  transferModeHeader: {
-    alignItems: "flex-start",
-  },
-  transferModeCopy: {
-    maxWidth: "100%",
-  },
-  transferModeEyebrow: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: "#8c5b68",
-  },
-  transferModeTitle: {
-    marginTop: 4,
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#4b3640",
-    fontWeight: "600",
-  },
-  transferModeOptions: {
     flexDirection: "row",
     gap: 10,
   },
@@ -1894,24 +1769,6 @@ const styles = StyleSheet.create({
   },
   transferModeOptionTextActive: {
     color: "#fff",
-  },
-  transferModeStats: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  transferModeChip: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#fffafc",
-    borderWidth: 1,
-    borderColor: "#eed6dd",
-  },
-  transferModeChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#7e5160",
   },
   journeyPlannerCard: {
     marginHorizontal: 12,
