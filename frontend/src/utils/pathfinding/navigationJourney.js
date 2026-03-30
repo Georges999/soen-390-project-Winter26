@@ -129,7 +129,23 @@ export function getJourneyMapStage(stages = [], activeStageId = null) {
   return null;
 }
 
-export function buildJourneyStats(transitionPref, accessibleRoute, routeSegments = []) {
+export function buildJourneyStats(
+  routeSegmentsOrTransitionPref = [],
+  transitionPrefOrAccessibleRoute = null,
+  accessibleRouteOrRouteSegments = false
+) {
+  const routeSegments = Array.isArray(routeSegmentsOrTransitionPref)
+    ? routeSegmentsOrTransitionPref
+    : Array.isArray(accessibleRouteOrRouteSegments)
+      ? accessibleRouteOrRouteSegments
+      : [];
+  const transitionPref = Array.isArray(routeSegmentsOrTransitionPref)
+    ? transitionPrefOrAccessibleRoute
+    : routeSegmentsOrTransitionPref;
+  const accessibleRoute = Array.isArray(routeSegmentsOrTransitionPref)
+    ? accessibleRouteOrRouteSegments
+    : transitionPrefOrAccessibleRoute;
+
   const floorTransfers = routeSegments.filter((segment) => segment.type === "vertical").length;
   const outdoorTransfers = routeSegments.filter((segment) => segment.type === "outdoor").length;
   const activeTransition = getTransitionLabel(

@@ -25,6 +25,7 @@ import {
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
 import {
+  buildJourneyStats,
   buildJourneyStages,
   getBuildingName,
   getDefaultJourneyStage,
@@ -69,6 +70,19 @@ function nodeStepText(node) {
 
 function buildSegmentIcon(method) {
   return method === "elevator" ? "elevator" : "stairs";
+}
+
+function buildRouteOverviewItem(segment) {
+  if (segment.type === "vertical") {
+    const transitionLabel = segment.transitionType === "elevator" ? "elevator" : "stairs";
+    return `Change floors via ${transitionLabel} to Floor ${getFloorLabel(segment.toFloor)}`;
+  }
+
+  if (segment.type === "outdoor") {
+    return `Walk outside from ${getBuildingName(segment.fromBuildingId)} to ${getBuildingName(segment.toBuildingId)}`;
+  }
+
+  return `Walk on Floor ${getFloorLabel(segment.floorId)}`;
 }
 
 function isRedundantContinueStep(text = "") {
@@ -300,6 +314,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const stageIndex = journeyStages.findIndex((stage) => stage.id === activeJourneyStage.id);
     return stageIndex >= 0 ? stageIndex + 1 : null;
   }, [journeyStages, activeJourneyStage]);
+
+  const transferSummaryStats = useMemo(
+    () => buildJourneyStats(routeSegments, resolvedTransitionPref, accessibleRoute),
+    [routeSegments, resolvedTransitionPref, accessibleRoute]
+  );
+
+  const routeOverviewItems = useMemo(
+    () => routeSegments.map((segment) => buildRouteOverviewItem(segment)),
+    [routeSegments]
+  );
 
   // Filtered search results
   const searchResults = useMemo(
@@ -977,54 +1001,71 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         </View>
 
         {(routeType === "cross-floor" || routeType === "cross-building") && startRoom && destRoom && (
-          <View style={styles.transferModeOptionsStandalone}>
-            <Pressable
-              testID="transition-pref-stairs"
-              style={[
-                styles.transferModeOption,
-                resolvedTransitionPref === "stairs" && styles.transferModeOptionActive,
-                accessibleRoute && styles.selectorDisabled,
-              ]}
-              disabled={accessibleRoute}
-              onPress={() => setTransitionPref("stairs")}
-            >
-              <MaterialIcons
-                name="stairs"
-                size={18}
-                color={resolvedTransitionPref === "stairs" ? "#fff" : MAROON}
-              />
-              <Text
+          <View style={styles.transferModeCard}>
+            <Text style={styles.transferModeTitle}>Between-floor route</Text>
+            <Text style={styles.transferModeSubtitle}>
+              Choose how you want to handle floor changes along the way.
+            </Text>
+
+            {transferSummaryStats.length > 0 && (
+              <View style={styles.transferSummaryRow}>
+                {transferSummaryStats.map((stat) => (
+                  <View key={stat} style={styles.transferSummaryChip}>
+                    <Text style={styles.transferSummaryText}>{stat}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.transferModeOptionsStandalone}>
+              <Pressable
+                testID="transition-pref-stairs"
                 style={[
-                  styles.transferModeOptionText,
-                  resolvedTransitionPref === "stairs" && styles.transferModeOptionTextActive,
+                  styles.transferModeOption,
+                  resolvedTransitionPref === "stairs" && styles.transferModeOptionActive,
+                  accessibleRoute && styles.selectorDisabled,
                 ]}
+                disabled={accessibleRoute}
+                onPress={() => setTransitionPref("stairs")}
               >
-                Stairs
-              </Text>
-            </Pressable>
-            <Pressable
-              testID="transition-pref-elevator"
-              style={[
-                styles.transferModeOption,
-                resolvedTransitionPref === "elevator" && styles.transferModeOptionActiveBlue,
-              ]}
-              onPress={() => setTransitionPref("elevator")}
-            >
-              <MaterialIcons
-                name="elevator"
-                size={18}
-                color={resolvedTransitionPref === "elevator" ? "#fff" : BLUE}
-              />
-              <Text
+                <MaterialIcons
+                  name="stairs"
+                  size={18}
+                  color={resolvedTransitionPref === "stairs" ? "#fff" : MAROON}
+                />
+                <Text
+                  style={[
+                    styles.transferModeOptionText,
+                    resolvedTransitionPref === "stairs" && styles.transferModeOptionTextActive,
+                  ]}
+                >
+                  Stairs
+                </Text>
+              </Pressable>
+              <Pressable
+                testID="transition-pref-elevator"
                 style={[
-                  styles.transferModeOptionText,
-                  styles.transferModeOptionTextBlue,
-                  resolvedTransitionPref === "elevator" && styles.transferModeOptionTextActive,
+                  styles.transferModeOption,
+                  resolvedTransitionPref === "elevator" && styles.transferModeOptionActiveBlue,
                 ]}
+                onPress={() => setTransitionPref("elevator")}
               >
-                Elevator
-              </Text>
-            </Pressable>
+                <MaterialIcons
+                  name="elevator"
+                  size={18}
+                  color={resolvedTransitionPref === "elevator" ? "#fff" : BLUE}
+                />
+                <Text
+                  style={[
+                    styles.transferModeOptionText,
+                    styles.transferModeOptionTextBlue,
+                    resolvedTransitionPref === "elevator" && styles.transferModeOptionTextActive,
+                  ]}
+                >
+                  Elevator
+                </Text>
+              </Pressable>
+            </View>
           </View>
         )}
 
@@ -1130,6 +1171,17 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                     <Text style={styles.outdoorNavButtonText}>Open Outdoor Directions</Text>
                   </Pressable>
                 )}
+              </View>
+            )}
+
+            {routeOverviewItems.length > 0 && (
+              <View style={styles.routeOverviewCard}>
+                <Text style={styles.routeOverviewTitle}>Route Overview</Text>
+                {routeOverviewItems.map((item, index) => (
+                  <Text key={`${item}-${index}`} style={styles.routeOverviewItem}>
+                    {item}
+                  </Text>
+                ))}
               </View>
             )}
           </View>
@@ -1733,10 +1785,45 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   transferModeOptionsStandalone: {
-    marginHorizontal: 12,
-    marginTop: 8,
+    marginTop: 12,
     flexDirection: "row",
     gap: 10,
+  },
+  transferModeCard: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: "#faf6f7",
+    borderWidth: 1,
+    borderColor: "#eadbe0",
+  },
+  transferModeTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#4b3640",
+  },
+  transferModeSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#7e5160",
+  },
+  transferSummaryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  transferSummaryChip: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "#f2e4e8",
+  },
+  transferSummaryText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6e4553",
   },
   transferModeOption: {
     flex: 1,
@@ -1788,6 +1875,23 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: "#7e5160",
+  },
+  routeOverviewCard: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#eadbe0",
+    gap: 8,
+  },
+  routeOverviewTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#4b3640",
+  },
+  routeOverviewItem: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#6e4553",
   },
   journeyStageRow: {
     gap: 10,

@@ -172,56 +172,65 @@ export default function CalendarScreen({ navigation, route }) {
   }
 
   function handleGetDirections(event) {
+    const nextClassSummary = event.summary || event.title;
+
     navigation.navigate('Map', {
       nextClassLocation: event.location,
-      nextClassSummary: event.summary || event.title,
+      nextClassSummary,
     });
   }
 
-  const listContent = isLoading ? (
-    <View style={styles.emptyState}>
-      <MaterialIcons name="schedule" size={48} color="#CCC" />
-      <Text style={styles.emptyText}>Loading calendar...</Text>
-    </View>
-  ) : todaysClasses.length === 0 ? (
-    <View style={styles.emptyState}>
-      <MaterialIcons name="event-busy" size={48} color="#CCC" />
-      <Text style={styles.emptyText}>No classes scheduled for this day</Text>
-      {emptySubtext ? <Text style={styles.emptySubtext}>{emptySubtext}</Text> : null}
-    </View>
-  ) : (
-    todaysClasses.map((event, index) => {
-            const stepKey =
-              event.id ||
-              `${event.startTime || event.start?.dateTime || event.start?.date}-${event.summary || event.title || 'class'}-${index}`;
-            return (
-              <View key={stepKey} style={styles.classCard}>
-              <View style={styles.classTime}>
-                <Text style={styles.timeText}>
-                  {formatTime(event.startTime || event.start?.dateTime)}
-                </Text>
-              </View>
-              <View style={styles.classInfo}>
-                <View style={styles.classBar} />
-                <View style={styles.classContent}>
-                  <Text style={styles.className}>{event.summary || event.title}</Text>
-                  <Text style={styles.classDetail}>No additional info</Text>
-                  <View style={styles.locationRow}>
-                    <MaterialIcons name="location-on" size={16} color="#666" />
-                    <Text style={styles.locationText}>{event.location}</Text>
-                  </View>
-                </View>
-                <Pressable
-                  style={styles.directionsButton}
-                  onPress={() => handleGetDirections(event)}
-                >
-                  <Text style={styles.directionsText}>Get Directions</Text>
-                </Pressable>
+  let listContent;
+
+  if (isLoading) {
+    listContent = (
+      <View style={styles.emptyState}>
+        <MaterialIcons name="schedule" size={48} color="#CCC" />
+        <Text style={styles.emptyText}>Loading calendar...</Text>
+      </View>
+    );
+  } else if (todaysClasses.length === 0) {
+    listContent = (
+      <View style={styles.emptyState}>
+        <MaterialIcons name="event-busy" size={48} color="#CCC" />
+        <Text style={styles.emptyText}>No classes scheduled for this day</Text>
+        {emptySubtext ? <Text style={styles.emptySubtext}>{emptySubtext}</Text> : null}
+      </View>
+    );
+  } else {
+    listContent = todaysClasses.map((event, index) => {
+      const stepKey =
+        event.id ||
+        `${event.startTime || event.start?.dateTime || event.start?.date}-${event.summary || event.title || 'class'}-${index}`;
+
+      return (
+        <View key={stepKey} style={styles.classCard}>
+          <View style={styles.classTime}>
+            <Text style={styles.timeText}>
+              {formatTime(event.startTime || event.start?.dateTime)}
+            </Text>
+          </View>
+          <View style={styles.classInfo}>
+            <View style={styles.classBar} />
+            <View style={styles.classContent}>
+              <Text style={styles.className}>{event.summary || event.title}</Text>
+              <Text style={styles.classDetail}>No additional info</Text>
+              <View style={styles.locationRow}>
+                <MaterialIcons name="location-on" size={16} color="#666" />
+                <Text style={styles.locationText}>{event.location}</Text>
               </View>
             </View>
-            );
-          })
-  );
+            <Pressable
+              style={styles.directionsButton}
+              onPress={() => handleGetDirections(event)}
+            >
+              <Text style={styles.directionsText}>Get Directions</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    });
+  }
 
   return (
     <View style={styles.container}>
