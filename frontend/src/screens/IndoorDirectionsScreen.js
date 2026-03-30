@@ -79,7 +79,7 @@ function finalizeDirectionSteps(rawSteps) {
   const compactedSteps = [];
 
   rawSteps.forEach((step) => {
-    const previousStep = compactedSteps[compactedSteps.length - 1];
+    const previousStep = compactedSteps.at(-1);
 
     if (
       previousStep &&

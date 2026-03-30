@@ -39,8 +39,10 @@ function buildOutdoorStageDescription(segment) {
   return `Exit ${getBuildingName(segment.fromBuildingId)} and continue outside to ${getBuildingName(segment.toBuildingId)}.`;
 }
 
-export function buildJourneyStages(routeSegments = [], startRoom, destRoom) {
-  return routeSegments.map((segment, index) => {
+export function buildJourneyStages(routeSegments, startRoom, destRoom) {
+  const segments = routeSegments ?? [];
+
+  return segments.map((segment, index) => {
     if (segment.type === "indoor") {
       return {
         id: `journey-stage-${index}`,
@@ -93,7 +95,7 @@ export function getJourneyMapStage(stages = [], activeStageId = null) {
   if (!stages.length) return null;
 
   const activeIndex = stages.findIndex((stage) => stage.id === activeStageId);
-  const normalizedIndex = activeIndex >= 0 ? activeIndex : 0;
+  const normalizedIndex = Math.max(activeIndex, 0);
   const activeStage = stages[normalizedIndex];
 
   if (activeStage?.mapBuildingId && activeStage?.mapFloorId) {
@@ -125,8 +127,10 @@ export function buildJourneyStats(routeSegments = [], transitionPref, accessible
   const stats = [];
 
   if (floorTransfers > 0) {
-    stats.push(`${floorTransfers} floor transfer${floorTransfers === 1 ? "" : "s"}`);
-    stats.push(`Using ${activeTransition}`);
+    stats.push(
+      `${floorTransfers} floor transfer${floorTransfers === 1 ? "" : "s"}`,
+      `Using ${activeTransition}`
+    );
   }
 
   if (outdoorTransfers > 0) {
