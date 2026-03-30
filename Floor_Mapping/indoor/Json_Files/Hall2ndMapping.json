@@ -1300,6 +1300,11 @@
           "weight": 114.43
         },
         {
+          "from": "Hall2Red_hallway_086",
+          "to": "Hall2Red_elevator_001",
+          "weight": 100.05
+        },
+        {
           "from": "Hall2Red_hallway_087",
           "to": "Hall2Red_hallway_104",
           "weight": 97.61

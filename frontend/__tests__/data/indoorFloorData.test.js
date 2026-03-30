@@ -20,6 +20,7 @@ import {
   BUILDING_META,
   getBuildingById,
 } from '../../src/data/indoorFloorData';
+import { findShortestPath } from '../../src/utils/pathfinding/pathfinding';
 
 describe('indoorFloorData', () => {
   it('exports buildings grouped by campus', () => {
@@ -113,6 +114,36 @@ describe('indoorFloorData', () => {
     expect(nodes.some((node) => node.type === 'hallway')).toBe(true);
     expect(nodes.some((node) => node.type === 'classroom')).toBe(true);
     expect(nodes.some((node) => node.type === 'elevator' || node.type === 'washroom')).toBe(true);
+  });
+
+  it('keeps the Hall lower-floor elevators connected to the routing graph', () => {
+    const hall1 = getFloorGraphData('hall', 'Hall-1');
+    const hall2 = getFloorGraphData('hall', 'Hall-2');
+
+    const hall1Path = findShortestPath({
+      floorsData: {
+        floors: {
+          'Hall-1': hall1,
+        },
+      },
+      startNodeId: 'Hall1Red_elevator_001',
+      endNodeId: 'Hall1Red_hallway_007',
+      accessible: true,
+    });
+
+    const hall2Path = findShortestPath({
+      floorsData: {
+        floors: {
+          'Hall-2': hall2,
+        },
+      },
+      startNodeId: 'Hall2Red_elevator_001',
+      endNodeId: 'Hall2Red_hallway_086',
+      accessible: true,
+    });
+
+    expect(hall1Path).toEqual(expect.objectContaining({ ok: true }));
+    expect(hall2Path).toEqual(expect.objectContaining({ ok: true }));
   });
 
   it('returns empty list for getAllNodesForFloor with invalid or missing floor ids', () => {

@@ -740,6 +740,11 @@
           "weight": 180.59
         },
         {
+          "from": "Hall1Red_hallway_007",
+          "to": "Hall1Red_elevator_001",
+          "weight": 74.56
+        },
+        {
           "from": "Hall1Red_hallway_008",
           "to": "Hall1Red_classroom_041",
           "weight": 70.7
