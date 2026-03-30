@@ -1633,6 +1633,11 @@
           "weight": 40.77
         },
         {
+          "from": "Hall9_hallway_036",
+          "to": "Hall9_stairs_003",
+          "weight": 64.65
+        },
+        {
           "from": "Hall9_hallway_035",
           "to": "Hall9_hallway_036",
           "weight": 117.27

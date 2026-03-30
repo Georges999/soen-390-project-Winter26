@@ -20,6 +20,38 @@ import {
   BUILDING_META,
   getBuildingById,
 } from '../../src/data/indoorFloorData';
+import { findShortestPath } from '../../src/utils/pathfinding/pathfinding';
+
+function countConnectedComponents(nodeIds, edges) {
+  const adjacency = new Map(nodeIds.map((nodeId) => [nodeId, new Set()]));
+
+  edges.forEach((edge) => {
+    if (!adjacency.has(edge.from) || !adjacency.has(edge.to)) return;
+    adjacency.get(edge.from).add(edge.to);
+    adjacency.get(edge.to).add(edge.from);
+  });
+
+  const visited = new Set();
+  let componentCount = 0;
+
+  nodeIds.forEach((nodeId) => {
+    if (visited.has(nodeId)) return;
+    componentCount += 1;
+    const stack = [nodeId];
+    visited.add(nodeId);
+
+    while (stack.length) {
+      const currentNodeId = stack.pop();
+      (adjacency.get(currentNodeId) || []).forEach((neighborId) => {
+        if (visited.has(neighborId)) return;
+        visited.add(neighborId);
+        stack.push(neighborId);
+      });
+    }
+  });
+
+  return componentCount;
+}
 
 describe('indoorFloorData', () => {
   it('exports buildings grouped by campus', () => {
@@ -113,6 +145,82 @@ describe('indoorFloorData', () => {
     expect(nodes.some((node) => node.type === 'hallway')).toBe(true);
     expect(nodes.some((node) => node.type === 'classroom')).toBe(true);
     expect(nodes.some((node) => node.type === 'elevator' || node.type === 'washroom')).toBe(true);
+  });
+
+  it('keeps all mapped stairs, elevators, and escalators connected to each floor graph', () => {
+    const allBuildings = [...buildings.sgw, ...buildings.loyola];
+
+    allBuildings.forEach((building) => {
+      building.floors.forEach((floor) => {
+        const floorData = getFloorGraphData(building.id, floor.id);
+        const floorNodes = getAllNodesForFloor(floor.id);
+        const connectors = floorNodes.filter((node) =>
+          ['stairs', 'elevator', 'escalator'].includes(node.type)
+        );
+
+        connectors.forEach((connector) => {
+          const connectedEdges = floorData.edges.filter(
+            (edge) => edge.from === connector.id || edge.to === connector.id
+          );
+
+          expect(connectedEdges.length).toBeGreaterThan(0);
+
+          const neighboringNodeId = connectedEdges[0].from === connector.id
+            ? connectedEdges[0].to
+            : connectedEdges[0].from;
+
+          const path = findShortestPath({
+            floorsData: {
+              floors: {
+                [floor.id]: floorData,
+              },
+            },
+            startNodeId: connector.id,
+            endNodeId: neighboringNodeId,
+            accessible: connector.type === 'elevator',
+          });
+
+          expect(path).toEqual(expect.objectContaining({ ok: true }));
+        });
+      });
+    });
+  });
+
+  it('repairs each floor graph into a connected indoor routing network', () => {
+    const allBuildings = [...buildings.sgw, ...buildings.loyola];
+
+    allBuildings.forEach((building) => {
+      building.floors.forEach((floor) => {
+        const floorData = getFloorGraphData(building.id, floor.id);
+        const floorNodes = getAllNodesForFloor(floor.id);
+        const floorRooms = getRoomsForFloor(floor.id);
+
+        expect(
+          countConnectedComponents(
+            floorNodes.map((node) => node.id),
+            floorData.edges
+          )
+        ).toBe(1);
+
+        if (floorRooms.length < 2) return;
+
+        const anchorRoom = floorRooms[0];
+
+        floorRooms.slice(1).forEach((room) => {
+          const path = findShortestPath({
+            floorsData: {
+              floors: {
+                [floor.id]: floorData,
+              },
+            },
+            startNodeId: anchorRoom.id,
+            endNodeId: room.id,
+          });
+
+          expect(path).toEqual(expect.objectContaining({ ok: true }));
+        });
+      });
+    });
   });
 
   it('returns empty list for getAllNodesForFloor with invalid or missing floor ids', () => {

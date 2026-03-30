@@ -25,8 +25,8 @@ import {
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
 import {
-  buildJourneyStages,
   buildJourneyStats,
+  buildJourneyStages,
   getBuildingName,
   getDefaultJourneyStage,
   getFloorLabel,
@@ -70,6 +70,19 @@ function nodeStepText(node) {
 
 function buildSegmentIcon(method) {
   return method === "elevator" ? "elevator" : "stairs";
+}
+
+function buildRouteOverviewItem(segment) {
+  if (segment.type === "vertical") {
+    const transitionLabel = segment.transitionType === "elevator" ? "elevator" : "stairs";
+    return `Change floors via ${transitionLabel} to Floor ${getFloorLabel(segment.toFloor)}`;
+  }
+
+  if (segment.type === "outdoor") {
+    return `Walk outside from ${getBuildingName(segment.fromBuildingId)} to ${getBuildingName(segment.toBuildingId)}`;
+  }
+
+  return `Walk on Floor ${getFloorLabel(segment.floorId)}`;
 }
 
 function isRedundantContinueStep(text = "") {
@@ -162,39 +175,6 @@ function buildSameFloorSteps(coords, startRoom, destRoom) {
   });
 
   return finalizeDirectionSteps(steps);
-}
-
-function buildRouteOverviewItems(routeSegments, startRoom, destRoom) {
-  if (!routeSegments.length || !startRoom || !destRoom) return [];
-
-  const items = [{
-    icon: "trip-origin",
-    text: `Start on Floor ${getFloorLabel(startRoom.floor)} in ${getBuildingName(startRoom.buildingId)}`,
-  }];
-
-  routeSegments.forEach((segment) => {
-    if (segment.type === "vertical") {
-      items.push({
-        icon: buildSegmentIcon(segment.transitionType),
-        text: `Change floors via ${segment.transitionType} to Floor ${getFloorLabel(segment.toFloor)}`,
-      });
-      return;
-    }
-
-    if (segment.type === "outdoor") {
-      items.push({
-        icon: "directions-walk",
-        text: `Walk outside from ${getBuildingName(segment.fromBuildingId)} to ${getBuildingName(segment.toBuildingId)}`,
-      });
-    }
-  });
-
-  items.push({
-    icon: "place",
-    text: `Finish at ${destRoom.label || "destination"} on Floor ${getFloorLabel(destRoom.floor)}`,
-  });
-
-  return items;
 }
 
 // Map image dimensions
@@ -328,9 +308,21 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     [journeyStages, activeJourneyStage]
   );
 
-  const journeyStats = useMemo(
-    () => buildJourneyStats(routeSegments, transitionPref, accessibleRoute),
-    [routeSegments, transitionPref, accessibleRoute]
+  const activeJourneyStepNumber = useMemo(() => {
+    if (!activeJourneyStage) return null;
+
+    const stageIndex = journeyStages.findIndex((stage) => stage.id === activeJourneyStage.id);
+    return stageIndex >= 0 ? stageIndex + 1 : null;
+  }, [journeyStages, activeJourneyStage]);
+
+  const transferSummaryStats = useMemo(
+    () => buildJourneyStats(routeSegments, resolvedTransitionPref, accessibleRoute),
+    [routeSegments, resolvedTransitionPref, accessibleRoute]
+  );
+
+  const routeOverviewItems = useMemo(
+    () => routeSegments.map((segment) => buildRouteOverviewItem(segment)),
+    [routeSegments]
   );
 
   // Filtered search results
@@ -365,11 +357,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
     return segmentResults.find(({ segment }) => segment.type === "indoor") || null;
   }, [segmentResults, activeJourneyStage, mapJourneyStage, selectedFloor?.id, selectedBuilding?.id]);
-
-  const routeOverviewItems = useMemo(
-    () => buildRouteOverviewItems(routeSegments, startRoom, destRoom),
-    [routeSegments, startRoom, destRoom]
-  );
 
   const browsingLocked = Boolean(startRoom && destRoom);
 
@@ -1015,17 +1002,22 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
         {(routeType === "cross-floor" || routeType === "cross-building") && startRoom && destRoom && (
           <View style={styles.transferModeCard}>
-            <View style={styles.transferModeHeader}>
-              <View style={styles.transferModeCopy}>
-                <Text style={styles.transferModeEyebrow}>Between-floor route</Text>
-                <Text style={styles.transferModeTitle}>
-                  {accessibleRoute
-                    ? "Elevator routing is active for accessibility."
-                    : "Choose how you want to move between floors."}
-                </Text>
+            <Text style={styles.transferModeTitle}>Between-floor route</Text>
+            <Text style={styles.transferModeSubtitle}>
+              Choose how you want to handle floor changes along the way.
+            </Text>
+
+            {transferSummaryStats.length > 0 && (
+              <View style={styles.transferSummaryRow}>
+                {transferSummaryStats.map((stat) => (
+                  <View key={stat} style={styles.transferSummaryChip}>
+                    <Text style={styles.transferSummaryText}>{stat}</Text>
+                  </View>
+                ))}
               </View>
-            </View>
-            <View style={styles.transferModeOptions}>
+            )}
+
+            <View style={styles.transferModeOptionsStandalone}>
               <Pressable
                 testID="transition-pref-stairs"
                 style={[
@@ -1074,27 +1066,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                 </Text>
               </Pressable>
             </View>
-            {journeyStats.length > 0 && (
-              <View style={styles.transferModeStats}>
-                {journeyStats.map((item) => (
-                  <View key={item} style={styles.transferModeChip}>
-                    <Text style={styles.transferModeChipText}>{item}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-
-        {routeOverviewItems.length > 0 && (
-          <View style={styles.routeOverviewCard}>
-            <Text style={styles.routeOverviewTitle}>Route Overview</Text>
-            {routeOverviewItems.map((item, index) => (
-              <View key={`${item.text}-${index}`} style={styles.routeOverviewRow}>
-                <MaterialIcons name={item.icon} size={18} color={MAROON} />
-                <Text style={styles.routeOverviewText}>{item.text}</Text>
-              </View>
-            ))}
           </View>
         )}
 
@@ -1109,7 +1080,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.journeyStageRow}
             >
-              {journeyStages.map((stage) => {
+              {journeyStages.map((stage, index) => {
                 const isActive = activeJourneyStage?.id === stage.id;
                 return (
                   <Pressable
@@ -1132,7 +1103,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                         isActive && styles.journeyStageLabelActive,
                       ]}
                     >
-                      {stage.shortLabel}
+                      {index + 1}
                     </Text>
                   <Text
                     style={[
@@ -1202,6 +1173,17 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                 )}
               </View>
             )}
+
+            {routeOverviewItems.length > 0 && (
+              <View style={styles.routeOverviewCard}>
+                <Text style={styles.routeOverviewTitle}>Route Overview</Text>
+                {routeOverviewItems.map((item, index) => (
+                  <Text key={`${item}-${index}`} style={styles.routeOverviewItem}>
+                    {item}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -1246,7 +1228,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   </Pressable>
                   {activeJourneyStage && (
                     <View style={styles.mapStageBadge}>
-                      <Text style={styles.mapStageBadgeText}>{activeJourneyStage.shortLabel}</Text>
+                      <Text style={styles.mapStageBadgeText}>Step {activeJourneyStepNumber}</Text>
                     </View>
                   )}
                 </View>
@@ -1607,33 +1589,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
-  routeOverviewCard: {
-    marginHorizontal: 12,
-    marginTop: 8,
-    padding: 16,
-    borderRadius: 14,
-    backgroundColor: "#f7f1f3",
-    borderWidth: 1,
-    borderColor: "#ead7dd",
-    gap: 10,
-  },
-  routeOverviewTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#7e5160",
-    letterSpacing: 0.6,
-  },
-  routeOverviewRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  routeOverviewText: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 14,
-    color: "#4b3640",
-    lineHeight: 20,
-  },
   floorPlanContainer: {
     marginHorizontal: 12,
     marginVertical: 8,
@@ -1829,39 +1784,46 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginRight: 10,
   },
+  transferModeOptionsStandalone: {
+    marginTop: 12,
+    flexDirection: "row",
+    gap: 10,
+  },
   transferModeCard: {
     marginHorizontal: 12,
     marginTop: 8,
     padding: 14,
     borderRadius: 16,
-    backgroundColor: "#fcf7f8",
+    backgroundColor: "#faf6f7",
     borderWidth: 1,
-    borderColor: "#edd7dd",
-    gap: 12,
-  },
-  transferModeHeader: {
-    alignItems: "flex-start",
-  },
-  transferModeCopy: {
-    maxWidth: "100%",
-  },
-  transferModeEyebrow: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    color: "#8c5b68",
+    borderColor: "#eadbe0",
   },
   transferModeTitle: {
-    marginTop: 4,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    fontWeight: "700",
     color: "#4b3640",
-    fontWeight: "600",
   },
-  transferModeOptions: {
+  transferModeSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#7e5160",
+  },
+  transferSummaryRow: {
     flexDirection: "row",
-    gap: 10,
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  transferSummaryChip: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: "#f2e4e8",
+  },
+  transferSummaryText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#6e4553",
   },
   transferModeOption: {
     flex: 1,
@@ -1895,24 +1857,6 @@ const styles = StyleSheet.create({
   transferModeOptionTextActive: {
     color: "#fff",
   },
-  transferModeStats: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  transferModeChip: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#fffafc",
-    borderWidth: 1,
-    borderColor: "#eed6dd",
-  },
-  transferModeChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#7e5160",
-  },
   journeyPlannerCard: {
     marginHorizontal: 12,
     marginTop: 8,
@@ -1931,6 +1875,23 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: "#7e5160",
+  },
+  routeOverviewCard: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#eadbe0",
+    gap: 8,
+  },
+  routeOverviewTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#4b3640",
+  },
+  routeOverviewItem: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#6e4553",
   },
   journeyStageRow: {
     gap: 10,
