@@ -284,6 +284,10 @@ describe('navigationJourney', () => {
     expect(buildJourneyStats('stairs', false, null)).toEqual([]);
   });
 
+  it('uses default buildJourneyStats arguments when none are provided', () => {
+    expect(buildJourneyStats()).toEqual([]);
+  });
+
   it('exports readable fallback labels', () => {
     expect(getFloorLabel('Hall-8')).toBe('8');
     expect(getFloorLabel('Unknown-Floor')).toBe('Unknown-Floor');
