@@ -71,12 +71,38 @@ function buildSegmentIcon(method) {
   return method === "elevator" ? "elevator" : "stairs";
 }
 
+function isRedundantContinueStep(text = "") {
+  return text.startsWith("Continue through") || text.startsWith("Continue along");
+}
+
+function finalizeDirectionSteps(rawSteps) {
+  const compactedSteps = [];
+
+  rawSteps.forEach((step) => {
+    const previousStep = compactedSteps[compactedSteps.length - 1];
+
+    if (
+      previousStep &&
+      isRedundantContinueStep(previousStep.text) &&
+      isRedundantContinueStep(step.text)
+    ) {
+      return;
+    }
+
+    compactedSteps.push(step);
+  });
+
+  return compactedSteps.map((step, index) => ({
+    ...step,
+    step: index + 1,
+  }));
+}
+
 /** Build direction steps for cross-floor / cross-building routes. */
 function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
   const steps = [];
-  let stepNum = 1;
 
-  steps.push({ step: stepNum++, text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
+  steps.push({ text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
 
   for (let si = 0; si < segmentResults.length; si++) {
     const { segment, pathResult: segPath } = segmentResults[si];
@@ -87,32 +113,30 @@ function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
       const floorLabel = floorMeta?.floorLabel || segment.floorId;
 
       if (si > 0) {
-        steps.push({ step: stepNum++, text: `Continue on Floor ${floorLabel}`, icon: "layers" });
+        steps.push({ text: `Continue on Floor ${floorLabel}`, icon: "layers" });
       }
 
       for (let i = 1; i < coords.length - 1; i++) {
-        steps.push({ step: stepNum++, text: nodeStepText(coords[i]) });
+        steps.push({ text: nodeStepText(coords[i]) });
       }
     } else if (segment.type === "vertical") {
       const fromLabel = FLOOR_META[segment.fromFloor]?.floorLabel || segment.fromFloor;
       const toLabel = FLOOR_META[segment.toFloor]?.floorLabel || segment.toFloor;
       const method = segment.transitionType === "elevator" ? "elevator" : "stairs";
       steps.push({
-        step: stepNum++,
         text: `Take the ${method} from Floor ${fromLabel} to Floor ${toLabel}`,
         icon: buildSegmentIcon(method),
       });
     } else if (segment.type === "outdoor") {
       steps.push({
-        step: stepNum++,
         text: `Walk outside to the ${segment.toBuildingId?.toUpperCase() || "destination"} building`,
         icon: "directions-walk",
       });
     }
   }
 
-  steps.push({ step: stepNum, text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
-  return steps;
+  steps.push({ text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
+  return finalizeDirectionSteps(steps);
 }
 
 /** Build direction steps for same-floor routes. */
@@ -120,26 +144,23 @@ function buildSameFloorSteps(coords, startRoom, destRoom) {
   if (coords.length < 2) return [];
 
   const steps = [{
-    step: 1,
     text: `Start at ${startRoom?.label || 'starting point'}`,
     distance: null,
   }];
 
   for (let i = 1; i < coords.length - 1; i++) {
     steps.push({
-      step: i + 1,
       text: nodeStepText(coords[i]),
       distance: null,
     });
   }
 
   steps.push({
-    step: coords.length,
     text: `Arrive at ${destRoom?.label || 'destination'}`,
     distance: null,
   });
 
-  return steps;
+  return finalizeDirectionSteps(steps);
 }
 
 function buildRouteOverviewItems(routeSegments, startRoom, destRoom) {

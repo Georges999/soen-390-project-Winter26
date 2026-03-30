@@ -356,6 +356,27 @@ describe('IndoorDirectionsScreen', () => {
     expect(getByText('Arrive at H861')).toBeTruthy();
   });
 
+  it('should merge repeated corridor instructions into a single continue step', () => {
+    mockFindShortestPath.mockReturnValue({
+      ok: true,
+      pathCoords: [
+        { x: 100, y: 200, type: 'classroom' },
+        { x: 140, y: 240, type: 'hallway' },
+        { x: 180, y: 280, type: 'hallway' },
+        { x: 220, y: 320, type: 'hallway' },
+        { x: 300, y: 400, type: 'classroom' },
+      ],
+      totalWeight: 620,
+      reason: null,
+    });
+
+    const { getAllByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+
+    expect(getAllByText('Continue through the hallway')).toHaveLength(1);
+  });
+
   it('should show step numbers', () => {
     const { getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
