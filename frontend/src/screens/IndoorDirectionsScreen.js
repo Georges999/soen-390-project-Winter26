@@ -52,6 +52,7 @@ const MAROON = "#912338";
 const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const MAP_INSPECT_SCALE = 1.45;
 
 // ── Step-text helpers (extracted to reduce cognitive complexity) ──
 
@@ -238,6 +239,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Selection mode for map clicks
   const [selectionMode, setSelectionMode] = useState(null); // "start" or "dest"
+  const [inspectMode, setInspectMode] = useState(false);
 
   // Accessibility route toggle
   const [accessibleRoute, setAccessibleRoute] = useState(false);
@@ -549,6 +551,13 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     );
   }, [displayedFloor]);
 
+  const displayedMapWidth = inspectMode
+    ? MAP_IMAGE_WIDTH * MAP_INSPECT_SCALE
+    : MAP_IMAGE_WIDTH;
+  const displayedMapHeight = inspectMode
+    ? MAP_IMAGE_HEIGHT * MAP_INSPECT_SCALE
+    : MAP_IMAGE_HEIGHT;
+
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
     if (!pathResult?.ok || !pathResult.pathCoords || pathResult.pathCoords.length < 2) {
@@ -558,8 +567,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const coords = pathResult.pathCoords;
     const displayWidth = displayedFloor?.width || floorDimensions.width;
     const displayHeight = displayedFloor?.height || floorDimensions.height;
-    const scaleX = MAP_IMAGE_WIDTH / displayWidth;
-    const scaleY = MAP_IMAGE_HEIGHT / displayHeight;
+    const scaleX = displayedMapWidth / displayWidth;
+    const scaleY = displayedMapHeight / displayHeight;
 
     let pathD = `M ${coords[0].x * scaleX} ${coords[0].y * scaleY}`;
     for (let i = 1; i < coords.length; i++) {
@@ -572,7 +581,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       end: { x: coords[coords.length - 1].x * scaleX, y: coords[coords.length - 1].y * scaleY },
       points: coords.map(c => ({ x: c.x * scaleX, y: c.y * scaleY, type: c.type }))
     };
-  }, [pathResult, displayedFloor, floorDimensions]);
+  }, [pathResult, displayedFloor, floorDimensions, displayedMapWidth, displayedMapHeight]);
 
   const handleFieldChange = (text) => {
     if (activeField === "start" && startRoom) {
@@ -662,8 +671,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const { locationX, locationY } = event.nativeEvent;
     
     // Scale tap coordinates back to original floor plan coordinates
-    const scaleX = floorDimensions.width / MAP_IMAGE_WIDTH;
-    const scaleY = floorDimensions.height / MAP_IMAGE_HEIGHT;
+    const scaleX = floorDimensions.width / displayedMapWidth;
+    const scaleY = floorDimensions.height / displayedMapHeight;
     const tapX = locationX * scaleX;
     const tapY = locationY * scaleY;
 
@@ -693,29 +702,138 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       }
       setSelectionMode(null);
     }
-  }, [selectionMode, selectedBuilding, selectedFloor, currentFloorData, floorDimensions]);
+  }, [selectionMode, selectedBuilding, selectedFloor, currentFloorData, floorDimensions, displayedMapWidth, displayedMapHeight]);
 
   // Toggle selection mode
   const toggleSelectionMode = (mode) => {
+    setInspectMode(false);
     setSelectionMode(selectionMode === mode ? null : mode);
+  };
+
+  const toggleInspectMode = () => {
+    setSelectionMode(null);
+    setInspectMode((prev) => !prev);
   };
 
   // Scale room coordinates for display
   const scaleCoord = useCallback((x, y) => {
-    const scaleX = MAP_IMAGE_WIDTH / floorDimensions.width;
-    const scaleY = MAP_IMAGE_HEIGHT / floorDimensions.height;
+    const scaleX = displayedMapWidth / floorDimensions.width;
+    const scaleY = displayedMapHeight / floorDimensions.height;
     return { x: x * scaleX, y: y * scaleY };
-  }, [floorDimensions]);
+  }, [floorDimensions, displayedMapWidth, displayedMapHeight]);
 
   const scaleDisplayedPoiCoord = useCallback((x, y) => {
     const displayWidth = displayedFloor?.width || floorDimensions.width;
     const displayHeight = displayedFloor?.height || floorDimensions.height;
 
     return {
-      x: x * (MAP_IMAGE_WIDTH / displayWidth),
-      y: y * (MAP_IMAGE_HEIGHT / displayHeight),
+      x: x * (displayedMapWidth / displayWidth),
+      y: y * (displayedMapHeight / displayHeight),
     };
-  }, [displayedFloor, floorDimensions]);
+  }, [displayedFloor, floorDimensions, displayedMapWidth, displayedMapHeight]);
+
+  const renderFloorPlanMap = () => (
+    <View
+      style={styles.mapWrapper}
+      {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
+    >
+      <Image
+        source={displayedFloor.image}
+        style={[
+          styles.floorPlanImage,
+          inspectMode && styles.floorPlanImageInspect,
+        ]}
+        resizeMode="contain"
+      />
+      <IndoorPoiMarkers
+        pois={displayedFloorPois}
+        markerStyle={styles.poiMarker}
+        positionForPoi={(poi) => {
+          const scaledPoi = scaleDisplayedPoiCoord(poi.x, poi.y);
+          return {
+            left: scaledPoi.x,
+            top: scaledPoi.y,
+          };
+        }}
+        testIdPrefix="directions-poi-marker"
+        iconColor={MAROON}
+      />
+      <Svg
+        testID="indoor-route-overlay"
+        style={styles.svgOverlay}
+        width={displayedMapWidth}
+        height={displayedMapHeight}
+      >
+        {selectionMode && currentFloorData.rooms.map((room) => {
+          if (room.x === undefined || room.y === undefined) return null;
+          const scaled = scaleCoord(room.x, room.y);
+          return (
+            <Circle
+              key={room.id}
+              cx={scaled.x}
+              cy={scaled.y}
+              r={8}
+              fill="rgba(145, 35, 56, 0.3)"
+              stroke={MAROON}
+              strokeWidth={2}
+            />
+          );
+        })}
+
+        {svgPath && (
+          <>
+            <Path
+              testID="indoor-route-overlay-path"
+              d={svgPath.path}
+              stroke={BLUE}
+              strokeWidth={4}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="8,4"
+            />
+            <Circle
+              cx={svgPath.start.x}
+              cy={svgPath.start.y}
+              r={12}
+              fill={GREEN}
+              stroke="#fff"
+              strokeWidth={3}
+            />
+            <Circle
+              cx={svgPath.end.x}
+              cy={svgPath.end.y}
+              r={12}
+              fill={MAROON}
+              stroke="#fff"
+              strokeWidth={3}
+            />
+          </>
+        )}
+
+        {!svgPath && startRoom?.x && startRoom?.y && (
+          <Circle
+            cx={scaleCoord(startRoom.x, startRoom.y).x}
+            cy={scaleCoord(startRoom.x, startRoom.y).y}
+            r={12}
+            fill={GREEN}
+            stroke="#fff"
+            strokeWidth={3}
+          />
+        )}
+        {!svgPath && destRoom?.x && destRoom?.y && (
+          <Circle
+            cx={scaleCoord(destRoom.x, destRoom.y).x}
+            cy={scaleCoord(destRoom.x, destRoom.y).y}
+            r={12}
+            fill={MAROON}
+            stroke="#fff"
+            strokeWidth={3}
+          />
+        )}
+      </Svg>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -1088,7 +1206,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         )}
 
           {/* Floor Plan with Route */}
-          <View 
+          <View
             testID="indoor-floor-plan-container"
             style={styles.floorPlanContainer}
             {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
@@ -1104,114 +1222,55 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                     )} · Floor {displayedFloor.label}
                   </Text>
                 </View>
-                {activeJourneyStage && (
-                  <View style={styles.mapStageBadge}>
-                    <Text style={styles.mapStageBadgeText}>{activeJourneyStage.shortLabel}</Text>
-                  </View>
-                )}
+                <View style={styles.mapStageActions}>
+                  <Pressable
+                    style={[
+                      styles.inspectToggle,
+                      inspectMode && styles.inspectToggleActive,
+                    ]}
+                    onPress={toggleInspectMode}
+                  >
+                    <MaterialIcons
+                      name={inspectMode ? "zoom-out-map" : "zoom-in"}
+                      size={14}
+                      color={inspectMode ? "#fff" : MAROON}
+                    />
+                    <Text
+                      style={[
+                        styles.inspectToggleText,
+                        inspectMode && styles.inspectToggleTextActive,
+                      ]}
+                    >
+                      {inspectMode ? "Inspecting map" : "Inspect map"}
+                    </Text>
+                  </Pressable>
+                  {activeJourneyStage && (
+                    <View style={styles.mapStageBadge}>
+                      <Text style={styles.mapStageBadgeText}>{activeJourneyStage.shortLabel}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
             )}
             {displayedFloor?.image ? (
-              <View style={styles.mapWrapper}>
-                <Image
-                  source={displayedFloor.image}
-                  style={styles.floorPlanImage}
-                  resizeMode="contain"
-                />
-                <IndoorPoiMarkers
-                  pois={displayedFloorPois}
-                  markerStyle={styles.poiMarker}
-                  positionForPoi={(poi) => {
-                    const scaledPoi = scaleDisplayedPoiCoord(poi.x, poi.y);
-                    return {
-                      left: scaledPoi.x,
-                      top: scaledPoi.y,
-                    };
-                  }}
-                  testIdPrefix="directions-poi-marker"
-                  iconColor={MAROON}
-                />
-                {/* SVG Overlay for Route and Markers */}
-                <Svg
-                  testID="indoor-route-overlay"
-                  style={styles.svgOverlay}
-                  width={MAP_IMAGE_WIDTH}
-                  height={MAP_IMAGE_HEIGHT}
+              inspectMode ? (
+                <ScrollView
+                  horizontal
+                  contentContainerStyle={styles.floorPlanScrollContent}
+                  showsHorizontalScrollIndicator={false}
                 >
-                  {/* Show clickable room markers when in selection mode */}
-                  {selectionMode && currentFloorData.rooms.map((room) => {
-                    if (room.x === undefined || room.y === undefined) return null;
-                    const scaled = scaleCoord(room.x, room.y);
-                    return (
-                      <Circle
-                        key={room.id}
-                        cx={scaled.x}
-                        cy={scaled.y}
-                        r={8}
-                        fill="rgba(145, 35, 56, 0.3)"
-                        stroke={MAROON}
-                        strokeWidth={2}
-                      />
-                    );
-                  })}
-                  
-                  {/* Route Path */}
-                  {svgPath && (
-                    <>
-                      <Path
-                        testID="indoor-route-overlay-path"
-                        d={svgPath.path}
-                        stroke={BLUE}
-                        strokeWidth={4}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeDasharray="8,4"
-                      />
-                      {/* Start Point */}
-                      <Circle
-                        cx={svgPath.start.x}
-                        cy={svgPath.start.y}
-                        r={12}
-                        fill={GREEN}
-                        stroke="#fff"
-                        strokeWidth={3}
-                      />
-                      {/* End Point */}
-                      <Circle
-                        cx={svgPath.end.x}
-                        cy={svgPath.end.y}
-                        r={12}
-                        fill={MAROON}
-                        stroke="#fff"
-                        strokeWidth={3}
-                      />
-                    </>
-                  )}
-                  
-                  {/* Start/End Markers when selected but no path yet */}
-                  {!svgPath && startRoom?.x && startRoom?.y && (
-                    <Circle
-                      cx={scaleCoord(startRoom.x, startRoom.y).x}
-                      cy={scaleCoord(startRoom.x, startRoom.y).y}
-                      r={12}
-                      fill={GREEN}
-                      stroke="#fff"
-                      strokeWidth={3}
-                    />
-                  )}
-                  {!svgPath && destRoom?.x && destRoom?.y && (
-                    <Circle
-                      cx={scaleCoord(destRoom.x, destRoom.y).x}
-                      cy={scaleCoord(destRoom.x, destRoom.y).y}
-                      r={12}
-                      fill={MAROON}
-                      stroke="#fff"
-                      strokeWidth={3}
-                    />
-                  )}
-                </Svg>
-              </View>
+                  <ScrollView
+                    contentContainerStyle={styles.floorPlanScrollContent}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {renderFloorPlanMap()}
+                  </ScrollView>
+                </ScrollView>
+              ) : (
+                <View style={styles.floorPlanScrollContent}>
+                  {renderFloorPlanMap()}
+                </View>
+              )
             ) : (
               <View style={styles.noFloorPlan}>
                 <MaterialIcons name="map" size={48} color="#ccc" />
@@ -1587,12 +1646,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  floorPlanScrollContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   mapWrapper: {
     position: "relative",
   },
   floorPlanImage: {
     width: MAP_IMAGE_WIDTH,
     height: MAP_IMAGE_HEIGHT,
+  },
+  floorPlanImageInspect: {
+    width: MAP_IMAGE_WIDTH * MAP_INSPECT_SCALE,
+    height: MAP_IMAGE_HEIGHT * MAP_INSPECT_SCALE,
   },
   svgOverlay: {
     position: "absolute",
@@ -1958,10 +2025,38 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 6,
   },
+  mapStageActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   mapStageTitle: {
     fontSize: 14,
     fontWeight: "700",
     color: "#5d4637",
+  },
+  inspectToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(145, 35, 56, 0.35)",
+    backgroundColor: "#fff",
+  },
+  inspectToggleActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  inspectToggleText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: MAROON,
+  },
+  inspectToggleTextActive: {
+    color: "#fff",
   },
   mapStageBadge: {
     paddingVertical: 6,
