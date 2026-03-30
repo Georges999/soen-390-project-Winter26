@@ -1071,6 +1071,29 @@ describe('IndoorDirectionsScreen', () => {
       expect(getByText(/Hall Building · Floor 9/)).toBeTruthy();
     });
 
+    it('should sync the active journey stage when the floor selector is used during a route', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+      const { getAllByText, getByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getAllByText('9')[0]);
+
+      expect(getAllByText('Walk on Floor 9').length).toBeGreaterThan(0);
+      expect(getByText(/Hall Building · Floor 9/)).toBeTruthy();
+    });
+
     it('should set transitionPref to elevator when accessibility is toggled on', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([]);

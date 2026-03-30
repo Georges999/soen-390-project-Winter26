@@ -127,6 +127,19 @@ describe('crossFloorRouter', () => {
       expect(pair.startNode.id).toBe('Hall8_elevator_001');
       expect(pair.endNode.id).toBe('Hall9_elevator_001');
     });
+
+    it('falls back to any available transition node when only one floor has connectors', () => {
+      const pair = pickTransitionPair('Hall-8', 'NOPE', 'stairs');
+
+      expect(pair).toBeDefined();
+      expect(pair.transitionType).toBe('stairs');
+      expect(pair.startNode).toEqual(expect.objectContaining({ type: 'stairs' }));
+      expect(pair.endNode).toBeNull();
+    });
+
+    it('returns null when no transition nodes exist on either floor', () => {
+      expect(pickTransitionPair('NOPE', 'ALSO-NOPE', 'stairs')).toBeNull();
+    });
   });
 
   describe('getGroundFloor', () => {
@@ -182,6 +195,25 @@ describe('crossFloorRouter', () => {
       expect(types).toContain('indoor');
     });
 
+    it('still returns a vertical segment when cross-floor transition nodes are unavailable', () => {
+      const segments = buildRouteSegments(
+        { id: 'start-room', floor: 'Unknown-1', buildingId: 'ghost' },
+        { id: 'dest-room', floor: 'Unknown-2', buildingId: 'ghost' },
+        'stairs'
+      );
+
+      expect(segments).toEqual([
+        expect.objectContaining({
+          type: 'vertical',
+          buildingId: 'ghost',
+          fromFloor: 'Unknown-1',
+          toFloor: 'Unknown-2',
+          transitionNodeStart: null,
+          transitionNodeEnd: null,
+        }),
+      ]);
+    });
+
     it('includes outdoor segment for cross-building', () => {
       const segments = buildRouteSegments(
         { id: 'H837', floor: 'Hall-8' },
@@ -226,6 +258,44 @@ describe('crossFloorRouter', () => {
       verticals.forEach((v) => {
         expect(v.transitionType).toBe('elevator');
       });
+    });
+
+    it('falls back to floor metadata when building ids are omitted on a cross-building route', () => {
+      const segments = buildRouteSegments(
+        { id: 'H110', floor: 'Hall-1' },
+        { id: 'MB1.210', floor: 'MB-1' },
+        'stairs'
+      );
+
+      expect(segments.some((segment) => segment.type === 'outdoor')).toBe(true);
+      expect(segments.find((segment) => segment.type === 'outdoor')).toEqual(
+        expect.objectContaining({
+          fromBuildingId: 'hall',
+          toBuildingId: 'mb',
+        })
+      );
+    });
+
+    it('adds the destination-side vertical transition when starting on a ground floor', () => {
+      const segments = buildRouteSegments(
+        { id: 'H110', floor: 'Hall-1', buildingId: 'hall' },
+        { id: 'MB1.210', floor: 'MB-1', buildingId: 'mb' },
+        'stairs'
+      );
+
+      const destinationVertical = segments.find(
+        (segment) => segment.type === 'vertical' && segment.buildingId === 'mb'
+      );
+      const startVertical = segments.find(
+        (segment) => segment.type === 'vertical' && segment.buildingId === 'hall'
+      );
+
+      expect(destinationVertical).toEqual(expect.objectContaining({
+        fromFloor: 'MB-S2',
+        toFloor: 'MB-1',
+      }));
+      expect(startVertical).toBeUndefined();
+      expect(segments.some((segment) => segment.type === 'indoor' && segment.toNodeId === 'MB1.210')).toBe(true);
     });
   });
 });
