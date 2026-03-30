@@ -173,6 +173,47 @@ describe('navigationJourney', () => {
     expect(finishingAndGenericStages[1].description).toBe('Follow the indoor path across Floor 9.');
   });
 
+  it('falls back to generic labels when indoor stage endpoints are missing labels', () => {
+    const unlabeledStartRoom = {
+      id: 'Hall8_classroom_002',
+      floor: 'Hall-8',
+      buildingId: 'hall',
+    };
+    const unlabeledDestRoom = {
+      id: 'Hall9_classroom_001',
+      floor: 'Hall-9',
+      buildingId: 'hall',
+    };
+
+    const directStage = buildIndoorStage({
+      type: 'indoor',
+      floorId: 'Hall-8',
+      buildingId: 'hall',
+      fromNodeId: unlabeledStartRoom.id,
+      toNodeId: unlabeledDestRoom.id,
+    }, 0, unlabeledStartRoom, unlabeledDestRoom);
+
+    const leavingStage = buildIndoorStage({
+      type: 'indoor',
+      floorId: 'Hall-8',
+      buildingId: 'hall',
+      fromNodeId: unlabeledStartRoom.id,
+      toNodeId: 'Hall8_stairs_001',
+    }, 1, unlabeledStartRoom, destRoom);
+
+    const finishingStage = buildIndoorStage({
+      type: 'indoor',
+      floorId: 'Hall-9',
+      buildingId: 'hall',
+      fromNodeId: 'Hall9_stairs_001',
+      toNodeId: unlabeledDestRoom.id,
+    }, 2, startRoom, unlabeledDestRoom);
+
+    expect(directStage.description).toBe('Walk directly to your destination on Floor 8.');
+    expect(leavingStage.description).toBe('Leave your start point and follow the path to the floor connector.');
+    expect(finishingStage.description).toBe('Continue on Floor 9 and finish at your destination.');
+  });
+
   it('returns the first indoor stage as the default journey stage', () => {
     const stages = [
       { id: 'journey-stage-0', type: 'outdoor' },
