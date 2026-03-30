@@ -230,6 +230,19 @@ describe('navigationJourney', () => {
     expect(buildJourneyStats([], null, false)).toEqual([]);
   });
 
+  it('supports the legacy buildJourneyStats argument order', () => {
+    expect(buildJourneyStats('stairs', false, [
+      { type: 'vertical' },
+      { type: 'outdoor' },
+    ])).toEqual([
+      '1 floor transfer',
+      'Using stairs',
+      '1 outdoor segment',
+    ]);
+
+    expect(buildJourneyStats('stairs', false, null)).toEqual([]);
+  });
+
   it('exports readable fallback labels', () => {
     expect(getFloorLabel('Hall-8')).toBe('8');
     expect(getFloorLabel('Unknown-Floor')).toBe('Unknown-Floor');
