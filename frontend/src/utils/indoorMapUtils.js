@@ -1,5 +1,48 @@
 import { buildings } from "../data/indoorFloorData";
 
+function compareText(a = "", b = "") {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function getLocationPreferenceScore(room, preferredBuildingId, preferredCampusId) {
+  if (preferredBuildingId && room.buildingId === preferredBuildingId) {
+    return 0;
+  }
+
+  if (preferredCampusId && room.campusId === preferredCampusId) {
+    return 1;
+  }
+
+  return 2;
+}
+
+function getRoomMatchScore(room, lowerQuery, normalizedQuery) {
+  const label = (room.label || "").toLowerCase();
+  const id = (room.id || "").toLowerCase();
+  const buildingName = (room.buildingName || "").toLowerCase();
+  const searchKeys = room.searchKeys || [];
+
+  const exactSearchKeyMatch = searchKeys.some((key) => key === normalizedQuery);
+  if (exactSearchKeyMatch || label === lowerQuery || id === lowerQuery) {
+    return 0;
+  }
+
+  const prefixSearchKeyMatch = searchKeys.some((key) => key.startsWith(normalizedQuery));
+  if (prefixSearchKeyMatch || label.startsWith(lowerQuery) || id.startsWith(lowerQuery)) {
+    return 1;
+  }
+
+  if (label.includes(lowerQuery) || id.includes(lowerQuery)) {
+    return 2;
+  }
+
+  if (buildingName.includes(lowerQuery)) {
+    return 3;
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
 export function buildAllRooms(source = buildings) {
   const campusEntries = Array.isArray(source)
     ? [["", source]]
@@ -17,19 +60,54 @@ export function buildAllRooms(source = buildings) {
   );
 }
 
-export function getFilteredRooms(allRooms, searchQuery) {
+export function getFilteredRooms(allRooms, searchQuery, options = {}) {
   if (!searchQuery.trim()) return [];
 
+  const { preferredBuildingId = null, preferredCampusId = null } = options;
   const lowerQuery = searchQuery.toLowerCase();
   const normalizedQuery = searchQuery.toUpperCase().replaceAll(/[^A-Z0-9]/g, "");
+  const preferLocationFirst = /^\d+$/.test(normalizedQuery);
 
-  return allRooms.filter(
-    (room) =>
-      (room.label || "").toLowerCase().includes(lowerQuery) ||
-      (room.id || "").toLowerCase().includes(lowerQuery) ||
-      (room.buildingName || "").toLowerCase().includes(lowerQuery) ||
+  return allRooms
+    .map((room) => ({
+      room,
+      score: getRoomMatchScore(room, lowerQuery, normalizedQuery),
+      locationScore: getLocationPreferenceScore(
+        room,
+        preferredBuildingId,
+        preferredCampusId
+      ),
+    }))
+    .filter(({ room, score }) =>
+      Number.isFinite(score) ||
       (room.searchKeys || []).some((key) => key.includes(normalizedQuery))
-  );
+    )
+    .sort((left, right) => {
+      if (preferLocationFirst && left.locationScore !== right.locationScore) {
+        return left.locationScore - right.locationScore;
+      }
+
+      if (left.score !== right.score) {
+        return left.score - right.score;
+      }
+
+      if (left.locationScore !== right.locationScore) {
+        return left.locationScore - right.locationScore;
+      }
+
+      const buildingComparison = compareText(left.room.buildingName, right.room.buildingName);
+      if (buildingComparison !== 0) {
+        return buildingComparison;
+      }
+
+      const floorComparison = compareText(left.room.floor, right.room.floor);
+      if (floorComparison !== 0) {
+        return floorComparison;
+      }
+
+      return compareText(left.room.label, right.room.label);
+    })
+    .map(({ room }) => room);
 }
 
 export function getSelectedRoomContext(campusBuildings, selectedRoom) {

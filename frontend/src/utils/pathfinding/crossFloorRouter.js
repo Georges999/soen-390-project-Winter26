@@ -45,6 +45,88 @@ export function getVerticalTransitionNodes(floorId) {
   };
 }
 
+function getTransitionNodesByType(floorId, transitionType) {
+  const { stairs, elevators } = getVerticalTransitionNodes(floorId);
+  return transitionType === "elevator" ? elevators : stairs;
+}
+
+function distanceBetweenPoints(pointA, pointB) {
+  if (!pointA || !pointB) return 0;
+  return Math.hypot((pointA.x || 0) - (pointB.x || 0), (pointA.y || 0) - (pointB.y || 0));
+}
+
+function getPairCost(startNode, endNode, startAnchor, destAnchor) {
+  const startCost = distanceBetweenPoints(startAnchor, startNode);
+  const destinationCost = distanceBetweenPoints(destAnchor, endNode);
+  const alignmentCost = distanceBetweenPoints(startNode, endNode);
+
+  return startCost + destinationCost + alignmentCost * 1.5;
+}
+
+/**
+ * Choose a consistent transition pair between two floors.
+ *
+ * Prioritizes the requested transition type and selects the pair that best
+ * lines up across floors while staying close to the start and destination.
+ */
+export function pickTransitionPair(
+  startFloorId,
+  destFloorId,
+  preference = "stairs",
+  startAnchor = null,
+  destAnchor = null
+) {
+  const preferredTypes = preference === "elevator"
+    ? ["elevator", "stairs"]
+    : ["stairs", "elevator"];
+
+  for (const transitionType of preferredTypes) {
+    const startNodes = getTransitionNodesByType(startFloorId, transitionType);
+    const destNodes = getTransitionNodesByType(destFloorId, transitionType);
+
+    if (!startNodes.length || !destNodes.length) {
+      continue;
+    }
+
+    let bestPair = null;
+    let bestCost = Infinity;
+
+    startNodes.forEach((startNode) => {
+      destNodes.forEach((endNode) => {
+        const pairCost = getPairCost(startNode, endNode, startAnchor, destAnchor);
+        if (pairCost < bestCost) {
+          bestCost = pairCost;
+          bestPair = {
+            transitionType,
+            startNode,
+            endNode,
+          };
+        }
+      });
+    });
+
+    if (bestPair) {
+      return bestPair;
+    }
+  }
+
+  const fallbackStartNode = pickTransitionNode(startFloorId, preference);
+  const fallbackEndNode = pickTransitionNode(destFloorId, preference);
+
+  if (!fallbackStartNode && !fallbackEndNode) {
+    return null;
+  }
+
+  return {
+    transitionType:
+      fallbackStartNode?.type ||
+      fallbackEndNode?.type ||
+      preference,
+    startNode: fallbackStartNode,
+    endNode: fallbackEndNode,
+  };
+}
+
 /**
  * Pick the best vertical-transition node on `floorId` for the given
  * preference ("stairs" | "elevator").
@@ -207,11 +289,15 @@ function buildCrossFloorSegments(startRoom, destRoom, transitionPref) {
   const buildingId =
     startRoom.buildingId || getBuildingForFloor(startRoom.floor)?.buildingId;
 
-  // Pick transition node on the start floor
-  const transitionNode = pickTransitionNode(startRoom.floor, transitionPref);
-
-  // Pick matching transition node on the dest floor
-  const destTransitionNode = pickTransitionNode(destRoom.floor, transitionPref);
+  const transitionPair = pickTransitionPair(
+    startRoom.floor,
+    destRoom.floor,
+    transitionPref,
+    startRoom,
+    destRoom
+  );
+  const transitionNode = transitionPair?.startNode || null;
+  const destTransitionNode = transitionPair?.endNode || null;
 
   const segments = [];
 
@@ -232,7 +318,7 @@ function buildCrossFloorSegments(startRoom, destRoom, transitionPref) {
     buildingId,
     fromFloor: startRoom.floor,
     toFloor: destRoom.floor,
-    transitionType: transitionNode?.type === "elevator" ? "elevator" : "stairs",
+    transitionType: transitionPair?.transitionType || "stairs",
     transitionNodeStart: transitionNode?.id || null,
     transitionNodeEnd: destTransitionNode?.id || null,
   });
@@ -272,9 +358,14 @@ function buildCrossBuildingSegments(startRoom, destRoom, transitionPref) {
 
   // ── Phase 1: Get to ground floor of start building ──
   if (startRoom.floor !== startGroundFloor && startGroundFloor) {
-    // Walk to transition node on current floor
-    const transNode = pickTransitionNode(startRoom.floor, transitionPref);
-    const groundTransNode = pickTransitionNode(startGroundFloor, transitionPref);
+    const transitionPair = pickTransitionPair(
+      startRoom.floor,
+      startGroundFloor,
+      transitionPref,
+      startRoom
+    );
+    const transNode = transitionPair?.startNode || null;
+    const groundTransNode = transitionPair?.endNode || null;
 
     if (transNode) {
       segments.push({
@@ -291,7 +382,7 @@ function buildCrossBuildingSegments(startRoom, destRoom, transitionPref) {
       buildingId: startBuildingId,
       fromFloor: startRoom.floor,
       toFloor: startGroundFloor,
-      transitionType: transNode?.type === "elevator" ? "elevator" : "stairs",
+      transitionType: transitionPair?.transitionType || "stairs",
       transitionNodeStart: transNode?.id || null,
       transitionNodeEnd: groundTransNode?.id || null,
     });
@@ -311,15 +402,22 @@ function buildCrossBuildingSegments(startRoom, destRoom, transitionPref) {
 
   // ── Phase 3: Navigate to destination floor in target building ──
   if (destRoom.floor !== destGroundFloor && destGroundFloor) {
-    const groundTransNode = pickTransitionNode(destGroundFloor, transitionPref);
-    const destTransNode = pickTransitionNode(destRoom.floor, transitionPref);
+    const transitionPair = pickTransitionPair(
+      destGroundFloor,
+      destRoom.floor,
+      transitionPref,
+      null,
+      destRoom
+    );
+    const groundTransNode = transitionPair?.startNode || null;
+    const destTransNode = transitionPair?.endNode || null;
 
     segments.push({
       type: "vertical",
       buildingId: destBuildingId,
       fromFloor: destGroundFloor,
       toFloor: destRoom.floor,
-      transitionType: destTransNode?.type === "elevator" ? "elevator" : "stairs",
+      transitionType: transitionPair?.transitionType || "stairs",
       transitionNodeStart: groundTransNode?.id || null,
       transitionNodeEnd: destTransNode?.id || null,
     });

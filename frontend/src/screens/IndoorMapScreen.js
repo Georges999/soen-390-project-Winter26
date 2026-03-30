@@ -68,8 +68,11 @@ function IndoorMapScreen({ navigation }) {
 
   // Filtered search results
   const searchResults = useMemo(
-    () => getFilteredRooms(allRooms, searchQuery),
-    [searchQuery, allRooms]
+    () => getFilteredRooms(allRooms, searchQuery, {
+      preferredBuildingId: currentBuilding?.id,
+      preferredCampusId: selectedCampus,
+    }),
+    [searchQuery, allRooms, currentBuilding?.id, selectedCampus]
   );
 
   const selectedRoomContext = useMemo(() => {

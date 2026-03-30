@@ -15,6 +15,7 @@ import {
   getBuildingForFloor,
   getVerticalTransitionNodes,
   pickTransitionNode,
+  pickTransitionPair,
   getGroundFloor,
   getBuildingCoords,
 } from '../../src/utils/pathfinding/crossFloorRouter';
@@ -93,6 +94,38 @@ describe('crossFloorRouter', () => {
 
     it('returns null for unknown floor', () => {
       expect(pickTransitionNode('NOPE')).toBeNull();
+    });
+  });
+
+  describe('pickTransitionPair', () => {
+    it('chooses a consistent stairs pair between floors', () => {
+      const pair = pickTransitionPair(
+        'Hall-8',
+        'Hall-9',
+        'stairs',
+        { x: 300, y: 730 },
+        { x: 300, y: 740 }
+      );
+
+      expect(pair).toBeDefined();
+      expect(pair.transitionType).toBe('stairs');
+      expect(pair.startNode.id).toBe('Hall8_stairs_001');
+      expect(pair.endNode.id).toBe('Hall9_stairs_002');
+    });
+
+    it('keeps elevator routing aligned when elevators exist on both floors', () => {
+      const pair = pickTransitionPair(
+        'Hall-8',
+        'Hall-9',
+        'elevator',
+        { x: 650, y: 660 },
+        { x: 650, y: 650 }
+      );
+
+      expect(pair).toBeDefined();
+      expect(pair.transitionType).toBe('elevator');
+      expect(pair.startNode.id).toBe('Hall8_elevator_001');
+      expect(pair.endNode.id).toBe('Hall9_elevator_001');
     });
   });
 
