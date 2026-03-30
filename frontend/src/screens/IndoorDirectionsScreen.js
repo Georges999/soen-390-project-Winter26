@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   View,
@@ -10,7 +10,6 @@ import {
   ScrollView,
   Dimensions,
   Switch,
-  Modal,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,7 +25,16 @@ import {
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
 import {
+  buildJourneyStages,
+  buildJourneyStats,
+  getBuildingName,
+  getDefaultJourneyStage,
+  getFloorLabel,
+  getJourneyMapStage,
+} from "../utils/pathfinding/navigationJourney";
+import {
   buildAllRooms,
+  getFilteredRooms,
   getInitialSelection,
   getSelectionForLocation,
 } from "../utils/indoorMapUtils";
@@ -44,6 +52,7 @@ const MAROON = "#912338";
 const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const MAP_INSPECT_SCALE = 1.45;
 
 // ── Step-text helpers (extracted to reduce cognitive complexity) ──
 
@@ -63,12 +72,38 @@ function buildSegmentIcon(method) {
   return method === "elevator" ? "elevator" : "stairs";
 }
 
+function isRedundantContinueStep(text = "") {
+  return text.startsWith("Continue through") || text.startsWith("Continue along");
+}
+
+function finalizeDirectionSteps(rawSteps) {
+  const compactedSteps = [];
+
+  rawSteps.forEach((step) => {
+    const previousStep = compactedSteps.at(-1);
+
+    if (
+      previousStep &&
+      isRedundantContinueStep(previousStep.text) &&
+      isRedundantContinueStep(step.text)
+    ) {
+      return;
+    }
+
+    compactedSteps.push(step);
+  });
+
+  return compactedSteps.map((step, index) => ({
+    ...step,
+    step: index + 1,
+  }));
+}
+
 /** Build direction steps for cross-floor / cross-building routes. */
 function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
   const steps = [];
-  let stepNum = 1;
 
-  steps.push({ step: stepNum++, text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
+  steps.push({ text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
 
   for (let si = 0; si < segmentResults.length; si++) {
     const { segment, pathResult: segPath } = segmentResults[si];
@@ -79,32 +114,30 @@ function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
       const floorLabel = floorMeta?.floorLabel || segment.floorId;
 
       if (si > 0) {
-        steps.push({ step: stepNum++, text: `Continue on Floor ${floorLabel}`, icon: "layers" });
+        steps.push({ text: `Continue on Floor ${floorLabel}`, icon: "layers" });
       }
 
       for (let i = 1; i < coords.length - 1; i++) {
-        steps.push({ step: stepNum++, text: nodeStepText(coords[i]) });
+        steps.push({ text: nodeStepText(coords[i]) });
       }
     } else if (segment.type === "vertical") {
       const fromLabel = FLOOR_META[segment.fromFloor]?.floorLabel || segment.fromFloor;
       const toLabel = FLOOR_META[segment.toFloor]?.floorLabel || segment.toFloor;
       const method = segment.transitionType === "elevator" ? "elevator" : "stairs";
       steps.push({
-        step: stepNum++,
         text: `Take the ${method} from Floor ${fromLabel} to Floor ${toLabel}`,
         icon: buildSegmentIcon(method),
       });
     } else if (segment.type === "outdoor") {
       steps.push({
-        step: stepNum++,
         text: `Walk outside to the ${segment.toBuildingId?.toUpperCase() || "destination"} building`,
         icon: "directions-walk",
       });
     }
   }
 
-  steps.push({ step: stepNum, text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
-  return steps;
+  steps.push({ text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
+  return finalizeDirectionSteps(steps);
 }
 
 /** Build direction steps for same-floor routes. */
@@ -112,26 +145,56 @@ function buildSameFloorSteps(coords, startRoom, destRoom) {
   if (coords.length < 2) return [];
 
   const steps = [{
-    step: 1,
     text: `Start at ${startRoom?.label || 'starting point'}`,
     distance: null,
   }];
 
   for (let i = 1; i < coords.length - 1; i++) {
     steps.push({
-      step: i + 1,
       text: nodeStepText(coords[i]),
       distance: null,
     });
   }
 
   steps.push({
-    step: coords.length,
     text: `Arrive at ${destRoom?.label || 'destination'}`,
     distance: null,
   });
 
-  return steps;
+  return finalizeDirectionSteps(steps);
+}
+
+function buildRouteOverviewItems(routeSegments, startRoom, destRoom) {
+  if (!routeSegments.length || !startRoom || !destRoom) return [];
+
+  const items = [{
+    icon: "trip-origin",
+    text: `Start on Floor ${getFloorLabel(startRoom.floor)} in ${getBuildingName(startRoom.buildingId)}`,
+  }];
+
+  routeSegments.forEach((segment) => {
+    if (segment.type === "vertical") {
+      items.push({
+        icon: buildSegmentIcon(segment.transitionType),
+        text: `Change floors via ${segment.transitionType} to Floor ${getFloorLabel(segment.toFloor)}`,
+      });
+      return;
+    }
+
+    if (segment.type === "outdoor") {
+      items.push({
+        icon: "directions-walk",
+        text: `Walk outside from ${getBuildingName(segment.fromBuildingId)} to ${getBuildingName(segment.toBuildingId)}`,
+      });
+    }
+  });
+
+  items.push({
+    icon: "place",
+    text: `Finish at ${destRoom.label || "destination"} on Floor ${getFloorLabel(destRoom.floor)}`,
+  });
+
+  return items;
 }
 
 // Map image dimensions
@@ -176,14 +239,15 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Selection mode for map clicks
   const [selectionMode, setSelectionMode] = useState(null); // "start" or "dest"
+  const [inspectMode, setInspectMode] = useState(false);
 
   // Accessibility route toggle
   const [accessibleRoute, setAccessibleRoute] = useState(false);
 
   // Transition preference for cross-floor routes
   const [transitionPref, setTransitionPref] = useState(null); // "stairs" | "elevator"
-  const [showTransitionModal, setShowTransitionModal] = useState(false);
-  const [activeSegmentIndex, setActiveSegmentIndex] = useState(0);
+  const [activeJourneyStageId, setActiveJourneyStageId] = useState(null);
+  const resolvedTransitionPref = transitionPref || (accessibleRoute ? "elevator" : "stairs");
 
   const [selectedCampus, setSelectedCampus] = useState(initialSelection.campusId);
   const [selectedBuildingIdx, setSelectedBuildingIdx] = useState(initialSelection.buildingIdx);
@@ -235,9 +299,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const routeSegments = useMemo(() => {
     if (!routeType) return [];
     if (routeType === "same-floor" || routeType === "same-room") return [];
-    const pref = transitionPref || (accessibleRoute ? "elevator" : "stairs");
-    return buildRouteSegments(startRoom, destRoom, pref);
-  }, [startRoom, destRoom, routeType, transitionPref, accessibleRoute]);
+    return buildRouteSegments(startRoom, destRoom, resolvedTransitionPref);
+  }, [startRoom, destRoom, routeType, resolvedTransitionPref]);
 
   // Multi-segment path results (cross-floor)
   const segmentResults = useMemo(() => {
@@ -245,31 +308,127 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     return routeSegments.map((seg) => resolveSegmentPath(seg, accessibleRoute));
   }, [routeSegments, accessibleRoute]);
 
+  const journeyStages = useMemo(
+    () => buildJourneyStages(routeSegments, startRoom, destRoom),
+    [routeSegments, startRoom, destRoom]
+  );
+
+  const defaultJourneyStage = useMemo(
+    () => getDefaultJourneyStage(journeyStages),
+    [journeyStages]
+  );
+
+  const activeJourneyStage = useMemo(
+    () => journeyStages.find((stage) => stage.id === activeJourneyStageId) || defaultJourneyStage,
+    [journeyStages, activeJourneyStageId, defaultJourneyStage]
+  );
+
+  const mapJourneyStage = useMemo(
+    () => getJourneyMapStage(journeyStages, activeJourneyStage?.id),
+    [journeyStages, activeJourneyStage]
+  );
+
+  const journeyStats = useMemo(
+    () => buildJourneyStats(routeSegments, transitionPref, accessibleRoute),
+    [routeSegments, transitionPref, accessibleRoute]
+  );
+
   // Filtered search results
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase();
-    return allRooms.filter(
-      (r) =>
-        (r.label || "").toLowerCase().includes(q) ||
-        (r.id || "").toLowerCase().includes(q) ||
-        (r.buildingName || "").toLowerCase().includes(q)
+  const searchResults = useMemo(
+    () => getFilteredRooms(allRooms, searchQuery, {
+      preferredBuildingId: selectedBuilding?.id,
+      preferredCampusId: selectedCampus,
+    }),
+    [searchQuery, allRooms, selectedBuilding?.id, selectedCampus]
+  );
+
+  const displayedSegmentResult = useMemo(() => {
+    if (!segmentResults.length) return null;
+
+    if (activeJourneyStage?.type === "indoor") {
+      return segmentResults[activeJourneyStage.segmentIndex] || null;
+    }
+
+    if (mapJourneyStage?.type === "indoor") {
+      return segmentResults[mapJourneyStage.segmentIndex] || null;
+    }
+
+    const selectedFloorSegment = segmentResults.find(
+      ({ segment }) =>
+        segment.type === "indoor" &&
+        segment.floorId === selectedFloor?.id &&
+        segment.buildingId === selectedBuilding?.id
     );
-  }, [searchQuery, allRooms]);
+    if (selectedFloorSegment) {
+      return selectedFloorSegment;
+    }
+
+    return segmentResults.find(({ segment }) => segment.type === "indoor") || null;
+  }, [segmentResults, activeJourneyStage, mapJourneyStage, selectedFloor?.id, selectedBuilding?.id]);
+
+  const routeOverviewItems = useMemo(
+    () => buildRouteOverviewItems(routeSegments, startRoom, destRoom),
+    [routeSegments, startRoom, destRoom]
+  );
+
+  const browsingLocked = Boolean(startRoom && destRoom);
+
+  useEffect(() => {
+    if (!journeyStages.length) {
+      if (activeJourneyStageId !== null) {
+        setActiveJourneyStageId(null);
+      }
+      return;
+    }
+
+    const currentStageStillExists = journeyStages.some((stage) => stage.id === activeJourneyStageId);
+    if (!currentStageStillExists && defaultJourneyStage) {
+      setActiveJourneyStageId(defaultJourneyStage.id);
+    }
+  }, [journeyStages, activeJourneyStageId, defaultJourneyStage]);
+
+  useEffect(() => {
+    if (!browsingLocked || !mapJourneyStage?.mapBuildingId || !mapJourneyStage?.mapFloorId) {
+      return;
+    }
+
+    const nextSelection = getSelectionForLocation(
+      mapJourneyStage.mapBuildingId,
+      mapJourneyStage.mapFloorId
+    );
+
+    if (
+      nextSelection.campusId !== selectedCampus ||
+      nextSelection.buildingIdx !== selectedBuildingIdx ||
+      nextSelection.floorIdx !== selectedFloorIdx
+    ) {
+      setSelectedCampus(nextSelection.campusId);
+      setSelectedBuildingIdx(nextSelection.buildingIdx);
+      setSelectedFloorIdx(nextSelection.floorIdx);
+    }
+  }, [
+    browsingLocked,
+    mapJourneyStage,
+    selectedCampus,
+    selectedBuildingIdx,
+    selectedFloorIdx,
+  ]);
 
   // Calculate path - single floor (same-floor) or first indoor segment (cross-floor)
   const pathResult = useMemo(() => {
     if (!startRoom || !destRoom) return null;
 
-    // Cross-floor / cross-building: use the active segment result
     if (routeSegments.length > 0 && segmentResults.length > 0) {
-      // Find the indoor segment at activeSegmentIndex
-      const activeResult = segmentResults[activeSegmentIndex];
-      if (activeResult?.pathResult) return activeResult.pathResult;
-      // If active segment is vertical/outdoor, show the nearest indoor segment
-      for (const sr of segmentResults) {
-        if (sr.pathResult?.ok) return sr.pathResult;
+      if (displayedSegmentResult?.pathResult) {
+        return displayedSegmentResult.pathResult;
       }
+
+      for (const sr of segmentResults) {
+        if (sr.segment.type === "indoor" && sr.pathResult?.ok) {
+          return sr.pathResult;
+        }
+      }
+
       return { ok: false, reason: "No indoor path available for this segment" };
     }
     
@@ -302,7 +461,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     });
 
     return result;
-  }, [startRoom, destRoom, params.building?.id, selectedBuilding, accessibleRoute, routeSegments, segmentResults, activeSegmentIndex]);
+  }, [startRoom, destRoom, params.building?.id, selectedBuilding, accessibleRoute, routeSegments, segmentResults, displayedSegmentResult]);
 
   // Generate step-by-step directions from path (supports multi-segment)
   const directionSteps = useMemo(() => {
@@ -321,34 +480,43 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Route stats - calculate actual distance
   const routeStats = useMemo(() => {
-    if (!pathResult?.ok) {
+    const routedWeight = segmentResults.length > 0
+      ? segmentResults.reduce((total, segmentResult) => (
+        segmentResult.segment.type === "indoor" && segmentResult.pathResult?.ok
+          ? total + segmentResult.pathResult.totalWeight
+          : total
+      ), 0)
+      : pathResult?.ok
+        ? pathResult.totalWeight
+        : 0;
+
+    if (!routedWeight) {
       return { duration: "--", distance: "--", type: "walking" };
     }
-    
-    // The totalWeight is the sum of edge weights (roughly in pixels/units)
-    // Convert to approximate meters (assuming ~1 pixel = 0.1m for indoor maps)
-    const distanceMeters = Math.round(pathResult.totalWeight * 0.1);
-    
-    // Estimate walking time (average walking speed ~1.2 m/s indoors)
+
+    const distanceMeters = Math.round(routedWeight * 0.1);
     const durationSeconds = distanceMeters / 1.2;
     const durationMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
-    
+
     return {
       duration: `${durationMinutes} min`,
       distance: `${distanceMeters}m`,
       type: "walking"
     };
-  }, [pathResult]);
+  }, [pathResult, segmentResults]);
 
   // Determine the floor image to display for active segment
   const displayedFloor = useMemo(() => {
-    if (segmentResults.length > 0) {
-      const activeSeg = segmentResults[activeSegmentIndex]?.segment;
-      if (activeSeg?.type === "indoor" && activeSeg.floorId) {
-        const building = getBuildingById(activeSeg.buildingId);
-        const floor = building?.floors?.find((f) => f.id === activeSeg.floorId);
-        if (floor) return floor;
-      }
+    if (displayedSegmentResult?.segment?.type === "indoor" && displayedSegmentResult.segment.floorId) {
+      const building = getBuildingById(displayedSegmentResult.segment.buildingId);
+      const floor = building?.floors?.find((f) => f.id === displayedSegmentResult.segment.floorId);
+      if (floor) return floor;
+    }
+
+    if (mapJourneyStage?.mapBuildingId && mapJourneyStage?.mapFloorId) {
+      const journeyBuilding = getBuildingById(mapJourneyStage.mapBuildingId);
+      const journeyFloor = journeyBuilding?.floors?.find((floor) => floor.id === mapJourneyStage.mapFloorId);
+      if (journeyFloor) return journeyFloor;
     }
 
     if (
@@ -365,9 +533,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
     return selectedFloor;
   }, [
-    segmentResults,
-    activeSegmentIndex,
+    displayedSegmentResult,
     routeType,
+    mapJourneyStage,
     startRoom,
     destRoom,
     params.building?.id,
@@ -383,6 +551,13 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     );
   }, [displayedFloor]);
 
+  const displayedMapWidth = inspectMode
+    ? MAP_IMAGE_WIDTH * MAP_INSPECT_SCALE
+    : MAP_IMAGE_WIDTH;
+  const displayedMapHeight = inspectMode
+    ? MAP_IMAGE_HEIGHT * MAP_INSPECT_SCALE
+    : MAP_IMAGE_HEIGHT;
+
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
     if (!pathResult?.ok || !pathResult.pathCoords || pathResult.pathCoords.length < 2) {
@@ -392,8 +567,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const coords = pathResult.pathCoords;
     const displayWidth = displayedFloor?.width || floorDimensions.width;
     const displayHeight = displayedFloor?.height || floorDimensions.height;
-    const scaleX = MAP_IMAGE_WIDTH / displayWidth;
-    const scaleY = MAP_IMAGE_HEIGHT / displayHeight;
+    const scaleX = displayedMapWidth / displayWidth;
+    const scaleY = displayedMapHeight / displayHeight;
 
     let pathD = `M ${coords[0].x * scaleX} ${coords[0].y * scaleY}`;
     for (let i = 1; i < coords.length; i++) {
@@ -406,21 +581,17 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       end: { x: coords[coords.length - 1].x * scaleX, y: coords[coords.length - 1].y * scaleY },
       points: coords.map(c => ({ x: c.x * scaleX, y: c.y * scaleY, type: c.type }))
     };
-  }, [pathResult, displayedFloor, floorDimensions]);
+  }, [pathResult, displayedFloor, floorDimensions, displayedMapWidth, displayedMapHeight]);
 
   const handleFieldChange = (text) => {
     if (activeField === "start" && startRoom) {
       setStartRoom(null);
       setTransitionPref(null);
-      setShowTransitionModal(false);
-      setActiveSegmentIndex(0);
     }
 
     if (activeField === "dest" && destRoom) {
       setDestRoom(null);
       setTransitionPref(null);
-      setShowTransitionModal(false);
-      setActiveSegmentIndex(0);
     }
 
     setSearchQuery(text);
@@ -454,6 +625,19 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const handleFloorChange = (index) => {
     setSelectedFloorIdx(index);
     setSelectionMode(null);
+
+    const nextFloor = selectedBuilding?.floors?.[index];
+    if (!nextFloor || !browsingLocked) return;
+
+    const matchingStage = journeyStages.find(
+      (stage) =>
+        stage.mapBuildingId === selectedBuilding?.id &&
+        stage.mapFloorId === nextFloor.id
+    );
+
+    if (matchingStage) {
+      setActiveJourneyStageId(matchingStage.id);
+    }
   };
 
   const handleSelectRoom = (room) => {
@@ -487,8 +671,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const { locationX, locationY } = event.nativeEvent;
     
     // Scale tap coordinates back to original floor plan coordinates
-    const scaleX = floorDimensions.width / MAP_IMAGE_WIDTH;
-    const scaleY = floorDimensions.height / MAP_IMAGE_HEIGHT;
+    const scaleX = floorDimensions.width / displayedMapWidth;
+    const scaleY = floorDimensions.height / displayedMapHeight;
     const tapX = locationX * scaleX;
     const tapY = locationY * scaleY;
 
@@ -518,31 +702,138 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       }
       setSelectionMode(null);
     }
-  }, [selectionMode, selectedBuilding, selectedFloor, currentFloorData, floorDimensions]);
+  }, [selectionMode, selectedBuilding, selectedFloor, currentFloorData, floorDimensions, displayedMapWidth, displayedMapHeight]);
 
   // Toggle selection mode
   const toggleSelectionMode = (mode) => {
+    setInspectMode(false);
     setSelectionMode(selectionMode === mode ? null : mode);
+  };
+
+  const toggleInspectMode = () => {
+    setSelectionMode(null);
+    setInspectMode((prev) => !prev);
   };
 
   // Scale room coordinates for display
   const scaleCoord = useCallback((x, y) => {
-    const scaleX = MAP_IMAGE_WIDTH / floorDimensions.width;
-    const scaleY = MAP_IMAGE_HEIGHT / floorDimensions.height;
+    const scaleX = displayedMapWidth / floorDimensions.width;
+    const scaleY = displayedMapHeight / floorDimensions.height;
     return { x: x * scaleX, y: y * scaleY };
-  }, [floorDimensions]);
+  }, [floorDimensions, displayedMapWidth, displayedMapHeight]);
 
   const scaleDisplayedPoiCoord = useCallback((x, y) => {
     const displayWidth = displayedFloor?.width || floorDimensions.width;
     const displayHeight = displayedFloor?.height || floorDimensions.height;
 
     return {
-      x: x * (MAP_IMAGE_WIDTH / displayWidth),
-      y: y * (MAP_IMAGE_HEIGHT / displayHeight),
+      x: x * (displayedMapWidth / displayWidth),
+      y: y * (displayedMapHeight / displayHeight),
     };
-  }, [displayedFloor, floorDimensions]);
+  }, [displayedFloor, floorDimensions, displayedMapWidth, displayedMapHeight]);
 
-  const browsingLocked = Boolean(startRoom && destRoom);
+  const renderFloorPlanMap = () => (
+    <View
+      style={styles.mapWrapper}
+      {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
+    >
+      <Image
+        source={displayedFloor.image}
+        style={[
+          styles.floorPlanImage,
+          inspectMode && styles.floorPlanImageInspect,
+        ]}
+        resizeMode="contain"
+      />
+      <IndoorPoiMarkers
+        pois={displayedFloorPois}
+        markerStyle={styles.poiMarker}
+        positionForPoi={(poi) => {
+          const scaledPoi = scaleDisplayedPoiCoord(poi.x, poi.y);
+          return {
+            left: scaledPoi.x,
+            top: scaledPoi.y,
+          };
+        }}
+        testIdPrefix="directions-poi-marker"
+        iconColor={MAROON}
+      />
+      <Svg
+        testID="indoor-route-overlay"
+        style={styles.svgOverlay}
+        width={displayedMapWidth}
+        height={displayedMapHeight}
+      >
+        {selectionMode && currentFloorData.rooms.map((room) => {
+          if (room.x === undefined || room.y === undefined) return null;
+          const scaled = scaleCoord(room.x, room.y);
+          return (
+            <Circle
+              key={room.id}
+              cx={scaled.x}
+              cy={scaled.y}
+              r={8}
+              fill="rgba(145, 35, 56, 0.3)"
+              stroke={MAROON}
+              strokeWidth={2}
+            />
+          );
+        })}
+
+        {svgPath && (
+          <>
+            <Path
+              testID="indoor-route-overlay-path"
+              d={svgPath.path}
+              stroke={BLUE}
+              strokeWidth={4}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="8,4"
+            />
+            <Circle
+              cx={svgPath.start.x}
+              cy={svgPath.start.y}
+              r={12}
+              fill={GREEN}
+              stroke="#fff"
+              strokeWidth={3}
+            />
+            <Circle
+              cx={svgPath.end.x}
+              cy={svgPath.end.y}
+              r={12}
+              fill={MAROON}
+              stroke="#fff"
+              strokeWidth={3}
+            />
+          </>
+        )}
+
+        {!svgPath && startRoom?.x && startRoom?.y && (
+          <Circle
+            cx={scaleCoord(startRoom.x, startRoom.y).x}
+            cy={scaleCoord(startRoom.x, startRoom.y).y}
+            r={12}
+            fill={GREEN}
+            stroke="#fff"
+            strokeWidth={3}
+          />
+        )}
+        {!svgPath && destRoom?.x && destRoom?.y && (
+          <Circle
+            cx={scaleCoord(destRoom.x, destRoom.y).x}
+            cy={scaleCoord(destRoom.x, destRoom.y).y}
+            r={12}
+            fill={MAROON}
+            stroke="#fff"
+            strokeWidth={3}
+          />
+        )}
+      </Svg>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -557,22 +848,22 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
         <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        <View style={styles.explorerPanel}>
-          <IndoorCampusToggle
-            selectedCampus={selectedCampus}
-            onSelectCampus={handleCampusChange}
-            styles={styles}
-            disabled={browsingLocked}
-          />
+        {!browsingLocked && (
+          <View style={styles.explorerPanel}>
+            <IndoorCampusToggle
+              selectedCampus={selectedCampus}
+              onSelectCampus={handleCampusChange}
+              styles={styles}
+            />
 
-          <IndoorBuildingSelector
-            buildings={campusBuildings}
-            selectedBuildingIdx={selectedBuildingIdx}
-            onSelectBuilding={handleBuildingChange}
-            styles={styles}
-            disabled={browsingLocked}
-          />
-        </View>
+            <IndoorBuildingSelector
+              buildings={campusBuildings}
+              selectedBuildingIdx={selectedBuildingIdx}
+              onSelectBuilding={handleBuildingChange}
+              styles={styles}
+            />
+          </View>
+        )}
 
         <View style={styles.searchColumnWrapper}>
         {/* Search Inputs with Map Selection Buttons */}
@@ -699,14 +990,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         )}
         </View>
 
-        {/* Walking Mode Indicator (Walking Only) */}
-        <View style={styles.transportContainer}>
-          <View style={[styles.transportChip, styles.transportChipActive]}>
-            <MaterialIcons name="directions-walk" size={18} color="#fff" />
-            <Text style={[styles.transportChipText, styles.transportChipTextActive]}>Walking</Text>
-          </View>
-        </View>
-
         {/* Accessibility Toggle */}
         <View style={styles.accessibilityRow} testID="accessibility-toggle-row">
           <View style={styles.accessibilityLabelContainer}>
@@ -730,208 +1013,264 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           />
         </View>
 
-        {/* Cross-floor prompt: show transition choice if needed */}
-        {(routeType === "cross-floor" || routeType === "cross-building") && !transitionPref && startRoom && destRoom && (
-          <Pressable
-            style={styles.transitionPrompt}
-            onPress={() => setShowTransitionModal(true)}
-          >
-            <MaterialIcons name="swap-vert" size={22} color={MAROON} />
-            <Text style={styles.transitionPromptText}>
-              This route requires changing floors. Tap to choose stairs or elevator.
-            </Text>
-            <MaterialIcons name="chevron-right" size={22} color={MAROON} />
-          </Pressable>
-        )}
-
-        {/* Segment tabs for cross-floor navigation */}
-        {segmentResults.length > 1 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.segmentTabs}>
-            {segmentResults.map((sr, idx) => {
-              const seg = sr.segment;
-              let label = "";
-              let icon = "layers";
-              if (seg.type === "indoor") {
-                const meta = FLOOR_META[seg.floorId];
-                label = meta ? `Floor ${meta.floorLabel}` : seg.floorId;
-              } else if (seg.type === "vertical") {
-                label = seg.transitionType === "elevator" ? "Elevator" : "Stairs";
-                icon = seg.transitionType === "elevator" ? "elevator" : "stairs";
-              } else if (seg.type === "outdoor") {
-                label = "Outdoor";
-                icon = "directions-walk";
-              }
-              return (
-                <Pressable
-                  key={`${seg.type}-${seg.floorId || seg.fromFloor || "out"}-${idx}`}
-                  style={[styles.segmentTab, idx === activeSegmentIndex && styles.segmentTabActive]}
-                  onPress={() => setActiveSegmentIndex(idx)}
-                >
-                  <MaterialIcons name={icon} size={16} color={idx === activeSegmentIndex ? "#fff" : MAROON} />
-                  <Text style={[styles.segmentTabText, idx === activeSegmentIndex && styles.segmentTabTextActive]}>
-                    {label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        )}
-
-          {/* Outdoor segment card */}
-          {segmentResults.length > 0 && segmentResults[activeSegmentIndex]?.segment?.type === "outdoor" && (
-            <View style={styles.outdoorCard}>
-              <MaterialIcons name="directions-walk" size={40} color={MAROON} />
-              <Text style={styles.outdoorCardTitle}>Walk between buildings</Text>
-              <Text style={styles.outdoorCardSubtext}>
-                {segmentResults[activeSegmentIndex].segment.fromBuildingId?.toUpperCase()} → {segmentResults[activeSegmentIndex].segment.toBuildingId?.toUpperCase()}
-              </Text>
+        {(routeType === "cross-floor" || routeType === "cross-building") && startRoom && destRoom && (
+          <View style={styles.transferModeCard}>
+            <View style={styles.transferModeHeader}>
+              <View style={styles.transferModeCopy}>
+                <Text style={styles.transferModeEyebrow}>Between-floor route</Text>
+                <Text style={styles.transferModeTitle}>
+                  {accessibleRoute
+                    ? "Elevator routing is active for accessibility."
+                    : "Choose how you want to move between floors."}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.transferModeOptions}>
               <Pressable
-                style={styles.outdoorNavButton}
-                onPress={() => {
-                  const seg = segmentResults[activeSegmentIndex].segment;
-                  const { BUILDING_META: bm } = require("../data/indoorFloorData");
-                  const startName = bm[seg.fromBuildingId]?.name || seg.fromBuildingId;
-                  const destName = bm[seg.toBuildingId]?.name || seg.toBuildingId;
-                  navigation.navigate("Map", {
-                    outdoorRoute: {
-                      startName,
-                      destName,
-                      startCoords: seg.fromCoords,
-                      destCoords: seg.toCoords,
-                    },
-                  });
-                }}
+                testID="transition-pref-stairs"
+                style={[
+                  styles.transferModeOption,
+                  resolvedTransitionPref === "stairs" && styles.transferModeOptionActive,
+                  accessibleRoute && styles.selectorDisabled,
+                ]}
+                disabled={accessibleRoute}
+                onPress={() => setTransitionPref("stairs")}
               >
-                <MaterialIcons name="map" size={20} color="#fff" />
-                <Text style={styles.outdoorNavButtonText}>Open Outdoor Directions</Text>
+                <MaterialIcons
+                  name="stairs"
+                  size={18}
+                  color={resolvedTransitionPref === "stairs" ? "#fff" : MAROON}
+                />
+                <Text
+                  style={[
+                    styles.transferModeOptionText,
+                    resolvedTransitionPref === "stairs" && styles.transferModeOptionTextActive,
+                  ]}
+                >
+                  Stairs
+                </Text>
+              </Pressable>
+              <Pressable
+                testID="transition-pref-elevator"
+                style={[
+                  styles.transferModeOption,
+                  resolvedTransitionPref === "elevator" && styles.transferModeOptionActiveBlue,
+                ]}
+                onPress={() => setTransitionPref("elevator")}
+              >
+                <MaterialIcons
+                  name="elevator"
+                  size={18}
+                  color={resolvedTransitionPref === "elevator" ? "#fff" : BLUE}
+                />
+                <Text
+                  style={[
+                    styles.transferModeOptionText,
+                    styles.transferModeOptionTextBlue,
+                    resolvedTransitionPref === "elevator" && styles.transferModeOptionTextActive,
+                  ]}
+                >
+                  Elevator
+                </Text>
               </Pressable>
             </View>
-          )}
+            {journeyStats.length > 0 && (
+              <View style={styles.transferModeStats}>
+                {journeyStats.map((item) => (
+                  <View key={item} style={styles.transferModeChip}>
+                    <Text style={styles.transferModeChipText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
 
-          {/* Vertical segment card */}
-          {segmentResults.length > 0 && segmentResults[activeSegmentIndex]?.segment?.type === "vertical" && (
-            <View style={styles.outdoorCard}>
-              <MaterialIcons
-                name={segmentResults[activeSegmentIndex].segment.transitionType === "elevator" ? "elevator" : "stairs"}
-                size={40}
-                color={MAROON}
-              />
-              <Text style={styles.outdoorCardTitle}>
-                Take the {segmentResults[activeSegmentIndex].segment.transitionType}
-              </Text>
-              <Text style={styles.outdoorCardSubtext}>
-                Floor {FLOOR_META[segmentResults[activeSegmentIndex].segment.fromFloor]?.floorLabel} → Floor {FLOOR_META[segmentResults[activeSegmentIndex].segment.toFloor]?.floorLabel}
-              </Text>
-            </View>
-          )}
+        {routeOverviewItems.length > 0 && (
+          <View style={styles.routeOverviewCard}>
+            <Text style={styles.routeOverviewTitle}>Route Overview</Text>
+            {routeOverviewItems.map((item, index) => (
+              <View key={`${item.text}-${index}`} style={styles.routeOverviewRow}>
+                <MaterialIcons name={item.icon} size={18} color={MAROON} />
+                <Text style={styles.routeOverviewText}>{item.text}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {journeyStages.length > 0 && (
+          <View style={styles.journeyPlannerCard}>
+            <Text style={styles.journeyPlannerTitle}>Floor-by-floor journey</Text>
+            <Text style={styles.journeyPlannerSubtitle}>
+              Tap a stage to preview that part of the trip.
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.journeyStageRow}
+            >
+              {journeyStages.map((stage) => {
+                const isActive = activeJourneyStage?.id === stage.id;
+                return (
+                  <Pressable
+                    key={stage.id}
+                    testID={stage.id}
+                    style={[
+                      styles.journeyStageCard,
+                      isActive && styles.journeyStageCardActive,
+                    ]}
+                    onPress={() => setActiveJourneyStageId(stage.id)}
+                  >
+                    <MaterialIcons
+                      name={stage.icon}
+                      size={20}
+                      color={isActive ? "#fff" : MAROON}
+                    />
+                    <Text
+                      style={[
+                        styles.journeyStageLabel,
+                        isActive && styles.journeyStageLabelActive,
+                      ]}
+                    >
+                      {stage.shortLabel}
+                    </Text>
+                  <Text
+                    style={[
+                      styles.journeyStageTitle,
+                      isActive && styles.journeyStageTitleActive,
+                    ]}
+                    numberOfLines={2}
+                  >
+                    {stage.title}
+                  </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            {activeJourneyStage && (
+              <View style={styles.activeStageDetailCard}>
+                <View style={styles.activeStageHeader}>
+                  <MaterialIcons
+                    name={activeJourneyStage.icon}
+                    size={22}
+                    color={activeJourneyStage.type === "vertical" && resolvedTransitionPref === "elevator" ? BLUE : MAROON}
+                  />
+                  <View style={styles.activeStageTextBlock}>
+                    <Text style={styles.activeStageTitle}>{activeJourneyStage.title}</Text>
+                    <Text style={styles.activeStageDescription}>{activeJourneyStage.description}</Text>
+                  </View>
+                </View>
+
+                {activeJourneyStage.type === "vertical" && (
+                  <View style={styles.activeStageMetaRow}>
+                    <View style={styles.activeStageMetaChip}>
+                      <Text style={styles.activeStageMetaText}>
+                        Floor {getFloorLabel(routeSegments[activeJourneyStage.segmentIndex]?.fromFloor)}
+                      </Text>
+                    </View>
+                    <MaterialIcons name="arrow-forward" size={16} color="#7e5160" />
+                    <View style={styles.activeStageMetaChip}>
+                      <Text style={styles.activeStageMetaText}>
+                        Floor {getFloorLabel(routeSegments[activeJourneyStage.segmentIndex]?.toFloor)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {activeJourneyStage.type === "outdoor" && (
+                  <Pressable
+                    style={styles.outdoorNavButton}
+                    onPress={() => {
+                      const outdoorSegment = routeSegments[activeJourneyStage.segmentIndex];
+                      const { BUILDING_META: bm } = require("../data/indoorFloorData");
+                      const startName = bm[outdoorSegment.fromBuildingId]?.name || outdoorSegment.fromBuildingId;
+                      const destName = bm[outdoorSegment.toBuildingId]?.name || outdoorSegment.toBuildingId;
+                      navigation.navigate("Map", {
+                        outdoorRoute: {
+                          startName,
+                          destName,
+                          startCoords: outdoorSegment.fromCoords,
+                          destCoords: outdoorSegment.toCoords,
+                        },
+                      });
+                    }}
+                  >
+                    <MaterialIcons name="map" size={20} color="#fff" />
+                    <Text style={styles.outdoorNavButtonText}>Open Outdoor Directions</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </View>
+        )}
 
           {/* Floor Plan with Route */}
-          <View 
+          <View
             testID="indoor-floor-plan-container"
             style={styles.floorPlanContainer}
             {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
           >
-            {displayedFloor?.image ? (
-              <View style={styles.mapWrapper}>
-                <Image
-                  source={displayedFloor.image}
-                  style={styles.floorPlanImage}
-                  resizeMode="contain"
-                />
-                <IndoorPoiMarkers
-                  pois={displayedFloorPois}
-                  markerStyle={styles.poiMarker}
-                  positionForPoi={(poi) => {
-                    const scaledPoi = scaleDisplayedPoiCoord(poi.x, poi.y);
-                    return {
-                      left: scaledPoi.x,
-                      top: scaledPoi.y,
-                    };
-                  }}
-                  testIdPrefix="directions-poi-marker"
-                  iconColor={MAROON}
-                />
-                {/* SVG Overlay for Route and Markers */}
-                <Svg
-                  testID="indoor-route-overlay"
-                  style={styles.svgOverlay}
-                  width={MAP_IMAGE_WIDTH}
-                  height={MAP_IMAGE_HEIGHT}
-                >
-                  {/* Show clickable room markers when in selection mode */}
-                  {selectionMode && currentFloorData.rooms.map((room) => {
-                    if (room.x === undefined || room.y === undefined) return null;
-                    const scaled = scaleCoord(room.x, room.y);
-                    return (
-                      <Circle
-                        key={room.id}
-                        cx={scaled.x}
-                        cy={scaled.y}
-                        r={8}
-                        fill="rgba(145, 35, 56, 0.3)"
-                        stroke={MAROON}
-                        strokeWidth={2}
-                      />
-                    );
-                  })}
-                  
-                  {/* Route Path */}
-                  {svgPath && (
-                    <>
-                      <Path
-                        testID="indoor-route-overlay-path"
-                        d={svgPath.path}
-                        stroke={BLUE}
-                        strokeWidth={4}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeDasharray="8,4"
-                      />
-                      {/* Start Point */}
-                      <Circle
-                        cx={svgPath.start.x}
-                        cy={svgPath.start.y}
-                        r={12}
-                        fill={GREEN}
-                        stroke="#fff"
-                        strokeWidth={3}
-                      />
-                      {/* End Point */}
-                      <Circle
-                        cx={svgPath.end.x}
-                        cy={svgPath.end.y}
-                        r={12}
-                        fill={MAROON}
-                        stroke="#fff"
-                        strokeWidth={3}
-                      />
-                    </>
-                  )}
-                  
-                  {/* Start/End Markers when selected but no path yet */}
-                  {!svgPath && startRoom?.x && startRoom?.y && (
-                    <Circle
-                      cx={scaleCoord(startRoom.x, startRoom.y).x}
-                      cy={scaleCoord(startRoom.x, startRoom.y).y}
-                      r={12}
-                      fill={GREEN}
-                      stroke="#fff"
-                      strokeWidth={3}
+            {displayedFloor && (
+              <View style={styles.mapStageHeader}>
+                <View>
+                  <Text style={styles.mapStageTitle}>
+                    {getBuildingName(
+                      mapJourneyStage?.mapBuildingId ||
+                      displayedSegmentResult?.segment?.buildingId ||
+                      selectedBuilding?.id
+                    )} · Floor {displayedFloor.label}
+                  </Text>
+                </View>
+                <View style={styles.mapStageActions}>
+                  <Pressable
+                    style={[
+                      styles.inspectToggle,
+                      inspectMode && styles.inspectToggleActive,
+                    ]}
+                    onPress={toggleInspectMode}
+                  >
+                    <MaterialIcons
+                      name={inspectMode ? "zoom-out-map" : "zoom-in"}
+                      size={14}
+                      color={inspectMode ? "#fff" : MAROON}
                     />
+                    <Text
+                      style={[
+                        styles.inspectToggleText,
+                        inspectMode && styles.inspectToggleTextActive,
+                      ]}
+                    >
+                      {inspectMode ? "Inspecting map" : "Inspect map"}
+                    </Text>
+                  </Pressable>
+                  {activeJourneyStage && (
+                    <View style={styles.mapStageBadge}>
+                      <Text style={styles.mapStageBadgeText}>{activeJourneyStage.shortLabel}</Text>
+                    </View>
                   )}
-                  {!svgPath && destRoom?.x && destRoom?.y && (
-                    <Circle
-                      cx={scaleCoord(destRoom.x, destRoom.y).x}
-                      cy={scaleCoord(destRoom.x, destRoom.y).y}
-                      r={12}
-                      fill={MAROON}
-                      stroke="#fff"
-                      strokeWidth={3}
-                    />
-                  )}
-                </Svg>
+                </View>
               </View>
+            )}
+            {displayedFloor?.image ? (
+              inspectMode ? (
+                <ScrollView
+                  horizontal
+                  contentContainerStyle={styles.floorPlanScrollContent}
+                  showsHorizontalScrollIndicator={false}
+                >
+                  <ScrollView
+                    contentContainerStyle={styles.floorPlanScrollContent}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    {renderFloorPlanMap()}
+                  </ScrollView>
+                </ScrollView>
+              ) : (
+                <View style={styles.floorPlanScrollContent}>
+                  {renderFloorPlanMap()}
+                </View>
+              )
             ) : (
               <View style={styles.noFloorPlan}>
                 <MaterialIcons name="map" size={48} color="#ccc" />
@@ -942,13 +1281,14 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
           <IndoorPoiLegend styles={styles} iconColor={MAROON} />
 
-          <IndoorFloorSelector
-            floors={selectedBuilding?.floors}
-            selectedFloorIdx={selectedFloorIdx}
-            onSelectFloor={handleFloorChange}
-            styles={styles}
-            disabled={browsingLocked}
-          />
+          {(journeyStages.length > 0 || !browsingLocked) && (
+            <IndoorFloorSelector
+              floors={selectedBuilding?.floors}
+              selectedFloorIdx={selectedFloorIdx}
+              onSelectFloor={handleFloorChange}
+              styles={styles}
+            />
+          )}
 
           {/* Route Stats Bar */}
           {startRoom && destRoom ? (
@@ -967,17 +1307,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   <Text style={styles.statValue}>{routeStats.type}</Text>
                   <Text style={styles.statLabel}>route</Text>
                 </View>
-                {/* Accessibility Button */}
-                <Pressable
-                  testID="accessibility-route-toggle"
-                  style={[
-                    styles.accessButton,
-                    accessibleRoute && styles.accessButtonActive,
-                  ]}
-                  onPress={() => setAccessibleRoute(!accessibleRoute)}
-                >
-                  <Text style={styles.accessButtonIcon}>♿</Text>
-                </Pressable>
               </View>
 
               {/* Path Error Message */}
@@ -1021,41 +1350,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           )}
 
         </ScrollView>
-
-        {/* Transition Preference Modal (stairs vs elevator) */}
-        <Modal
-          testID="transition-preference-modal"
-          visible={showTransitionModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowTransitionModal(false)}
-        >
-          <Pressable testID="transition-modal-overlay" style={styles.modalOverlay} onPress={() => setShowTransitionModal(false)}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>How would you like to change floors?</Text>
-              <Pressable
-                style={styles.modalOption}
-                onPress={() => { setTransitionPref("stairs"); setShowTransitionModal(false); }}
-              >
-                <MaterialIcons name="stairs" size={28} color={MAROON} />
-                <View style={styles.modalOptionText}>
-                  <Text style={styles.modalOptionLabel}>Stairs</Text>
-                  <Text style={styles.modalOptionHint}>Faster route</Text>
-                </View>
-              </Pressable>
-              <Pressable
-                style={styles.modalOption}
-                onPress={() => { setTransitionPref("elevator"); setShowTransitionModal(false); }}
-              >
-                <MaterialIcons name="elevator" size={28} color={BLUE} />
-                <View style={styles.modalOptionText}>
-                  <Text style={styles.modalOptionLabel}>Elevator</Text>
-                  <Text style={styles.modalOptionHint}>Accessible route</Text>
-                </View>
-              </Pressable>
-            </View>
-          </Pressable>
-        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -1313,36 +1607,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
-  transportContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingVertical: 8,
-    zIndex: 0,
-    elevation: 0,
-  },
-  transportChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+  routeOverviewCard: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: "#f7f1f3",
     borderWidth: 1,
-    borderColor: "#ddd",
-    gap: 6,
-    elevation: 0,
+    borderColor: "#ead7dd",
+    gap: 10,
   },
-  transportChipActive: {
-    backgroundColor: MAROON,
-    borderColor: MAROON,
+  routeOverviewTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#7e5160",
+    letterSpacing: 0.6,
   },
-  transportChipText: {
+  routeOverviewRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  routeOverviewText: {
+    flex: 1,
+    marginLeft: 10,
     fontSize: 14,
-    fontWeight: "600",
-    color: "#555",
-  },
-  transportChipTextActive: {
-    color: "#fff",
+    color: "#4b3640",
+    lineHeight: 20,
   },
   floorPlanContainer: {
     marginHorizontal: 12,
@@ -1356,12 +1646,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  floorPlanScrollContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   mapWrapper: {
     position: "relative",
   },
   floorPlanImage: {
     width: MAP_IMAGE_WIDTH,
     height: MAP_IMAGE_HEIGHT,
+  },
+  floorPlanImageInspect: {
+    width: MAP_IMAGE_WIDTH * MAP_INSPECT_SCALE,
+    height: MAP_IMAGE_HEIGHT * MAP_INSPECT_SCALE,
   },
   svgOverlay: {
     position: "absolute",
@@ -1408,23 +1706,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#888",
     marginTop: 2,
-  },
-  accessButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  accessButtonActive: {
-    backgroundColor: BLUE,
-    borderColor: BLUE,
-  },
-  accessButtonIcon: {
-    fontSize: 18,
   },
   errorContainer: {
     flexDirection: "row",
@@ -1548,128 +1829,247 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginRight: 10,
   },
-  // Cross-floor transition prompt
-  transitionPrompt: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "#fff5f0",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0d0c7",
-  },
-  transitionPromptText: {
-    flex: 1,
-    marginHorizontal: 10,
-    fontSize: 14,
-    color: MAROON,
-    fontWeight: "500",
-  },
-  // Segment tabs
-  segmentTabs: {
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#fafafa",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  segmentTab: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+  transferModeCard: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    padding: 14,
     borderRadius: 16,
-    backgroundColor: "#f0f0f0",
-    marginRight: 8,
+    backgroundColor: "#fcf7f8",
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    gap: 4,
+    borderColor: "#edd7dd",
+    gap: 12,
   },
-  segmentTabActive: {
+  transferModeHeader: {
+    alignItems: "flex-start",
+  },
+  transferModeCopy: {
+    maxWidth: "100%",
+  },
+  transferModeEyebrow: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: "#8c5b68",
+  },
+  transferModeTitle: {
+    marginTop: 4,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#4b3640",
+    fontWeight: "600",
+  },
+  transferModeOptions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  transferModeOption: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#e3c6cf",
+    backgroundColor: "#fff",
+  },
+  transferModeOptionActive: {
     backgroundColor: MAROON,
     borderColor: MAROON,
   },
-  segmentTabText: {
+  transferModeOptionActiveBlue: {
+    backgroundColor: BLUE,
+    borderColor: BLUE,
+  },
+  transferModeOptionText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
     color: MAROON,
   },
-  segmentTabTextActive: {
+  transferModeOptionTextBlue: {
+    color: BLUE,
+  },
+  transferModeOptionTextActive: {
     color: "#fff",
   },
-  // Transition modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
+  transferModeStats: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
-  modalContent: {
-    backgroundColor: "#fff",
+  transferModeChip: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: "#fffafc",
+    borderWidth: 1,
+    borderColor: "#eed6dd",
+  },
+  transferModeChipText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#7e5160",
+  },
+  journeyPlannerCard: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    padding: 14,
     borderRadius: 16,
-    padding: 24,
-    width: SCREEN_WIDTH - 64,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    backgroundColor: "#faf6f7",
+    borderWidth: 1,
+    borderColor: "#eadbe0",
   },
-  modalTitle: {
-    fontSize: 18,
+  journeyPlannerTitle: {
+    fontSize: 15,
     fontWeight: "700",
-    color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
+    color: "#4b3640",
   },
-  modalOption: {
+  journeyPlannerSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#7e5160",
+  },
+  journeyStageRow: {
+    gap: 10,
+    paddingTop: 12,
+    paddingBottom: 4,
+    paddingRight: 10,
+  },
+  journeyStageCard: {
+    width: 142,
+    minHeight: 112,
+    padding: 12,
+    borderRadius: 15,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e7d8de",
+    justifyContent: "space-between",
+    overflow: "hidden",
+  },
+  journeyStageCardActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  journeyStageLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#8c5b68",
+    marginTop: 8,
+  },
+  journeyStageLabelActive: {
+    color: "#f4dfe5",
+  },
+  journeyStageTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#4b3640",
+    fontWeight: "700",
+    marginTop: 6,
+  },
+  journeyStageTitleActive: {
+    color: "#fff",
+  },
+  activeStageDetailCard: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: "#fffdfd",
+    borderWidth: 1,
+    borderColor: "#e7d8de",
+    gap: 12,
+  },
+  activeStageHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  activeStageTextBlock: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  activeStageTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#4b3640",
+  },
+  activeStageDescription: {
+    marginTop: 4,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#6c5560",
+  },
+  activeStageMetaRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: "#f8f8f8",
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e8e8e8",
+    gap: 8,
   },
-  modalOptionText: {
-    marginLeft: 16,
+  activeStageMetaChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: "#f6eef1",
   },
-  modalOptionLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-  modalOptionHint: {
-    fontSize: 13,
-    color: "#888",
-    marginTop: 2,
-  },
-  // Outdoor / vertical segment cards
-  outdoorCard: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 32,
-    paddingHorizontal: 24,
-    marginHorizontal: 12,
-    marginVertical: 8,
-    borderRadius: 12,
-    backgroundColor: "#f9f5ef",
-    borderWidth: 1,
-    borderColor: "#e0d8ce",
-  },
-  outdoorCardTitle: {
-    fontSize: 18,
+  activeStageMetaText: {
+    fontSize: 12,
     fontWeight: "700",
-    color: "#333",
-    marginTop: 12,
+    color: "#7e5160",
   },
-  outdoorCardSubtext: {
+  mapStageHeader: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 6,
+  },
+  mapStageActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  mapStageTitle: {
     fontSize: 14,
-    color: "#888",
-    marginTop: 4,
+    fontWeight: "700",
+    color: "#5d4637",
+  },
+  inspectToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(145, 35, 56, 0.35)",
+    backgroundColor: "#fff",
+  },
+  inspectToggleActive: {
+    backgroundColor: MAROON,
+    borderColor: MAROON,
+  },
+  inspectToggleText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: MAROON,
+  },
+  inspectToggleTextActive: {
+    color: "#fff",
+  },
+  mapStageBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: "#fffaf5",
+    borderWidth: 1,
+    borderColor: "#e2d5c8",
+  },
+  mapStageBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: MAROON,
   },
   outdoorNavButton: {
     flexDirection: "row",

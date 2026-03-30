@@ -371,6 +371,17 @@ describe('IndoorMapScreen', () => {
     expect(getByText(/H837/)).toBeTruthy();
   });
 
+  it('should prioritize current-building rooms for broad numeric searches', () => {
+    const { getByPlaceholderText, getAllByText } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), '1');
+
+    const firstResult = getAllByText(/ · /)[0];
+    expect(firstResult.props.children.join('')).toContain('Hall Building');
+  });
+
   // --- Inspect Mode ---
 
   it('should render inspect map toggle in default state', () => {
