@@ -22,7 +22,7 @@ function getRoomMatchScore(room, lowerQuery, normalizedQuery) {
   const buildingName = (room.buildingName || "").toLowerCase();
   const searchKeys = room.searchKeys || [];
 
-  const exactSearchKeyMatch = searchKeys.some((key) => key === normalizedQuery);
+  const exactSearchKeyMatch = searchKeys.includes(normalizedQuery);
   if (exactSearchKeyMatch || label === lowerQuery || id === lowerQuery) {
     return 0;
   }

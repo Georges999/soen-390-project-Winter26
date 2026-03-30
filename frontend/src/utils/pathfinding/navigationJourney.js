@@ -39,49 +39,63 @@ function buildOutdoorStageDescription(segment) {
   return `Exit ${getBuildingName(segment.fromBuildingId)} and continue outside to ${getBuildingName(segment.toBuildingId)}.`;
 }
 
-export function buildJourneyStages(routeSegments = [], startRoom, destRoom) {
-  return routeSegments.map((segment, index) => {
+export function buildIndoorStage(segment, index, startRoom, destRoom) {
+  return {
+    id: `journey-stage-${index}`,
+    segmentIndex: index,
+    type: "indoor",
+    icon: "directions-walk",
+    shortLabel: `Floor ${getFloorLabel(segment.floorId)}`,
+    title: `Walk on Floor ${getFloorLabel(segment.floorId)}`,
+    description: buildIndoorStageDescription(segment, startRoom, destRoom),
+    mapBuildingId: segment.buildingId,
+    mapFloorId: segment.floorId,
+  };
+}
+
+export function buildVerticalStage(segment, index) {
+  return {
+    id: `journey-stage-${index}`,
+    segmentIndex: index,
+    type: "vertical",
+    icon: segment.transitionType === "elevator" ? "elevator" : "stairs",
+    shortLabel: `${getFloorLabel(segment.fromFloor)} -> ${getFloorLabel(segment.toFloor)}`,
+    title: `Take the ${getTransitionLabel(segment.transitionType)}`,
+    description: buildVerticalStageDescription(segment),
+    mapBuildingId: segment.buildingId,
+    mapFloorId: segment.fromFloor,
+    destinationFloorId: segment.toFloor,
+  };
+}
+
+export function buildOutdoorStage(segment, index) {
+  return {
+    id: `journey-stage-${index}`,
+    segmentIndex: index,
+    type: "outdoor",
+    icon: "directions-walk",
+    shortLabel: "Outside",
+    title: "Outdoor transfer",
+    description: buildOutdoorStageDescription(segment),
+    mapBuildingId: null,
+    mapFloorId: null,
+    destinationBuildingId: segment.toBuildingId,
+  };
+}
+
+export function buildJourneyStages(routeSegments, startRoom, destRoom) {
+  const segments = routeSegments ?? [];
+
+  return segments.map((segment, index) => {
     if (segment.type === "indoor") {
-      return {
-        id: `journey-stage-${index}`,
-        segmentIndex: index,
-        type: "indoor",
-        icon: "directions-walk",
-        shortLabel: `Floor ${getFloorLabel(segment.floorId)}`,
-        title: `Walk on Floor ${getFloorLabel(segment.floorId)}`,
-        description: buildIndoorStageDescription(segment, startRoom, destRoom),
-        mapBuildingId: segment.buildingId,
-        mapFloorId: segment.floorId,
-      };
+      return buildIndoorStage(segment, index, startRoom, destRoom);
     }
 
     if (segment.type === "vertical") {
-      return {
-        id: `journey-stage-${index}`,
-        segmentIndex: index,
-        type: "vertical",
-        icon: segment.transitionType === "elevator" ? "elevator" : "stairs",
-        shortLabel: `${getFloorLabel(segment.fromFloor)} -> ${getFloorLabel(segment.toFloor)}`,
-        title: `Take the ${getTransitionLabel(segment.transitionType)}`,
-        description: buildVerticalStageDescription(segment),
-        mapBuildingId: segment.buildingId,
-        mapFloorId: segment.fromFloor,
-        destinationFloorId: segment.toFloor,
-      };
+      return buildVerticalStage(segment, index);
     }
 
-    return {
-      id: `journey-stage-${index}`,
-      segmentIndex: index,
-      type: "outdoor",
-      icon: "directions-walk",
-      shortLabel: "Outside",
-      title: "Outdoor transfer",
-      description: buildOutdoorStageDescription(segment),
-      mapBuildingId: null,
-      mapFloorId: null,
-      destinationBuildingId: segment.toBuildingId,
-    };
+    return buildOutdoorStage(segment, index);
   });
 }
 
@@ -93,7 +107,7 @@ export function getJourneyMapStage(stages = [], activeStageId = null) {
   if (!stages.length) return null;
 
   const activeIndex = stages.findIndex((stage) => stage.id === activeStageId);
-  const normalizedIndex = activeIndex >= 0 ? activeIndex : 0;
+  const normalizedIndex = Math.max(activeIndex, 0);
   const activeStage = stages[normalizedIndex];
 
   if (activeStage?.mapBuildingId && activeStage?.mapFloorId) {
@@ -125,8 +139,10 @@ export function buildJourneyStats(routeSegments = [], transitionPref, accessible
   const stats = [];
 
   if (floorTransfers > 0) {
-    stats.push(`${floorTransfers} floor transfer${floorTransfers === 1 ? "" : "s"}`);
-    stats.push(`Using ${activeTransition}`);
+    stats.push(
+      `${floorTransfers} floor transfer${floorTransfers === 1 ? "" : "s"}`,
+      `Using ${activeTransition}`
+    );
   }
 
   if (outdoorTransfers > 0) {

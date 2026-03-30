@@ -33,7 +33,7 @@ export function useNextClass(isConnected = false) {
   }
 
   function getBuildingFromClass() {
-    if (!nextClass || !nextClass.location) return null;
+    if (!nextClass?.location) return null;
     return parseBuildingFromLocation(nextClass.location);
   }
 

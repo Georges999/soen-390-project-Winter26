@@ -9,8 +9,11 @@ jest.mock('../../assets/floor-maps/VL-1-F.png', () => 'vl1img', { virtual: true 
 jest.mock('../../assets/floor-maps/VL-2-F.png', () => 'vl2img', { virtual: true });
 
 import {
+  buildIndoorStage,
   buildJourneyStages,
   buildJourneyStats,
+  buildOutdoorStage,
+  buildVerticalStage,
   getBuildingName,
   getDefaultJourneyStage,
   getFloorLabel,
@@ -62,6 +65,70 @@ describe('navigationJourney', () => {
       shortLabel: 'Outside',
       title: 'Outdoor transfer',
       description: 'Exit Hall Building and continue outside to John Molson Building.',
+      destinationBuildingId: 'mb',
+    }));
+  });
+
+  it('builds an indoor stage through the dedicated helper', () => {
+    const stage = buildIndoorStage({
+      type: 'indoor',
+      floorId: 'Hall-8',
+      buildingId: 'hall',
+      fromNodeId: startRoom.id,
+      toNodeId: 'Hall8_stairs_001',
+    }, 0, startRoom, destRoom);
+
+    expect(stage).toEqual(expect.objectContaining({
+      id: 'journey-stage-0',
+      segmentIndex: 0,
+      type: 'indoor',
+      shortLabel: 'Floor 8',
+      title: 'Walk on Floor 8',
+      description: 'Leave H837 and follow the path to the floor connector.',
+      mapBuildingId: 'hall',
+      mapFloorId: 'Hall-8',
+    }));
+  });
+
+  it('builds a vertical stage through the dedicated helper', () => {
+    const stage = buildVerticalStage({
+      type: 'vertical',
+      buildingId: 'hall',
+      fromFloor: 'Hall-8',
+      toFloor: 'Hall-9',
+      transitionType: 'stairs',
+    }, 1);
+
+    expect(stage).toEqual(expect.objectContaining({
+      id: 'journey-stage-1',
+      segmentIndex: 1,
+      type: 'vertical',
+      icon: 'stairs',
+      shortLabel: '8 -> 9',
+      title: 'Take the stairs',
+      description: 'Use the stairs in Hall Building to go from Floor 8 to Floor 9.',
+      mapBuildingId: 'hall',
+      mapFloorId: 'Hall-8',
+      destinationFloorId: 'Hall-9',
+    }));
+  });
+
+  it('builds an outdoor stage through the dedicated helper', () => {
+    const stage = buildOutdoorStage({
+      type: 'outdoor',
+      fromBuildingId: 'hall',
+      toBuildingId: 'mb',
+    }, 2);
+
+    expect(stage).toEqual(expect.objectContaining({
+      id: 'journey-stage-2',
+      segmentIndex: 2,
+      type: 'outdoor',
+      shortLabel: 'Outside',
+      title: 'Outdoor transfer',
+      description: 'Exit Hall Building and continue outside to John Molson Building.',
+      mapBuildingId: null,
+      mapFloorId: null,
       destinationBuildingId: 'mb',
     }));
   });

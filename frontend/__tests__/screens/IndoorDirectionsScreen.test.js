@@ -216,6 +216,29 @@ describe('IndoorDirectionsScreen', () => {
     expect(getByPlaceholderText('Tap map or search destination')).toBeTruthy();
   });
 
+  it('should render inspect map toggle in its default state', () => {
+    const { getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteBrowseHall8} navigation={mockNavigation} />
+    );
+
+    expect(getByText('Inspect map')).toBeTruthy();
+    expect(getByText('zoom-in')).toBeTruthy();
+  });
+
+  it('should toggle inspect mode on and off', () => {
+    const { getByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteBrowseHall8} navigation={mockNavigation} />
+    );
+
+    fireEvent.press(getByText('Inspect map'));
+    expect(getByText('Inspecting map')).toBeTruthy();
+    expect(getByText('zoom-out-map')).toBeTruthy();
+
+    fireEvent.press(getByText('Inspecting map'));
+    expect(getByText('Inspect map')).toBeTruthy();
+    expect(queryByText('Inspecting map')).toBeNull();
+  });
+
   it('should render campus, building, and floor browsing controls', () => {
     const { getByText, getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
