@@ -11,7 +11,8 @@ const mapShuttleSchedules = (shuttleSchedule) =>
     estimatedTravelMin: route.estimatedTravelMin,
   }));
 
-const getShuttleDepartures = (now = new Date(), schedule) => {
+const getShuttleDepartures = (now, schedule) => {
+  now = now ?? new Date();
   const day = now.getDay(); // 0 Sun ... 6 Sat
   if (day === 0 || day === 6) return { active: false, times: [] }; //no shuttle on weekend
 
