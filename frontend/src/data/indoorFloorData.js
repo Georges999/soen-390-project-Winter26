@@ -15,6 +15,9 @@ const cc1Mapping = require("../../../Floor_Mapping/indoor/Json_Files/CC1-FloorPl
 
 const DEFAULT_DIMENSION = 1000;
 const CAMPUSES = ["sgw", "loyola"];
+const ROOM_TYPES = new Set(["room", "classroom"]);
+const CONNECTOR_TYPES = new Set(["stairs", "elevator", "escalator"]);
+const MAX_INFERRED_BRIDGE_DISTANCE = 200;
 
 const floorImages = {
   "Hall-1": require("../../assets/floor-maps/Hall-1-F.png"),
@@ -133,7 +136,145 @@ function initializeFloorRecord(floorId, floorData) {
   };
 }
 
-const floorGraphDataById = MAPPING_SOURCES.reduce((accumulator, source) => {
+function getAllFloorNodes(record) {
+  return [...record.nodes, ...record.rooms, ...record.pois];
+}
+
+function getUndirectedEdgeKey(from, to) {
+  return [String(from), String(to)].sort((left, right) => left.localeCompare(right)).join("::");
+}
+
+function buildAdjacency(record) {
+  const nodeIds = getAllFloorNodes(record).map((node) => node.id);
+  const adjacency = new Map(nodeIds.map((nodeId) => [nodeId, new Set()]));
+
+  (record.edges || []).forEach((edge) => {
+    if (!adjacency.has(edge.from) || !adjacency.has(edge.to)) return;
+    adjacency.get(edge.from).add(edge.to);
+    adjacency.get(edge.to).add(edge.from);
+  });
+
+  return adjacency;
+}
+
+function collectConnectedComponents(record) {
+  const nodes = getAllFloorNodes(record);
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const adjacency = buildAdjacency(record);
+  const visited = new Set();
+  const components = [];
+
+  nodeById.forEach((_, nodeId) => {
+    if (visited.has(nodeId)) return;
+
+    const stack = [nodeId];
+    const component = [];
+    visited.add(nodeId);
+
+    while (stack.length) {
+      const currentNodeId = stack.pop();
+      component.push(currentNodeId);
+
+      (adjacency.get(currentNodeId) || []).forEach((neighborId) => {
+        if (visited.has(neighborId)) return;
+        visited.add(neighborId);
+        stack.push(neighborId);
+      });
+    }
+
+    components.push(component);
+  });
+
+  return { nodeById, components };
+}
+
+function getBridgePenalty(leftNode, rightNode) {
+  const leftIsRoom = ROOM_TYPES.has(leftNode?.type);
+  const rightIsRoom = ROOM_TYPES.has(rightNode?.type);
+  const leftIsConnector = CONNECTOR_TYPES.has(leftNode?.type);
+  const rightIsConnector = CONNECTOR_TYPES.has(rightNode?.type);
+  const leftIsHallway = leftNode?.type === "hallway";
+  const rightIsHallway = rightNode?.type === "hallway";
+
+  if (leftIsHallway && rightIsHallway) return 0;
+  if (leftIsHallway || rightIsHallway) return 10;
+  if (leftIsConnector || rightIsConnector) return 20;
+  if (leftIsRoom && rightIsRoom) return 80;
+  if (leftIsRoom || rightIsRoom) return 40;
+  return 30;
+}
+
+function findClosestComponentBridge(components, nodeById) {
+  let bestBridge = null;
+
+  for (let leftIndex = 0; leftIndex < components.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < components.length; rightIndex += 1) {
+      const leftComponent = components[leftIndex];
+      const rightComponent = components[rightIndex];
+
+      leftComponent.forEach((leftNodeId) => {
+        const leftNode = nodeById.get(leftNodeId);
+        if (!leftNode) return;
+
+        rightComponent.forEach((rightNodeId) => {
+          const rightNode = nodeById.get(rightNodeId);
+          if (!rightNode) return;
+
+          const distance = Math.hypot((leftNode.x || 0) - (rightNode.x || 0), (leftNode.y || 0) - (rightNode.y || 0));
+          if (!Number.isFinite(distance) || distance > MAX_INFERRED_BRIDGE_DISTANCE) return;
+
+          const score = distance + getBridgePenalty(leftNode, rightNode);
+          if (!bestBridge || score < bestBridge.score || (score === bestBridge.score && distance < bestBridge.distance)) {
+            bestBridge = {
+              from: leftNode.id,
+              to: rightNode.id,
+              distance,
+              score,
+            };
+          }
+        });
+      });
+    }
+  }
+
+  return bestBridge;
+}
+
+function repairDisconnectedFloorRecord(record) {
+  const repairedRecord = {
+    ...record,
+    nodes: [...record.nodes],
+    rooms: [...record.rooms],
+    pois: [...record.pois],
+    edges: [...record.edges],
+  };
+  const edgeKeys = new Set(
+    repairedRecord.edges.map((edge) => getUndirectedEdgeKey(edge.from, edge.to))
+  );
+  const maxBridges = getAllFloorNodes(repairedRecord).length;
+
+  for (let bridgeCount = 0; bridgeCount < maxBridges; bridgeCount += 1) {
+    const { nodeById, components } = collectConnectedComponents(repairedRecord);
+    if (components.length <= 1) break;
+
+    const bridge = findClosestComponentBridge(components, nodeById);
+    if (!bridge) break;
+
+    const edgeKey = getUndirectedEdgeKey(bridge.from, bridge.to);
+    if (edgeKeys.has(edgeKey)) break;
+
+    repairedRecord.edges.push({
+      from: bridge.from,
+      to: bridge.to,
+      weight: Math.round(bridge.distance * 100) / 100,
+    });
+    edgeKeys.add(edgeKey);
+  }
+
+  return repairedRecord;
+}
+
+const rawFloorGraphDataById = MAPPING_SOURCES.reduce((accumulator, source) => {
   const floors = source?.floors ?? {};
 
   Object.entries(floors).forEach(([rawFloorId, floorData]) => {
@@ -185,6 +326,11 @@ const floorGraphDataById = MAPPING_SOURCES.reduce((accumulator, source) => {
     });
   });
 
+  return accumulator;
+}, {});
+
+const floorGraphDataById = Object.entries(rawFloorGraphDataById).reduce((accumulator, [floorId, record]) => {
+  accumulator[floorId] = repairDisconnectedFloorRecord(record);
   return accumulator;
 }, {});
 
