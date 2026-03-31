@@ -25,7 +25,6 @@ import {
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
 import {
-  buildJourneyStats,
   buildJourneyStages,
   getBuildingName,
   getDefaultJourneyStage,
@@ -70,19 +69,6 @@ function nodeStepText(node) {
 
 function buildSegmentIcon(method) {
   return method === "elevator" ? "elevator" : "stairs";
-}
-
-function buildRouteOverviewItem(segment) {
-  if (segment.type === "vertical") {
-    const transitionLabel = segment.transitionType === "elevator" ? "elevator" : "stairs";
-    return `Change floors via ${transitionLabel} to Floor ${getFloorLabel(segment.toFloor)}`;
-  }
-
-  if (segment.type === "outdoor") {
-    return `Walk outside from ${getBuildingName(segment.fromBuildingId)} to ${getBuildingName(segment.toBuildingId)}`;
-  }
-
-  return `Walk on Floor ${getFloorLabel(segment.floorId)}`;
 }
 
 function isRedundantContinueStep(text = "") {
@@ -314,16 +300,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const stageIndex = journeyStages.findIndex((stage) => stage.id === activeJourneyStage.id);
     return stageIndex >= 0 ? stageIndex + 1 : null;
   }, [journeyStages, activeJourneyStage]);
-
-  const transferSummaryStats = useMemo(
-    () => buildJourneyStats(routeSegments, resolvedTransitionPref, accessibleRoute),
-    [routeSegments, resolvedTransitionPref, accessibleRoute]
-  );
-
-  const routeOverviewItems = useMemo(
-    () => routeSegments.map((segment) => buildRouteOverviewItem(segment)),
-    [routeSegments]
-  );
 
   // Filtered search results
   const searchResults = useMemo(
@@ -1001,22 +977,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         </View>
 
         {(routeType === "cross-floor" || routeType === "cross-building") && startRoom && destRoom && (
-          <View style={styles.transferModeCard}>
-            <Text style={styles.transferModeTitle}>Between-floor route</Text>
-            <Text style={styles.transferModeSubtitle}>
-              Choose how you want to handle floor changes along the way.
-            </Text>
-
-            {transferSummaryStats.length > 0 && (
-              <View style={styles.transferSummaryRow}>
-                {transferSummaryStats.map((stat) => (
-                  <View key={stat} style={styles.transferSummaryChip}>
-                    <Text style={styles.transferSummaryText}>{stat}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
+          <View style={styles.transferModeControls}>
             <View style={styles.transferModeOptionsStandalone}>
               <Pressable
                 testID="transition-pref-stairs"
@@ -1171,17 +1132,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                     <Text style={styles.outdoorNavButtonText}>Open Outdoor Directions</Text>
                   </Pressable>
                 )}
-              </View>
-            )}
-
-            {routeOverviewItems.length > 0 && (
-              <View style={styles.routeOverviewCard}>
-                <Text style={styles.routeOverviewTitle}>Route Overview</Text>
-                {routeOverviewItems.map((item, index) => (
-                  <Text key={`${item}-${index}`} style={styles.routeOverviewItem}>
-                    {item}
-                  </Text>
-                ))}
               </View>
             )}
           </View>
@@ -1784,46 +1734,13 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginRight: 10,
   },
-  transferModeOptionsStandalone: {
-    marginTop: 12,
-    flexDirection: "row",
-    gap: 10,
-  },
-  transferModeCard: {
+  transferModeControls: {
     marginHorizontal: 12,
     marginTop: 8,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: "#faf6f7",
-    borderWidth: 1,
-    borderColor: "#eadbe0",
   },
-  transferModeTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#4b3640",
-  },
-  transferModeSubtitle: {
-    marginTop: 4,
-    fontSize: 12,
-    color: "#7e5160",
-  },
-  transferSummaryRow: {
+  transferModeOptionsStandalone: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 12,
-  },
-  transferSummaryChip: {
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: "#f2e4e8",
-  },
-  transferSummaryText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6e4553",
+    gap: 10,
   },
   transferModeOption: {
     flex: 1,
@@ -1875,23 +1792,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: "#7e5160",
-  },
-  routeOverviewCard: {
-    marginTop: 14,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "#eadbe0",
-    gap: 8,
-  },
-  routeOverviewTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#4b3640",
-  },
-  routeOverviewItem: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: "#6e4553",
   },
   journeyStageRow: {
     gap: 10,
