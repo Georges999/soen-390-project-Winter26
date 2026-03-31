@@ -212,8 +212,8 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    expect(getByPlaceholderText('Tap map or search start')).toBeTruthy();
-    expect(getByPlaceholderText('Tap map or search destination')).toBeTruthy();
+    expect(getByPlaceholderText('Search start or use map pin button')).toBeTruthy();
+    expect(getByPlaceholderText('Search destination or use map pin button')).toBeTruthy();
   });
 
   it('should render inspect map toggle in its default state', () => {
@@ -469,7 +469,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, 'H837');
     expect(getAllByText(/H837.*Hall Building/).length).toBeGreaterThan(0);
@@ -479,7 +479,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const destInput = getByPlaceholderText('Tap map or search destination');
+    const destInput = getByPlaceholderText('Search destination or use map pin button');
     fireEvent(destInput, 'focus');
     fireEvent.changeText(destInput, 'H837');
     expect(getAllByText(/H837.*Hall Building/).length).toBeGreaterThan(0);
@@ -490,7 +490,7 @@ describe('IndoorDirectionsScreen', () => {
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
 
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, '1');
 
@@ -502,7 +502,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getAllByText, queryAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
 
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, 'H837');
@@ -516,7 +516,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getAllByText, queryAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const destInput = getByPlaceholderText('Tap map or search destination');
+    const destInput = getByPlaceholderText('Search destination or use map pin button');
 
     fireEvent(destInput, 'focus');
     fireEvent.changeText(destInput, 'H837');
@@ -530,7 +530,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getAllByText, getByDisplayValue } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, 'H837');
     fireEvent.press(getAllByText(/H837.*Hall Building/)[0]);
@@ -541,7 +541,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getAllByText, getByDisplayValue } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const destInput = getByPlaceholderText('Tap map or search destination');
+    const destInput = getByPlaceholderText('Search destination or use map pin button');
     fireEvent(destInput, 'focus');
     fireEvent.changeText(destInput, 'H837');
     fireEvent.press(getAllByText(/H837.*Hall Building/)[0]);
@@ -593,7 +593,7 @@ describe('IndoorDirectionsScreen', () => {
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
 
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, 'MB1.210');
 
@@ -606,7 +606,7 @@ describe('IndoorDirectionsScreen', () => {
       <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
     );
 
-    const destInput = getByPlaceholderText('Tap map or search destination');
+    const destInput = getByPlaceholderText('Search destination or use map pin button');
     fireEvent(destInput, 'focus');
     fireEvent.changeText(destInput, 'MB1.210');
 
@@ -636,7 +636,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getAllByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, 'Library');
     expect(getAllByText(/Vanier Library/).length).toBeGreaterThan(0);
@@ -648,7 +648,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, getByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, 'XYZABC Hall');
     expect(getByText(/No rooms or buildings found/)).toBeTruthy();
@@ -658,7 +658,7 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, queryByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, '');
     expect(queryByText(/No rooms or buildings found/)).toBeNull();
@@ -668,10 +668,20 @@ describe('IndoorDirectionsScreen', () => {
     const { getByPlaceholderText, queryByText } = render(
       <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
     );
-    const startInput = getByPlaceholderText('Tap map or search start');
+    const startInput = getByPlaceholderText('Search start or use map pin button');
     fireEvent(startInput, 'focus');
     fireEvent.changeText(startInput, '   ');
     expect(queryByText(/No rooms or buildings found/)).toBeNull();
+  });
+
+  it('should show "not found" for punctuation-only search input', () => {
+    const { getByPlaceholderText, getByText } = render(
+      <IndoorDirectionsScreen route={mockRouteEmpty} navigation={mockNavigation} />
+    );
+    const startInput = getByPlaceholderText('Search start or use map pin button');
+    fireEvent(startInput, 'focus');
+    fireEvent.changeText(startInput, '@@@');
+    expect(getByText(/No rooms or buildings found/)).toBeTruthy();
   });
 
   // --- Empty prompt subtext ---

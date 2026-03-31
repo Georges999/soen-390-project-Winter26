@@ -21,13 +21,17 @@ function getRoomMatchScore(room, lowerQuery, normalizedQuery) {
   const id = (room.id || "").toLowerCase();
   const buildingName = (room.buildingName || "").toLowerCase();
   const searchKeys = room.searchKeys || [];
+  const hasNormalizedQuery = normalizedQuery.length > 0;
 
-  const exactSearchKeyMatch = searchKeys.includes(normalizedQuery);
+  const exactSearchKeyMatch =
+    hasNormalizedQuery && searchKeys.includes(normalizedQuery);
   if (exactSearchKeyMatch || label === lowerQuery || id === lowerQuery) {
     return 0;
   }
 
-  const prefixSearchKeyMatch = searchKeys.some((key) => key.startsWith(normalizedQuery));
+  const prefixSearchKeyMatch =
+    hasNormalizedQuery &&
+    searchKeys.some((key) => key.startsWith(normalizedQuery));
   if (prefixSearchKeyMatch || label.startsWith(lowerQuery) || id.startsWith(lowerQuery)) {
     return 1;
   }
@@ -36,7 +40,7 @@ function getRoomMatchScore(room, lowerQuery, normalizedQuery) {
     return 2;
   }
 
-  if (buildingName.includes(lowerQuery)) {
+  if (lowerQuery.length >= 2 && buildingName.includes(lowerQuery)) {
     return 3;
   }
 
@@ -68,6 +72,8 @@ export function getFilteredRooms(allRooms, searchQuery, options = {}) {
   const normalizedQuery = searchQuery.toUpperCase().replaceAll(/[^A-Z0-9]/g, "");
   const preferLocationFirst = /^\d+$/.test(normalizedQuery);
 
+  const canUseSearchKeyContains = normalizedQuery.length >= 2;
+
   return allRooms
     .map((room) => ({
       room,
@@ -80,7 +86,8 @@ export function getFilteredRooms(allRooms, searchQuery, options = {}) {
     }))
     .filter(({ room, score }) =>
       Number.isFinite(score) ||
-      (room.searchKeys || []).some((key) => key.includes(normalizedQuery))
+      (canUseSearchKeyContains &&
+        (room.searchKeys || []).some((key) => key.includes(normalizedQuery)))
     )
     .sort((left, right) => {
       if (preferLocationFirst && left.locationScore !== right.locationScore) {
