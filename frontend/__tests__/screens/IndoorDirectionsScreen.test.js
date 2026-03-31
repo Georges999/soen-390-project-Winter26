@@ -947,10 +947,10 @@ describe('IndoorDirectionsScreen', () => {
   it('should show inline transfer controls when routeType is cross-floor', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([]);
-      const { getByText, getByTestId } = render(
+      const { queryByText, getByTestId } = render(
         <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
       );
-      expect(getByText('Between-floor route')).toBeTruthy();
+      expect(queryByText('Between-floor route')).toBeNull();
       expect(getByTestId('transition-pref-stairs')).toBeTruthy();
       expect(getByTestId('transition-pref-elevator')).toBeTruthy();
     });
@@ -984,17 +984,20 @@ describe('IndoorDirectionsScreen', () => {
       );
     });
 
-    it('should render floor-transfer stats in the inline control card', () => {
+    it('should keep only the inline transfer buttons for cross-floor routes', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
-      const { getByText } = render(
+      const { getByTestId, queryByText } = render(
         <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
       );
-      expect(getByText('1 floor transfer')).toBeTruthy();
-      expect(getByText('Using stairs')).toBeTruthy();
+      expect(getByTestId('transition-pref-stairs')).toBeTruthy();
+      expect(getByTestId('transition-pref-elevator')).toBeTruthy();
+      expect(queryByText('Between-floor route')).toBeNull();
+      expect(queryByText('1 floor transfer')).toBeNull();
+      expect(queryByText('Using stairs')).toBeNull();
     });
 
-    it('should render a route overview for multi-segment cross-floor route', () => {
+    it('should not render a route overview for multi-segment cross-floor route', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
       mockFindShortestPath.mockReturnValue({
@@ -1007,11 +1010,11 @@ describe('IndoorDirectionsScreen', () => {
         totalWeight: 300,
         reason: null,
       });
-      const { getAllByText } = render(
+      const { queryByText } = render(
         <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
       );
-      expect(getAllByText('Route Overview').length).toBeGreaterThan(0);
-      expect(getAllByText(/Change floors via stairs to Floor 9/).length).toBeGreaterThan(0);
+      expect(queryByText('Route Overview')).toBeNull();
+      expect(queryByText(/Change floors via stairs to Floor 9/)).toBeNull();
     });
 
     it('should hide campus and building browsing controls once a route is active', () => {
@@ -1129,13 +1132,15 @@ describe('IndoorDirectionsScreen', () => {
       expect(queryByText(/requires changing floors/)).toBeNull();
     });
 
-    it('should show transition prompt for cross-building route', () => {
+    it('should show only transition buttons for cross-building route', () => {
       mockClassifyRoute.mockReturnValue('cross-building');
       mockBuildRouteSegments.mockReturnValue([]);
-      const { getByText } = render(
+      const { getByTestId, queryByText } = render(
         <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
       );
-      expect(getByText('Between-floor route')).toBeTruthy();
+      expect(getByTestId('transition-pref-stairs')).toBeTruthy();
+      expect(getByTestId('transition-pref-elevator')).toBeTruthy();
+      expect(queryByText('Between-floor route')).toBeNull();
     });
   });
 
@@ -1165,31 +1170,16 @@ describe('IndoorDirectionsScreen', () => {
       },
     };
 
-    it('should render outdoor journey details when active segment is outdoor', () => {
+    it('should keep only the outdoor journey stage card without the detail panel', () => {
       mockClassifyRoute.mockReturnValue('cross-building');
       mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
       mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
-      const { getAllByText, getByText } = render(
+      const { getAllByText, queryByText } = render(
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
       expect(getAllByText('Outdoor transfer').length).toBeGreaterThan(0);
-      expect(getByText(/Exit Hall Building and continue outside to John Molson Building/)).toBeTruthy();
-    });
-
-    it('should navigate to Map screen when outdoor directions button pressed', () => {
-      mockClassifyRoute.mockReturnValue('cross-building');
-      mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
-      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
-      const { getByText } = render(
-        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
-      );
-      fireEvent.press(getByText('Open Outdoor Directions'));
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', expect.objectContaining({
-        outdoorRoute: expect.objectContaining({
-          startCoords: outdoorSeg.fromCoords,
-          destCoords: outdoorSeg.toCoords,
-        }),
-      }));
+      expect(queryByText(/Exit Hall Building and continue outside to John Molson Building/)).toBeNull();
+      expect(queryByText('Open Outdoor Directions')).toBeNull();
     });
 
     it('should show outdoor step in cross-building direction steps', () => {
@@ -1202,7 +1192,7 @@ describe('IndoorDirectionsScreen', () => {
       expect(getByText(/Walk outside to the MB building/)).toBeTruthy();
     });
 
-    it('should include outdoor travel in the route overview for cross-building routes', () => {
+    it('should not render route overview text for cross-building routes', () => {
       const indoorSeg = {
         type: 'indoor',
         floorId: 'Hall-8',
@@ -1229,10 +1219,11 @@ describe('IndoorDirectionsScreen', () => {
         totalWeight: 200,
         reason: null,
       });
-      const { getByText } = render(
+      const { queryByText } = render(
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
-      expect(getByText(/Walk outside from Hall Building to John Molson Building/)).toBeTruthy();
+      expect(queryByText('Route Overview')).toBeNull();
+      expect(queryByText(/Walk outside from Hall Building to John Molson Building/)).toBeNull();
     });
   });
 
