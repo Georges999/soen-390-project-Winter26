@@ -14,7 +14,14 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Circle } from "react-native-svg";
-import { buildings, getFloorGraphData, getRoomsForFloor, getAllNodesForFloor, getBuildingById, FLOOR_META } from "../data/indoorFloorData";
+import {
+  buildings,
+  getFloorGraphData,
+  getRoomsForFloor,
+  getAllNodesForFloor,
+  getBuildingById,
+  FLOOR_META,
+} from "../data/indoorFloorData";
 import IndoorPoiLegend from "../components/IndoorPoiLegend";
 import IndoorPoiMarkers from "../components/IndoorPoiMarkers";
 import {
@@ -23,7 +30,10 @@ import {
   IndoorFloorSelector,
 } from "../components/IndoorSelectors";
 import { findShortestPath } from "../utils/pathfinding/pathfinding";
-import { classifyRoute, buildRouteSegments } from "../utils/pathfinding/crossFloorRouter";
+import {
+  classifyRoute,
+  buildRouteSegments,
+} from "../utils/pathfinding/crossFloorRouter";
 import {
   buildJourneyStages,
   getBuildingName,
@@ -51,7 +61,7 @@ const MAROON = "#912338";
 const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const MAP_INSPECT_SCALE = 1.45;
+const MAP_INSPECT_SCALE = 1.75; //cz vanier extension is way too small to be viewed from afar
 
 // ── Step-text helpers (extracted to reduce cognitive complexity) ──
 
@@ -71,8 +81,19 @@ function buildSegmentIcon(method) {
   return method === "elevator" ? "elevator" : "stairs";
 }
 
+function getMapStageBuildingLabel(buildingId) {
+  const name = getBuildingName(buildingId);
+  if (name === "John Molson Building") return "JMSB";
+  if (name === "Vanier Library") return "VL";
+  if (name === "Vanier Extension") return "VE";
+  if (name === "Central Building") return "CC";
+  return name;
+}
+
 function isRedundantContinueStep(text = "") {
-  return text.startsWith("Continue through") || text.startsWith("Continue along");
+  return (
+    text.startsWith("Continue through") || text.startsWith("Continue along")
+  );
 }
 
 function finalizeDirectionSteps(rawSteps) {
@@ -102,7 +123,10 @@ function finalizeDirectionSteps(rawSteps) {
 function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
   const steps = [];
 
-  steps.push({ text: `Start at ${startRoom?.label || "starting point"}`, icon: "trip-origin" });
+  steps.push({
+    text: `Start at ${startRoom?.label || "starting point"}`,
+    icon: "trip-origin",
+  });
 
   for (let si = 0; si < segmentResults.length; si++) {
     const { segment, pathResult: segPath } = segmentResults[si];
@@ -120,9 +144,12 @@ function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
         steps.push({ text: nodeStepText(coords[i]) });
       }
     } else if (segment.type === "vertical") {
-      const fromLabel = FLOOR_META[segment.fromFloor]?.floorLabel || segment.fromFloor;
-      const toLabel = FLOOR_META[segment.toFloor]?.floorLabel || segment.toFloor;
-      const method = segment.transitionType === "elevator" ? "elevator" : "stairs";
+      const fromLabel =
+        FLOOR_META[segment.fromFloor]?.floorLabel || segment.fromFloor;
+      const toLabel =
+        FLOOR_META[segment.toFloor]?.floorLabel || segment.toFloor;
+      const method =
+        segment.transitionType === "elevator" ? "elevator" : "stairs";
       steps.push({
         text: `Take the ${method} from Floor ${fromLabel} to Floor ${toLabel}`,
         icon: buildSegmentIcon(method),
@@ -135,7 +162,10 @@ function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
     }
   }
 
-  steps.push({ text: `Arrive at ${destRoom?.label || "destination"}`, icon: "place" });
+  steps.push({
+    text: `Arrive at ${destRoom?.label || "destination"}`,
+    icon: "place",
+  });
   return finalizeDirectionSteps(steps);
 }
 
@@ -143,10 +173,12 @@ function buildMultiSegmentSteps(segmentResults, startRoom, destRoom) {
 function buildSameFloorSteps(coords, startRoom, destRoom) {
   if (coords.length < 2) return [];
 
-  const steps = [{
-    text: `Start at ${startRoom?.label || 'starting point'}`,
-    distance: null,
-  }];
+  const steps = [
+    {
+      text: `Start at ${startRoom?.label || "starting point"}`,
+      distance: null,
+    },
+  ];
 
   for (let i = 1; i < coords.length - 1; i++) {
     steps.push({
@@ -156,7 +188,7 @@ function buildSameFloorSteps(coords, startRoom, destRoom) {
   }
 
   steps.push({
-    text: `Arrive at ${destRoom?.label || 'destination'}`,
+    text: `Arrive at ${destRoom?.label || "destination"}`,
     distance: null,
   });
 
@@ -172,12 +204,22 @@ function resolveSegmentPath(seg, accessible) {
   if (seg.type !== "indoor") return { segment: seg, pathResult: null };
 
   const buildingObj = getBuildingById(seg.buildingId);
-  if (!buildingObj) return { segment: seg, pathResult: { ok: false, reason: "Building not found" } };
+  if (!buildingObj)
+    return {
+      segment: seg,
+      pathResult: { ok: false, reason: "Building not found" },
+    };
 
   const floorsData = { floors: {} };
   buildingObj.floors.forEach((floor) => {
     const fd = getFloorGraphData(buildingObj.id, floor.id);
-    floorsData.floors[floor.id] = { label: floor.label, nodes: fd.nodes, rooms: fd.rooms, pois: fd.pois, edges: fd.edges };
+    floorsData.floors[floor.id] = {
+      label: floor.label,
+      nodes: fd.nodes,
+      rooms: fd.rooms,
+      pois: fd.pois,
+      edges: fd.edges,
+    };
   });
 
   const result = findShortestPath({
@@ -196,7 +238,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   // Start and destination rooms
   const [startRoom, setStartRoom] = useState(params.startRoom || null);
   const [destRoom, setDestRoom] = useState(params.destinationRoom || null);
-  
+
   // Input text for search
   const [startText, setStartText] = useState(params.startRoom?.label || "");
   const [destText, setDestText] = useState(params.destinationRoom?.label || "");
@@ -213,27 +255,37 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   // Transition preference for cross-floor routes
   const [transitionPref, setTransitionPref] = useState(null); // "stairs" | "elevator"
   const [activeJourneyStageId, setActiveJourneyStageId] = useState(null);
-  const resolvedTransitionPref = transitionPref || (accessibleRoute ? "elevator" : "stairs");
+  const resolvedTransitionPref =
+    transitionPref || (accessibleRoute ? "elevator" : "stairs");
 
-  const [selectedCampus, setSelectedCampus] = useState(initialSelection.campusId);
-  const [selectedBuildingIdx, setSelectedBuildingIdx] = useState(initialSelection.buildingIdx);
-  const [selectedFloorIdx, setSelectedFloorIdx] = useState(initialSelection.floorIdx);
+  const [selectedCampus, setSelectedCampus] = useState(
+    initialSelection.campusId,
+  );
+  const [selectedBuildingIdx, setSelectedBuildingIdx] = useState(
+    initialSelection.buildingIdx,
+  );
+  const [selectedFloorIdx, setSelectedFloorIdx] = useState(
+    initialSelection.floorIdx,
+  );
 
   const campusBuildings = useMemo(
     () => buildings[selectedCampus] || [],
-    [selectedCampus]
+    [selectedCampus],
   );
 
   // Current building and floor being displayed while browsing
-  const selectedBuilding = campusBuildings[selectedBuildingIdx] || campusBuildings[0];
+  const selectedBuilding =
+    campusBuildings[selectedBuildingIdx] || campusBuildings[0];
   const selectedFloor =
-    selectedBuilding?.floors?.[selectedFloorIdx] || selectedBuilding?.floors?.[0] || null;
+    selectedBuilding?.floors?.[selectedFloorIdx] ||
+    selectedBuilding?.floors?.[0] ||
+    null;
 
   // Get current floor dimensions from the floor data
   const floorDimensions = useMemo(() => {
     return {
       width: selectedFloor?.width || 1000,
-      height: selectedFloor?.height || 1000
+      height: selectedFloor?.height || 1000,
     };
   }, [selectedFloor]);
 
@@ -243,15 +295,18 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   // Current floor rooms and nodes for map interaction
   const currentFloorData = useMemo(() => {
     if (!selectedFloor) return { rooms: [], nodes: [], pois: [] };
-    
+
     const floorId = selectedFloor.id;
     const rooms = getRoomsForFloor(floorId);
     const allNodes = getAllNodesForFloor(floorId);
-    
+
     return {
       rooms,
-      nodes: allNodes.filter(n => n.type === 'hallway'),
-      pois: allNodes.filter(n => n.type !== 'hallway' && n.type !== 'classroom' && n.type !== 'room')
+      nodes: allNodes.filter((n) => n.type === "hallway"),
+      pois: allNodes.filter(
+        (n) =>
+          n.type !== "hallway" && n.type !== "classroom" && n.type !== "room",
+      ),
     };
   }, [selectedFloor]);
 
@@ -276,38 +331,43 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   const journeyStages = useMemo(
     () => buildJourneyStages(routeSegments, startRoom, destRoom),
-    [routeSegments, startRoom, destRoom]
+    [routeSegments, startRoom, destRoom],
   );
 
   const defaultJourneyStage = useMemo(
     () => getDefaultJourneyStage(journeyStages),
-    [journeyStages]
+    [journeyStages],
   );
 
   const activeJourneyStage = useMemo(
-    () => journeyStages.find((stage) => stage.id === activeJourneyStageId) || defaultJourneyStage,
-    [journeyStages, activeJourneyStageId, defaultJourneyStage]
+    () =>
+      journeyStages.find((stage) => stage.id === activeJourneyStageId) ||
+      defaultJourneyStage,
+    [journeyStages, activeJourneyStageId, defaultJourneyStage],
   );
 
   const mapJourneyStage = useMemo(
     () => getJourneyMapStage(journeyStages, activeJourneyStage?.id),
-    [journeyStages, activeJourneyStage]
+    [journeyStages, activeJourneyStage],
   );
 
   const activeJourneyStepNumber = useMemo(() => {
     if (!activeJourneyStage) return null;
 
-    const stageIndex = journeyStages.findIndex((stage) => stage.id === activeJourneyStage.id);
+    const stageIndex = journeyStages.findIndex(
+      (stage) => stage.id === activeJourneyStage.id,
+    );
     return stageIndex >= 0 ? stageIndex + 1 : null;
   }, [journeyStages, activeJourneyStage]);
 
   // Filtered search results
   const searchResults = useMemo(
-    () => getFilteredRooms(allRooms, searchQuery, {
-      preferredBuildingId: selectedBuilding?.id,
-      preferredCampusId: selectedCampus,
-    }),
-    [searchQuery, allRooms, selectedBuilding?.id, selectedCampus]
+    () =>
+      getFilteredRooms(allRooms, searchQuery, {
+        preferredBuildingId: selectedBuilding?.id,
+        preferredCampusId: selectedCampus,
+      }),
+    [searchQuery, allRooms, selectedBuilding?.id, selectedCampus],
   );
 
   const displayedSegmentResult = useMemo(() => {
@@ -325,14 +385,22 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       ({ segment }) =>
         segment.type === "indoor" &&
         segment.floorId === selectedFloor?.id &&
-        segment.buildingId === selectedBuilding?.id
+        segment.buildingId === selectedBuilding?.id,
     );
     if (selectedFloorSegment) {
       return selectedFloorSegment;
     }
 
-    return segmentResults.find(({ segment }) => segment.type === "indoor") || null;
-  }, [segmentResults, activeJourneyStage, mapJourneyStage, selectedFloor?.id, selectedBuilding?.id]);
+    return (
+      segmentResults.find(({ segment }) => segment.type === "indoor") || null
+    );
+  }, [
+    segmentResults,
+    activeJourneyStage,
+    mapJourneyStage,
+    selectedFloor?.id,
+    selectedBuilding?.id,
+  ]);
 
   const browsingLocked = Boolean(startRoom && destRoom);
 
@@ -344,20 +412,26 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       return;
     }
 
-    const currentStageStillExists = journeyStages.some((stage) => stage.id === activeJourneyStageId);
+    const currentStageStillExists = journeyStages.some(
+      (stage) => stage.id === activeJourneyStageId,
+    );
     if (!currentStageStillExists && defaultJourneyStage) {
       setActiveJourneyStageId(defaultJourneyStage.id);
     }
   }, [journeyStages, activeJourneyStageId, defaultJourneyStage]);
 
   useEffect(() => {
-    if (!browsingLocked || !mapJourneyStage?.mapBuildingId || !mapJourneyStage?.mapFloorId) {
+    if (
+      !browsingLocked ||
+      !mapJourneyStage?.mapBuildingId ||
+      !mapJourneyStage?.mapFloorId
+    ) {
       return;
     }
 
     const nextSelection = getSelectionForLocation(
       mapJourneyStage.mapBuildingId,
-      mapJourneyStage.mapFloorId
+      mapJourneyStage.mapFloorId,
     );
 
     if (
@@ -394,15 +468,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
       return { ok: false, reason: "No indoor path available for this segment" };
     }
-    
+
     // Same-floor: build floors data from the selected building
     const routeBuilding =
-      getBuildingById(startRoom.buildingId || destRoom.buildingId || params.building?.id) ||
-      selectedBuilding;
+      getBuildingById(
+        startRoom.buildingId || destRoom.buildingId || params.building?.id,
+      ) || selectedBuilding;
     const floorsData = {
-      floors: {}
+      floors: {},
     };
-    
+
     if (routeBuilding?.floors) {
       routeBuilding.floors.forEach((floor) => {
         const floorGraphData = getFloorGraphData(routeBuilding.id, floor.id);
@@ -411,7 +486,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           nodes: floorGraphData.nodes,
           rooms: floorGraphData.rooms,
           pois: floorGraphData.pois,
-          edges: floorGraphData.edges
+          edges: floorGraphData.edges,
         };
       });
     }
@@ -424,7 +499,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     });
 
     return result;
-  }, [startRoom, destRoom, params.building?.id, selectedBuilding, accessibleRoute, routeSegments, segmentResults, displayedSegmentResult]);
+  }, [
+    startRoom,
+    destRoom,
+    params.building?.id,
+    selectedBuilding,
+    accessibleRoute,
+    routeSegments,
+    segmentResults,
+    displayedSegmentResult,
+  ]);
 
   // Generate step-by-step directions from path (supports multi-segment)
   const directionSteps = useMemo(() => {
@@ -443,15 +527,19 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Route stats - calculate actual distance
   const routeStats = useMemo(() => {
-    const routedWeight = segmentResults.length > 0
-      ? segmentResults.reduce((total, segmentResult) => (
-        segmentResult.segment.type === "indoor" && segmentResult.pathResult?.ok
-          ? total + segmentResult.pathResult.totalWeight
-          : total
-      ), 0)
-      : pathResult?.ok
-        ? pathResult.totalWeight
-        : 0;
+    const routedWeight =
+      segmentResults.length > 0
+        ? segmentResults.reduce(
+            (total, segmentResult) =>
+              segmentResult.segment.type === "indoor" &&
+              segmentResult.pathResult?.ok
+                ? total + segmentResult.pathResult.totalWeight
+                : total,
+            0,
+          )
+        : pathResult?.ok
+          ? pathResult.totalWeight
+          : 0;
 
     if (!routedWeight) {
       return { duration: "--", distance: "--", type: "walking" };
@@ -464,21 +552,30 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     return {
       duration: `${durationMinutes} min`,
       distance: `${distanceMeters}m`,
-      type: "walking"
+      type: "walking",
     };
   }, [pathResult, segmentResults]);
 
   // Determine the floor image to display for active segment
   const displayedFloor = useMemo(() => {
-    if (displayedSegmentResult?.segment?.type === "indoor" && displayedSegmentResult.segment.floorId) {
-      const building = getBuildingById(displayedSegmentResult.segment.buildingId);
-      const floor = building?.floors?.find((f) => f.id === displayedSegmentResult.segment.floorId);
+    if (
+      displayedSegmentResult?.segment?.type === "indoor" &&
+      displayedSegmentResult.segment.floorId
+    ) {
+      const building = getBuildingById(
+        displayedSegmentResult.segment.buildingId,
+      );
+      const floor = building?.floors?.find(
+        (f) => f.id === displayedSegmentResult.segment.floorId,
+      );
       if (floor) return floor;
     }
 
     if (mapJourneyStage?.mapBuildingId && mapJourneyStage?.mapFloorId) {
       const journeyBuilding = getBuildingById(mapJourneyStage.mapBuildingId);
-      const journeyFloor = journeyBuilding?.floors?.find((floor) => floor.id === mapJourneyStage.mapFloorId);
+      const journeyFloor = journeyBuilding?.floors?.find(
+        (floor) => floor.id === mapJourneyStage.mapFloorId,
+      );
       if (journeyFloor) return journeyFloor;
     }
 
@@ -488,9 +585,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       startRoom.floor === destRoom?.floor
     ) {
       const routeBuilding =
-        getBuildingById(startRoom.buildingId || destRoom?.buildingId || params.building?.id) ||
-        selectedBuilding;
-      const routeFloor = routeBuilding?.floors?.find((floor) => floor.id === startRoom.floor);
+        getBuildingById(
+          startRoom.buildingId || destRoom?.buildingId || params.building?.id,
+        ) || selectedBuilding;
+      const routeFloor = routeBuilding?.floors?.find(
+        (floor) => floor.id === startRoom.floor,
+      );
       if (routeFloor) return routeFloor;
     }
 
@@ -510,7 +610,10 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     if (!displayedFloor?.id) return [];
 
     return getAllNodesForFloor(displayedFloor.id).filter(
-      (node) => node.type !== "hallway" && node.type !== "classroom" && node.type !== "room"
+      (node) =>
+        node.type !== "hallway" &&
+        node.type !== "classroom" &&
+        node.type !== "room",
     );
   }, [displayedFloor]);
 
@@ -523,7 +626,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Generate SVG path from coordinates
   const svgPath = useMemo(() => {
-    if (!pathResult?.ok || !pathResult.pathCoords || pathResult.pathCoords.length < 2) {
+    if (
+      !pathResult?.ok ||
+      !pathResult.pathCoords ||
+      pathResult.pathCoords.length < 2
+    ) {
       return null;
     }
 
@@ -541,36 +648,57 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     return {
       path: pathD,
       start: { x: coords[0].x * scaleX, y: coords[0].y * scaleY },
-      end: { x: coords[coords.length - 1].x * scaleX, y: coords[coords.length - 1].y * scaleY },
-      points: coords.map(c => ({ x: c.x * scaleX, y: c.y * scaleY, type: c.type }))
+      end: {
+        x: coords[coords.length - 1].x * scaleX,
+        y: coords[coords.length - 1].y * scaleY,
+      },
+      points: coords.map((c) => ({
+        x: c.x * scaleX,
+        y: c.y * scaleY,
+        type: c.type,
+      })),
     };
-  }, [pathResult, displayedFloor, floorDimensions, displayedMapWidth, displayedMapHeight]);
+  }, [
+    pathResult,
+    displayedFloor,
+    floorDimensions,
+    displayedMapWidth,
+    displayedMapHeight,
+  ]);
 
-  const handleFieldChange = (text) => {
-    if (activeField === "start" && startRoom) {
+  const handleFieldChange = (text, field) => {
+    if (field === "start" && startRoom) {
       setStartRoom(null);
       setTransitionPref(null);
     }
 
-    if (activeField === "dest" && destRoom) {
+    if (field === "dest" && destRoom) {
       setDestRoom(null);
       setTransitionPref(null);
     }
 
+    setActiveField(field);
     setSearchQuery(text);
-    if (activeField === "start") {
+    if (field === "start") {
       setStartText(text);
     } else {
       setDestText(text);
     }
   };
 
-  const syncSelectionToLocation = useCallback((buildingId, floorId, campusId) => {
-    const nextSelection = getSelectionForLocation(buildingId, floorId, campusId);
-    setSelectedCampus(nextSelection.campusId);
-    setSelectedBuildingIdx(nextSelection.buildingIdx);
-    setSelectedFloorIdx(nextSelection.floorIdx);
-  }, []);
+  const syncSelectionToLocation = useCallback(
+    (buildingId, floorId, campusId) => {
+      const nextSelection = getSelectionForLocation(
+        buildingId,
+        floorId,
+        campusId,
+      );
+      setSelectedCampus(nextSelection.campusId);
+      setSelectedBuildingIdx(nextSelection.buildingIdx);
+      setSelectedFloorIdx(nextSelection.floorIdx);
+    },
+    [],
+  );
 
   const handleCampusChange = (campusId) => {
     setSelectedCampus(campusId);
@@ -595,7 +723,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const matchingStage = journeyStages.find(
       (stage) =>
         stage.mapBuildingId === selectedBuilding?.id &&
-        stage.mapFloorId === nextFloor.id
+        stage.mapFloorId === nextFloor.id,
     );
 
     if (matchingStage) {
@@ -628,44 +756,68 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   };
 
   // Handle map tap to select start/end point
-  const handleMapPress = useCallback((event) => {
-    if (!selectionMode) return;
+  const handleMapPress = useCallback(
+    (event) => {
+      if (!selectionMode) return;
 
-    const { locationX, locationY } = event.nativeEvent;
-    
-    // Scale tap coordinates back to original floor plan coordinates
-    const scaleX = floorDimensions.width / displayedMapWidth;
-    const scaleY = floorDimensions.height / displayedMapHeight;
-    const tapX = locationX * scaleX;
-    const tapY = locationY * scaleY;
+      const { locationX, locationY } = event.nativeEvent;
 
-    // Find nearest room from the current floor's rooms
-    let nearestRoom = null;
-    let nearestDistance = Infinity;
+      // Scale tap coordinates back to original floor plan coordinates
+      const scaleX = floorDimensions.width / displayedMapWidth;
+      const scaleY = floorDimensions.height / displayedMapHeight;
+      const tapX = locationX * scaleX;
+      const tapY = locationY * scaleY;
 
-    currentFloorData.rooms.forEach((room) => {
-      if (room.x !== undefined && room.y !== undefined) {
-        const distance = Math.sqrt(Math.pow(room.x - tapX, 2) + Math.pow(room.y - tapY, 2));
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestRoom = room;
+      // Find nearest room from the current floor's rooms
+      let nearestRoom = null;
+      let nearestDistance = Infinity;
+
+      currentFloorData.rooms.forEach((room) => {
+        if (room.x !== undefined && room.y !== undefined) {
+          const distance = Math.sqrt(
+            Math.pow(room.x - tapX, 2) + Math.pow(room.y - tapY, 2),
+          );
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestRoom = room;
+          }
         }
-      }
-    });
+      });
 
-    // Use a larger threshold for selection (150 units)
-    if (nearestRoom && nearestDistance < 150) {
-      const floorLabel = selectedFloor?.label || nearestRoom.floor?.split("-")[1];
-      if (selectionMode === "start") {
-        setStartRoom({ ...nearestRoom, buildingName: selectedBuilding.name, buildingId: selectedBuilding.id });
-        setStartText(nearestRoom.label + ", Floor " + floorLabel);
-      } else {
-        setDestRoom({ ...nearestRoom, buildingName: selectedBuilding.name, buildingId: selectedBuilding.id });
-        setDestText(nearestRoom.label + ", Floor " + floorLabel);
+      // Use a larger threshold for selection (150 units)
+      if (nearestRoom && nearestDistance < 150) {
+        const floorLabel =
+          selectedFloor?.label || nearestRoom.floor?.split("-")[1];
+        if (selectionMode === "start") {
+          setStartRoom({
+            ...nearestRoom,
+            buildingName: selectedBuilding.name,
+            buildingId: selectedBuilding.id,
+          });
+          setStartText(nearestRoom.label + ", Floor " + floorLabel);
+        } else {
+          setDestRoom({
+            ...nearestRoom,
+            buildingName: selectedBuilding.name,
+            buildingId: selectedBuilding.id,
+          });
+          setDestText(nearestRoom.label + ", Floor " + floorLabel);
+        }
+        setSearchQuery("");
+        setActiveField(null);
+        setSelectionMode(null);
       }
-      setSelectionMode(null);
-    }
-  }, [selectionMode, selectedBuilding, selectedFloor, currentFloorData, floorDimensions, displayedMapWidth, displayedMapHeight]);
+    },
+    [
+      selectionMode,
+      selectedBuilding,
+      selectedFloor,
+      currentFloorData,
+      floorDimensions,
+      displayedMapWidth,
+      displayedMapHeight,
+    ],
+  );
 
   // Toggle selection mode
   const toggleSelectionMode = (mode) => {
@@ -679,26 +831,37 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   };
 
   // Scale room coordinates for display
-  const scaleCoord = useCallback((x, y) => {
-    const scaleX = displayedMapWidth / floorDimensions.width;
-    const scaleY = displayedMapHeight / floorDimensions.height;
-    return { x: x * scaleX, y: y * scaleY };
-  }, [floorDimensions, displayedMapWidth, displayedMapHeight]);
+  const scaleCoord = useCallback(
+    (x, y) => {
+      const scaleX = displayedMapWidth / floorDimensions.width;
+      const scaleY = displayedMapHeight / floorDimensions.height;
+      return { x: x * scaleX, y: y * scaleY };
+    },
+    [floorDimensions, displayedMapWidth, displayedMapHeight],
+  );
 
-  const scaleDisplayedPoiCoord = useCallback((x, y) => {
-    const displayWidth = displayedFloor?.width || floorDimensions.width;
-    const displayHeight = displayedFloor?.height || floorDimensions.height;
+  const scaleDisplayedPoiCoord = useCallback(
+    (x, y) => {
+      const displayWidth = displayedFloor?.width || floorDimensions.width;
+      const displayHeight = displayedFloor?.height || floorDimensions.height;
 
-    return {
-      x: x * (displayedMapWidth / displayWidth),
-      y: y * (displayedMapHeight / displayHeight),
-    };
-  }, [displayedFloor, floorDimensions, displayedMapWidth, displayedMapHeight]);
+      return {
+        x: x * (displayedMapWidth / displayWidth),
+        y: y * (displayedMapHeight / displayHeight),
+      };
+    },
+    [displayedFloor, floorDimensions, displayedMapWidth, displayedMapHeight],
+  );
 
   const renderFloorPlanMap = () => (
     <View
       style={styles.mapWrapper}
-      {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
+      {...(selectionMode
+        ? {
+            onStartShouldSetResponder: () => true,
+            onResponderRelease: handleMapPress,
+          }
+        : {})}
     >
       <Image
         source={displayedFloor.image}
@@ -727,21 +890,22 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         width={displayedMapWidth}
         height={displayedMapHeight}
       >
-        {selectionMode && currentFloorData.rooms.map((room) => {
-          if (room.x === undefined || room.y === undefined) return null;
-          const scaled = scaleCoord(room.x, room.y);
-          return (
-            <Circle
-              key={room.id}
-              cx={scaled.x}
-              cy={scaled.y}
-              r={8}
-              fill="rgba(145, 35, 56, 0.3)"
-              stroke={MAROON}
-              strokeWidth={2}
-            />
-          );
-        })}
+        {selectionMode &&
+          currentFloorData.rooms.map((room) => {
+            if (room.x === undefined || room.y === undefined) return null;
+            const scaled = scaleCoord(room.x, room.y);
+            return (
+              <Circle
+                key={room.id}
+                cx={scaled.x}
+                cy={scaled.y}
+                r={8}
+                fill="rgba(145, 35, 56, 0.3)"
+                stroke={MAROON}
+                strokeWidth={2}
+              />
+            );
+          })}
 
         {svgPath && (
           <>
@@ -803,300 +967,396 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <MaterialIcons name="chevron-left" size={28} color="#fff" />
           </Pressable>
           <Text style={styles.headerTitle}>Indoor Directions</Text>
         </View>
 
-        <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {!browsingLocked && (
+            <View style={styles.explorerPanel}>
+              <IndoorCampusToggle
+                selectedCampus={selectedCampus}
+                onSelectCampus={handleCampusChange}
+                styles={styles}
+              />
 
-        {!browsingLocked && (
-          <View style={styles.explorerPanel}>
-            <IndoorCampusToggle
-              selectedCampus={selectedCampus}
-              onSelectCampus={handleCampusChange}
-              styles={styles}
-            />
-
-            <IndoorBuildingSelector
-              buildings={campusBuildings}
-              selectedBuildingIdx={selectedBuildingIdx}
-              onSelectBuilding={handleBuildingChange}
-              styles={styles}
-            />
-          </View>
-        )}
-
-        <View style={styles.searchColumnWrapper}>
-        {/* Search Inputs with Map Selection Buttons */}
-        <View style={styles.searchSection}>
-          <View style={styles.searchInputsBlock}>
-            {/* Start Input */}
-            <View style={[styles.inputRowContainer, styles.inputRowContainerStart]}>
-              <View style={[styles.inputRow, selectionMode === "start" && styles.inputRowActive]}>
-                <MaterialIcons name="trip-origin" size={18} color={GREEN} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Tap map or search start"
-                  placeholderTextColor="#999"
-                  value={activeField === "start" ? searchQuery : startText}
-                  onChangeText={handleFieldChange}
-                  onFocus={() => {
-                    setActiveField("start");
-                    setSearchQuery(startText);
-                  }}
-                  onBlur={() => {
-                    setActiveField(null);
-                  }}
-                />
-                {startText.length > 0 && (
-                  <Pressable onPress={() => { setStartRoom(null); setStartText(""); setSearchQuery(""); }} hitSlop={10}>
-                    <MaterialIcons name="close" size={16} color="#999" />
-                  </Pressable>
-                )}
-              </View>
-              <Pressable
-                style={[styles.mapSelectButton, selectionMode === "start" && styles.mapSelectButtonActive]}
-                onPress={() => toggleSelectionMode("start")}
-              >
-                <MaterialIcons name="my-location" size={20} color={selectionMode === "start" ? "#fff" : MAROON} />
-              </Pressable>
+              <IndoorBuildingSelector
+                buildings={campusBuildings}
+                selectedBuildingIdx={selectedBuildingIdx}
+                onSelectBuilding={handleBuildingChange}
+                styles={styles}
+              />
             </View>
+          )}
 
-            <View style={[styles.inputRowContainer, styles.inputRowContainerDest]}>
-              <View style={[styles.inputRow, selectionMode === "dest" && styles.inputRowActive]}>
-                <MaterialIcons name="place" size={18} color={MAROON} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Tap map or search destination"
-                  placeholderTextColor="#999"
-                  value={activeField === "dest" ? searchQuery : destText}
-                  onChangeText={handleFieldChange}
-                  onFocus={() => {
-                    setActiveField("dest");
-                    setSearchQuery(destText);
-                  }}
-                  onBlur={() => {
-                    setActiveField(null);
-                  }}
-                />
-                {destText.length > 0 && (
-                  <Pressable onPress={() => { setDestRoom(null); setDestText(""); setSearchQuery(""); }} hitSlop={10}>
-                    <MaterialIcons name="close" size={16} color="#999" />
-                  </Pressable>
-                )}
-              </View>
-              <Pressable
-                style={[styles.mapSelectButton, selectionMode === "dest" && styles.mapSelectButtonActive]}
-                onPress={() => toggleSelectionMode("dest")}
-              >
-                <MaterialIcons name="place" size={20} color={selectionMode === "dest" ? "#fff" : MAROON} />
-              </Pressable>
-            </View>
-
-            <Pressable
-              testID="swap-direction-toggle"
-              style={styles.swapButton}
-              onPress={handleSwap}
-            >
-              <MaterialIcons name="swap-vert" size={20} color={MAROON} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Selection Mode Indicator */}
-        {selectionMode && (
-          <View style={styles.selectionModeIndicator}>
-            <MaterialIcons name="touch-app" size={18} color={MAROON} />
-            <Text style={styles.selectionModeText}>
-              Tap on the map to select {selectionMode === "start" ? "start point" : "destination"}
-            </Text>
-          </View>
-        )}
-
-        {/* Search Results Dropdown */}
-        {searchQuery.trim().length > 0 && activeField && (
-          <View style={styles.searchResultsContainer}>
-            {searchResults.length > 0 ? (
-              <ScrollView
-                nestedScrollEnabled
-                keyboardShouldPersistTaps="handled"
-                style={styles.searchResultsScroll}
-                showsVerticalScrollIndicator
-              >
-                {searchResults.slice(0, 6).map((item) => (
-                  <Pressable
-                    key={item.id}
-                    style={styles.searchResultItem}
-                    onPress={() => handleSelectRoom(item)}
+          <View style={styles.searchColumnWrapper}>
+            {/* Search Inputs with Map Selection Buttons */}
+            <View style={styles.searchSection}>
+              <View style={styles.searchInputsBlock}>
+                {/* Start Input */}
+                <View
+                  style={[
+                    styles.inputRowContainer,
+                    styles.inputRowContainerStart,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.inputRow,
+                      selectionMode === "start" && styles.inputRowActive,
+                    ]}
                   >
-                    <Text
-                      style={styles.searchResultText}
-                      numberOfLines={2}
-                      ellipsizeMode="tail"
-                    >
-                      {item.label}, Floor {item.floor?.split("-")[1] || item.floor} · {item.buildingName}
-                    </Text>
+                    <MaterialIcons name="trip-origin" size={18} color={GREEN} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Search start or use map pin button"
+                      placeholderTextColor="#999"
+                      value={activeField === "start" ? searchQuery : startText}
+                      onChangeText={(text) => handleFieldChange(text, "start")}
+                      onFocus={() => {
+                        setActiveField("start");
+                        setSearchQuery(startRoom?.label || startText);
+                      }}
+                      onBlur={() => {
+                        setActiveField(null);
+                      }}
+                    />
+                    {startText.length > 0 && (
+                      <Pressable
+                        onPress={() => {
+                          setStartRoom(null);
+                          setStartText("");
+                          if (activeField === "start") setSearchQuery("");
+                        }}
+                        hitSlop={10}
+                      >
+                        <MaterialIcons name="close" size={16} color="#999" />
+                      </Pressable>
+                    )}
+                  </View>
+                  <Pressable
+                    style={[
+                      styles.mapSelectButton,
+                      selectionMode === "start" && styles.mapSelectButtonActive,
+                    ]}
+                    onPress={() => toggleSelectionMode("start")}
+                  >
+                    <MaterialIcons
+                      name="my-location"
+                      size={20}
+                      color={selectionMode === "start" ? "#fff" : MAROON}
+                    />
                   </Pressable>
-                ))}
-              </ScrollView>
-            ) : (
-              <View style={styles.noResultsContainer}>
-                <MaterialIcons name="search-off" size={24} color="#999" />
-                <Text style={styles.noResultsText}>
-                  No rooms or buildings found. Please try again.
+                </View>
+
+                <View
+                  style={[
+                    styles.inputRowContainer,
+                    styles.inputRowContainerDest,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.inputRow,
+                      selectionMode === "dest" && styles.inputRowActive,
+                    ]}
+                  >
+                    <MaterialIcons name="place" size={18} color={MAROON} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Search destination or use map pin button"
+                      placeholderTextColor="#999"
+                      value={activeField === "dest" ? searchQuery : destText}
+                      onChangeText={(text) => handleFieldChange(text, "dest")}
+                      onFocus={() => {
+                        setActiveField("dest");
+                        setSearchQuery(destRoom?.label || destText);
+                      }}
+                      onBlur={() => {
+                        setActiveField(null);
+                      }}
+                    />
+                    {destText.length > 0 && (
+                      <Pressable
+                        onPress={() => {
+                          setDestRoom(null);
+                          setDestText("");
+                          if (activeField === "dest") setSearchQuery("");
+                        }}
+                        hitSlop={10}
+                      >
+                        <MaterialIcons name="close" size={16} color="#999" />
+                      </Pressable>
+                    )}
+                  </View>
+                  <Pressable
+                    style={[
+                      styles.mapSelectButton,
+                      selectionMode === "dest" && styles.mapSelectButtonActive,
+                    ]}
+                    onPress={() => toggleSelectionMode("dest")}
+                  >
+                    <MaterialIcons
+                      name="place"
+                      size={20}
+                      color={selectionMode === "dest" ? "#fff" : MAROON}
+                    />
+                  </Pressable>
+                </View>
+
+                <Pressable
+                  testID="swap-direction-toggle"
+                  style={styles.swapButton}
+                  onPress={handleSwap}
+                >
+                  <MaterialIcons name="swap-vert" size={20} color={MAROON} />
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Selection Mode Indicator */}
+            {selectionMode && (
+              <View style={styles.selectionModeIndicator}>
+                <MaterialIcons name="touch-app" size={18} color={MAROON} />
+                <Text style={styles.selectionModeText}>
+                  Tap on the map to select{" "}
+                  {selectionMode === "start" ? "start point" : "destination"}
                 </Text>
               </View>
             )}
-          </View>
-        )}
-        </View>
 
-        {/* Accessibility Toggle */}
-        <View style={styles.accessibilityRow} testID="accessibility-toggle-row">
-          <View style={styles.accessibilityLabelContainer}>
-            <MaterialIcons name="accessible" size={22} color={accessibleRoute ? BLUE : "#666"} />
-            <Text style={[styles.accessibilityLabel, accessibleRoute && styles.accessibilityLabelActive]}>
-              Accessible Route
-            </Text>
+            {/* Search Results Dropdown */}
+            {searchQuery.trim().length > 0 && activeField && (
+              <View style={styles.searchResultsContainer}>
+                {searchResults.length > 0 ? (
+                  <ScrollView
+                    nestedScrollEnabled
+                    keyboardShouldPersistTaps="handled"
+                    style={styles.searchResultsScroll}
+                    showsVerticalScrollIndicator
+                  >
+                    {searchResults.slice(0, 6).map((item) => (
+                      <Pressable
+                        key={item.id}
+                        style={styles.searchResultItem}
+                        onPress={() => handleSelectRoom(item)}
+                      >
+                        <Text
+                          style={styles.searchResultText}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {item.label}, Floor{" "}
+                          {item.floor?.split("-")[1] || item.floor} ·{" "}
+                          {item.buildingName}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                ) : (
+                  <View style={styles.noResultsContainer}>
+                    <MaterialIcons name="search-off" size={24} color="#999" />
+                    <Text style={styles.noResultsText}>
+                      No rooms or buildings found. Please try again.
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
-          <Text style={styles.accessibilityHint}>
-            {accessibleRoute ? "Avoiding stairs" : "Uses stairs if shorter"}
-          </Text>
-          <Switch
-            testID="accessibility-switch"
-            value={accessibleRoute}
-            onValueChange={(val) => {
-              setAccessibleRoute(val);
-              if (val) setTransitionPref("elevator");
-            }}
-            trackColor={{ false: "#ddd", true: BLUE }}
-            thumbColor={accessibleRoute ? "#fff" : "#f4f3f4"}
-          />
-        </View>
 
-        {(routeType === "cross-floor" || routeType === "cross-building") && startRoom && destRoom && (
-          <View style={styles.transferModeControls}>
-            <View style={styles.transferModeOptionsStandalone}>
-              <Pressable
-                testID="transition-pref-stairs"
+          {/* Accessibility Toggle */}
+          <View
+            style={styles.accessibilityRow}
+            testID="accessibility-toggle-row"
+          >
+            <View style={styles.accessibilityLabelContainer}>
+              <MaterialIcons
+                name="accessible"
+                size={22}
+                color={accessibleRoute ? BLUE : "#666"}
+              />
+              <Text
                 style={[
-                  styles.transferModeOption,
-                  resolvedTransitionPref === "stairs" && styles.transferModeOptionActive,
-                  accessibleRoute && styles.selectorDisabled,
+                  styles.accessibilityLabel,
+                  accessibleRoute && styles.accessibilityLabelActive,
                 ]}
-                disabled={accessibleRoute}
-                onPress={() => setTransitionPref("stairs")}
               >
-                <MaterialIcons
-                  name="stairs"
-                  size={18}
-                  color={resolvedTransitionPref === "stairs" ? "#fff" : MAROON}
-                />
-                <Text
-                  style={[
-                    styles.transferModeOptionText,
-                    resolvedTransitionPref === "stairs" && styles.transferModeOptionTextActive,
-                  ]}
-                >
-                  Stairs
-                </Text>
-              </Pressable>
-              <Pressable
-                testID="transition-pref-elevator"
-                style={[
-                  styles.transferModeOption,
-                  resolvedTransitionPref === "elevator" && styles.transferModeOptionActiveBlue,
-                ]}
-                onPress={() => setTransitionPref("elevator")}
-              >
-                <MaterialIcons
-                  name="elevator"
-                  size={18}
-                  color={resolvedTransitionPref === "elevator" ? "#fff" : BLUE}
-                />
-                <Text
-                  style={[
-                    styles.transferModeOptionText,
-                    styles.transferModeOptionTextBlue,
-                    resolvedTransitionPref === "elevator" && styles.transferModeOptionTextActive,
-                  ]}
-                >
-                  Elevator
-                </Text>
-              </Pressable>
+                Accessible Route
+              </Text>
             </View>
-          </View>
-        )}
-
-        {journeyStages.length > 0 && (
-          <View style={styles.journeyPlannerCard}>
-            <Text style={styles.journeyPlannerTitle}>Floor-by-floor journey</Text>
-            <Text style={styles.journeyPlannerSubtitle}>
-              Tap a stage to preview that part of the trip.
+            <Text style={styles.accessibilityHint}>
+              {accessibleRoute ? "Avoiding stairs" : "Uses stairs if shorter"}
             </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.journeyStageRow}
-            >
-              {journeyStages.map((stage, index) => {
-                const isActive = activeJourneyStage?.id === stage.id;
-                return (
+            <Switch
+              testID="accessibility-switch"
+              value={accessibleRoute}
+              onValueChange={(val) => {
+                setAccessibleRoute(val);
+                if (val) setTransitionPref("elevator");
+              }}
+              trackColor={{ false: "#ddd", true: BLUE }}
+              thumbColor={accessibleRoute ? "#fff" : "#f4f3f4"}
+            />
+          </View>
+
+          {(routeType === "cross-floor" || routeType === "cross-building") &&
+            startRoom &&
+            destRoom && (
+              <View style={styles.transferModeControls}>
+                <View style={styles.transferModeOptionsStandalone}>
                   <Pressable
-                    key={stage.id}
-                    testID={stage.id}
+                    testID="transition-pref-stairs"
                     style={[
-                      styles.journeyStageCard,
-                      isActive && styles.journeyStageCardActive,
+                      styles.transferModeOption,
+                      resolvedTransitionPref === "stairs" &&
+                        styles.transferModeOptionActive,
+                      accessibleRoute && styles.selectorDisabled,
                     ]}
-                    onPress={() => setActiveJourneyStageId(stage.id)}
+                    disabled={accessibleRoute}
+                    onPress={() => setTransitionPref("stairs")}
                   >
                     <MaterialIcons
-                      name={stage.icon}
-                      size={20}
-                      color={isActive ? "#fff" : MAROON}
+                      name="stairs"
+                      size={18}
+                      color={
+                        resolvedTransitionPref === "stairs" ? "#fff" : MAROON
+                      }
                     />
                     <Text
                       style={[
-                        styles.journeyStageLabel,
-                        isActive && styles.journeyStageLabelActive,
+                        styles.transferModeOptionText,
+                        resolvedTransitionPref === "stairs" &&
+                          styles.transferModeOptionTextActive,
                       ]}
                     >
-                      {index + 1}
+                      Stairs
                     </Text>
-                  <Text
-                    style={[
-                      styles.journeyStageTitle,
-                      isActive && styles.journeyStageTitleActive,
-                    ]}
-                    numberOfLines={2}
-                  >
-                    {stage.title}
-                  </Text>
                   </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-        )}
+                  <Pressable
+                    testID="transition-pref-elevator"
+                    style={[
+                      styles.transferModeOption,
+                      resolvedTransitionPref === "elevator" &&
+                        styles.transferModeOptionActiveBlue,
+                    ]}
+                    onPress={() => setTransitionPref("elevator")}
+                  >
+                    <MaterialIcons
+                      name="elevator"
+                      size={18}
+                      color={
+                        resolvedTransitionPref === "elevator" ? "#fff" : BLUE
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.transferModeOptionText,
+                        styles.transferModeOptionTextBlue,
+                        resolvedTransitionPref === "elevator" &&
+                          styles.transferModeOptionTextActive,
+                      ]}
+                    >
+                      Elevator
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+
+          {journeyStages.length > 0 && (
+            <View style={styles.journeyPlannerCard}>
+              <Text style={styles.journeyPlannerTitle}>
+                Floor-by-floor journey
+              </Text>
+              <Text style={styles.journeyPlannerSubtitle}>
+                Tap a stage to preview that part of the trip.
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.journeyStageRow}
+              >
+                {journeyStages.map((stage, index) => {
+                  const isActive = activeJourneyStage?.id === stage.id;
+                  return (
+                    <Pressable
+                      key={stage.id}
+                      testID={stage.id}
+                      style={[
+                        styles.journeyStageCard,
+                        isActive && styles.journeyStageCardActive,
+                      ]}
+                      onPress={() => setActiveJourneyStageId(stage.id)}
+                    >
+                      <View style={styles.journeyStageHeaderRow}>
+                        <MaterialIcons
+                          name={stage.icon}
+                          size={20}
+                          color={isActive ? "#fff" : MAROON}
+                        />
+                        <View
+                          style={[
+                            styles.journeyStageNumberBadge,
+                            isActive && styles.journeyStageNumberBadgeActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.journeyStageNumberText,
+                              isActive && styles.journeyStageNumberTextActive,
+                            ]}
+                          >
+                            {index + 1}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text
+                        style={[
+                          styles.journeyStageTitle,
+                          isActive && styles.journeyStageTitleActive,
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {stage.title}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Floor Plan with Route */}
           <View
             testID="indoor-floor-plan-container"
             style={styles.floorPlanContainer}
-            {...(selectionMode ? { onStartShouldSetResponder: () => true, onResponderRelease: handleMapPress } : {})}
+            {...(selectionMode
+              ? {
+                  onStartShouldSetResponder: () => true,
+                  onResponderRelease: handleMapPress,
+                }
+              : {})}
           >
             {displayedFloor && (
               <View style={styles.mapStageHeader}>
                 <View>
                   <Text style={styles.mapStageTitle}>
-                    {getBuildingName(
+                    {getMapStageBuildingLabel(
                       mapJourneyStage?.mapBuildingId ||
-                      displayedSegmentResult?.segment?.buildingId ||
-                      selectedBuilding?.id
-                    )} · Floor {displayedFloor.label}
+                        displayedSegmentResult?.segment?.buildingId ||
+                        selectedBuilding?.id,
+                    )}{" "}
+                    · Floor {displayedFloor.label}
                   </Text>
                 </View>
                 <View style={styles.mapStageActions}>
@@ -1123,7 +1383,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   </Pressable>
                   {activeJourneyStage && (
                     <View style={styles.mapStageBadge}>
-                      <Text style={styles.mapStageBadgeText}>Step {activeJourneyStepNumber}</Text>
+                      <Text style={styles.mapStageBadgeText}>
+                        Step {activeJourneyStepNumber}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -1151,7 +1413,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             ) : (
               <View style={styles.noFloorPlan}>
                 <MaterialIcons name="map" size={48} color="#ccc" />
-                <Text style={styles.noFloorPlanText}>Select start and destination</Text>
+                <Text style={styles.noFloorPlanText}>
+                  Select start and destination
+                </Text>
               </View>
             )}
           </View>
@@ -1172,16 +1436,26 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             <>
               <View style={styles.statsBar}>
                 <View style={styles.statItem}>
-                  <MaterialIcons name="directions-walk" size={20} color={MAROON} />
-                  <Text style={styles.statValue}>{routeStats.duration}</Text>
+                  <View style={styles.statValueRow}>
+                    <MaterialIcons
+                      name="directions-walk"
+                      size={18}
+                      color={MAROON}
+                    />
+                    <Text style={styles.statValue}>{routeStats.duration}</Text>
+                  </View>
                   <Text style={styles.statLabel}>walking</Text>
                 </View>
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{routeStats.distance}</Text>
+                  <View style={styles.statValueRow}>
+                    <Text style={styles.statValue}>{routeStats.distance}</Text>
+                  </View>
                   <Text style={styles.statLabel}>distance</Text>
                 </View>
                 <View style={styles.statItemRight}>
-                  <Text style={styles.statValue}>{routeStats.type}</Text>
+                  <View style={styles.statValueRow}>
+                    <Text style={styles.statValue}>{routeStats.type}</Text>
+                  </View>
                   <Text style={styles.statLabel}>route</Text>
                 </View>
               </View>
@@ -1189,7 +1463,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               {/* Path Error Message */}
               {pathResult && !pathResult.ok && (
                 <View style={styles.errorContainer}>
-                  <MaterialIcons name="error-outline" size={20} color="#dc3545" />
+                  <MaterialIcons
+                    name="error-outline"
+                    size={20}
+                    color="#dc3545"
+                  />
                   <Text style={styles.errorText}>{pathResult.reason}</Text>
                 </View>
               )}
@@ -1206,7 +1484,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                       <View style={styles.stepTextContainer}>
                         <Text style={styles.stepText}>{step.text}</Text>
                         {step.distance != null && (
-                          <Text style={styles.stepDistance}>{step.distance}</Text>
+                          <Text style={styles.stepDistance}>
+                            {step.distance}
+                          </Text>
                         )}
                       </View>
                     </View>
@@ -1225,7 +1505,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               </Text>
             </View>
           )}
-
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -1541,11 +1820,19 @@ const styles = StyleSheet.create({
   },
   statItem: {
     alignItems: "center",
+    justifyContent: "center",
     flex: 1,
   },
   statItemRight: {
     alignItems: "center",
+    justifyContent: "center",
     flex: 1,
+  },
+  statValueRow: {
+    minHeight: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   statValue: {
     fontSize: 18,
@@ -1759,14 +2046,30 @@ const styles = StyleSheet.create({
     backgroundColor: MAROON,
     borderColor: MAROON,
   },
-  journeyStageLabel: {
+  journeyStageHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  journeyStageNumberBadge: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    backgroundColor: "rgba(145, 35, 56, 0.12)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  journeyStageNumberBadgeActive: {
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+  },
+  journeyStageNumberText: {
+    color: MAROON,
     fontSize: 12,
     fontWeight: "700",
-    color: "#8c5b68",
-    marginTop: 8,
   },
-  journeyStageLabelActive: {
-    color: "#f4dfe5",
+  journeyStageNumberTextActive: {
+    color: "#fff",
   },
   journeyStageTitle: {
     fontSize: 13,
