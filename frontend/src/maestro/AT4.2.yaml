@@ -47,7 +47,7 @@ appId: host.exp.Exponent
     timeout: 12000
 
 # Valid route exists on Hall floor 9.
-- tapOn: "Tap map or search start"
+- tapOn: "Search start or use map pin button"
 - eraseText
 - inputText: "921"
 - extendedWaitUntil:
