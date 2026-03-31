@@ -1079,61 +1079,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                 );
               })}
             </ScrollView>
-
-            {activeJourneyStage && (
-              <View style={styles.activeStageDetailCard}>
-                <View style={styles.activeStageHeader}>
-                  <MaterialIcons
-                    name={activeJourneyStage.icon}
-                    size={22}
-                    color={activeJourneyStage.type === "vertical" && resolvedTransitionPref === "elevator" ? BLUE : MAROON}
-                  />
-                  <View style={styles.activeStageTextBlock}>
-                    <Text style={styles.activeStageTitle}>{activeJourneyStage.title}</Text>
-                    <Text style={styles.activeStageDescription}>{activeJourneyStage.description}</Text>
-                  </View>
-                </View>
-
-                {activeJourneyStage.type === "vertical" && (
-                  <View style={styles.activeStageMetaRow}>
-                    <View style={styles.activeStageMetaChip}>
-                      <Text style={styles.activeStageMetaText}>
-                        Floor {getFloorLabel(routeSegments[activeJourneyStage.segmentIndex]?.fromFloor)}
-                      </Text>
-                    </View>
-                    <MaterialIcons name="arrow-forward" size={16} color="#7e5160" />
-                    <View style={styles.activeStageMetaChip}>
-                      <Text style={styles.activeStageMetaText}>
-                        Floor {getFloorLabel(routeSegments[activeJourneyStage.segmentIndex]?.toFloor)}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                {activeJourneyStage.type === "outdoor" && (
-                  <Pressable
-                    style={styles.outdoorNavButton}
-                    onPress={() => {
-                      const outdoorSegment = routeSegments[activeJourneyStage.segmentIndex];
-                      const { BUILDING_META: bm } = require("../data/indoorFloorData");
-                      const startName = bm[outdoorSegment.fromBuildingId]?.name || outdoorSegment.fromBuildingId;
-                      const destName = bm[outdoorSegment.toBuildingId]?.name || outdoorSegment.toBuildingId;
-                      navigation.navigate("Map", {
-                        outdoorRoute: {
-                          startName,
-                          destName,
-                          startCoords: outdoorSegment.fromCoords,
-                          destCoords: outdoorSegment.toCoords,
-                        },
-                      });
-                    }}
-                  >
-                    <MaterialIcons name="map" size={20} color="#fff" />
-                    <Text style={styles.outdoorNavButtonText}>Open Outdoor Directions</Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
           </View>
         )}
 
@@ -1833,50 +1778,6 @@ const styles = StyleSheet.create({
   journeyStageTitleActive: {
     color: "#fff",
   },
-  activeStageDetailCard: {
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: "#fffdfd",
-    borderWidth: 1,
-    borderColor: "#e7d8de",
-    gap: 12,
-  },
-  activeStageHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  activeStageTextBlock: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  activeStageTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#4b3640",
-  },
-  activeStageDescription: {
-    marginTop: 4,
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#6c5560",
-  },
-  activeStageMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  activeStageMetaChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: "#f6eef1",
-  },
-  activeStageMetaText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#7e5160",
-  },
   mapStageHeader: {
     width: "100%",
     flexDirection: "row",
@@ -1931,21 +1832,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: MAROON,
-  },
-  outdoorNavButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: MAROON,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 24,
-    marginTop: 16,
-    gap: 8,
-  },
-  outdoorNavButtonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "600",
   },
 });
 

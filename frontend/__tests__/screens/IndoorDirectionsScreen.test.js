@@ -1170,31 +1170,16 @@ describe('IndoorDirectionsScreen', () => {
       },
     };
 
-    it('should render outdoor journey details when active segment is outdoor', () => {
+    it('should keep only the outdoor journey stage card without the detail panel', () => {
       mockClassifyRoute.mockReturnValue('cross-building');
       mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
       mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
-      const { getAllByText, getByText } = render(
+      const { getAllByText, queryByText } = render(
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
       expect(getAllByText('Outdoor transfer').length).toBeGreaterThan(0);
-      expect(getByText(/Exit Hall Building and continue outside to John Molson Building/)).toBeTruthy();
-    });
-
-    it('should navigate to Map screen when outdoor directions button pressed', () => {
-      mockClassifyRoute.mockReturnValue('cross-building');
-      mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
-      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
-      const { getByText } = render(
-        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
-      );
-      fireEvent.press(getByText('Open Outdoor Directions'));
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('Map', expect.objectContaining({
-        outdoorRoute: expect.objectContaining({
-          startCoords: outdoorSeg.fromCoords,
-          destCoords: outdoorSeg.toCoords,
-        }),
-      }));
+      expect(queryByText(/Exit Hall Building and continue outside to John Molson Building/)).toBeNull();
+      expect(queryByText('Open Outdoor Directions')).toBeNull();
     });
 
     it('should show outdoor step in cross-building direction steps', () => {
