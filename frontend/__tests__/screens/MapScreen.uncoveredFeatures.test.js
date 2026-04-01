@@ -211,6 +211,7 @@ describe('MapScreen uncovered lines tests', () => {
     expect(Speech.stop).toHaveBeenCalledTimes(1);
   });
 
+  // Validates outdoor route params prefill both text inputs on mount.
   it('covers outdoorRoute prefill effect for start and destination fields', async () => {
     const route = {
       params: {
@@ -231,6 +232,7 @@ describe('MapScreen uncovered lines tests', () => {
     });
   });
 
+  // Checks building card actions: directions sets destination and close hides the sheet.
   it('covers building bottom sheet close and directions callbacks', async () => {
     const { getByTestId, getByText, queryByText } = render(<MapScreen />);
 
