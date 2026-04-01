@@ -208,6 +208,26 @@ describe('MapScreen uncovered lines tests', () => {
     expect(Speech.stop).toHaveBeenCalledTimes(1);
   });
 
+  it('covers outdoorRoute prefill effect for start and destination fields', async () => {
+    const route = {
+      params: {
+        outdoorRoute: {
+          startName: 'Hall Building',
+          destName: 'Library Building',
+          startCoords: { latitude: 45.497, longitude: -73.579 },
+          destCoords: { latitude: 45.499, longitude: -73.577 },
+        },
+      },
+    };
+
+    const { getByTestId } = render(<MapScreen route={route} />);
+
+    await waitFor(() => {
+      expect(getByTestId('start-input').props.value).toBe('Hall Building');
+      expect(getByTestId('dest-input').props.value).toBe('Library Building');
+    });
+  });
+
   it('covers building bottom sheet close and directions callbacks', async () => {
     const { getByTestId, getByText, queryByText } = render(<MapScreen />);
 
