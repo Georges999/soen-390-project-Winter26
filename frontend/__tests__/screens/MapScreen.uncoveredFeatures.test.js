@@ -146,6 +146,7 @@ describe('MapScreen uncovered lines tests', () => {
     fetchNearbyPOIs.mockResolvedValue([]);
   });
 
+  // Verifies calendar/next-class params prefill both origin and destination fields.
   it('covers next class prefill branch when building code is found', async () => {
     const route = {
       params: {
@@ -162,6 +163,7 @@ describe('MapScreen uncovered lines tests', () => {
     });
   });
 
+  // Confirms campus toggle press updates campus selection state.
   it('covers campus toggle onSelect callback path', async () => {
     const { getByText } = render(<MapScreen />);
 
@@ -172,6 +174,7 @@ describe('MapScreen uncovered lines tests', () => {
     });
   });
 
+  // Ensures POI panel shows empty-state text when a request returns no results.
   it('covers POI empty-state rendering after requesting POIs', async () => {
     const { getByTestId, getByText } = render(<MapScreen />);
 
