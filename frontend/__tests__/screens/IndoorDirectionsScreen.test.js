@@ -62,6 +62,7 @@ jest.mock('../../src/utils/pathfinding/crossFloorRouter', () => ({
 const mockNavigation = {
   navigate: jest.fn(),
   goBack: jest.fn(),
+  getParent: jest.fn(() => ({ navigate: jest.fn() })),
 };
 
 const mockRouteEmpty = { params: {} };
@@ -1180,16 +1181,36 @@ describe('IndoorDirectionsScreen', () => {
       },
     };
 
-    it('should keep only the outdoor journey stage card without the detail panel', () => {
+    it('should show the outdoor bridge card with navigation button when outdoor stage is active', () => {
       mockClassifyRoute.mockReturnValue('cross-building');
       mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
       mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
-      const { getAllByText, queryByText } = render(
+      const { getAllByText, getByTestId } = render(
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
       expect(getAllByText('Outdoor transfer').length).toBeGreaterThan(0);
-      expect(queryByText(/Exit Hall Building and continue outside to John Molson Building/)).toBeNull();
-      expect(queryByText('Open Outdoor Directions')).toBeNull();
+      expect(getByTestId('outdoor-navigate-btn')).toBeTruthy();
+    });
+
+    it('should navigate to Map with outdoor route when outdoor button is pressed', () => {
+      const parentNavigate = jest.fn();
+      const navWithParent = {
+        ...mockNavigation,
+        getParent: jest.fn(() => ({ navigate: parentNavigate })),
+      };
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={navWithParent} />
+      );
+      fireEvent.press(getByTestId('outdoor-navigate-btn'));
+      expect(parentNavigate).toHaveBeenCalledWith('Map', expect.objectContaining({
+        outdoorRoute: expect.objectContaining({
+          startCoords: outdoorSeg.fromCoords,
+          destCoords: outdoorSeg.toCoords,
+        }),
+      }));
     });
 
     it('should show outdoor step in cross-building direction steps', () => {

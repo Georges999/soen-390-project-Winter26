@@ -374,6 +374,26 @@
           "from": "MB1annotated_washroom_002",
           "to": "MB1annotated_hallway_005",
           "weight": 58.37
+        },
+        {
+          "from": "MB1annotated_entry_001",
+          "to": "MB1annotated_hallway_006",
+          "weight": 207.5
+        },
+        {
+          "from": "MB1annotated_entry_001",
+          "to": "MB1annotated_classroom_013",
+          "weight": 65.3
+        },
+        {
+          "from": "MB1annotated_entry_001",
+          "to": "MB1annotated_classroom_021",
+          "weight": 129.7
+        },
+        {
+          "from": "MB1annotated_classroom_013",
+          "to": "MB1annotated_classroom_021",
+          "weight": 79.4
         }
       ],
       "rooms": [
@@ -639,6 +659,15 @@
           "label": "",
           "nodeSize": 5,
           "labelSize": 7
+        },
+        {
+          "id": "MB1annotated_entry_001",
+          "type": "building_entry_exit",
+          "x": 700,
+          "y": 985,
+          "label": "MB Main Entrance",
+          "nodeSize": 10,
+          "labelSize": 9
         }
       ],
       "annotations": []

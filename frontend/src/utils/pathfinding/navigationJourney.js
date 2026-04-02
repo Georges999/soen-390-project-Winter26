@@ -79,7 +79,10 @@ export function buildOutdoorStage(segment, index) {
     description: buildOutdoorStageDescription(segment),
     mapBuildingId: null,
     mapFloorId: null,
+    fromBuildingId: segment.fromBuildingId,
     destinationBuildingId: segment.toBuildingId,
+    fromCoords: segment.fromCoords || null,
+    toCoords: segment.toCoords || null,
   };
 }
 

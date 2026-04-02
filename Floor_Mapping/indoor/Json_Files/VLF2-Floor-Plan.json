@@ -74,6 +74,11 @@
       ],
       "edges": [
         {
+          "from": "VE2annotated_entry_001",
+          "to": "VE2annotated_hallway_001",
+          "weight": 50.5
+        },
+        {
           "from": "VE2annotated_stairs_002",
           "to": "VE2annotated_hallway_001",
           "weight": 44.48
@@ -552,6 +557,15 @@
       ],
       "pois": [
         {
+          "id": "VE2annotated_entry_001",
+          "type": "building_entry_exit",
+          "x": 810,
+          "y": 165,
+          "label": "VE Main Entrance",
+          "nodeSize": 6,
+          "labelSize": 8
+        },
+        {
           "id": "VE2annotated_washroom_001",
           "type": "washroom",
           "x": 735.36,
@@ -715,6 +729,11 @@
         }
       ],
       "edges": [
+        {
+          "from": "VL1annotated_entry_001",
+          "to": "VL1annotated_hallway_001",
+          "weight": 125.8
+        },
         {
           "from": "VL1annotated_stairs_001",
           "to": "VL1annotated_hallway_001",
@@ -1399,6 +1418,15 @@
           "y": 740.73,
           "label": "VLF1-Stairs4",
           "nodeSize": 5,
+          "labelSize": 9
+        },
+        {
+          "id": "VL1annotated_entry_001",
+          "type": "building_entry_exit",
+          "x": 95,
+          "y": 950,
+          "label": "VL Main Entrance",
+          "nodeSize": 6,
           "labelSize": 9
         }
       ],
