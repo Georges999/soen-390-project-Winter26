@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import MapScreen from '../src/screens/MapScreen';
+import MapScreen, { shouldContinueToIndoor } from '../src/screens/MapScreen';
 import * as locationService from '../src/services/locationService';
 import { fetchNearbyPOIs } from '../src/services/poiService';
 
@@ -42,6 +42,39 @@ describe('MapScreen', () => {
         results: [],
       }),
     });
+  });
+
+  it('shouldContinueToIndoor returns true when route is active and user is close to destination', () => {
+    expect(
+      shouldContinueToIndoor({
+        outdoorRoute: { continueToIndoor: { destinationRoom: { id: 'x' } } },
+        userCoord: { latitude: 45.4973, longitude: -73.5789 },
+        destCoord: { latitude: 45.49731, longitude: -73.57891 },
+        routeActive: true,
+        hasNavigated: false,
+      })
+    ).toBe(true);
+  });
+
+  it('shouldContinueToIndoor returns false when route is inactive or already navigated', () => {
+    expect(
+      shouldContinueToIndoor({
+        outdoorRoute: { continueToIndoor: { destinationRoom: { id: 'x' } } },
+        userCoord: { latitude: 45.4973, longitude: -73.5789 },
+        destCoord: { latitude: 45.49731, longitude: -73.57891 },
+        routeActive: false,
+        hasNavigated: false,
+      })
+    ).toBe(false);
+    expect(
+      shouldContinueToIndoor({
+        outdoorRoute: { continueToIndoor: { destinationRoom: { id: 'x' } } },
+        userCoord: { latitude: 45.4973, longitude: -73.5789 },
+        destCoord: { latitude: 45.49731, longitude: -73.57891 },
+        routeActive: true,
+        hasNavigated: true,
+      })
+    ).toBe(false);
   });
 
   describe('Campus Toggle', () => {
