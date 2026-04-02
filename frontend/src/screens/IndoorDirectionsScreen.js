@@ -134,7 +134,7 @@ function speakSegmentSteps(steps) {
 }
 
 function normalizeSpokenInstructionText(text = "") {
-  return String(text).replace(/\s+/g, " ").trim();
+  return String(text).replaceAll(/\s+/g, " ").trim();
 }
 
 function isGenericHallwayInstruction(text = "") {
@@ -2312,5 +2312,6 @@ IndoorDirectionsScreen.propTypes = {
   navigation: PropTypes.shape({
     navigate: PropTypes.func,
     goBack: PropTypes.func,
+    addListener: PropTypes.func,
   }),
 };
