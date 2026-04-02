@@ -1,4 +1,10 @@
-import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import PropTypes from "prop-types";
 import { View, Text, Pressable, Keyboard, ScrollView } from "react-native";
 import MapView, { Polygon, Marker } from "react-native-maps";
@@ -27,7 +33,7 @@ import {
 } from "../hooks/useMapRoutingController";
 import { useSimulation } from "../hooks/useSimulation";
 import { useUserLocation } from "../hooks/useUserLocation";
-import { getPolygonCenter } from "../utils/geoUtils";
+import { distanceMeters, getPolygonCenter } from "../utils/geoUtils";
 import { normalizeText, stripHtml } from "../utils/textUtils";
 import {
   getShuttleDepartures,
@@ -51,6 +57,18 @@ export const getPoiApiRadius = (fetchRadius, mode, radius) => {
     return radius;
   }
   return Math.max(radius, 2000);
+};
+//swtich from outdoor to indoor navigation when arrived at dest
+export const shouldContinueToIndoor = ({
+  outdoorRoute,
+  userCoord,
+  destCoord,
+  routeActive,
+  hasNavigated,
+}) => {
+  if (hasNavigated || !routeActive) return false;
+  if (!outdoorRoute?.continueToIndoor || !userCoord || !destCoord) return false;
+  return distanceMeters(userCoord, destCoord) <= 35; //transitions back to indoor directions when user is 35 meters away from dest
 };
 
 const getAmenities = (building) => {
@@ -140,7 +158,11 @@ export const handlePoiInfoCtaLogic = ({
 export const getPoiInfoCardBottomOffset = (isPOIPanelOpen) =>
   isPOIPanelOpen ? 300 : 40;
 
-export const handleRecenterPressLogic = ({ routeCoords, userCoord, mapRef }) => {
+export const handleRecenterPressLogic = ({
+  routeCoords,
+  userCoord,
+  mapRef,
+}) => {
   const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
   if (targetCoord) {
     zoomMapToCoordinate(mapRef, targetCoord);
@@ -161,7 +183,7 @@ const fitMapToRoute = (mapRef, routeCoords) => {
   });
 };
 
-export default function MapScreen({ route }) {
+export default function MapScreen({ route, navigation }) {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -207,6 +229,7 @@ export default function MapScreen({ route }) {
 
   const mapRef = useRef(null);
   const latestPOIRequestIdRef = useRef(0);
+  const hasContinuedIndoorRef = useRef(false); //This ref flips to true after first indoor handoff, so it only happens once instead of auto navgiating to indoor repeatedly
   /** Restore directions panel after closing POI sheet if it was visible when POI opened. */
   const directionsVisibleBeforePoiRef = useRef(false);
   const setLocationDetails = (
@@ -365,14 +388,22 @@ export default function MapScreen({ route }) {
 
     //Only fill if user explicitly selected a field first
     if (activeField === "start") {
-      setOriginDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
+      setOriginDetails(
+        name,
+        center,
+        building.__campusId ?? selectedCampus?.id ?? null,
+      );
       setActiveField(null); //resetting to false so next tap doesn't also change start
       Keyboard.dismiss();
       return;
     }
 
     if (activeField === "dest") {
-      setDestinationDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
+      setDestinationDetails(
+        name,
+        center,
+        building.__campusId ?? selectedCampus?.id ?? null,
+      );
       setActiveField(null);
       Keyboard.dismiss();
       return;
@@ -484,6 +515,8 @@ export default function MapScreen({ route }) {
 
     setStartCoord(outdoor.startCoords ?? null);
     setDestCoord(outdoor.destCoords ?? null);
+    setTravelMode(outdoor.defaultTravelMode || "driving");
+    hasContinuedIndoorRef.current = false;
   }, [route?.params?.outdoorRoute]);
 
   // Pre-fill from Calendar/Next Class when params change (not on every GPS tick)
@@ -504,7 +537,11 @@ export default function MapScreen({ route }) {
       );
       if (building) {
         const center = getPolygonCenter(building.coordinates);
-        setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
+        setDestinationAndOpenPanel(
+          location,
+          center,
+          building.__campusId ?? null,
+        );
       } else {
         setDestText(location);
         setDestCoord(null);
@@ -681,6 +718,35 @@ export default function MapScreen({ route }) {
 
   const userCoord =
     isSimulating && simulatedCoord ? simulatedCoord : liveUserCoord;
+
+  useEffect(() => {
+    const outdoor = route?.params?.outdoorRoute; //
+    if (
+      !shouldContinueToIndoor({
+        outdoorRoute: outdoor,
+        userCoord,
+        destCoord,
+        routeActive: isSimulating || navActive,
+        hasNavigated: hasContinuedIndoorRef.current,
+      })
+    ) {
+      return;
+    }
+
+    hasContinuedIndoorRef.current = true; //ref switched to true so it doesnt get triggered again
+    const continuation = outdoor.continueToIndoor;
+    navigation?.navigate?.("IndoorDirections", {
+      startRoom: continuation?.startRoom ?? null,
+      destinationRoom: continuation?.destinationRoom ?? null,
+    });
+  }, [
+    route?.params?.outdoorRoute,
+    userCoord,
+    destCoord,
+    isSimulating,
+    navActive,
+    navigation,
+  ]);
 
   // If Map opened before GPS was ready, set start once when location arrives
   useEffect(() => {
@@ -1163,9 +1229,7 @@ export default function MapScreen({ route }) {
                 }}
               >
                 <View style={styles.poiInfoTag}>
-                  <Text style={styles.poiInfoTagText}>
-                    {lastPoiCategory}
-                  </Text>
+                  <Text style={styles.poiInfoTagText}>{lastPoiCategory}</Text>
                 </View>
                 <Text style={styles.poiInfoDistance}>
                   {formatPOIDistance(selectedPOI.distance)}
@@ -1321,7 +1385,11 @@ export default function MapScreen({ route }) {
               styles.poiButtonClearFilterPanel,
           ]}
         >
-          <MaterialIcons name="info-outline" size={22} style={styles.poiButtonIcon} />
+          <MaterialIcons
+            name="info-outline"
+            size={22}
+            style={styles.poiButtonIcon}
+          />
         </Pressable>
 
         {canShowDirectionsPanel && (
@@ -1365,6 +1433,9 @@ export default function MapScreen({ route }) {
 }
 
 MapScreen.propTypes = {
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func,
+  }),
   route: PropTypes.shape({
     params: PropTypes.shape({
       outdoorRoute: PropTypes.shape({
@@ -1372,6 +1443,11 @@ MapScreen.propTypes = {
         destName: PropTypes.string,
         startCoords: PropTypes.object,
         destCoords: PropTypes.object,
+        defaultTravelMode: PropTypes.string,
+        continueToIndoor: PropTypes.shape({
+          startRoom: PropTypes.object,
+          destinationRoom: PropTypes.object,
+        }),
       }),
       nextClassLocation: PropTypes.string,
       nextClassSummary: PropTypes.string,
