@@ -1354,7 +1354,10 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   const fromCoords = activeJourneyStage.fromCoords;
                   const toCoords = activeJourneyStage.toCoords;
                   if (fromCoords && toCoords) {
-                    navigation.navigate("MapScreen", {
+                    // Navigate to the Map tab (parent tab navigator)
+                    // using the correct screen name "Map"
+                    const parent = navigation.getParent();
+                    (parent || navigation).navigate("Map", {
                       outdoorRoute: {
                         startName:
                           getBuildingName(activeJourneyStage.fromBuildingId) +

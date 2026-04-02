@@ -62,6 +62,7 @@ jest.mock('../../src/utils/pathfinding/crossFloorRouter', () => ({
 const mockNavigation = {
   navigate: jest.fn(),
   goBack: jest.fn(),
+  getParent: jest.fn(() => ({ navigate: jest.fn() })),
 };
 
 const mockRouteEmpty = { params: {} };
