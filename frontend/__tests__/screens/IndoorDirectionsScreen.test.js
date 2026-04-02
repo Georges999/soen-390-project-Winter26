@@ -1152,6 +1152,94 @@ describe('IndoorDirectionsScreen', () => {
       expect(getByText('Building not found')).toBeTruthy();
     });
 
+    it('should skip speech for an unsupported segment type card', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([
+        indoorSegFloor8,
+        {
+          type: 'mystery-segment',
+          buildingId: 'hall',
+          floorId: 'Hall-8',
+        },
+        indoorSegFloor9,
+      ]);
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-1'));
+
+      expect(Speech.speak).not.toHaveBeenCalled();
+    });
+
+    it('should fallback to the first ok indoor path result when active segment path is missing', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, indoorSegFloor9]);
+      mockFindShortestPath
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce({
+          ok: true,
+          pathCoords: [
+            { x: 100, y: 200, type: 'classroom' },
+            { x: 150, y: 250, type: 'hallway' },
+            { x: 200, y: 300, type: 'classroom' },
+          ],
+          totalWeight: 300,
+          reason: null,
+        });
+
+      const { getByText, queryByText } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      expect(queryByText('No indoor path available for this segment')).toBeNull();
+      expect(getByText('Continue through the hallway')).toBeTruthy();
+    });
+
+    it('should collapse repeated "Continue along the corridor" while keeping non-generic steps', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 140, y: 240, type: 'unknown' },
+          { x: 180, y: 280, type: 'unknown' },
+          { x: 220, y: 320, type: 'stairs' },
+          { x: 300, y: 400, type: 'classroom' },
+        ],
+        totalWeight: 620,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-1'));
+      fireEvent.press(getByTestId('journey-stage-0'));
+
+      const spokenText = Speech.speak.mock.calls[Speech.speak.mock.calls.length - 1][0];
+      const corridorMatches = spokenText.match(/Continue along the corridor/g) || [];
+
+      expect(corridorMatches).toHaveLength(1);
+      expect(spokenText).toContain('Pass the stairs');
+    });
+
+    it('should attach selection responders to the map while selection mode is active', () => {
+      const { getAllByText, getByTestId, getByText } = render(
+        <IndoorDirectionsScreen route={mockRouteBrowseHall8} navigation={mockNavigation} />
+      );
+
+      const myLocationIcons = getAllByText('my-location');
+      fireEvent.press(myLocationIcons[myLocationIcons.length - 1]);
+
+      fireEvent(getByTestId('indoor-route-overlay'), 'startShouldSetResponder');
+
+      expect(getByText(/Tap on the map to select start point/)).toBeTruthy();
+    });
+
     it('should speak a fallback floor instruction when an indoor segment has no intermediate steps', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
