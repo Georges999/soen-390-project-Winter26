@@ -90,6 +90,64 @@ function getMapStageBuildingLabel(buildingId) {
   return name;
 }
 
+function buildIndoorContinuationStartRoom(
+  routeSegments = [],
+  outdoorIndex = -1,
+) {
+  const nextSegment = routeSegments[outdoorIndex + 1];
+  if (!nextSegment) return null;
+
+  if (nextSegment.type === "indoor") {
+    return {
+      id: nextSegment.fromNodeId,
+      label: "Building entrance",
+      floor: nextSegment.floorId,
+      buildingId: nextSegment.buildingId,
+      buildingName: getBuildingName(nextSegment.buildingId),
+      type: "hallway",
+    };
+  }
+  //between floors in same building
+  if (nextSegment.type === "vertical") {
+    return {
+      id: nextSegment.transitionNodeStart || nextSegment.fromFloor,
+      label: "Building entrance",
+      floor: nextSegment.fromFloor,
+      buildingId: nextSegment.buildingId,
+      buildingName: getBuildingName(nextSegment.buildingId),
+      type: "hallway",
+    };
+  }
+
+  return null;
+}
+//this function builds the object in mapscreen that needs to launch outdoor directions by using the current indoor journey context and
+//the route segments to determine the correct start and end points for the outdoor route, as well as the handoff point for continuing indoors at the destination building
+export function buildOutdoorRoutePayload(
+  routeSegments = [],
+  activeJourneyStage = null,
+  destinationRoom = null,
+) {
+  if (activeJourneyStage?.type !== "outdoor") return null;
+
+  const outdoorIndex = activeJourneyStage.segmentIndex;
+  const outdoorSegment = routeSegments[outdoorIndex];
+  if (!outdoorSegment || outdoorSegment.type !== "outdoor") return null;
+  if (!outdoorSegment.fromCoords || !outdoorSegment.toCoords) return null;
+
+  return {
+    startName: getBuildingName(outdoorSegment.fromBuildingId),
+    destName: getBuildingName(outdoorSegment.toBuildingId),
+    startCoords: outdoorSegment.fromCoords,
+    destCoords: outdoorSegment.toCoords,
+    defaultTravelMode: "driving", //preset to driving cz its faster to load than walking
+    continueToIndoor: {
+      startRoom: buildIndoorContinuationStartRoom(routeSegments, outdoorIndex),
+      destinationRoom,
+    },
+  };
+}
+
 function isRedundantContinueStep(text = "") {
   return (
     text.startsWith("Continue through") || text.startsWith("Continue along")
@@ -402,6 +460,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     selectedBuilding?.id,
   ]);
 
+  const outdoorRoutePayload = useMemo(
+    () => buildOutdoorRoutePayload(routeSegments, activeJourneyStage, destRoom),
+    [routeSegments, activeJourneyStage, destRoom],
+  );
+
   const browsingLocked = Boolean(startRoom && destRoom);
 
   useEffect(() => {
@@ -558,6 +621,14 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Determine the floor image to display for active segment
   const displayedFloor = useMemo(() => {
+    if (mapJourneyStage?.mapBuildingId && mapJourneyStage?.mapFloorId) {
+      const journeyBuilding = getBuildingById(mapJourneyStage.mapBuildingId);
+      const journeyFloor = journeyBuilding?.floors?.find(
+        (floor) => floor.id === mapJourneyStage.mapFloorId,
+      );
+      if (journeyFloor) return journeyFloor;
+    }
+
     if (
       displayedSegmentResult?.segment?.type === "indoor" &&
       displayedSegmentResult.segment.floorId
@@ -569,14 +640,6 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
         (f) => f.id === displayedSegmentResult.segment.floorId,
       );
       if (floor) return floor;
-    }
-
-    if (mapJourneyStage?.mapBuildingId && mapJourneyStage?.mapFloorId) {
-      const journeyBuilding = getBuildingById(mapJourneyStage.mapBuildingId);
-      const journeyFloor = journeyBuilding?.floors?.find(
-        (floor) => floor.id === mapJourneyStage.mapFloorId,
-      );
-      if (journeyFloor) return journeyFloor;
     }
 
     if (
@@ -829,6 +892,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     setSelectionMode(null);
     setInspectMode((prev) => !prev);
   };
+
+  const handleOpenOutdoorDirections = useCallback(() => {
+    if (!outdoorRoutePayload) return;
+    navigation.navigate("Map", { outdoorRoute: outdoorRoutePayload }); //Navigate to MapScreen and pass the prefilled outdoor route in params
+  }, [navigation, outdoorRoutePayload]);
 
   // Scale room coordinates for display
   const scaleCoord = useCallback(
@@ -1333,6 +1401,19 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   );
                 })}
               </ScrollView>
+
+              {activeJourneyStage?.type === "outdoor" &&
+                outdoorRoutePayload && (
+                  <Pressable
+                    style={styles.outdoorNavButton}
+                    onPress={handleOpenOutdoorDirections}
+                  >
+                    <MaterialIcons name="map" size={18} color="#fff" />
+                    <Text style={styles.outdoorNavButtonText}>
+                      Open Outdoor Directions
+                    </Text>
+                  </Pressable>
+                )}
             </View>
           )}
 
@@ -2080,6 +2161,22 @@ const styles = StyleSheet.create({
   },
   journeyStageTitleActive: {
     color: "#fff",
+  },
+  outdoorNavButton: {
+    marginTop: 10,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: MAROON,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  outdoorNavButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
   },
   mapStageHeader: {
     width: "100%",
