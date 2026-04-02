@@ -1336,6 +1336,48 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
             </View>
           )}
 
+          {/* Outdoor navigation bridge — shown when outdoor stage is active */}
+          {activeJourneyStage?.type === "outdoor" && (
+            <View style={styles.outdoorBridgeCard}>
+              <MaterialIcons name="directions-walk" size={28} color={MAROON} />
+              <Text style={styles.outdoorBridgeTitle}>
+                Walk outside to{" "}
+                {getBuildingName(activeJourneyStage.destinationBuildingId)}
+              </Text>
+              <Text style={styles.outdoorBridgeSubtitle}>
+                {activeJourneyStage.description}
+              </Text>
+              <Pressable
+                testID="outdoor-navigate-btn"
+                style={styles.outdoorBridgeButton}
+                onPress={() => {
+                  const fromCoords = activeJourneyStage.fromCoords;
+                  const toCoords = activeJourneyStage.toCoords;
+                  if (fromCoords && toCoords) {
+                    navigation.navigate("MapScreen", {
+                      outdoorRoute: {
+                        startName:
+                          getBuildingName(activeJourneyStage.fromBuildingId) +
+                          " Building",
+                        destName:
+                          getBuildingName(
+                            activeJourneyStage.destinationBuildingId,
+                          ) + " Building",
+                        startCoords: fromCoords,
+                        destCoords: toCoords,
+                      },
+                    });
+                  }
+                }}
+              >
+                <MaterialIcons name="map" size={18} color="#fff" />
+                <Text style={styles.outdoorBridgeButtonText}>
+                  View outdoor route
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
           {/* Floor Plan with Route */}
           <View
             testID="indoor-floor-plan-container"
@@ -2080,6 +2122,45 @@ const styles = StyleSheet.create({
   },
   journeyStageTitleActive: {
     color: "#fff",
+  },
+  outdoorBridgeCard: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#f0f7ff",
+    borderWidth: 1,
+    borderColor: "#c4ddf5",
+    alignItems: "center",
+  },
+  outdoorBridgeTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2c3e50",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  outdoorBridgeSubtitle: {
+    fontSize: 13,
+    color: "#5a7a97",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  outdoorBridgeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: MAROON,
+    gap: 6,
+  },
+  outdoorBridgeButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   mapStageHeader: {
     width: "100%",
