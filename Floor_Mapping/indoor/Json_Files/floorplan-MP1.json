@@ -374,6 +374,11 @@
           "from": "MB1annotated_washroom_002",
           "to": "MB1annotated_hallway_005",
           "weight": 58.37
+        },
+        {
+          "from": "MB1annotated_entry_001",
+          "to": "MB1annotated_hallway_003",
+          "weight": 183.4
         }
       ],
       "rooms": [
@@ -639,6 +644,15 @@
           "label": "",
           "nodeSize": 5,
           "labelSize": 7
+        },
+        {
+          "id": "MB1annotated_entry_001",
+          "type": "building_entry_exit",
+          "x": 700,
+          "y": 985,
+          "label": "MB Main Entrance",
+          "nodeSize": 10,
+          "labelSize": 9
         }
       ],
       "annotations": []
