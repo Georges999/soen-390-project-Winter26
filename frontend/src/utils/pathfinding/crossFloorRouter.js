@@ -19,6 +19,16 @@ import {
   getAllNodesForFloor,
 } from "../../data/indoorFloorData";
 
+// Explicit building entry floors used for cross-building handoff.
+// This avoids treating basements as the default arrival floor.
+const ENTRY_FLOOR_BY_BUILDING = {
+  hall: "Hall-1",
+  mb: "MB-1",
+  cc: "CC-1",
+  vl: "VL-1",
+  ve: "VE-2",
+};
+
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
@@ -145,12 +155,17 @@ export function pickTransitionNode(floorId, preference = "stairs") {
 }
 
 /**
- * Get the ground / entry floor for a building (lowest floorNumber).
- * Used when the user must exit a building for an outdoor segment.
+ * Get the entry floor for a building used by cross-building routing.
+ * Prefers explicit entry-floor mapping, then falls back to lowest floorNumber.
  */
 export function getGroundFloor(buildingId) {
   const meta = BUILDING_META[buildingId];
   if (!meta) return null;
+
+  const mappedEntryFloor = ENTRY_FLOOR_BY_BUILDING[buildingId];
+  if (mappedEntryFloor && meta.floors.includes(mappedEntryFloor)) {
+    return mappedEntryFloor;
+  }
 
   let groundFloorId = null;
   let lowestNumber = Infinity;
