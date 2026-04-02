@@ -277,9 +277,10 @@ describe('crossFloorRouter', () => {
     });
 
     it('adds the destination-side vertical transition when starting on a ground floor', () => {
+      // Route from Hall-1 to MB-S2 (dest is NOT the MB entry floor)
       const segments = buildRouteSegments(
         { id: 'H110', floor: 'Hall-1', buildingId: 'hall' },
-        { id: 'MB1.210', floor: 'MB-1', buildingId: 'mb' },
+        { id: 'MBS2.100', floor: 'MB-S2', buildingId: 'mb' },
         'stairs'
       );
 
@@ -291,10 +292,25 @@ describe('crossFloorRouter', () => {
       );
 
       expect(destinationVertical).toEqual(expect.objectContaining({
-        fromFloor: 'MB-S2',
-        toFloor: 'MB-1',
+        fromFloor: 'MB-1',
+        toFloor: 'MB-S2',
       }));
       expect(startVertical).toBeUndefined();
+      expect(segments.some((segment) => segment.type === 'indoor' && segment.toNodeId === 'MBS2.100')).toBe(true);
+    });
+
+    it('skips vertical transition when dest is on the entry floor', () => {
+      // Hall-1 to MB-1: MB-1 is the entry floor, no vertical transition needed in MB
+      const segments = buildRouteSegments(
+        { id: 'H110', floor: 'Hall-1', buildingId: 'hall' },
+        { id: 'MB1.210', floor: 'MB-1', buildingId: 'mb' },
+        'stairs'
+      );
+
+      const destinationVertical = segments.find(
+        (segment) => segment.type === 'vertical' && segment.buildingId === 'mb'
+      );
+      expect(destinationVertical).toBeUndefined();
       expect(segments.some((segment) => segment.type === 'indoor' && segment.toNodeId === 'MB1.210')).toBe(true);
     });
   });

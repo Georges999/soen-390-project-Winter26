@@ -1180,16 +1180,15 @@ describe('IndoorDirectionsScreen', () => {
       },
     };
 
-    it('should keep only the outdoor journey stage card without the detail panel', () => {
+    it('should show the outdoor bridge card with navigation button when outdoor stage is active', () => {
       mockClassifyRoute.mockReturnValue('cross-building');
       mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
       mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
-      const { getAllByText, queryByText } = render(
+      const { getAllByText, getByTestId } = render(
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
       expect(getAllByText('Outdoor transfer').length).toBeGreaterThan(0);
-      expect(queryByText(/Exit Hall Building and continue outside to John Molson Building/)).toBeNull();
-      expect(queryByText('Open Outdoor Directions')).toBeNull();
+      expect(getByTestId('outdoor-navigate-btn')).toBeTruthy();
     });
 
     it('should show outdoor step in cross-building direction steps', () => {
