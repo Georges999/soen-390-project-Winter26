@@ -1141,6 +1141,56 @@ describe('IndoorDirectionsScreen', () => {
       expect(Speech.speak).not.toHaveBeenCalledWith(expect.stringContaining('Arrive at'));
     });
 
+    it('should prepend the start location when the first segment is spoken', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-1'));
+      fireEvent.press(getByTestId('journey-stage-0'));
+
+      const lastSpeechCall = Speech.speak.mock.calls[Speech.speak.mock.calls.length - 1][0];
+      expect(lastSpeechCall.startsWith('Start at H837')).toBe(true);
+    });
+
+    it('should append destination arrival line when the last segment is spoken', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-2'));
+
+      expect(Speech.speak).toHaveBeenCalledWith(
+        expect.stringContaining('You have arrived at H961')
+      );
+    });
+
     it('should compress repeated hallway instructions in spoken segment guidance', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);

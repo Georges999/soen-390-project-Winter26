@@ -180,6 +180,32 @@ function prepareSegmentSpokenInstructions(steps = []) {
   return compacted;
 }
 
+function buildSegmentSpokenInstructions({
+  stage,
+  journeyStages,
+  segmentResults,
+  startRoom,
+  destRoom,
+}) {
+  const segmentSteps = getSegmentSpeechSteps(stage, segmentResults);
+  const spokenSteps = prepareSegmentSpokenInstructions(segmentSteps);
+
+  if (!spokenSteps.length) return [];
+
+  const stageIndex = journeyStages.findIndex((journeyStage) => journeyStage.id === stage.id);
+  const contextualSteps = [...spokenSteps];
+
+  if (stageIndex === 0) {
+    contextualSteps.unshift(`Start at ${startRoom?.label || "starting point"}`);
+  }
+
+  if (stageIndex === journeyStages.length - 1) {
+    contextualSteps.push(`You have arrived at ${destRoom?.label || "destination"}`);
+  }
+
+  return contextualSteps;
+}
+
 function getMapStageBuildingLabel(buildingId) {
   const name = getBuildingName(buildingId);
   if (name === "John Molson Building") return "JMSB";
@@ -842,8 +868,13 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
       if (!selectedStage) return;
 
-      const segmentSteps = getSegmentSpeechSteps(selectedStage, segmentResults);
-      const spokenSteps = prepareSegmentSpokenInstructions(segmentSteps);
+      const spokenSteps = buildSegmentSpokenInstructions({
+        stage: selectedStage,
+        journeyStages,
+        segmentResults,
+        startRoom,
+        destRoom,
+      });
       if (!spokenSteps.length) return;
 
       if (lastSpokenJourneyStageIdRef.current === stageId) return;
@@ -851,7 +882,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       speakSegmentSteps(spokenSteps);
       lastSpokenJourneyStageIdRef.current = stageId;
     },
-    [activeJourneyStage, journeyStages, segmentResults],
+    [activeJourneyStage, journeyStages, segmentResults, startRoom, destRoom],
   );
 
   useEffect(() => {
