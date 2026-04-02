@@ -6,7 +6,8 @@ import SearchBox from '../../src/components/SearchBox';
 const mockStyles = StyleSheet.create({
   redBox: {}, inputRow: {}, input: {}, inputPlaceholder: {},
   searchIcon: {}, clearBtn: {}, clearBtnText: {}, swapBtn: {},
-  searchResults: {}, searchResultRow: {}, searchResultText: {},
+  searchResults: {}, searchResultsScroll: {}, searchResultRow: {}, searchResultText: {},
+  searchSectionLabel: {},
 });
 
 const baseProps = {
@@ -15,9 +16,12 @@ const baseProps = {
   destText: '',
   activeField: null,
   searchResults: [],
+  roomResults: [],
   shouldShowMyLocationOption: false,
   getBuildingKey: (campusId, b) => `${campusId}:${b.id}`,
   getBuildingName: (b) => b.name || 'Building',
+  getRoomKey: (room) => `${room.campusId}:${room.buildingId}:${room.id}`,
+  getRoomLabel: (room) => `${room.label} · ${room.buildingName}`,
   onStartChange: jest.fn(),
   onDestChange: jest.fn(),
   onStartFocus: jest.fn(),
@@ -27,6 +31,7 @@ const baseProps = {
   onSwap: jest.fn(),
   onSelectMyLocation: jest.fn(),
   onSelectBuilding: jest.fn(),
+  onSelectRoom: jest.fn(),
 };
 
 describe('SearchBox', () => {
@@ -124,5 +129,56 @@ describe('SearchBox', () => {
     );
     fireEvent.press(getByText('Hall Building'));
     expect(baseProps.onSelectBuilding).toHaveBeenCalledWith(building, 'dest');
+  });
+
+  it('should show room search results in a separate section', () => {
+    const room = {
+      campusId: 'sgw',
+      buildingId: 'hall',
+      id: 'Hall8_classroom_002',
+      label: 'H837',
+      buildingName: 'Hall Building',
+    };
+
+    const { getByText } = render(
+      <SearchBox {...baseProps} roomResults={[room]} activeField="start" />,
+    );
+
+    expect(getByText('Room matches')).toBeTruthy();
+    expect(getByText('H837 · Hall Building')).toBeTruthy();
+  });
+
+  it('should call onSelectRoom when a room result is pressed', () => {
+    const room = {
+      campusId: 'sgw',
+      buildingId: 'hall',
+      id: 'Hall8_classroom_002',
+      label: 'H837',
+      buildingName: 'Hall Building',
+    };
+
+    const { getByText } = render(
+      <SearchBox {...baseProps} roomResults={[room]} activeField="start" />,
+    );
+
+    fireEvent.press(getByText('H837 · Hall Building'));
+    expect(baseProps.onSelectRoom).toHaveBeenCalledWith(room, 'start');
+  });
+
+  it('should render all provided room results without truncating them', () => {
+    const roomResults = [
+      { campusId: 'sgw', buildingId: 'hall', id: '1', label: 'H820', buildingName: 'Hall Building' },
+      { campusId: 'sgw', buildingId: 'hall', id: '2', label: 'H821', buildingName: 'Hall Building' },
+      { campusId: 'sgw', buildingId: 'hall', id: '3', label: 'H822', buildingName: 'Hall Building' },
+      { campusId: 'sgw', buildingId: 'hall', id: '4', label: 'H823', buildingName: 'Hall Building' },
+      { campusId: 'sgw', buildingId: 'hall', id: '5', label: 'H825', buildingName: 'Hall Building' },
+    ];
+
+    const { getByText } = render(
+      <SearchBox {...baseProps} roomResults={roomResults} activeField="start" />,
+    );
+
+    expect(getByText('H820 · Hall Building')).toBeTruthy();
+    expect(getByText('H825 · Hall Building')).toBeTruthy();
   });
 });

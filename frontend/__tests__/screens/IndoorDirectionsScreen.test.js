@@ -39,8 +39,8 @@ const mockFindShortestPath = jest.fn().mockReturnValue({
   ok: true,
   pathCoords: [
     { x: 100, y: 200, type: 'classroom' },
-    { x: 150, y: 250, type: 'hallway' },
-    { x: 200, y: 300, type: 'classroom' },
+    { x: 325, y: 200, type: 'hallway' },
+    { x: 550, y: 200, type: 'classroom' },
   ],
   totalWeight: 450,
   reason: null,
@@ -53,10 +53,31 @@ jest.mock('../../src/utils/pathfinding/pathfinding', () => ({
 // Mock crossFloorRouter with controllable fns
 const mockClassifyRoute = jest.fn().mockReturnValue(null);
 const mockBuildRouteSegments = jest.fn().mockReturnValue([]);
+const mockGetEntryFloor = jest.fn((buildingId) => {
+  if (buildingId === 'hall') return 'Hall-1';
+  if (buildingId === 'mb') return 'MB-1';
+  return null;
+});
+const mockGetGroundFloor = jest.fn((buildingId) => {
+  if (buildingId === 'hall') return 'Hall-1';
+  if (buildingId === 'mb') return 'MB-1';
+  return null;
+});
+const mockPickEntryNode = jest.fn((floorId) => ({
+  id: `${floorId}-entry`,
+  floor: floorId,
+  x: 100,
+  y: 200,
+  type: 'building_entry_exit',
+  label: 'Entrance',
+}));
 
 jest.mock('../../src/utils/pathfinding/crossFloorRouter', () => ({
   classifyRoute: (...args) => mockClassifyRoute(...args),
   buildRouteSegments: (...args) => mockBuildRouteSegments(...args),
+  getEntryFloor: (...args) => mockGetEntryFloor(...args),
+  getGroundFloor: (...args) => mockGetGroundFloor(...args),
+  pickEntryNode: (...args) => mockPickEntryNode(...args),
 }));
 
 const mockNavigation = {
@@ -82,6 +103,36 @@ const mockRouteWithRooms = {
       rooms: [],
     },
     floor: { id: 'Hall-8', label: '8', floorNumber: 8, image: 'hall8img', nodes: [], pois: [], edges: [], width: 1000, height: 800 },
+  },
+};
+
+const mockRouteWithDestinationOnly = {
+  params: {
+    destinationRoom: {
+      id: 'Hall8_classroom_005',
+      label: 'H861',
+      floor: 'Hall-8',
+      x: 300,
+      y: 400,
+      type: 'classroom',
+      buildingId: 'hall',
+      buildingName: 'Hall Building',
+    },
+  },
+};
+
+const mockRouteWithStartOnly = {
+  params: {
+    startRoom: {
+      id: 'Hall8_classroom_002',
+      label: 'H837',
+      floor: 'Hall-8',
+      x: 100,
+      y: 200,
+      type: 'classroom',
+      buildingId: 'hall',
+      buildingName: 'Hall Building',
+    },
   },
 };
 
@@ -354,6 +405,77 @@ describe('IndoorDirectionsScreen', () => {
     expect(getByText('45m')).toBeTruthy();
     expect(getByText('distance')).toBeTruthy();
     expect(getByText('route')).toBeTruthy();
+  });
+
+  it('should route from the building entrance when only a destination room is provided', () => {
+    const { getByText } = render(
+      <IndoorDirectionsScreen
+        route={mockRouteWithDestinationOnly}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByText('Start at Entrance')).toBeTruthy();
+    expect(getByText('1 min')).toBeTruthy();
+    expect(getByText('45m')).toBeTruthy();
+  });
+
+  it('should route to the building exit when only a start room is provided', () => {
+    const { getByText } = render(
+      <IndoorDirectionsScreen
+        route={mockRouteWithStartOnly}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByText('Arrive at Exit')).toBeTruthy();
+    expect(getByText('1 min')).toBeTruthy();
+    expect(getByText('45m')).toBeTruthy();
+  });
+
+  it('should refresh indoor state when new route params are received', () => {
+    const { getByDisplayValue, getByText, queryByText, rerender } = render(
+      <IndoorDirectionsScreen
+        route={mockRouteWithDestinationOnly}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByDisplayValue('H861')).toBeTruthy();
+    expect(getByText('Start at Entrance')).toBeTruthy();
+
+    rerender(
+      <IndoorDirectionsScreen
+        route={mockRouteWithRooms}
+        navigation={mockNavigation}
+      />
+    );
+
+    expect(getByDisplayValue('H837')).toBeTruthy();
+    expect(getByDisplayValue('H861')).toBeTruthy();
+    expect(getByText('Start at H837')).toBeTruthy();
+    expect(queryByText('Start at Entrance')).toBeNull();
+  });
+
+  it('should calculate indoor stats from routed geometry instead of weighted path cost', () => {
+    mockFindShortestPath.mockReturnValueOnce({
+      ok: true,
+      pathCoords: [
+        { x: 100, y: 200, type: 'classroom' },
+        { x: 325, y: 200, type: 'hallway' },
+        { x: 550, y: 200, type: 'classroom' },
+      ],
+      totalWeight: 100450,
+      reason: null,
+    });
+
+    const { getByText, queryByText } = render(
+      <IndoorDirectionsScreen route={mockRouteWithRooms} navigation={mockNavigation} />
+    );
+
+    expect(getByText('45m')).toBeTruthy();
+    expect(getByText('1 min')).toBeTruthy();
+    expect(queryByText('10045m')).toBeNull();
   });
 
   it('should keep showing the routed floor for same-floor routes', () => {

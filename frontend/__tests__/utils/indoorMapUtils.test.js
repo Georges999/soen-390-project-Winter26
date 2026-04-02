@@ -75,6 +75,15 @@ describe('indoorMapUtils', () => {
     expect(results[0].id).toBe('H101');
   });
 
+  it('getFilteredRooms matches hall rooms when the query includes the building name', () => {
+    const rooms = [
+      { id: 'H937', label: 'H937', floor: 'Hall-9', buildingName: 'Hall Building', buildingId: 'hall', campusId: 'sgw', searchKeys: ['H937', 'HALL937'] },
+    ];
+
+    const results = getFilteredRooms(rooms, 'Hall 937');
+    expect(results[0].id).toBe('H937');
+  });
+
   it('getSelectedRoomContext returns floor undefined when the building exists but the floor does not', () => {
     const context = getSelectedRoomContext(sampleCampusBuildings, {
       id: 'H837',

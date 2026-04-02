@@ -80,6 +80,13 @@ function getRoomAliases(floorId, label) {
   const formatted = formatRoomLabel(floorId, label);
   const aliases = [normalized, normalizeRoomLabel(formatted)];
 
+  if (floorId.startsWith("Hall-")) {
+    const hallMatch = /^H?(\d{3,})$/.exec(normalizeRoomLabel(formatted));
+    if (hallMatch) {
+      aliases.push(`HALL${hallMatch[1]}`);
+    }
+  }
+
   if (floorId.startsWith("MB-") && !normalized.startsWith("MB")) {
     aliases.push(`MB${normalized}`);
   }

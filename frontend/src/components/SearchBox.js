@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, TextInput, Image } from "react-native";
+import { View, Text, Pressable, TextInput, Image, ScrollView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import PropTypes from "prop-types";
 
@@ -9,9 +9,12 @@ function SearchBox({
   destText,
   activeField,
   searchResults,
+  roomResults,
   shouldShowMyLocationOption,
   getBuildingKey,
   getBuildingName,
+  getRoomKey,
+  getRoomLabel,
   onStartChange,
   onDestChange,
   onStartFocus,
@@ -21,7 +24,13 @@ function SearchBox({
   onSwap,
   onSelectMyLocation,
   onSelectBuilding,
+  onSelectRoom,
 }) {
+  const hasSuggestions =
+    shouldShowMyLocationOption ||
+    searchResults.length > 0 ||
+    roomResults.length > 0;
+
   return (
     <View style={styles.redBox}>
       <View style={styles.inputRow}>
@@ -72,8 +81,13 @@ function SearchBox({
         <MaterialIcons name="swap-vert" size={18} color="#95223D" />
       </Pressable>
 
-      {(shouldShowMyLocationOption || searchResults.length > 0) && (
-        <View style={styles.searchResults}>
+      {hasSuggestions && (
+        <ScrollView
+          style={styles.searchResults}
+          contentContainerStyle={styles.searchResultsScroll}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+        >
           {shouldShowMyLocationOption && (
             <Pressable
               onPress={() => onSelectMyLocation(activeField)}
@@ -91,15 +105,33 @@ function SearchBox({
               <Text style={styles.searchResultText}>{getBuildingName(building)}</Text>
             </Pressable>
           ))}
-        </View>
+          {roomResults.length > 0 && (
+            <>
+              <Text style={styles.searchSectionLabel}>Room matches</Text>
+              {roomResults.map((room) => (
+                <Pressable
+                  key={getRoomKey(room)}
+                  onPress={() => onSelectRoom(room, activeField)}
+                  style={styles.searchResultRow}
+                >
+                  <Text style={styles.searchResultText}>{getRoomLabel(room)}</Text>
+                </Pressable>
+              ))}
+            </>
+          )}
+        </ScrollView>
       )}
 
       {/* Show "not found" message when searching for invalid buildings */}
-      {activeField && (activeField === "start" ? startText : destText).trim().length > 0 && !shouldShowMyLocationOption && searchResults.length === 0 && (
+      {activeField &&
+      (activeField === "start" ? startText : destText).trim().length > 0 &&
+      !shouldShowMyLocationOption &&
+      searchResults.length === 0 &&
+      roomResults.length === 0 && (
         <View style={styles.noResultsContainer}>
           <MaterialIcons name="search-off" size={24} color="#999" />
           <Text style={styles.noResultsText}>
-            No buildings found. Please try again.
+            No buildings found. You can also try a room number.
           </Text>
         </View>
       )}
@@ -124,8 +156,10 @@ SearchBox.propTypes = {
     clearBtnText: stylePropType,
     swapBtn: stylePropType,
     searchResults: stylePropType,
+    searchResultsScroll: stylePropType,
     searchResultRow: stylePropType,
     searchResultText: stylePropType,
+    searchSectionLabel: stylePropType,
     noResultsContainer: stylePropType,
     noResultsText: stylePropType,
   }).isRequired,
@@ -133,9 +167,12 @@ SearchBox.propTypes = {
   destText: PropTypes.string.isRequired,
   activeField: PropTypes.string,
   searchResults: PropTypes.arrayOf(PropTypes.object).isRequired,
+  roomResults: PropTypes.arrayOf(PropTypes.object).isRequired,
   shouldShowMyLocationOption: PropTypes.bool.isRequired,
   getBuildingKey: PropTypes.func.isRequired,
   getBuildingName: PropTypes.func.isRequired,
+  getRoomKey: PropTypes.func.isRequired,
+  getRoomLabel: PropTypes.func.isRequired,
   onStartChange: PropTypes.func.isRequired,
   onDestChange: PropTypes.func.isRequired,
   onStartFocus: PropTypes.func.isRequired,
@@ -145,6 +182,7 @@ SearchBox.propTypes = {
   onSwap: PropTypes.func.isRequired,
   onSelectMyLocation: PropTypes.func.isRequired,
   onSelectBuilding: PropTypes.func.isRequired,
+  onSelectRoom: PropTypes.func.isRequired,
 };
 
 export default SearchBox;
