@@ -56,8 +56,8 @@
         {
           "id": "CC1red_hallway_006",
           "type": "hallway",
-          "x": 1118.5,
-          "y": 453.92,
+          "x": 1200,
+          "y": 455.5,
           "label": "",
           "nodeSize": 8,
           "labelSize": 13
@@ -83,6 +83,11 @@
       ],
       "edges": [
         {
+          "from": "CC1red_entry_001",
+          "to": "CC1red_hallway_001",
+          "weight": 102.3
+        },
+        {
           "from": "CC1red_stairs_001",
           "to": "CC1red_hallway_001",
           "weight": 61.07
@@ -96,6 +101,11 @@
           "from": "CC1red_hallway_001",
           "to": "CC1red_classroom_015",
           "weight": 83.46
+        },
+        {
+          "from": "CC1red_hallway_001",
+          "to": "CC1red_classroom_016",
+          "weight": 55.2
         },
         {
           "from": "CC1red_hallway_001",
@@ -211,6 +221,16 @@
           "from": "CC1red_hallway_008",
           "to": "CC1red_stairs_003",
           "weight": 39.39
+        },
+        {
+          "from": "CC1red_hallway_003",
+          "to": "CC1red_classroom_017",
+          "weight": 70.2
+        },
+        {
+          "from": "CC1red_hallway_008",
+          "to": "CC1red_classroom_018",
+          "weight": 95.5
         }
       ],
       "rooms": [
@@ -264,7 +284,7 @@
           "type": "classroom",
           "x": 1099.82,
           "y": 396.79,
-          "label": "CC-115",
+          "label": "CC-114",
           "nodeSize": 8,
           "labelSize": 9
         },
@@ -348,9 +368,45 @@
           "label": "CC-119",
           "nodeSize": 8,
           "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_016",
+          "type": "classroom",
+          "x": 145.5,
+          "y": 384.0,
+          "label": "CC-124",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_017",
+          "type": "classroom",
+          "x": 695.5,
+          "y": 386.5,
+          "label": "CC-118",
+          "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "CC1red_classroom_018",
+          "type": "classroom",
+          "x": 1320.0,
+          "y": 392.0,
+          "label": "CC-104",
+          "nodeSize": 8,
+          "labelSize": 13
         }
       ],
       "pois": [
+        {
+          "id": "CC1red_entry_001",
+          "type": "building_entry_exit",
+          "x": 68,
+          "y": 460,
+          "label": "CC Main Entrance",
+          "nodeSize": 10,
+          "labelSize": 13
+        },
         {
           "id": "CC1red_stairs_001",
           "type": "stairs",
