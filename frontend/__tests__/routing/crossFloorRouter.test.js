@@ -18,6 +18,9 @@ import {
   pickTransitionPair,
   getGroundFloor,
   getBuildingCoords,
+  getEntryExitNodes,
+  pickEntryNode,
+  getEntryFloor,
 } from '../../src/utils/pathfinding/crossFloorRouter';
 
 describe('crossFloorRouter', () => {
@@ -163,6 +166,68 @@ describe('crossFloorRouter', () => {
 
     it('returns null for unknown building', () => {
       expect(getBuildingCoords('unknown')).toBeNull();
+    });
+  });
+
+  describe('getEntryExitNodes', () => {
+    it('returns entry/exit nodes for a floor with entry nodes', () => {
+      const nodes = getEntryExitNodes('Hall-1');
+      expect(nodes.length).toBeGreaterThan(0);
+      nodes.forEach((n) => expect(n.type).toBe('building_entry_exit'));
+    });
+
+    it('returns empty array for a floor without entry nodes', () => {
+      const nodes = getEntryExitNodes('Hall-8');
+      expect(nodes).toEqual([]);
+    });
+
+    it('returns empty array for unknown floor', () => {
+      const nodes = getEntryExitNodes('NOPE');
+      expect(nodes).toEqual([]);
+    });
+  });
+
+  describe('pickEntryNode', () => {
+    it('returns an entry/exit node when one exists', () => {
+      const node = pickEntryNode('Hall-1');
+      expect(node).toBeDefined();
+      expect(node.type).toBe('building_entry_exit');
+    });
+
+    it('falls back to transition node when no entry nodes exist', () => {
+      // Hall-8 has no entry/exit nodes — should fall back to stairs/elevator
+      const node = pickEntryNode('Hall-8', 'stairs');
+      expect(node).toBeDefined();
+      expect(node.type).toBe('stairs');
+    });
+
+    it('returns null for unknown floor', () => {
+      expect(pickEntryNode('NOPE')).toBeNull();
+    });
+  });
+
+  describe('getEntryFloor', () => {
+    it('returns the floor with entry nodes', () => {
+      const floor = getEntryFloor('hall');
+      expect(floor).toBe('Hall-1');
+    });
+
+    it('returns null for unknown building', () => {
+      expect(getEntryFloor('unknown')).toBeNull();
+    });
+
+    it('falls back to floor closest to level 1 when no entry nodes exist', () => {
+      // Pass a custom lookup that always returns empty → triggers fallback
+      const noEntryNodes = () => [];
+      const floor = getEntryFloor('hall', noEntryNodes);
+      expect(floor).toBe('Hall-1'); // floorNumber 1 is closest to 1
+    });
+
+    it('picks the closest floor to level 1 in fallback when multiple floors exist', () => {
+      const noEntryNodes = () => [];
+      const floor = getEntryFloor('mb', noEntryNodes);
+      // MB has MB-1 (floorNumber 1) and MB-S2 (floorNumber -2), so MB-1 is closest
+      expect(floor).toBe('MB-1');
     });
   });
 

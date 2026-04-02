@@ -88,6 +88,17 @@ describe("pathSmoothing", () => {
       expect(douglasPeucker(null)).toBeNull();
       expect(douglasPeucker(undefined)).toBeUndefined();
     });
+
+    it("handles zero-length line segment (coincident start/end)", () => {
+      const pts = [
+        { x: 50, y: 50 },
+        { x: 50, y: 50 }, // same as start
+        { x: 50, y: 50 }, // same as start — perpendicular dist uses Euclidean fallback
+      ];
+      const result = douglasPeucker(pts, 1);
+      // All points coincide → distance is 0 → intermediate points removed
+      expect(result).toHaveLength(2);
+    });
   });
 
   // ── buildRoundedPath ────────────────────────────────────

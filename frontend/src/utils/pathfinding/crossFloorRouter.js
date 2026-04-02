@@ -190,13 +190,13 @@ export function getGroundFloor(buildingId) {
  * Prefers floors that have building_entry_exit nodes.
  * Falls back to the floor closest to level 1.
  */
-export function getEntryFloor(buildingId) {
+export function getEntryFloor(buildingId, _getEntryExitNodes = getEntryExitNodes) {
   const meta = BUILDING_META[buildingId];
   if (!meta) return null;
 
   // Prefer floors with building_entry_exit nodes
   for (const fId of meta.floors) {
-    const entryNodes = getEntryExitNodes(fId);
+    const entryNodes = _getEntryExitNodes(fId);
     if (entryNodes.length > 0) return fId;
   }
 

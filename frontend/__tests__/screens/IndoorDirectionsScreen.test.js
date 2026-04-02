@@ -1192,6 +1192,27 @@ describe('IndoorDirectionsScreen', () => {
       expect(getByTestId('outdoor-navigate-btn')).toBeTruthy();
     });
 
+    it('should navigate to Map with outdoor route when outdoor button is pressed', () => {
+      const parentNavigate = jest.fn();
+      const navWithParent = {
+        ...mockNavigation,
+        getParent: jest.fn(() => ({ navigate: parentNavigate })),
+      };
+      mockClassifyRoute.mockReturnValue('cross-building');
+      mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
+      mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossBuildingRoute} navigation={navWithParent} />
+      );
+      fireEvent.press(getByTestId('outdoor-navigate-btn'));
+      expect(parentNavigate).toHaveBeenCalledWith('Map', expect.objectContaining({
+        outdoorRoute: expect.objectContaining({
+          startCoords: outdoorSeg.fromCoords,
+          destCoords: outdoorSeg.toCoords,
+        }),
+      }));
+    });
+
     it('should show outdoor step in cross-building direction steps', () => {
       mockClassifyRoute.mockReturnValue('cross-building');
       mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
