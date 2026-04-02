@@ -214,13 +214,13 @@ describe('navigationJourney', () => {
     expect(finishingStage.description).toBe('Continue on Floor 9 and finish at your destination.');
   });
 
-  it('returns the first indoor stage as the default journey stage', () => {
+  it('returns the first stage as the default journey stage', () => {
     const stages = [
       { id: 'journey-stage-0', type: 'outdoor' },
       { id: 'journey-stage-1', type: 'indoor' },
     ];
 
-    expect(getDefaultJourneyStage(stages)).toBe(stages[1]);
+    expect(getDefaultJourneyStage(stages)).toBe(stages[0]);
     expect(getDefaultJourneyStage([{ id: 'journey-stage-0', type: 'outdoor' }])).toEqual({ id: 'journey-stage-0', type: 'outdoor' });
     expect(getDefaultJourneyStage([])).toBeNull();
   });
@@ -234,7 +234,7 @@ describe('navigationJourney', () => {
     ];
 
     expect(getJourneyMapStage(stages, 'journey-stage-1')).toBe(stages[1]);
-    expect(getJourneyMapStage(stages, 'journey-stage-2')).toBe(stages[1]);
+    expect(getJourneyMapStage(stages, 'journey-stage-2')).toBe(stages[3]);
     expect(getJourneyMapStage(stages, 'missing-stage')).toBe(stages[1]);
     expect(getJourneyMapStage([
       { id: 'journey-stage-0', type: 'outdoor', mapBuildingId: null, mapFloorId: null },
