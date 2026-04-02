@@ -387,6 +387,128 @@ function buildCrossFloorSegments(startRoom, destRoom, transitionPref) {
   return segments;
 }
 
+/** Phase 1: Walk from start room to building exit. */
+function buildExitSegments(startRoom, startBuildingId, startEntryFloor, transitionPref) {
+  const segments = [];
+
+  if (startRoom.floor === startEntryFloor || !startEntryFloor) {
+    // Already on entry floor — walk from room to exit
+    const exitNode = pickEntryNode(startRoom.floor, transitionPref);
+    if (exitNode) {
+      segments.push({
+        type: "indoor",
+        floorId: startRoom.floor,
+        buildingId: startBuildingId,
+        fromNodeId: startRoom.id,
+        toNodeId: exitNode.id,
+      });
+    }
+    return segments;
+  }
+
+  // Need to descend to entry floor first
+  const transitionPair = pickTransitionPair(
+    startRoom.floor, startEntryFloor, transitionPref, startRoom
+  );
+  const transNode = transitionPair?.startNode || null;
+  const entryFloorTransNode = transitionPair?.endNode || null;
+
+  if (transNode) {
+    segments.push({
+      type: "indoor",
+      floorId: startRoom.floor,
+      buildingId: startBuildingId,
+      fromNodeId: startRoom.id,
+      toNodeId: transNode.id,
+    });
+  }
+
+  segments.push({
+    type: "vertical",
+    buildingId: startBuildingId,
+    fromFloor: startRoom.floor,
+    toFloor: startEntryFloor,
+    transitionType: transitionPair?.transitionType || "stairs",
+    transitionNodeStart: transNode?.id || null,
+    transitionNodeEnd: entryFloorTransNode?.id || null,
+  });
+
+  // Walk from transition node to building exit
+  const exitNode = pickEntryNode(startEntryFloor, transitionPref);
+  if (entryFloorTransNode && exitNode && entryFloorTransNode.id !== exitNode.id) {
+    segments.push({
+      type: "indoor",
+      floorId: startEntryFloor,
+      buildingId: startBuildingId,
+      fromNodeId: entryFloorTransNode.id,
+      toNodeId: exitNode.id,
+    });
+  }
+
+  return segments;
+}
+
+/** Phase 3: Enter destination building and navigate to room. */
+function buildEntranceSegments(destRoom, destBuildingId, destEntryFloor, transitionPref) {
+  const segments = [];
+  const destEntryNode = pickEntryNode(destEntryFloor || destRoom.floor, transitionPref);
+
+  if (destRoom.floor === destEntryFloor || !destEntryFloor) {
+    // Destination is on the entry floor — walk from entrance to room
+    if (destEntryNode) {
+      segments.push({
+        type: "indoor",
+        floorId: destRoom.floor,
+        buildingId: destBuildingId,
+        fromNodeId: destEntryNode.id,
+        toNodeId: destRoom.id,
+      });
+    }
+    return segments;
+  }
+
+  // Need to ascend from entry floor to dest floor
+  const transitionPair = pickTransitionPair(
+    destEntryFloor, destRoom.floor, transitionPref, null, destRoom
+  );
+  const entryFloorTransNode = transitionPair?.startNode || null;
+  const destTransNode = transitionPair?.endNode || null;
+
+  // Walk from building entrance to transition node on entry floor
+  if (destEntryNode && entryFloorTransNode && destEntryNode.id !== entryFloorTransNode.id) {
+    segments.push({
+      type: "indoor",
+      floorId: destEntryFloor,
+      buildingId: destBuildingId,
+      fromNodeId: destEntryNode.id,
+      toNodeId: entryFloorTransNode.id,
+    });
+  }
+
+  segments.push({
+    type: "vertical",
+    buildingId: destBuildingId,
+    fromFloor: destEntryFloor,
+    toFloor: destRoom.floor,
+    transitionType: transitionPair?.transitionType || "stairs",
+    transitionNodeStart: entryFloorTransNode?.id || null,
+    transitionNodeEnd: destTransNode?.id || null,
+  });
+
+  // Walk from transition point to destination room
+  if (destTransNode) {
+    segments.push({
+      type: "indoor",
+      floorId: destRoom.floor,
+      buildingId: destBuildingId,
+      fromNodeId: destTransNode.id,
+      toNodeId: destRoom.id,
+    });
+  }
+
+  return segments;
+}
+
 /**
  * Segments for navigating between different buildings.
  *
@@ -403,64 +525,9 @@ function buildCrossBuildingSegments(startRoom, destRoom, transitionPref) {
   const startEntryFloor = getEntryFloor(startBuildingId) || getGroundFloor(startBuildingId);
   const destEntryFloor = getEntryFloor(destBuildingId) || getGroundFloor(destBuildingId);
 
-  const segments = [];
-
-  // ── Phase 1: Get from start room to building exit ──
-  if (startRoom.floor !== startEntryFloor && startEntryFloor) {
-    // Need to descend to entry floor first
-    const transitionPair = pickTransitionPair(
-      startRoom.floor,
-      startEntryFloor,
-      transitionPref,
-      startRoom
-    );
-    const transNode = transitionPair?.startNode || null;
-    const entryFloorTransNode = transitionPair?.endNode || null;
-
-    if (transNode) {
-      segments.push({
-        type: "indoor",
-        floorId: startRoom.floor,
-        buildingId: startBuildingId,
-        fromNodeId: startRoom.id,
-        toNodeId: transNode.id,
-      });
-    }
-
-    segments.push({
-      type: "vertical",
-      buildingId: startBuildingId,
-      fromFloor: startRoom.floor,
-      toFloor: startEntryFloor,
-      transitionType: transitionPair?.transitionType || "stairs",
-      transitionNodeStart: transNode?.id || null,
-      transitionNodeEnd: entryFloorTransNode?.id || null,
-    });
-
-    // Walk from transition node to building exit
-    const exitNode = pickEntryNode(startEntryFloor, transitionPref);
-    if (entryFloorTransNode && exitNode && entryFloorTransNode.id !== exitNode.id) {
-      segments.push({
-        type: "indoor",
-        floorId: startEntryFloor,
-        buildingId: startBuildingId,
-        fromNodeId: entryFloorTransNode.id,
-        toNodeId: exitNode.id,
-      });
-    }
-  } else {
-    // Already on entry floor — walk from room to exit
-    const exitNode = pickEntryNode(startRoom.floor, transitionPref);
-    if (exitNode) {
-      segments.push({
-        type: "indoor",
-        floorId: startRoom.floor,
-        buildingId: startBuildingId,
-        fromNodeId: startRoom.id,
-        toNodeId: exitNode.id,
-      });
-    }
-  }
+  const segments = [
+    ...buildExitSegments(startRoom, startBuildingId, startEntryFloor, transitionPref),
+  ];
 
   // ── Phase 2: Outdoor navigation between buildings ──
   const startCoords = getBuildingCoords(startBuildingId);
@@ -474,64 +541,9 @@ function buildCrossBuildingSegments(startRoom, destRoom, transitionPref) {
     toCoords: destCoords,
   });
 
-  // ── Phase 3: Enter destination building and navigate to room ──
-  const destEntryNode = pickEntryNode(destEntryFloor || destRoom.floor, transitionPref);
-
-  if (destRoom.floor !== destEntryFloor && destEntryFloor) {
-    // Need to ascend from entry floor to dest floor
-    const transitionPair = pickTransitionPair(
-      destEntryFloor,
-      destRoom.floor,
-      transitionPref,
-      null,
-      destRoom
-    );
-    const entryFloorTransNode = transitionPair?.startNode || null;
-    const destTransNode = transitionPair?.endNode || null;
-
-    // Walk from building entrance to transition node on entry floor
-    if (destEntryNode && entryFloorTransNode && destEntryNode.id !== entryFloorTransNode.id) {
-      segments.push({
-        type: "indoor",
-        floorId: destEntryFloor,
-        buildingId: destBuildingId,
-        fromNodeId: destEntryNode.id,
-        toNodeId: entryFloorTransNode.id,
-      });
-    }
-
-    segments.push({
-      type: "vertical",
-      buildingId: destBuildingId,
-      fromFloor: destEntryFloor,
-      toFloor: destRoom.floor,
-      transitionType: transitionPair?.transitionType || "stairs",
-      transitionNodeStart: entryFloorTransNode?.id || null,
-      transitionNodeEnd: destTransNode?.id || null,
-    });
-
-    // Walk from transition point to destination room
-    if (destTransNode) {
-      segments.push({
-        type: "indoor",
-        floorId: destRoom.floor,
-        buildingId: destBuildingId,
-        fromNodeId: destTransNode.id,
-        toNodeId: destRoom.id,
-      });
-    }
-  } else {
-    // Destination is on the entry floor — walk from entrance to room
-    if (destEntryNode) {
-      segments.push({
-        type: "indoor",
-        floorId: destRoom.floor,
-        buildingId: destBuildingId,
-        fromNodeId: destEntryNode.id,
-        toNodeId: destRoom.id,
-      });
-    }
-  }
+  segments.push(
+    ...buildEntranceSegments(destRoom, destBuildingId, destEntryFloor, transitionPref),
+  );
 
   return segments;
 }

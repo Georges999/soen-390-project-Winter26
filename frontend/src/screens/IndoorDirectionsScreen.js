@@ -2228,5 +2228,6 @@ IndoorDirectionsScreen.propTypes = {
   navigation: PropTypes.shape({
     navigate: PropTypes.func,
     goBack: PropTypes.func,
+    getParent: PropTypes.func,
   }),
 };
