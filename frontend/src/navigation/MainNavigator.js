@@ -48,7 +48,10 @@ function ProfileStack() {
 function IndoorStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="IndoorDirections" component={IndoorDirectionsScreen} />
+      <Stack.Screen
+        name="IndoorDirections"
+        component={IndoorDirectionsScreen}
+      />
       <Stack.Screen name="IndoorMap" component={IndoorMapScreen} />
     </Stack.Navigator>
   );
@@ -57,7 +60,7 @@ function IndoorStack() {
 const TAB_SCREENS = [
   {
     name: "Map",
-    component: MapScreen,
+    component: MapScreen, //In React Navigation, when a screen does navigate("Map", {...}) -> that second object becomes route.params inside MapScreen
     testID: "tab-map",
     label: "Map",
     icon: "map",
