@@ -445,6 +445,7 @@ const POI_ICONS = {
   elevator: { icon: "elevator", label: "Elevator" },
   escalator: { icon: "escalator", label: "Escalator" },
   metro: { icon: "subway", label: "Metro" },
+  building_entry_exit: { icon: "meeting-room", label: "Entrance" },
 };
 
 export {
