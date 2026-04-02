@@ -100,7 +100,7 @@ export function buildJourneyStages(routeSegments, startRoom, destRoom) {
 }
 
 export function getDefaultJourneyStage(stages = []) {
-  return stages.find((stage) => stage.type === "indoor") || stages[0] || null;
+  return stages[0] || null;
 }
 
 export function getJourneyMapStage(stages = [], activeStageId = null) {
@@ -112,6 +112,17 @@ export function getJourneyMapStage(stages = [], activeStageId = null) {
 
   if (activeStage?.mapBuildingId && activeStage?.mapFloorId) {
     return activeStage;
+  }
+
+  // When active step is outdoor, prefer the upcoming mappable stage so
+  // map context progresses toward destination instead of snapping back.
+  if (activeStage?.type === "outdoor") {
+    for (let index = normalizedIndex + 1; index < stages.length; index += 1) {
+      const nextStage = stages[index];
+      if (nextStage?.mapBuildingId && nextStage?.mapFloorId) {
+        return nextStage;
+      }
+    }
   }
 
   for (let offset = 1; offset < stages.length; offset += 1) {
