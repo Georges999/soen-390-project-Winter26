@@ -51,6 +51,7 @@ import {
   indoorPoiLegendStyles,
   indoorPoiMarkerStyle,
 } from "../styles/indoorSharedStyles";
+import { smoothPath } from "../utils/pathfinding/pathSmoothing";
 export {
   buildAllRooms,
   getInitialSelection,
@@ -640,23 +641,21 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const scaleX = displayedMapWidth / displayWidth;
     const scaleY = displayedMapHeight / displayHeight;
 
-    let pathD = `M ${coords[0].x * scaleX} ${coords[0].y * scaleY}`;
-    for (let i = 1; i < coords.length; i++) {
-      pathD += ` L ${coords[i].x * scaleX} ${coords[i].y * scaleY}`;
-    }
+    // Scale raw coordinates to display dimensions
+    const scaledPoints = coords.map((c) => ({
+      x: c.x * scaleX,
+      y: c.y * scaleY,
+      type: c.type,
+    }));
+
+    // Apply smoothing pipeline: axis-snap → simplify → Catmull-Rom curves
+    const pathD = smoothPath(scaledPoints);
 
     return {
       path: pathD,
-      start: { x: coords[0].x * scaleX, y: coords[0].y * scaleY },
-      end: {
-        x: coords[coords.length - 1].x * scaleX,
-        y: coords[coords.length - 1].y * scaleY,
-      },
-      points: coords.map((c) => ({
-        x: c.x * scaleX,
-        y: c.y * scaleY,
-        type: c.type,
-      })),
+      start: scaledPoints[0],
+      end: scaledPoints[scaledPoints.length - 1],
+      points: scaledPoints,
     };
   }, [
     pathResult,
