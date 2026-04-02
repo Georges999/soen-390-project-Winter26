@@ -1246,6 +1246,32 @@ describe('IndoorDirectionsScreen', () => {
       expect(Speech.speak).toHaveBeenCalledTimes(2);
     });
 
+    it('should stop the prior speech before speaking the next selected segment', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-1'));
+      fireEvent.press(getByTestId('journey-stage-2'));
+
+      expect(Speech.stop.mock.invocationCallOrder[0]).toBeLessThan(
+        Speech.speak.mock.invocationCallOrder[1]
+      );
+    });
+
     it('should not replay speech when tapping the same active journey card', () => {
       mockClassifyRoute.mockReturnValue('cross-floor');
       mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
