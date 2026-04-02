@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { Dimensions } from 'react-native';
 import IndoorDirectionsScreen, {
   buildAllRooms,
+  buildOutdoorRoutePayload,
   getSelectionForLocation,
   getInitialSelection,
 } from '../../src/screens/IndoorDirectionsScreen';
@@ -154,6 +155,37 @@ describe('IndoorDirectionsScreen', () => {
     expect(selection.campusId).toBe('sgw');
     expect(selection.buildingIdx).toBe(1);
     expect(selection.floorIdx).toBe(1);
+  });
+
+  it('buildOutdoorRoutePayload should create outdoor handoff payload', () => {
+    const routeSegments = [
+      {
+        type: 'outdoor',
+        fromBuildingId: 'hall',
+        toBuildingId: 'mb',
+        fromCoords: { latitude: 45.497, longitude: -73.579 },
+        toCoords: { latitude: 45.495, longitude: -73.578 },
+      },
+      {
+        type: 'indoor',
+        floorId: 'MB-1',
+        buildingId: 'mb',
+        fromNodeId: 'MB1_hallway_001',
+        toNodeId: 'MB1_classroom_001',
+      },
+    ];
+
+    const payload = buildOutdoorRoutePayload(
+      routeSegments,
+      { type: 'outdoor', segmentIndex: 0 },
+      { id: 'MB1_classroom_001', label: 'MB101', floor: 'MB-1', buildingId: 'mb' },
+    );
+
+    expect(payload.startName).toBe('Hall Building');
+    expect(payload.destName).toBe('John Molson Building');
+    expect(payload.defaultTravelMode).toBe('driving');
+    expect(payload.continueToIndoor.startRoom.id).toBe('MB1_hallway_001');
+    expect(payload.continueToIndoor.destinationRoom.id).toBe('MB1_classroom_001');
   });
 
   it('should render safely when the selected campus data is unavailable', () => {
@@ -1180,16 +1212,28 @@ describe('IndoorDirectionsScreen', () => {
       },
     };
 
-    it('should keep only the outdoor journey stage card without the detail panel', () => {
+    it('should show outdoor CTA and navigate to outdoor map with indoor continuation data', () => {
       mockClassifyRoute.mockReturnValue('cross-building');
       mockBuildRouteSegments.mockReturnValue([outdoorSeg]);
       mockFindShortestPath.mockReturnValue({ ok: false, reason: 'no path' });
-      const { getAllByText, queryByText } = render(
+      const { getAllByText, getByText } = render(
         <IndoorDirectionsScreen route={crossBuildingRoute} navigation={mockNavigation} />
       );
       expect(getAllByText('Outdoor transfer').length).toBeGreaterThan(0);
-      expect(queryByText(/Exit Hall Building and continue outside to John Molson Building/)).toBeNull();
-      expect(queryByText('Open Outdoor Directions')).toBeNull();
+      fireEvent.press(getByText('Open Outdoor Directions'));
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Map',
+        expect.objectContaining({
+          outdoorRoute: expect.objectContaining({
+            startName: 'Hall Building',
+            destName: 'John Molson Building',
+            defaultTravelMode: 'driving',
+            continueToIndoor: expect.objectContaining({
+              destinationRoom: expect.objectContaining({ id: 'MB1_classroom_001' }),
+            }),
+          }),
+        }),
+      );
     });
 
     it('should show outdoor step in cross-building direction steps', () => {
