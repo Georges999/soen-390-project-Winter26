@@ -1203,6 +1203,16 @@
           "from": "Hall1Red_hallway_014",
           "to": "Hall1Red_hallway_065",
           "weight": 155.5
+        },
+        {
+          "from": "Hall1Red_entry_001",
+          "to": "Hall1Red_hallway_001",
+          "weight": 142.6
+        },
+        {
+          "from": "Hall1Red_entry_002",
+          "to": "Hall1Red_hallway_062",
+          "weight": 155.3
         }
       ],
       "rooms": [
@@ -1629,6 +1639,24 @@
           "y": 605.02,
           "label": "",
           "nodeSize": 8,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall1Red_entry_001",
+          "type": "building_entry_exit",
+          "x": 328,
+          "y": 1920,
+          "label": "Hall Main Entrance",
+          "nodeSize": 10,
+          "labelSize": 13
+        },
+        {
+          "id": "Hall1Red_entry_002",
+          "type": "building_entry_exit",
+          "x": 1668,
+          "y": 1920,
+          "label": "Hall Side Entrance",
+          "nodeSize": 10,
           "labelSize": 13
         }
       ],
