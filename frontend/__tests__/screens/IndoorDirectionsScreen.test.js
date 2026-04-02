@@ -1,12 +1,18 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Dimensions } from 'react-native';
+import * as Speech from 'expo-speech';
 import IndoorDirectionsScreen, {
   buildAllRooms,
   getSelectionForLocation,
   getInitialSelection,
 } from '../../src/screens/IndoorDirectionsScreen';
 import { buildings } from '../../src/data/indoorFloorData';
+
+jest.mock('expo-speech', () => ({
+  stop: jest.fn(),
+  speak: jest.fn(),
+}));
 
 // Mock the floor plan images
 jest.mock('../../assets/floor-maps/Hall-1-F.png', () => 'hall1img', { virtual: true });
@@ -62,6 +68,7 @@ jest.mock('../../src/utils/pathfinding/crossFloorRouter', () => ({
 const mockNavigation = {
   navigate: jest.fn(),
   goBack: jest.fn(),
+  addListener: jest.fn(() => jest.fn()),
 };
 
 const mockRouteEmpty = { params: {} };
@@ -1105,6 +1112,123 @@ describe('IndoorDirectionsScreen', () => {
       );
       fireEvent.press(getByTestId('journey-stage-2'));
       expect(getByText(/Hall Building · Floor 9/)).toBeTruthy();
+    });
+
+    it('should speak only the tapped segment instructions', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-1'));
+
+      expect(Speech.speak).toHaveBeenCalledWith(
+        expect.stringContaining('Take the stairs from Floor 8 to Floor 9')
+      );
+      expect(Speech.speak).not.toHaveBeenCalledWith(expect.stringContaining('Start at'));
+      expect(Speech.speak).not.toHaveBeenCalledWith(expect.stringContaining('Arrive at'));
+    });
+
+    it('should compress repeated hallway instructions in spoken segment guidance', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 140, y: 240, type: 'hallway' },
+          { x: 180, y: 280, type: 'hallway' },
+          { x: 220, y: 320, type: 'hallway' },
+          { x: 300, y: 400, type: 'classroom' },
+        ],
+        totalWeight: 620,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-0'));
+      fireEvent.press(getByTestId('journey-stage-1'));
+      fireEvent.press(getByTestId('journey-stage-0'));
+
+      const lastSpeechCall = Speech.speak.mock.calls[Speech.speak.mock.calls.length - 1][0];
+      const hallwayMatches = lastSpeechCall.match(/Continue through the hallway/g) || [];
+
+      expect(hallwayMatches).toHaveLength(1);
+    });
+
+    it('should stop current speech and start the newly selected segment', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-1'));
+      fireEvent.press(getByTestId('journey-stage-2'));
+
+      expect(Speech.stop).toHaveBeenCalled();
+      expect(Speech.speak).toHaveBeenCalledTimes(2);
+    });
+
+    it('should not replay speech when tapping the same active journey card', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+      mockFindShortestPath.mockReturnValue({
+        ok: true,
+        pathCoords: [
+          { x: 100, y: 200, type: 'classroom' },
+          { x: 150, y: 250, type: 'hallway' },
+          { x: 200, y: 300, type: 'classroom' },
+        ],
+        totalWeight: 300,
+        reason: null,
+      });
+
+      const { getByTestId } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      fireEvent.press(getByTestId('journey-stage-0'));
+
+      expect(Speech.speak).not.toHaveBeenCalled();
+    });
+
+    it('should stop speech on unmount', () => {
+      mockClassifyRoute.mockReturnValue('cross-floor');
+      mockBuildRouteSegments.mockReturnValue([indoorSegFloor8, verticalSeg, indoorSegFloor9]);
+
+      const { unmount } = render(
+        <IndoorDirectionsScreen route={crossFloorRoute} navigation={mockNavigation} />
+      );
+
+      unmount();
+      expect(Speech.stop).toHaveBeenCalled();
     });
 
     it('should sync the active journey stage when the floor selector is used during a route', () => {
