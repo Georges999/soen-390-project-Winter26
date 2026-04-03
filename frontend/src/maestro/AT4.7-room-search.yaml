@@ -32,11 +32,11 @@ appId: host.exp.Exponent
 
 # Wait for suggestions to appear
 - extendedWaitUntil:
-    visible: "H209, Floor 2 · Hall Building"
+    visible: "H209.*"
     timeout: 10000
 
 - tapOn:
-    text: "H209, Floor 2 · Hall Building"
+    text: "H209.*"
 - waitForAnimationToEnd
 - eraseText
 

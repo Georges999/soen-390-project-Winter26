@@ -56,7 +56,7 @@ appId: host.exp.Exponent
 - waitForAnimationToEnd
 - assertVisible: "Hall Building · Floor 9"
 
-# Room was on Floor 1 – highlight must not appear on Floor 9
+# Room was on Floor 8 – highlight must not appear on Floor 9
 - assertNotVisible:
     id: "selected-room-highlight"
 

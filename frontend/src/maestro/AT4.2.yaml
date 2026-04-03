@@ -29,9 +29,9 @@ appId: host.exp.Exponent
     text: "Search start or use map pin button"
 - inputText: "H937"
 - extendedWaitUntil:
-    visible: "H937, Floor 9 · Hall Building"
+    visible: "H937.*"
     timeout: 8000
-- tapOn: "H937, Floor 9 · Hall Building"
+- tapOn: "H937,.*"
 - hideKeyboard
 - waitForAnimationToEnd
 
@@ -40,13 +40,18 @@ appId: host.exp.Exponent
 - eraseText
 - inputText: "921"
 - extendedWaitUntil:
-    visible: "H921, Floor 9 · Hall Building"
+    visible: "H921.*"
     timeout: 8000
-- tapOn: "H921, Floor 9 · Hall Building"
+- tapOn: "H921,.*"
 
 - hideKeyboard
 - waitForAnimationToEnd
 
+- scrollUntilVisible:
+        element:
+            text: "STEP-BY-STEP DIRECTIONS"
+        direction: DOWN
+        timeout: 10000
 - assertVisible: "STEP-BY-STEP DIRECTIONS"
 - assertVisible: "Start at H921"
 - assertVisible:

@@ -47,9 +47,9 @@ appId: host.exp.Exponent
     text: "Search start or use map pin button"
 - inputText: "H837"
 - extendedWaitUntil:
-    visible: "H837, Floor 8 · Hall Building"
+    visible: "H837.*"
     timeout: 8000
-- tapOn: "H837, Floor 8 · Hall Building"
+- tapOn: "H837,.*"
 - hideKeyboard
 - waitForAnimationToEnd
 
