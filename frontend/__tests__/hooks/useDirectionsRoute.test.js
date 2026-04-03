@@ -1,5 +1,12 @@
 import { renderHook, waitFor, act } from '@testing-library/react-native';
-import { useDirectionsRoute } from '../../src/hooks/useDirectionsRoute';
+import {
+  buildRouteInfo,
+  buildRouteOptions,
+  buildWaypointsParam,
+  decodeStepCoords,
+  pickBestRoute,
+  useDirectionsRoute,
+} from '../../src/hooks/useDirectionsRoute';
 
 jest.mock('@mapbox/polyline', () => ({
   decode: jest.fn(() => [[45.4968, -73.5788], [45.4952, -73.5779]]),
@@ -37,6 +44,76 @@ describe('useDirectionsRoute', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     globalThis.fetch = jest.fn();
+  });
+
+  describe('helper functions', () => {
+    it('buildWaypointsParam returns "" for null and []', () => {
+      expect(buildWaypointsParam(null)).toBe('');
+      expect(buildWaypointsParam([])).toBe('');
+    });
+
+    it('pickBestRoute returns null for null routes', () => {
+      expect(pickBestRoute(null, false)).toBeNull();
+    });
+
+    it('pickBestRoute returns first route when it is already the shortest transit route', () => {
+      const r0 = { legs: [{ duration: { value: 100 } }] };
+      const r1 = { legs: [{ duration: { value: 200 } }] };
+      expect(pickBestRoute([r0, r1], true)).toBe(r0);
+    });
+
+    it('decodeStepCoords returns [] when polyline.decode throws', () => {
+      const polyline = require('@mapbox/polyline');
+      polyline.decode.mockImplementationOnce(() => {
+        throw new Error('decode failed');
+      });
+
+      expect(decodeStepCoords({ polyline: { points: 'bad' } })).toEqual([]);
+    });
+
+    it('buildRouteInfo returns null for null leg', () => {
+      expect(buildRouteInfo(null)).toBeNull();
+    });
+
+    it('buildRouteOptions transitLines uses short_name/name/vehicle.type/Transit fallback chain', () => {
+      const routes = [
+        {
+          legs: [
+            {
+              steps: [
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: { short_name: '24', name: 'Bus 24', vehicle: { type: 'BUS' } },
+                  },
+                },
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: { name: 'Green Line', vehicle: { type: 'SUBWAY' } },
+                  },
+                },
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: { vehicle: { type: 'TRAM' } },
+                  },
+                },
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: {},
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      const [opt] = buildRouteOptions(routes);
+      expect(opt.transitLines).toEqual(['24', 'Green Line', 'TRAM', 'Transit']);
+    });
   });
 
   it('should return empty when no startCoord', () => {

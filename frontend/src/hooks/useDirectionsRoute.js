@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import polyline from "@mapbox/polyline"; //a library that can decode Google’s “encoded polyline string” into actual lat/lng points.
+import polyline from "@mapbox/polyline"; //a library that can decode Google's "encoded polyline string" into actual lat/lng points.
 import { GOOGLE_MAPS_API_KEY } from "../config/google";
 
 const MODE_MAP = {
@@ -8,6 +8,113 @@ const MODE_MAP = {
   bicycling: "bicycling",
   transit: "transit",
 };
+
+export function buildWaypointsParam(waypoints) {
+  return Array.isArray(waypoints) && waypoints.length
+    ? `&waypoints=${waypoints.map((p) => encodeURIComponent(p)).join("|")}`
+    : "";
+}
+
+function buildRequestUrl(originParam, destinationParam, apiMode, waypointsParam) {
+  const isTransit = apiMode === "transit";
+  return (
+    `https://maps.googleapis.com/maps/api/directions/json?` +
+    `origin=${originParam}` +
+    `&destination=${destinationParam}` +
+    `&mode=${apiMode}` +
+    waypointsParam +
+    (isTransit ? `&departure_time=now` : "") +
+    (isTransit ? `&transit_mode=bus|subway` : "") +
+    (isTransit ? `&alternatives=true` : "") +
+    `&key=${GOOGLE_MAPS_API_KEY}`
+  );
+}
+
+export function pickBestRoute(routes, isTransit) {
+  if (!routes?.length) return null;
+  if (!isTransit) return routes[0];
+  return routes.reduce((best, current) => {
+    const bestDur = best?.legs?.[0]?.duration?.value ?? Infinity;
+    const curDur = current?.legs?.[0]?.duration?.value ?? Infinity;
+    return curDur < bestDur ? current : best;
+  }, routes[0]);
+}
+
+export function buildRouteOptions(routes) {
+  return routes.map((route) => {
+    const leg = route?.legs?.[0];
+    const steps = leg?.steps ?? [];
+    const transitSteps = steps.filter(
+      (step) => step.travel_mode === "TRANSIT",
+    );
+    const transitLines = transitSteps
+      .map((step) => {
+        const line = step.transit_details?.line;
+        return (
+          line?.short_name ||
+          line?.name ||
+          line?.vehicle?.type ||
+          "Transit"
+        );
+      })
+      .filter(Boolean);
+    const transitVehicles = transitSteps
+      .map((step) => step.transit_details?.line?.vehicle?.type || "")
+      .filter(Boolean);
+    return {
+      durationText: leg?.duration?.text ?? "",
+      durationValue: leg?.duration?.value ?? Infinity,
+      distanceText: leg?.distance?.text ?? "",
+      transitLines,
+      transitVehicles,
+    };
+  });
+}
+
+export function decodeStepCoords(step) {
+  if (!step.polyline?.points) return [];
+  try {
+    return polyline
+      .decode(step.polyline.points)
+      .map(([lat, lng]) => ({ latitude: lat, longitude: lng }));
+  } catch {
+    return [];
+  }
+}
+
+function buildSteps(steps) {
+  return steps.map((step) => ({
+    coords: decodeStepCoords(step),
+    instruction: step.html_instructions ?? "",
+    distanceText: step.distance?.text ?? "",
+    durationText: step.duration?.text ?? "",
+    endLocation: step.end_location
+      ? { latitude: step.end_location.lat, longitude: step.end_location.lng }
+      : null,
+    travelMode: step.travel_mode ?? "",
+    transitDetails: step.transit_details
+      ? {
+          departureStop: step.transit_details.departure_stop?.name ?? "",
+          arrivalStop: step.transit_details.arrival_stop?.name ?? "",
+          departureTime: step.transit_details.departure_time?.text ?? "",
+          arrivalTime: step.transit_details.arrival_time?.text ?? "",
+          lineShortName: step.transit_details.line?.short_name ?? "",
+          lineName: step.transit_details.line?.name ?? "",
+          vehicleType: step.transit_details.line?.vehicle?.type ?? "",
+          numStops: step.transit_details.num_stops ?? null,
+        }
+      : null,
+  }));
+}
+
+export function buildRouteInfo(leg) {
+  if (!leg) return null;
+  return {
+    durationText: leg.duration?.text ?? "",
+    distanceText: leg.distance?.text ?? "",
+    steps: buildSteps(leg.steps ?? []),
+  };
+}
 
 export function useDirectionsRoute({
   startCoord,
@@ -47,19 +154,8 @@ export function useDirectionsRoute({
         const destinationParam = destinationOverride
           ? encodeURIComponent(destinationOverride)
           : `${destCoord.latitude},${destCoord.longitude}`;
-        const waypointsParam = Array.isArray(waypoints) && waypoints.length
-          ? `&waypoints=${waypoints.map((p) => encodeURIComponent(p)).join("|")}`
-          : "";
-        const url =
-          `https://maps.googleapis.com/maps/api/directions/json?` +
-          `origin=${originParam}` +
-          `&destination=${destinationParam}` +
-          `&mode=${apiMode}` +
-          waypointsParam +
-          (isTransit ? `&departure_time=now` : "") +
-          (isTransit ? `&transit_mode=bus|subway` : "") +
-          (isTransit ? `&alternatives=true` : "") +
-          `&key=${GOOGLE_MAPS_API_KEY}`;
+        const waypointsParam = buildWaypointsParam(waypoints);
+        const url = buildRequestUrl(originParam, destinationParam, apiMode, waypointsParam);
 
         const res = await fetch(url);
         const data = await res.json();
@@ -72,46 +168,6 @@ export function useDirectionsRoute({
           return;
         }
 
-        const pickBestRoute = (routes) => {
-          if (!routes?.length) return null;
-          if (!isTransit) return routes[0];
-          return routes.reduce((best, current) => {
-            const bestDur = best?.legs?.[0]?.duration?.value ?? Infinity;
-            const curDur = current?.legs?.[0]?.duration?.value ?? Infinity;
-            return curDur < bestDur ? current : best;
-          }, routes[0]);
-        };
-
-        const buildRouteOptions = (routes) =>
-          routes.map((route) => {
-            const leg = route?.legs?.[0];
-            const steps = leg?.steps ?? [];
-            const transitSteps = steps.filter(
-              (step) => step.travel_mode === "TRANSIT",
-            );
-            const transitLines = transitSteps
-              .map((step) => {
-                const line = step.transit_details?.line;
-                return (
-                  line?.short_name ||
-                  line?.name ||
-                  line?.vehicle?.type ||
-                  "Transit"
-                );
-              })
-              .filter(Boolean);
-            const transitVehicles = transitSteps
-              .map((step) => step.transit_details?.line?.vehicle?.type || "")
-              .filter(Boolean);
-            return {
-              durationText: leg?.duration?.text ?? "",
-              durationValue: leg?.duration?.value ?? Infinity,
-              distanceText: leg?.distance?.text ?? "",
-              transitLines,
-              transitVehicles,
-            };
-          });
-
         const options = isTransit ? buildRouteOptions(data.routes) : [];
         const clampedIndex = Math.min(
           Math.max(routeIndex, 0),
@@ -119,7 +175,7 @@ export function useDirectionsRoute({
         );
         const selectedRoute = isTransit
           ? data.routes[clampedIndex]
-          : pickBestRoute(data.routes);
+          : pickBestRoute(data.routes, isTransit);
 
         //decode the polyline returned by Google
         const encoded = selectedRoute?.overview_polyline?.points;
@@ -139,58 +195,7 @@ export function useDirectionsRoute({
         setRouteCoords(points);
         if (!cancelled) setRouteOptions(options);
         const leg = selectedRoute?.legs?.[0];
-        setRouteInfo(
-          leg
-            ? {
-                durationText: leg.duration?.text ?? "",
-                distanceText: leg.distance?.text ?? "",
-                steps:
-                  leg.steps?.map((step) => ({
-                    coords: (() => {
-                      if (!step.polyline?.points) return [];
-                      try {
-                        return polyline
-                          .decode(step.polyline.points)
-                          .map(([lat, lng]) => ({
-                            latitude: lat,
-                            longitude: lng,
-                          }));
-                      } catch {
-                        return [];
-                      }
-                    })(),
-                    instruction: step.html_instructions ?? "",
-                    distanceText: step.distance?.text ?? "",
-                    durationText: step.duration?.text ?? "",
-                    endLocation: step.end_location
-                      ? {
-                          latitude: step.end_location.lat,
-                          longitude: step.end_location.lng,
-                        }
-                      : null,
-                    travelMode: step.travel_mode ?? "",
-                    transitDetails: step.transit_details
-                      ? {
-                          departureStop:
-                            step.transit_details.departure_stop?.name ?? "",
-                          arrivalStop:
-                            step.transit_details.arrival_stop?.name ?? "",
-                          departureTime:
-                            step.transit_details.departure_time?.text ?? "",
-                          arrivalTime:
-                            step.transit_details.arrival_time?.text ?? "",
-                          lineShortName:
-                            step.transit_details.line?.short_name ?? "",
-                          lineName: step.transit_details.line?.name ?? "",
-                          vehicleType:
-                            step.transit_details.line?.vehicle?.type ?? "",
-                          numStops: step.transit_details.num_stops ?? null,
-                        }
-                      : null,
-                  })) ?? [],
-              }
-            : null,
-        );
+        setRouteInfo(buildRouteInfo(leg));
 
         // zoom to the route
         if (fitToRoute) {
