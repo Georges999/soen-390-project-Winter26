@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getNextClassEvent, parseBuildingFromLocation } from '../services/googleCalendarService';
+import { getEventLocation } from '../domain/calendar/calendarDomain';
 
 export function useNextClass(isConnected = false) {
   const [nextClass, setNextClass] = useState(null);
@@ -33,8 +34,9 @@ export function useNextClass(isConnected = false) {
   }
 
   function getBuildingFromClass() {
-    if (!nextClass?.location) return null;
-    return parseBuildingFromLocation(nextClass.location);
+    const location = getEventLocation(nextClass);
+    if (!location) return null;
+    return parseBuildingFromLocation(location);
   }
 
   return {
