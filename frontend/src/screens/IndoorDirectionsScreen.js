@@ -326,26 +326,8 @@ function buildSameFloorSteps(coords, startRoom, destRoom) {
 const MAP_IMAGE_WIDTH = SCREEN_WIDTH - 32;
 const MAP_IMAGE_HEIGHT = SCREEN_WIDTH - 60;
 
-function buildFloorsData(buildingObj) {
-  const floorsData = { floors: {} };
-  if (!buildingObj?.id || !buildingObj?.floors) return floorsData;
-
-  buildingObj.floors.forEach((floor) => {
-    const floorGraphData = getFloorGraphData(buildingObj.id, floor.id);
-    floorsData.floors[floor.id] = {
-      label: floor.label,
-      nodes: floorGraphData.nodes,
-      rooms: floorGraphData.rooms,
-      pois: floorGraphData.pois,
-      edges: floorGraphData.edges,
-    };
-  });
-
-  return floorsData;
-}
-
 /** Resolve a single route segment into { segment, pathResult }. */
-function resolveSegmentPath({ seg, accessible }) {
+function resolveSegmentPath(seg, accessible) {
   if (seg.type !== "indoor") return { segment: seg, pathResult: null };
 
   const buildingObj = getBuildingById(seg.buildingId);
@@ -353,9 +335,19 @@ function resolveSegmentPath({ seg, accessible }) {
     return {
       segment: seg,
       pathResult: { ok: false, reason: "Building not found" },
-      };
+    };
 
-  const floorsData = buildFloorsData(buildingObj);
+  const floorsData = { floors: {} };
+  buildingObj.floors.forEach((floor) => {
+    const fd = getFloorGraphData(buildingObj.id, floor.id);
+    floorsData.floors[floor.id] = {
+      label: floor.label,
+      nodes: fd.nodes,
+      rooms: fd.rooms,
+      pois: fd.pois,
+      edges: fd.edges,
+    };
+  });
 
   const result = findShortestPath({
     floorsData,
@@ -366,16 +358,172 @@ function resolveSegmentPath({ seg, accessible }) {
   return { segment: seg, pathResult: result };
 }
 
-function computeDisplayedFloor({
+/**
+ * Compute an effective (auto-filled) start or destination room when
+ * only one endpoint has been selected by the user.
+ */
+function computeEffectiveRoom(
+
+  room,
+  otherRoom,
+  activeField,
+  fieldName,
+  buildingIdFallback,
+  pref,
+  label,
+) {
+  if (room || !otherRoom || activeField === fieldName) {
+    return room;
+  }
+
+  const buildingId = otherRoom.buildingId || buildingIdFallback;
+  if (!buildingId) return null;
+
+  const entryFloorId =
+    getEntryFloor(buildingId) || getGroundFloor(buildingId) || otherRoom.floor;
+  const entryNode = pickEntryNode(entryFloorId, pref);
+  if (!entryNode) return null;
+
+  const building = getBuildingById(buildingId);
+
+  return {
+    ...entryNode,
+    floor: entryFloorId,
+    buildingId,
+    buildingName: building?.name,
+    label,
+  };
+}
+
+/** Compute the active indoor path result (same-floor or cross-floor). */
+function computePathResult(
+  effectiveStartRoom,
+  effectiveDestRoom,
+  routeSegments,
+  segmentResults,
+  displayedSegmentResult,
+  buildingIdFallback,
+  selectedBuilding,
+  accessibleRoute,
+) {
+  if (!effectiveStartRoom || !effectiveDestRoom) return null;
+
+  if (routeSegments.length > 0 && segmentResults.length > 0) {
+    if (displayedSegmentResult?.pathResult) {
+      return displayedSegmentResult.pathResult;
+    }
+
+    for (const sr of segmentResults) {
+      if (sr.segment.type === "indoor" && sr.pathResult?.ok) {
+        return sr.pathResult;
+      }
+    }
+
+    return { ok: false, reason: "No indoor path available for this segment" };
+  }
+
+  const routeBuilding =
+    getBuildingById(
+      effectiveStartRoom.buildingId ||
+        effectiveDestRoom.buildingId ||
+        buildingIdFallback,
+    ) || selectedBuilding;
+  const floorsData = { floors: {} };
+
+  if (routeBuilding?.floors) {
+    routeBuilding.floors.forEach((floor) => {
+      const floorGraphData = getFloorGraphData(routeBuilding.id, floor.id);
+      floorsData.floors[floor.id] = {
+        label: floor.label,
+        nodes: floorGraphData.nodes,
+        rooms: floorGraphData.rooms,
+        pois: floorGraphData.pois,
+        edges: floorGraphData.edges,
+      };
+    });
+  }
+
+  return findShortestPath({
+    floorsData,
+    startNodeId: effectiveStartRoom.id,
+    endNodeId: effectiveDestRoom.id,
+    accessible: accessibleRoute,
+  });
+}
+
+function getPathGeometryWeight(coords = []) {
+  if (!Array.isArray(coords) || coords.length < 2) return 0;
+
+  let total = 0;
+  for (let i = 1; i < coords.length; i += 1) {
+    const dx = (coords[i]?.x || 0) - (coords[i - 1]?.x || 0);
+    const dy = (coords[i]?.y || 0) - (coords[i - 1]?.y || 0);
+    total += Math.hypot(dx, dy);
+  }
+  return total;
+}
+
+function getSafeIndoorWeight(weighted = 0, coords = []) {
+  const geometricWeight = getPathGeometryWeight(coords);
+  if (!geometricWeight) return weighted || 0;
+  if (!weighted) return geometricWeight;
+
+  // Large ratios indicate synthetic graph penalties (e.g., room-transit penalties).
+  return weighted / geometricWeight > 10 ? geometricWeight : weighted;
+}
+
+/** Compute route statistics (distance + duration) from path results. */
+function computeRouteStats(segmentResults, pathResult) {
+  let routedWeight = 0;
+  if (segmentResults.length > 0) {
+    routedWeight = segmentResults.reduce(
+      (total, segmentResult) =>
+        segmentResult.segment.type === "indoor" && segmentResult.pathResult?.ok
+          ? total +
+            getSafeIndoorWeight(
+              segmentResult.pathResult.totalWeight,
+              segmentResult.pathResult.pathCoords,
+            )
+          : total,
+      0,
+    );
+  } else if (pathResult?.ok) {
+    routedWeight = getSafeIndoorWeight(
+      pathResult.totalWeight,
+      pathResult.pathCoords,
+    );
+  }
+
+  if (!routedWeight) {
+    return { duration: "--", distance: "--", type: "walking" };
+  }
+
+  const distanceMeters = Math.max(
+    1,
+    Math.round(routedWeight * INDOOR_METERS_PER_MAP_UNIT),
+  );
+  const durationSeconds =
+    distanceMeters / INDOOR_WALKING_SPEED_METERS_PER_SECOND;
+  const durationMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
+
+  return {
+    duration: `${durationMinutes} min`,
+    distance: `${distanceMeters}m`,
+    type: "walking",
+  };
+}
+
+/** Determine the floor to display based on active journey stage. */
+function computeDisplayedFloor(
   displayedSegmentResult,
   mapJourneyStage,
   routeType,
   effectiveStartRoom,
   effectiveDestRoom,
-  buildingId,
+  buildingIdFallback,
   selectedBuilding,
   selectedFloor,
-}) {
+) {
   if (
     displayedSegmentResult?.segment?.type === "indoor" &&
     displayedSegmentResult.segment.floorId
@@ -404,7 +552,7 @@ function computeDisplayedFloor({
       getBuildingById(
         effectiveStartRoom.buildingId ||
           effectiveDestRoom?.buildingId ||
-          buildingId,
+          buildingIdFallback,
       ) || selectedBuilding;
     const routeFloor = routeBuilding?.floors?.find(
       (floor) => floor.id === effectiveStartRoom.floor,
@@ -415,7 +563,128 @@ function computeDisplayedFloor({
   return selectedFloor;
 }
 
-function findNearestRoom({ rooms, tapX, tapY, threshold = 150 }) {
+/** Resolve which segment result to display on the current map. */
+function computeDisplayedSegmentResult(
+  segmentResults,
+  activeJourneyStage,
+  mapJourneyStage,
+  selectedFloorId,
+  selectedBuildingId,
+) {
+  if (!segmentResults.length) return null;
+
+  if (activeJourneyStage?.type === "indoor") {
+    return segmentResults[activeJourneyStage.segmentIndex] || null;
+  }
+
+  if (mapJourneyStage?.type === "indoor") {
+    return segmentResults[mapJourneyStage.segmentIndex] || null;
+  }
+
+  const selectedFloorSegment = segmentResults.find(
+    ({ segment }) =>
+      segment.type === "indoor" &&
+      segment.floorId === selectedFloorId &&
+      segment.buildingId === selectedBuildingId,
+  );
+  if (selectedFloorSegment) {
+    return selectedFloorSegment;
+  }
+
+  return (
+    segmentResults.find(({ segment }) => segment.type === "indoor") || null
+  );
+}
+
+/** Build the SVG path data from a computed path result. */
+function computeSvgPath(
+  pathResult,
+  displayedFloor,
+  floorDimensions,
+  displayedMapWidth,
+  displayedMapHeight,
+) {
+  if (
+    !pathResult?.ok ||
+    !pathResult.pathCoords ||
+    pathResult.pathCoords.length < 2
+  ) {
+    return null;
+  }
+
+  const coords = pathResult.pathCoords;
+  const displayWidth = displayedFloor?.width || floorDimensions.width;
+  const displayHeight = displayedFloor?.height || floorDimensions.height;
+  const scaleX = displayedMapWidth / displayWidth;
+  const scaleY = displayedMapHeight / displayHeight;
+
+  const scaledPoints = coords.map((c) => ({
+    x: c.x * scaleX,
+    y: c.y * scaleY,
+    type: c.type,
+  }));
+
+  const pathD = smoothPath(scaledPoints);
+
+  return {
+    path: pathD,
+    start: scaledPoints[0],
+    end: scaledPoints[scaledPoints.length - 1],
+    points: scaledPoints,
+  };
+}
+
+/** Compute the step-by-step direction instructions. */
+function computeDirectionSteps(
+  segmentResults,
+  pathResult,
+  effectiveStartRoom,
+  effectiveDestRoom,
+) {
+  if (segmentResults.length > 0) {
+    return buildMultiSegmentSteps(
+      segmentResults,
+      effectiveStartRoom,
+      effectiveDestRoom,
+    );
+  }
+
+  if (!pathResult?.ok || !pathResult.pathCoords) {
+    return [];
+  }
+
+  return buildSameFloorSteps(
+    pathResult.pathCoords,
+    effectiveStartRoom,
+    effectiveDestRoom,
+  );
+}
+
+// ── Handler / effect helpers (extracted to reduce cognitive complexity) ──
+
+/** Process a text change in the start or destination search field. */
+function processFieldChange(text, field, state, setters) {
+  if (field === "start" && state.startRoom) {
+    setters.setStartRoom(null);
+    setters.setTransitionPref(null);
+  }
+
+  if (field === "dest" && state.destRoom) {
+    setters.setDestRoom(null);
+    setters.setTransitionPref(null);
+  }
+
+  setters.setActiveField(field);
+  setters.setSearchQuery(text);
+  if (field === "start") {
+    setters.setStartText(text);
+  } else {
+    setters.setDestText(text);
+  }
+}
+
+/** Find the nearest room to a tap point within a distance threshold. */
+function findNearestRoom(rooms, tapX, tapY, threshold) {
   let nearestRoom = null;
   let nearestDistance = Infinity;
 
@@ -431,22 +700,136 @@ function findNearestRoom({ rooms, tapX, tapY, threshold = 150 }) {
     }
   });
 
-  if (!nearestRoom || !(nearestDistance < threshold)) return null;
-  return nearestRoom;
+  if (nearestRoom && nearestDistance < threshold) {
+    return nearestRoom;
+  }
+  return null;
 }
 
-function speakJourneyStage({
-  stage,
+/** Apply the selected room to either the start or destination field. */
+function applyRoomSelection(field, room, floorLabel, setters) {
+  const label = room.label + ", Floor " + floorLabel;
+  if (field === "start") {
+    setters.setStartRoom(room);
+    setters.setStartText(label);
+  } else {
+    setters.setDestRoom(room);
+    setters.setDestText(label);
+  }
+  setters.setSearchQuery("");
+  setters.setActiveField(null);
+  setters.setSelectionMode(null);
+}
+
+/** Process a map tap to select a room for start or destination. */
+function processMapPress(
+  event,
+  selectionMode,
+  floorDimensions,
+  displayedMapWidth,
+  displayedMapHeight,
+  currentFloorRooms,
+  selectedFloor,
+  selectedBuilding,
+  setters,
+) {
+  if (!selectionMode) return;
+
+  const { locationX, locationY } = event.nativeEvent;
+  const scaleX = floorDimensions.width / displayedMapWidth;
+  const scaleY = floorDimensions.height / displayedMapHeight;
+  const tapX = locationX * scaleX;
+  const tapY = locationY * scaleY;
+
+  const nearestRoom = findNearestRoom(currentFloorRooms, tapX, tapY, 150);
+  if (!nearestRoom) return;
+
+  const floorLabel =
+    selectedFloor?.label || nearestRoom.floor?.split("-")[1];
+  const roomWithBuilding = {
+    ...nearestRoom,
+    buildingName: selectedBuilding.name,
+    buildingId: selectedBuilding.id,
+  };
+
+  applyRoomSelection(selectionMode, roomWithBuilding, floorLabel, setters);
+}
+
+/** Synchronise the active journey-stage ID with the current journey. */
+function syncJourneyStageId(
+  journeyStages,
+  activeJourneyStageId,
+  defaultJourneyStage,
+  setActiveJourneyStageId,
+) {
+  if (!journeyStages.length) {
+    if (activeJourneyStageId !== null) {
+      setActiveJourneyStageId(null);
+    }
+    return;
+  }
+
+  const currentStageStillExists = journeyStages.some(
+    (stage) => stage.id === activeJourneyStageId,
+  );
+  if (!currentStageStillExists && defaultJourneyStage) {
+    setActiveJourneyStageId(defaultJourneyStage.id);
+  }
+}
+
+/** Keep the map building/floor selectors in sync with the active journey stage. */
+function syncMapToJourneyStage(
+  browsingLocked,
+  mapJourneyStage,
+  selectedCampus,
+  selectedBuildingIdx,
+  selectedFloorIdx,
+  setters,
+) {
+  if (
+    !browsingLocked ||
+    !mapJourneyStage?.mapBuildingId ||
+    !mapJourneyStage?.mapFloorId
+  ) {
+    return;
+  }
+
+  const nextSelection = getSelectionForLocation(
+    mapJourneyStage.mapBuildingId,
+    mapJourneyStage.mapFloorId,
+  );
+
+  if (
+    nextSelection.campusId !== selectedCampus ||
+    nextSelection.buildingIdx !== selectedBuildingIdx ||
+    nextSelection.floorIdx !== selectedFloorIdx
+  ) {
+    setters.setSelectedCampus(nextSelection.campusId);
+    setters.setSelectedBuildingIdx(nextSelection.buildingIdx);
+    setters.setSelectedFloorIdx(nextSelection.floorIdx);
+  }
+}
+
+/** Handle journey-stage selection and trigger spoken instructions. */
+function processJourneyStageSelect(
+  stageId,
+  activeJourneyStageId,
   journeyStages,
   segmentResults,
   startRoom,
   destRoom,
   lastSpokenRef,
-}) {
-  if (!stage) return;
+  setActiveJourneyStageId,
+) {
+  if (stageId === activeJourneyStageId) return;
+
+  const selectedStage = findJourneyStageById(journeyStages, stageId);
+  setActiveJourneyStageId(stageId);
+
+  if (!selectedStage) return;
 
   const spokenSteps = buildSegmentSpokenInstructions({
-    stage,
+    stage: selectedStage,
     journeyStages,
     segmentResults,
     startRoom,
@@ -454,10 +837,66 @@ function speakJourneyStage({
   });
   if (!spokenSteps.length) return;
 
-  if (lastSpokenRef.current === stage.id) return;
+  if (lastSpokenRef.current === stageId) return;
 
   speakSegmentSteps(spokenSteps);
-  lastSpokenRef.current = stage.id;
+  lastSpokenRef.current = stageId;
+}
+
+/** Sync the active journey stage when the user changes the floor selector. */
+function syncFloorToJourneyStage(
+  index,
+  selectedBuilding,
+  browsingLocked,
+  journeyStages,
+  setActiveJourneyStageId,
+) {
+  const nextFloor = selectedBuilding?.floors?.[index];
+  if (!nextFloor || !browsingLocked) return;
+
+  const matchingStage = journeyStages.find(
+    (stage) =>
+      stage.mapBuildingId === selectedBuilding?.id &&
+      stage.mapFloorId === nextFloor.id,
+  );
+
+  if (matchingStage) {
+    setActiveJourneyStageId(matchingStage.id);
+  }
+}
+
+/** Build the current floor's room / node / POI data for map interaction. */
+function computeCurrentFloorData(selectedFloor) {
+  if (!selectedFloor) return { rooms: [], nodes: [], pois: [] };
+
+  const floorId = selectedFloor.id;
+  const rooms = getRoomsForFloor(floorId);
+  const allNodes = getAllNodesForFloor(floorId);
+
+  return {
+    rooms,
+    nodes: allNodes.filter((n) => n.type === "hallway"),
+    pois: allNodes.filter(
+      (n) =>
+        n.type !== "hallway" && n.type !== "classroom" && n.type !== "room",
+    ),
+  };
+}
+
+/** Classify route type and build segments for cross-floor navigation. */
+function computeRouteSegments(
+  routeType,
+  effectiveStartRoom,
+  effectiveDestRoom,
+  resolvedTransitionPref,
+) {
+  if (!routeType) return [];
+  if (routeType === "same-floor" || routeType === "same-room") return [];
+  return buildRouteSegments(
+    effectiveStartRoom,
+    effectiveDestRoom,
+    resolvedTransitionPref,
+  );
 }
 
 export default function IndoorDirectionsScreen({ route, navigation }) {
@@ -577,9 +1016,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   // Multi-segment path results (cross-floor)
   const segmentResults = useMemo(() => {
     if (!routeSegments.length) return [];
-    return routeSegments.map((seg) =>
-      resolveSegmentPath({ seg, accessible: accessibleRoute }),
-    );
+    return routeSegments.map((seg) => resolveSegmentPath(seg, accessibleRoute));
   }, [routeSegments, accessibleRoute]);
 
   const journeyStages = useMemo(
@@ -695,50 +1132,29 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   ]);
 
   // Calculate path - single floor (same-floor) or first indoor segment (cross-floor)
-  const pathResult = useMemo(() => {
-    if (!effectiveStartRoom || !effectiveDestRoom) return null;
-
-    if (routeSegments.length > 0 && segmentResults.length > 0) {
-      if (displayedSegmentResult?.pathResult) {
-        return displayedSegmentResult.pathResult;
-      }
-
-      for (const sr of segmentResults) {
-        if (sr.segment.type === "indoor" && sr.pathResult?.ok) {
-          return sr.pathResult;
-        }
-      }
-
-      return { ok: false, reason: "No indoor path available for this segment" };
-    }
-
-    // Same-floor: build floors data from the selected building
-    const routeBuilding =
-      getBuildingById(
-        effectiveStartRoom.buildingId ||
-          effectiveDestRoom.buildingId ||
-          params.building?.id,
-      ) || selectedBuilding;
-    const floorsData = buildFloorsData(routeBuilding);
-
-    const result = findShortestPath({
-      floorsData,
-      startNodeId: effectiveStartRoom.id,
-      endNodeId: effectiveDestRoom.id,
-      accessible: accessibleRoute,
-    });
-
-    return result;
-  }, [
-    effectiveStartRoom,
-    effectiveDestRoom,
-    params.building?.id,
-    selectedBuilding,
-    accessibleRoute,
-    routeSegments,
-    segmentResults,
-    displayedSegmentResult,
-  ]);
+  const pathResult = useMemo(
+    () =>
+      computePathResult(
+        effectiveStartRoom,
+        effectiveDestRoom,
+        routeSegments,
+        segmentResults,
+        displayedSegmentResult,
+        params.building?.id,
+        selectedBuilding,
+        accessibleRoute,
+      ),
+    [
+      effectiveStartRoom,
+      effectiveDestRoom,
+      params.building?.id,
+      selectedBuilding,
+      accessibleRoute,
+      routeSegments,
+      segmentResults,
+      displayedSegmentResult,
+    ],
+  );
 
   // Generate step-by-step directions from path (supports multi-segment)
   const directionSteps = useMemo(
@@ -759,27 +1175,29 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   );
 
   // Determine the floor image to display for active segment
-  const displayedFloor = useMemo(() => {
-    return computeDisplayedFloor({
+  const displayedFloor = useMemo(
+    () =>
+      computeDisplayedFloor(
+        displayedSegmentResult,
+        mapJourneyStage,
+        routeType,
+        effectiveStartRoom,
+        effectiveDestRoom,
+        params.building?.id,
+        selectedBuilding,
+        selectedFloor,
+      ),
+    [
       displayedSegmentResult,
-      mapJourneyStage,
       routeType,
+      mapJourneyStage,
       effectiveStartRoom,
       effectiveDestRoom,
-      buildingId: params.building?.id,
+      params.building?.id,
       selectedBuilding,
       selectedFloor,
-    });
-  }, [
-    displayedSegmentResult,
-    routeType,
-    mapJourneyStage,
-    effectiveStartRoom,
-    effectiveDestRoom,
-    params.building?.id,
-    selectedBuilding,
-    selectedFloor,
-  ]);
+    ],
+  );
 
   const displayedFloorPois = useMemo(() => {
     if (!displayedFloor?.id) return [];
@@ -876,18 +1294,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   const handleJourneyStageSelect = useCallback(
     (stageId) => {
-      if (stageId === activeJourneyStage?.id) return;
-
-      const selectedStage = findJourneyStageById(journeyStages, stageId);
-      setActiveJourneyStageId(stageId);
-      speakJourneyStage({
-        stage: selectedStage,
+      processJourneyStageSelect(
+        stageId,
+        activeJourneyStage?.id,
         journeyStages,
         segmentResults,
         startRoom,
         destRoom,
-        lastSpokenRef: lastSpokenJourneyStageIdRef,
-      });
+        lastSpokenJourneyStageIdRef,
+        setActiveJourneyStageId,
+      );
     },
     [activeJourneyStage, journeyStages, segmentResults, startRoom, destRoom],
   );
@@ -929,71 +1345,37 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   };
 
   // Handle map tap to select start/end point
-  const mapPressContextRef = useRef(null);
-  useEffect(() => {
-    mapPressContextRef.current = {
+  const handleMapPress = useCallback(
+    (event) => {
+      processMapPress(
+        event,
+        selectionMode,
+        floorDimensions,
+        displayedMapWidth,
+        displayedMapHeight,
+        currentFloorData.rooms,
+        selectedFloor,
+        selectedBuilding,
+        {
+          setStartRoom,
+          setStartText,
+          setDestRoom,
+          setDestText,
+          setSearchQuery,
+          setActiveField,
+          setSelectionMode,
+        },
+      );
+    },
+    [
       selectionMode,
+      selectedBuilding,
+      selectedFloor,
+      currentFloorData,
       floorDimensions,
       displayedMapWidth,
       displayedMapHeight,
-      rooms: currentFloorData.rooms,
-      selectedBuilding,
-      selectedFloor,
-    };
-  }, [
-    selectionMode,
-    floorDimensions,
-    displayedMapWidth,
-    displayedMapHeight,
-    currentFloorData.rooms,
-    selectedBuilding,
-    selectedFloor,
-  ]);
-
-  const handleMapPress = useCallback(
-    (event) => {
-      const ctx = mapPressContextRef.current;
-      if (!ctx?.selectionMode) return;
-
-      const { locationX, locationY } = event.nativeEvent;
-
-      // Scale tap coordinates back to original floor plan coordinates
-      const scaleX = ctx.floorDimensions.width / ctx.displayedMapWidth;
-      const scaleY = ctx.floorDimensions.height / ctx.displayedMapHeight;
-      const tapX = locationX * scaleX;
-      const tapY = locationY * scaleY;
-
-      // Use a larger threshold for selection (150 units)
-      const nearestRoom = findNearestRoom({
-        rooms: ctx.rooms,
-        tapX,
-        tapY,
-        threshold: 150,
-      });
-      if (nearestRoom) {
-        const floorLabel =
-          ctx.selectedFloor?.label || nearestRoom.floor?.split("-")[1];
-        if (ctx.selectionMode === "start") {
-          setStartRoom({
-            ...nearestRoom,
-            buildingName: ctx.selectedBuilding.name,
-            buildingId: ctx.selectedBuilding.id,
-          });
-          setStartText(nearestRoom.label + ", Floor " + floorLabel);
-        } else {
-          setDestRoom({
-            ...nearestRoom,
-            buildingName: ctx.selectedBuilding.name,
-            buildingId: ctx.selectedBuilding.id,
-          });
-          setDestText(nearestRoom.label + ", Floor " + floorLabel);
-        }
-        setSearchQuery("");
-        setActiveField(null);
-        setSelectionMode(null);
-      }
-    },
-    [],
+    ],
   );
 
   // Toggle selection mode
