@@ -120,16 +120,24 @@ export function getFilteredRooms(allRooms, searchQuery, options = {}) {
 export function getSelectedRoomContext(campusBuildings, selectedRoom) {
   if (!selectedRoom) return null;
 
-  const building = campusBuildings.find((candidate) =>
-    (candidate.rooms || []).some((room) => room.id === selectedRoom.id)
-  );
-  if (!building) return null;
+  const campusEntries = Array.isArray(campusBuildings)
+    ? [["", campusBuildings]]
+    : Object.entries(campusBuildings || {});
 
-  const floor = (building.floors || []).find(
-    (candidate) => candidate.id === selectedRoom.floor
-  );
+  for (const [campusId, buildingsForCampus] of campusEntries) {
+    const building = (buildingsForCampus || []).find((candidate) =>
+      (candidate.rooms || []).some((room) => room.id === selectedRoom.id)
+    );
+    if (!building) continue;
 
-  return { building, floor };
+    const floor = (building.floors || []).find(
+      (candidate) => candidate.id === selectedRoom.floor
+    );
+
+    return { campusId, building, floor };
+  }
+
+  return null;
 }
 
 export function getRoomSelectionIndexes(campusBuildings, room) {
