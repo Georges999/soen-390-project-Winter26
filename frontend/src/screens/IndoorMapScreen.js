@@ -4,22 +4,18 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
-  Pressable,
-  Image,
   ScrollView,
+  Pressable,
   Dimensions,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { buildings } from "../data/indoorFloorData";
 import IndoorPoiLegend from "../components/IndoorPoiLegend";
-import IndoorPoiMarkers from "../components/IndoorPoiMarkers";
-import {
-  IndoorBuildingSelector,
-  IndoorCampusToggle,
-  IndoorFloorSelector,
-} from "../components/IndoorSelectors";
+import FloorLabelControls from "../components/IndoorMapScreen/FloorLabelControls";
+import IndoorFloorMapPanel from "../components/IndoorMapScreen/IndoorFloorMapPanel";
+import RoomSearchSection from "../components/IndoorMapScreen/RoomSearchSection";
+import RoomSelectionBar from "../components/IndoorMapScreen/RoomSelectionBar";
 import { getRoomHighlightPoint } from "../data/indoorRoomHighlightData";
 import {
   buildAllRooms,
@@ -54,25 +50,31 @@ function IndoorMapScreen({ navigation }) {
   // Get available buildings for selected campus
   const campusBuildings = useMemo(
     () => buildings[selectedCampus] || [],
-    [selectedCampus]
+    [selectedCampus],
   );
 
   // Current building
-  const currentBuilding = campusBuildings[selectedBuildingIdx] || campusBuildings[0];
+  const currentBuilding =
+    campusBuildings[selectedBuildingIdx] || campusBuildings[0];
 
   // Current floor
-  const currentFloor = currentBuilding?.floors?.[selectedFloorIdx] || currentBuilding?.floors?.[0];
+  const currentFloor =
+    currentBuilding?.floors?.[selectedFloorIdx] || currentBuilding?.floors?.[0];
 
   // All rooms for search
-  const allRooms = useMemo(() => buildAllRooms(campusBuildings), [campusBuildings]);
+  const allRooms = useMemo(
+    () => buildAllRooms(campusBuildings),
+    [campusBuildings],
+  );
 
   // Filtered search results
   const searchResults = useMemo(
-    () => getFilteredRooms(allRooms, searchQuery, {
-      preferredBuildingId: currentBuilding?.id,
-      preferredCampusId: selectedCampus,
-    }),
-    [searchQuery, allRooms, currentBuilding?.id, selectedCampus]
+    () =>
+      getFilteredRooms(allRooms, searchQuery, {
+        preferredBuildingId: currentBuilding?.id,
+        preferredCampusId: selectedCampus,
+      }),
+    [searchQuery, allRooms, currentBuilding?.id, selectedCampus],
   );
 
   const selectedRoomContext = useMemo(() => {
@@ -84,7 +86,7 @@ function IndoorMapScreen({ navigation }) {
       selectedRoomContext?.floor?.id === currentFloor?.id
         ? getRoomHighlightPoint(currentFloor?.id, selectedRoom)
         : null,
-    [currentFloor?.id, selectedRoom, selectedRoomContext]
+    [currentFloor?.id, selectedRoom, selectedRoomContext],
   );
 
   useEffect(() => {
@@ -98,12 +100,7 @@ function IndoorMapScreen({ navigation }) {
     if (hasLeftSelectedRoomBuilding) {
       setSelectedRoom(null);
     }
-  }, [
-    currentBuilding?.id,
-    selectedCampus,
-    selectedRoom,
-    selectedRoomContext,
-  ]);
+  }, [currentBuilding?.id, selectedCampus, selectedRoom, selectedRoomContext]);
 
   const handleCampusToggle = (campus) => {
     setSelectedCampus(campus);
@@ -144,228 +141,70 @@ function IndoorMapScreen({ navigation }) {
     });
   };
 
-  const renderRoomHighlightMarker = () => {
-    if (!selectedRoomHighlight) return null;
-
-    return (
-      <View
-        testID="selected-room-highlight"
-        style={[
-          styles.roomHighlight,
-          {
-            left: `${(selectedRoomHighlight.x / 1000) * 100}%`,
-            top: `${(selectedRoomHighlight.y / 1000) * 100}%`,
-          },
-        ]}
-      />
-    );
-  };
-
-  const renderFloorPlanCanvas = (imageStyle) => (
-    <View style={styles.floorPlanCanvas}>
-      <Image source={currentFloor.image} style={imageStyle} resizeMode="contain" />
-      <IndoorPoiMarkers
-        pois={currentFloor?.pois || []}
-        markerStyle={styles.poiMarker}
-        positionForPoi={(poi) => ({
-          left: `${(poi.x / (currentFloor.width || 1000)) * 100}%`,
-          top: `${(poi.y / (currentFloor.height || 1000)) * 100}%`,
-        })}
-        testIdPrefix="poi-marker"
-        iconColor={MAROON}
-      />
-      {renderRoomHighlightMarker()}
-    </View>
-  );
-
-  const renderFloorPlanContent = () => {
-    if (!currentFloor?.image) {
-      return (
-        <View style={styles.noFloorPlan}>
-          <MaterialIcons name="map" size={48} color="#ccc" />
-          <Text style={styles.noFloorPlanText}>
-            Floor plan not available
-          </Text>
-        </View>
-      );
-    }
-
-    if (inspectMode) {
-      return (
-        <ScrollView
-          horizontal
-          contentContainerStyle={styles.floorPlanScrollContent}
-          showsHorizontalScrollIndicator={false}
-        >
-          <ScrollView
-            contentContainerStyle={styles.floorPlanScrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {renderFloorPlanCanvas([styles.floorPlanImage, styles.floorPlanImageInspect])}
-          </ScrollView>
-        </ScrollView>
-      );
-    }
-
-    return (
-      <View style={styles.floorPlanScrollContent}>
-        {renderFloorPlanCanvas(styles.floorPlanImage)}
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
             <MaterialIcons name="chevron-left" size={28} color={MAROON} />
           </Pressable>
           <Text style={styles.headerTitle}>Indoor Map</Text>
         </View>
 
-        <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-
-        {/* Campus Toggle */}
-        <IndoorCampusToggle
-          selectedCampus={selectedCampus}
-          onSelectCampus={handleCampusToggle}
-          styles={styles}
-        />
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <MaterialIcons name="search" size={20} color="#999" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search room or click on map"
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <Pressable onPress={() => setSearchQuery("")} hitSlop={10}>
-              <MaterialIcons name="close" size={18} color="#999" />
-            </Pressable>
-          )}
-        </View>
-
-        {/* Search Results Dropdown */}
-        {searchQuery.trim().length > 0 && (
-          <View style={styles.searchResultsContainer}>
-            {searchResults.length > 0 ? (
-              <ScrollView
-                nestedScrollEnabled
-                keyboardShouldPersistTaps="handled"
-                style={styles.searchResultsScroll}
-                showsVerticalScrollIndicator
-              >
-                {searchResults.slice(0, 8).map((item) => (
-                  <Pressable
-                    key={item.id}
-                    style={styles.searchResultItem}
-                    onPress={() => handleRoomSelect(item)}
-                  >
-                    <Text
-                      style={styles.searchResultText}
-                      numberOfLines={2}
-                      ellipsizeMode="tail"
-                    >
-                      {item.label} · {item.buildingName}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            ) : (
-              <View style={styles.noResultsContainer}>
-                <MaterialIcons name="search-off" size={24} color="#999" />
-                <Text style={styles.noResultsText}>
-                  No rooms or buildings found. Please try again.
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Building Selector (if multiple buildings) */}
-        {campusBuildings.length > 1 && (
-          <IndoorBuildingSelector
-            buildings={campusBuildings}
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Room Search Section - Campus Toggle, Search Bar, Results, Building/Floor Selectors */}
+          <RoomSearchSection
+            selectedCampus={selectedCampus}
             selectedBuildingIdx={selectedBuildingIdx}
-            onSelectBuilding={handleBuildingSelect}
-            styles={styles}
-          />
-        )}
-
-        {/* Floor Label */}
-        {currentFloor && (
-          <View style={styles.floorLabelContainer}>
-            <View style={styles.floorLabelBadge}>
-              <Text style={styles.floorLabelText}>
-                Floor {currentFloor.label}
-              </Text>
-            </View>
-            <Pressable
-              style={[
-                styles.inspectToggle,
-                inspectMode && styles.inspectToggleActive,
-              ]}
-              onPress={() => setInspectMode((prev) => !prev)}
-            >
-              <MaterialIcons
-                name={inspectMode ? "zoom-out-map" : "zoom-in"}
-                size={14}
-                color={inspectMode ? "#fff" : MAROON}
-              />
-              <Text
-                style={[
-                  styles.inspectToggleText,
-                  inspectMode && styles.inspectToggleTextActive,
-                ]}
-              >
-                {inspectMode ? "Inspecting map" : "Inspect map"}
-              </Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* Floor Plan Image */}
-        <View style={styles.floorPlanContainer}>
-          {renderFloorPlanContent()}
-        </View>
-
-        {/* POI Legend */}
-        <IndoorPoiLegend styles={styles} iconColor={MAROON} />
-
-        {/* Selected Room + Get Directions */}
-        {selectedRoom && (
-          <View style={styles.selectedRoomBar}>
-            <View style={styles.selectedRoomInfo}>
-              <Text style={styles.selectedRoomCheck}>✓</Text>
-              <View>
-                <Text style={styles.selectedRoomText}>Room Selected</Text>
-                <Text style={styles.selectedRoomDetail}>
-                  {selectedRoom.label || "Unknown"} · Floor {selectedRoomContext?.floor?.label || "?"} · {selectedRoomContext?.building?.name || "Unknown"}
-                </Text>
-              </View>
-            </View>
-            <Pressable style={styles.getDirectionsButton} onPress={handleGetDirections}>
-              <Text style={styles.getDirectionsText}>Get Directions</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* Floor Selector */}
-        {currentBuilding?.floors && (
-          <IndoorFloorSelector
-            floors={currentBuilding.floors}
             selectedFloorIdx={selectedFloorIdx}
-            onSelectFloor={handleFloorSelect}
+            searchQuery={searchQuery}
+            searchResults={searchResults}
+            campusBuildings={campusBuildings}
+            currentBuilding={currentBuilding}
+            showResults={searchQuery.trim().length > 0}
+            onCampusChange={handleCampusToggle}
+            onBuildingSelect={handleBuildingSelect}
+            onFloorSelect={handleFloorSelect}
+            onSearchChange={setSearchQuery}
+            onSearchResultSelect={handleRoomSelect}
             styles={styles}
           />
-        )}
 
+          {/* Floor Label and Inspect Toggle */}
+          <FloorLabelControls
+            currentFloor={currentFloor}
+            inspectMode={inspectMode}
+            onToggleInspect={() => setInspectMode((prev) => !prev)}
+            styles={styles}
+          />
+
+          {/* Floor Plan Display with Room Highlights */}
+          <IndoorFloorMapPanel
+            currentFloor={currentFloor}
+            inspectMode={inspectMode}
+            selectedRoomHighlight={selectedRoomHighlight}
+            styles={styles}
+            onInspectModeChange={setInspectMode}
+          />
+
+          {/* POI Legend */}
+          <IndoorPoiLegend styles={styles} iconColor={MAROON} />
+
+          {/* Room Selection Bar with Get Directions Button */}
+          <RoomSelectionBar
+            selectedRoom={selectedRoom}
+            selectedRoomContext={selectedRoomContext}
+            onGetDirections={handleGetDirections}
+            styles={styles}
+          />
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -603,6 +442,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#2563eb",
     backgroundColor: "rgba(37, 99, 235, 0.22)",
+  },
+  floorPlanNotAvailableText: {
+    fontSize: 16,
+    color: "#999",
+    fontWeight: "500",
   },
   noFloorPlan: {
     flex: 1,
