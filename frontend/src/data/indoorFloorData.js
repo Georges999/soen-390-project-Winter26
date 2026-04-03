@@ -26,7 +26,7 @@ const floorImages = {
   "Hall-9": require("../../assets/floor-maps/Hall-9-F.png"),
   "MB-1": require("../../assets/floor-maps/MB-1.png"),
   "MB-S2": require("../../assets/floor-maps/MB-S2.png"),
-  "CC-1": null, // Floor plan image not yet available
+  "CC-1": require("../../assets/floor-maps/CC-1-F.png"),
   "VE-2": require("../../assets/floor-maps/VE-2-F.png"),
   "VL-1": require("../../assets/floor-maps/VL-1-F.png"),
   "VL-2": require("../../assets/floor-maps/VL-2-F.png"),

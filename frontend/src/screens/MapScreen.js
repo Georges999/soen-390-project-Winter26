@@ -355,7 +355,7 @@ export default function MapScreen({ route, navigation }) {
   // coords for directions
   const [startCoord, setStartCoord] = useState(null);
   const [destCoord, setDestCoord] = useState(null);
-  const [travelMode, setTravelMode] = useState("walking");
+  const [travelMode, setTravelMode] = useState("driving");
   const [showDirectionsPanel, setShowDirectionsPanel] = useState(false);
   const [followUser, setFollowUser] = useState(false);
   const [navActive, setNavActive] = useState(false);

@@ -10,78 +10,17 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { isAuthenticated } from '../services/googleCalendarAuth';
 import { fetchCalendarEvents } from '../services/googleCalendarService';
+import {
+  getEventLocation,
+  getEventStartValue,
+  getEventSummary,
+  getLegacyClassesForDate,
+  getLiveClassesForDate,
+  getWeekDays,
+  getWeekRange,
+} from '../domain/calendar/calendarDomain';
 
 const MAROON = '#95223D';
-
-function getByDay(recurrenceString) {
-  const match = recurrenceString.match(/BYDAY=([A-Z,]+)/);
-  if (!match) return [];
-  return match[1].split(',');
-}
-
-function getWeekDays(referenceDate) {
-  const day = referenceDate.getDay();
-  const monday = new Date(referenceDate);
-  monday.setDate(referenceDate.getDate() - (day === 0 ? 6 : day - 1));
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
-  });
-}
-
-function getStartOfDay(date) {
-  const normalized = new Date(date);
-  normalized.setHours(0, 0, 0, 0);
-  return normalized;
-}
-
-function getEndOfDay(date) {
-  const normalized = new Date(date);
-  normalized.setHours(23, 59, 59, 999);
-  return normalized;
-}
-
-function getWeekRange(referenceDate) {
-  const weekDays = getWeekDays(referenceDate);
-  return {
-    timeMin: getStartOfDay(weekDays[0]),
-    timeMax: getEndOfDay(weekDays.at(-1)),
-  };
-}
-
-function getLegacyClassesForDate(calendars, selectedDate) {
-  const selectedCalendars = calendars.filter((cal) => cal.selected);
-  const events = selectedCalendars.flatMap((cal) => cal.events || []);
-  const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-  const selectedDayCode = dayMap[selectedDate.getDay()];
-
-  return events
-    .filter((event) => {
-      const recurrence = event.recurrence?.[0] || '';
-      const byDays = getByDay(recurrence);
-      return byDays.includes(selectedDayCode);
-    })
-    .sort(
-      (a, b) =>
-        new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime()
-    );
-}
-
-function getLiveClassesForDate(events, selectedDate) {
-  const selectedDay = getStartOfDay(selectedDate).getTime();
-
-  return events
-    .filter((event) => {
-      const start = event.startTime || event.start?.dateTime || event.start?.date;
-      return getStartOfDay(new Date(start)).getTime() === selectedDay;
-    })
-    .sort(
-      (a, b) =>
-        new Date(a.startTime || a.start?.dateTime).getTime() -
-        new Date(b.startTime || b.start?.dateTime).getTime()
-    );
-}
 
 export default function CalendarScreen({ navigation, route }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -172,10 +111,10 @@ export default function CalendarScreen({ navigation, route }) {
   }
 
   function handleGetDirections(event) {
-    const nextClassSummary = event.summary || event.title;
+    const nextClassSummary = getEventSummary(event);
 
     navigation.navigate('Map', {
-      nextClassLocation: event.location,
+      nextClassLocation: getEventLocation(event),
       nextClassSummary,
     });
   }
@@ -199,25 +138,28 @@ export default function CalendarScreen({ navigation, route }) {
     );
   } else {
     listContent = todaysClasses.map((event, index) => {
+      const eventStartValue = getEventStartValue(event);
+      const eventSummary = getEventSummary(event);
+      const eventLocation = getEventLocation(event);
       const stepKey =
         event.id ||
-        `${event.startTime || event.start?.dateTime || event.start?.date}-${event.summary || event.title || 'class'}-${index}`;
+        `${eventStartValue}-${eventSummary || 'class'}-${index}`;
 
       return (
         <View key={stepKey} style={styles.classCard}>
           <View style={styles.classTime}>
             <Text style={styles.timeText}>
-              {formatTime(event.startTime || event.start?.dateTime)}
+              {formatTime(eventStartValue)}
             </Text>
           </View>
           <View style={styles.classInfo}>
             <View style={styles.classBar} />
             <View style={styles.classContent}>
-              <Text style={styles.className}>{event.summary || event.title}</Text>
+              <Text style={styles.className}>{eventSummary}</Text>
               <Text style={styles.classDetail}>No additional info</Text>
               <View style={styles.locationRow}>
                 <MaterialIcons name="location-on" size={16} color="#666" />
-                <Text style={styles.locationText}>{event.location}</Text>
+                <Text style={styles.locationText}>{eventLocation}</Text>
               </View>
             </View>
             <Pressable
