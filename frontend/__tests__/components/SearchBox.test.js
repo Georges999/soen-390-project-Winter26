@@ -181,4 +181,16 @@ describe('SearchBox', () => {
     expect(getByText('H820 · Hall Building')).toBeTruthy();
     expect(getByText('H825 · Hall Building')).toBeTruthy();
   });
+
+  it('should show the updated empty-state message only when both building and room results are empty', () => {
+    const { getByText } = render(
+      <SearchBox
+        {...baseProps}
+        activeField="start"
+        startText="Unknown Building"
+      />,
+    );
+
+    expect(getByText('No buildings found. Please try again.')).toBeTruthy();
+  });
 });

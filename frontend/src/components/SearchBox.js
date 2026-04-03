@@ -131,7 +131,7 @@ function SearchBox({
         <View style={styles.noResultsContainer}>
           <MaterialIcons name="search-off" size={24} color="#999" />
           <Text style={styles.noResultsText}>
-            No buildings found. You can also try a room number.
+            No buildings found. Please try again.
           </Text>
         </View>
       )}
