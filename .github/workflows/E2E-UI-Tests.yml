@@ -54,11 +54,62 @@ jobs:
         working-directory: frontend
         run: npx expo prebuild --platform android --no-install
 
+      - name: Patch Gradle repository resolution
+        working-directory: frontend/android
+        run: |
+          SETTINGS_FILE="settings.gradle"
+
+          # Ensure plugin repositories include Google + Maven Central for RN/Expo settings plugins.
+          if ! grep -q "COPILOT_PLUGIN_REPOS_PATCH" "$SETTINGS_FILE"; then
+            awk '
+              BEGIN { inserted = 0 }
+              {
+                print
+                if (!inserted && $0 ~ /^pluginManagement[[:space:]]*\{/) {
+                  print "  // COPILOT_PLUGIN_REPOS_PATCH"
+                  print "  repositories {"
+                  print "    gradlePluginPortal()"
+                  print "    google()"
+                  print "    mavenCentral()"
+                  print "  }"
+                  inserted = 1
+                }
+              }
+            ' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
+          fi
+
+          # Avoid FAIL_ON_PROJECT_REPOS conflicts with React Native / Expo tooling.
+          if grep -q "RepositoriesMode.FAIL_ON_PROJECT_REPOS" "$SETTINGS_FILE"; then
+            sed -i 's/RepositoriesMode.FAIL_ON_PROJECT_REPOS/RepositoriesMode.PREFER_SETTINGS/g' "$SETTINGS_FILE"
+          fi
+
+          if ! grep -q "COPILOT_DEP_REPOS_PATCH" "$SETTINGS_FILE"; then
+            cat <<'EOF' >> "$SETTINGS_FILE"
+
+// COPILOT_DEP_REPOS_PATCH
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+EOF
+          fi
+
+          echo "Patched $SETTINGS_FILE"
+          sed -n '1,220p' "$SETTINGS_FILE"
+
       - name: Enable KVM (Acceleration)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+
+      - name: Build Android APK (Release)
+        working-directory: frontend/android
+        run: ./gradlew assembleRelease --no-daemon
+
       - name: Build, Patch, and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -69,8 +120,6 @@ jobs:
           disable-animations: true
           script: |
             curl -fsSL "https://get.maestro.mobile.dev" | bash
-            # TODO: need to refactor this code once PRs for sprint 4 are done
-            bash "$GITHUB_WORKSPACE/frontend/android/gradlew" --project-dir "$GITHUB_WORKSPACE/frontend/android" assembleRelease
             ls "$FLOW_DIR"/AT*.yaml >/dev/null 2>&1 || { echo "::error::No Maestro flow files found at $FLOW_DIR matching AT*.yaml"; exit 1; }
             sed -i "s/appId: host.exp.Exponent/appId: com.concordia.campusguide/g" "$FLOW_DIR"/AT*.yaml
             sed -i '/- extendedWaitUntil:/{N;N;/\n[[:space:]]*visible: "Campus Guide"\n[[:space:]]*timeout: [0-9]\+/d;}' "$FLOW_DIR"/AT*.yaml
