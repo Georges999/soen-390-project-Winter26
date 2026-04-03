@@ -155,6 +155,58 @@ export const handleRecenterPressLogic = ({ routeCoords, userCoord, mapRef }) => 
   }
 };
 
+const setLooseDestinationAndOpenPanel = ({
+  location,
+  setDestText,
+  setDestCoord,
+  setDestCampusId,
+  openDirectionsPanel,
+}) => {
+  setDestText(location);
+  setDestCoord(null);
+  setDestCampusId(null);
+  openDirectionsPanel();
+};
+
+const applyNextClassPrefill = ({
+  location,
+  allBuildings,
+  setDestinationAndOpenPanel,
+  setDestText,
+  setDestCoord,
+  setDestCampusId,
+  openDirectionsPanel,
+}) => {
+  const code = String(location).trim().split(/\s+/)[0];
+  if (!code) {
+    setLooseDestinationAndOpenPanel({
+      location,
+      setDestText,
+      setDestCoord,
+      setDestCampusId,
+      openDirectionsPanel,
+    });
+    return;
+  }
+
+  const building = allBuildings.find(
+    (b) => (b.label || "").toUpperCase() === code.toUpperCase(),
+  );
+  if (building) {
+    const center = getPolygonCenter(building.coordinates);
+    setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
+    return;
+  }
+
+  setLooseDestinationAndOpenPanel({
+    location,
+    setDestText,
+    setDestCoord,
+    setDestCampusId,
+    openDirectionsPanel,
+  });
+};
+
 const zoomMapToCoordinate = (mapRef, coord) => {
   mapRef.current?.animateToRegion(
     { ...coord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
@@ -452,7 +504,9 @@ export default function MapScreen({ route, navigation }) {
 
   const selectRoomForField = (room, field) => {
     const buildingAliases = ROOM_BUILDING_SEARCH_ALIASES[room?.buildingId] ?? [];
-    const normalizedAliases = buildingAliases.map((alias) => normalizeText(alias));
+    const normalizedAliases = new Set(
+      buildingAliases.map((alias) => normalizeText(alias)),
+    );
     const matchedBuilding =
       allBuildings.find(
         (building) =>
@@ -462,12 +516,12 @@ export default function MapScreen({ route, navigation }) {
       allBuildings.find(
         (building) =>
           building.__campusId === room?.campusId &&
-          normalizedAliases.includes(normalizeText(building.label || "")),
+          normalizedAliases.has(normalizeText(building.label || "")),
       ) ??
       allBuildings.find(
         (building) =>
           building.__campusId === room?.campusId &&
-          normalizedAliases.includes(normalizeText(building.name || "")),
+          normalizedAliases.has(normalizeText(building.name || "")),
       ) ??
       allBuildings.find((building) => building.id === room?.buildingId);
     const center = matchedBuilding
@@ -584,26 +638,15 @@ export default function MapScreen({ route, navigation }) {
     setStartIndoorRoom(null);
     setDestIndoorRoom(null);
 
-    const code = String(location).trim().split(/\s+/)[0];
-    if (code) {
-      const building = allBuildings.find(
-        (b) => (b.label || "").toUpperCase() === code.toUpperCase(),
-      );
-      if (building) {
-        const center = getPolygonCenter(building.coordinates);
-        setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
-      } else {
-        setDestText(location);
-        setDestCoord(null);
-        setDestCampusId(null);
-        openDirectionsPanel();
-      }
-    } else {
-      setDestText(location);
-      setDestCoord(null);
-      setDestCampusId(null);
-      openDirectionsPanel();
-    }
+    applyNextClassPrefill({
+      location,
+      allBuildings,
+      setDestinationAndOpenPanel,
+      setDestText,
+      setDestCoord,
+      setDestCampusId,
+      openDirectionsPanel,
+    });
   }, [
     route?.params?.nextClassLocation,
     route?.params?.nextClassSummary,
