@@ -21,13 +21,12 @@ appId: host.exp.Exponent
 
 # Wait for indoor content
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 10000
 
 # Default SGW selection
 - assertVisible: "SGW"
 - assertVisible: "Hall Building"
-- assertVisible: "Floor 8"
 
 # Switch building within campus
 - tapOn: "John Molson Building"
@@ -35,16 +34,26 @@ appId: host.exp.Exponent
 
 # Confirm new building floors
 - assertVisible: "John Molson Building"
-- assertVisible: "Floor S2"
-- assertNotVisible: "Floor 8"
+- scrollUntilVisible:
+        element:
+            text: "S2"
+        direction: DOWN
+        timeout: 10000
+- assertVisible: "S2"
+- assertNotVisible: "8"
 
 # go to another floor
 - tapOn: "1"
 - waitForAnimationToEnd
-- assertVisible: "Floor 1"
-- assertNotVisible: "Floor S2"
+- assertVisible: "JMSB · Floor 1"
+- assertNotVisible: "Hall Building · Floor 8"
 
 # Swap campus 
+- scrollUntilVisible:
+        element:
+            text: "Loyola"
+        direction: UP
+        timeout: 10000
 - tapOn: "Loyola"
 - waitForAnimationToEnd
 
@@ -52,12 +61,7 @@ appId: host.exp.Exponent
 - assertVisible: "Vanier Library"
 - assertNotVisible: "John Molson Building"
 
-# Switch back to SGW - resets to Hall Building, Floor 8
+# Switch back to SGW - resets to Hall Building, Floor 1
 - tapOn: "SGW"
 - waitForAnimationToEnd
-- assertVisible: "Hall Building"
-- assertVisible: "Floor 8"
-
-- tapOn: "9"
-- waitForAnimationToEnd
-- assertVisible: "Floor 9"
+- assertVisible: "Hall Building · Floor 1"

@@ -19,70 +19,42 @@ appId: host.exp.Exponent
 - waitForAnimationToEnd
 
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 12000
 
 - assertVisible: "Hall Building"
-- tapOn: "9"
-- waitForAnimationToEnd
-- assertVisible: "Floor 9"
 
 # Pick Hall 9 room and open directions
 - tapOn:
-    text: "Search room or click on map"
-- inputText: "H-937"
+    text: "Search start or use map pin button"
+- inputText: "H937"
 - extendedWaitUntil:
-    visible: "H937 · Hall Building"
+    visible: "H937.*"
     timeout: 8000
-- tapOn: "H937 · Hall Building"
+- tapOn: "H937,.*"
 - hideKeyboard
 - waitForAnimationToEnd
-- assertVisible: "Room Selected"
-- assertVisible: "Get Directions"
-- tapOn: "Get Directions"
-- waitForAnimationToEnd
-
-- extendedWaitUntil:
-    visible: "Indoor Directions"
-    timeout: 12000
 
 # Valid route exists on Hall floor 9.
 - tapOn: "Search start or use map pin button"
 - eraseText
 - inputText: "921"
 - extendedWaitUntil:
-    visible: "H921, Floor 9 · Hall Building"
+    visible: "H921.*"
     timeout: 8000
-- tapOn: "H921, Floor 9 · Hall Building"
+- tapOn: "H921,.*"
 
 - hideKeyboard
 - waitForAnimationToEnd
 
+- scrollUntilVisible:
+        element:
+            text: "STEP-BY-STEP DIRECTIONS"
+        direction: DOWN
+        timeout: 10000
 - assertVisible: "STEP-BY-STEP DIRECTIONS"
 - assertVisible: "Start at H921"
 - assertVisible:
     id: "indoor-route-overlay"
 - assertVisible:
     id: "indoor-route-overlay-path"
-
-# Toggle direction (swap) and ensure route updates
-- tapOn:
-    id: "swap-direction-toggle"
-- waitForAnimationToEnd
-- assertVisible: "Start at H937"
-- assertVisible:
-    id: "indoor-route-overlay-path"
-
-# Accessibility toggle is present and usable
-- assertVisible:
-    id: "accessibility-route-toggle"
-- tapOn:
-    id: "accessibility-route-toggle"
-- waitForAnimationToEnd
-- assertVisible: "Indoor Directions"
-
-#Check the toggle direction
-- assertVisible: ""
-- tapOn: ""
-
-

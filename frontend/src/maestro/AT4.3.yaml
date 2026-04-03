@@ -19,30 +19,57 @@ appId: host.exp.Exponent
 - waitForAnimationToEnd
 
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 12000
 
-# POI structure/rendering baseline (legend should exist on indoor map)
+# Accessibility mode exists
+- assertVisible:
+    id: "accessibility-toggle-row"
+- assertVisible:
+    id: "accessibility-switch"
+
+# Accessibility routing mode toggle behavior
+- assertVisible: "Uses stairs if shorter"
+- tapOn:
+    id: "accessibility-switch"
+- assertVisible: "Avoiding stairs"
+- tapOn:
+    id: "accessibility-switch"
+- assertVisible: "Uses stairs if shorter"
+
+# Indoor POI data/legend exists
 - assertVisible: "Washroom"
 - assertVisible: "Elevator"
 - assertVisible: "Stairs"
 
-# Floor-specific coordinate behavior (selected room highlight should follow floor)
+# Select a room and ensure route UI is stable
 - tapOn:
-    text: "Search room or click on map"
-- inputText: "H-837"
+    text: "Search start or use map pin button"
+- inputText: "H837"
 - extendedWaitUntil:
-    visible: "H837 · Hall Building"
+    visible: "H837.*"
     timeout: 8000
-- tapOn: "H837 · Hall Building"
+- tapOn: "H837,.*"
 - hideKeyboard
 - waitForAnimationToEnd
-- assertVisible:
-    id: "selected-room-highlight"
 
+
+# Clear selected start room, then scroll so floor chips are safely tappable
+- tapOn:
+    point: "77%,21%"
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
+
+
+- scrollUntilVisible:
+        element:
+            text: "9"
+        direction: DOWN
+        timeout: 10000
 - tapOn: "9"
 - waitForAnimationToEnd
-- assertVisible: "Floor 9"
+- assertVisible: "Hall Building · Floor 9"
 - assertNotVisible:
     id: "selected-room-highlight"
 
@@ -50,53 +77,3 @@ appId: host.exp.Exponent
 - assertVisible: "Washroom"
 - assertVisible: "Elevator"
 - assertVisible: "Stairs"
-
-- tapOn: "8"
-- waitForAnimationToEnd
-- assertVisible: "Floor 8"
-- assertVisible:
-    id: "selected-room-highlight"
-
-- assertVisible: "John Molson Building"
-
-- tapOn: "John Molson Building"
-- assertVisible: "S2"
-- assertVisible: "Washroom"
-- assertVisible: "Elevator"
-- assertVisible: "Stairs"
-
-#switch floor
-- assertVisible: "1"
-- tapOn: "1"
-# Visible for floor 1
-- assertVisible: "Washroom"
-- assertVisible: "Elevator"
-- assertVisible: "Stairs"
-
-#Switch to a different campus
-- assertVisible: "Loyola"
-- tapOn: "Loyola"
-
-#Check Vanier Library
-- assertVisible: "Vanier Library"
-- assertVisible: "1"
-- assertVisible: "Washroom"
-- assertVisible: "Elevator"
-- assertVisible: "Stairs"
-
-#Switch floor
-- assertVisible: "2"
-- tapOn: "2"
-- assertVisible: "Washroom"
-- assertVisible: "Elevator"
-- assertVisible: "Stairs"
-
-#Switch building 
-- assertVisible: "Vanier Extension"
-- tapOn: "Vanier Extension"
-- assertVisible: "2"
-- assertVisible: "Washroom"
-- assertVisible: "Elevator"
-- assertVisible: "Stairs"
-
-

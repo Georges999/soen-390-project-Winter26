@@ -1218,6 +1218,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               strokeDasharray="8,4"
             />
             <Circle
+              testID={
+                startRoom?.floor === displayedFloor?.id
+                  ? "selected-room-highlight"
+                  : undefined
+              }
               cx={svgPath.start.x}
               cy={svgPath.start.y}
               r={12}
@@ -1226,6 +1231,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               strokeWidth={3}
             />
             <Circle
+              testID={
+                destRoom?.floor === displayedFloor?.id
+                  ? "selected-room-highlight"
+                  : undefined
+              }
               cx={svgPath.end.x}
               cy={svgPath.end.y}
               r={12}
@@ -1236,26 +1246,38 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           </>
         )}
 
-        {!svgPath && effectiveStartRoom?.x && effectiveStartRoom?.y && effectiveStartRoom?.floor === selectedFloor?.id && (
-        <Circle
-          cx={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).x}
-          cy={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).y}
-          r={12}
-          fill={GREEN}
-          stroke="#fff"
-          strokeWidth={3}
-        />
-      )}
-      {!svgPath && effectiveDestRoom?.x && effectiveDestRoom?.y && effectiveDestRoom?.floor === selectedFloor?.id && (
-        <Circle
-          cx={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).x}
-          cy={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).y}
-          r={12}
-          fill={MAROON}
-          stroke="#fff"
-          strokeWidth={3}
-        />
-      )}
+        {!svgPath && effectiveStartRoom?.x && effectiveStartRoom?.y && (
+          <Circle
+            testID={
+              effectiveStartRoom?.floor === displayedFloor?.id
+                ? "selected-room-highlight"
+                : undefined
+            }
+            cx={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).x}
+            cy={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).y}
+            r={12}
+            fill={GREEN}
+            stroke="#fff"
+            strokeWidth={3}
+            opacity={effectiveStartRoom?.floor === displayedFloor?.id ? 1 : 0}
+          />
+        )}
+        {!svgPath && effectiveDestRoom?.x && effectiveDestRoom?.y && (
+          <Circle
+            testID={
+              effectiveDestRoom?.floor === displayedFloor?.id
+                ? "selected-room-highlight"
+                : undefined
+            }
+            cx={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).x}
+            cy={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).y}
+            r={12}
+            fill={MAROON}
+            stroke="#fff"
+            strokeWidth={3}
+            opacity={effectiveDestRoom?.floor === displayedFloor?.id ? 1 : 0}
+          />
+        )}
       </Svg>
     </View>
   );

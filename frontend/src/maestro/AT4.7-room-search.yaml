@@ -19,39 +19,31 @@ appId: host.exp.Exponent
 
 # Wait for Indoor Map screen
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 10000
 
 # Tap the indoor room search input
 - tapOn:
-    text: "Search room or click on map"
+    text: "Search start or use map pin button"
 - waitForAnimationToEnd
 
 # Type a partial room code to trigger suggestions
-- inputText: "H83"
+- inputText: "H20"
 
 # Wait for suggestions to appear
 - extendedWaitUntil:
-    visible: "H837.*Hall Building"
+    visible: "H209.*"
     timeout: 10000
 
 - tapOn:
-    text: "H837.*Hall Building"
+    text: "H209.*"
 - waitForAnimationToEnd
-
-# Verify the room was selected in the UI
-- assertVisible: "Room Selected"
-- assertVisible: "Get Directions"
-
-# Clear the search input (empty input test)
-- tapOn:
-    text: "Search room or click on map"
 - eraseText
-- waitForAnimationToEnd
+
 
 # Verify empty input does not break the UI
 - assertVisible:
-    text: "Search room or click on map"
+    text: "Search start or use map pin button"
 
 # Enter an invalid room code
 - inputText: "ZZ9999"
@@ -59,4 +51,4 @@ appId: host.exp.Exponent
 
 # Verify the app remains stable and usable after invalid input
 - assertVisible:
-    text: "Search room or click on map"
+    text: "Search start or use map pin button"
