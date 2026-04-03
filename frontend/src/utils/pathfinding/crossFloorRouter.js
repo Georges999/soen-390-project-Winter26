@@ -533,15 +533,14 @@ function buildCrossBuildingSegments(startRoom, destRoom, transitionPref) {
   const startCoords = getBuildingCoords(startBuildingId);
   const destCoords = getBuildingCoords(destBuildingId);
 
-  segments.push({
-    type: "outdoor",
-    fromBuildingId: startBuildingId,
-    toBuildingId: destBuildingId,
-    fromCoords: startCoords,
-    toCoords: destCoords,
-  });
-
   segments.push(
+    {
+      type: "outdoor",
+      fromBuildingId: startBuildingId,
+      toBuildingId: destBuildingId,
+      fromCoords: startCoords,
+      toCoords: destCoords,
+    },
     ...buildEntranceSegments(destRoom, destBuildingId, destEntryFloor, transitionPref),
   );
 
