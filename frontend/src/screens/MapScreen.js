@@ -1140,7 +1140,6 @@ export default function MapScreen({ route, navigation }) {
       <View style={{ flex: 1 }}>
         {/* red input box */}
         <SearchBox
-          styles={styles}
           startText={startText}
           destText={destText}
           activeField={activeField}

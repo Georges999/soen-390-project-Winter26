@@ -1,17 +1,8 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
 import SearchBox from '../../src/components/SearchBox';
 
-const mockStyles = StyleSheet.create({
-  redBox: {}, inputRow: {}, input: {}, inputPlaceholder: {},
-  searchIcon: {}, clearBtn: {}, clearBtnText: {}, swapBtn: {},
-  searchResults: {}, searchResultsScroll: {}, searchResultRow: {}, searchResultText: {},
-  searchSectionLabel: {},
-});
-
 const baseProps = {
-  styles: mockStyles,
   startText: '',
   destText: '',
   activeField: null,
