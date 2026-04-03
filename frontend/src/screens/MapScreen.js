@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import PropTypes from "prop-types";
-import { View, Text, Pressable, Keyboard } from "react-native";
+import { View, Text, Keyboard } from "react-native";
 import MapView from "react-native-maps";
 import * as Speech from "expo-speech";
 
