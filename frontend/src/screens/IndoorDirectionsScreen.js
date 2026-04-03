@@ -651,18 +651,43 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Route stats - calculate actual distance
   const routeStats = useMemo(() => {
+    const getPathGeometryWeight = (coords = []) => {
+      if (!Array.isArray(coords) || coords.length < 2) return 0;
+
+      let total = 0;
+      for (let i = 1; i < coords.length; i += 1) {
+        const dx = (coords[i]?.x || 0) - (coords[i - 1]?.x || 0);
+        const dy = (coords[i]?.y || 0) - (coords[i - 1]?.y || 0);
+        total += Math.hypot(dx, dy);
+      }
+      return total;
+    };
+
+    const getSafeIndoorWeight = (weighted = 0, coords = []) => {
+      const geometricWeight = getPathGeometryWeight(coords);
+      if (!geometricWeight) return weighted || 0;
+      if (!weighted) return geometricWeight;
+
+      // Large ratios indicate synthetic graph penalties (e.g., room-transit penalties).
+      return weighted / geometricWeight > 10 ? geometricWeight : weighted;
+    };
+
     const routedWeight =
       segmentResults.length > 0
         ? segmentResults.reduce(
             (total, segmentResult) =>
               segmentResult.segment.type === "indoor" &&
               segmentResult.pathResult?.ok
-                ? total + segmentResult.pathResult.totalWeight
+                ? total +
+                  getSafeIndoorWeight(
+                    segmentResult.pathResult.totalWeight,
+                    segmentResult.pathResult.pathCoords,
+                  )
                 : total,
             0,
           )
         : pathResult?.ok
-          ? pathResult.totalWeight
+          ? getSafeIndoorWeight(pathResult.totalWeight, pathResult.pathCoords)
           : 0;
 
     if (!routedWeight) {
