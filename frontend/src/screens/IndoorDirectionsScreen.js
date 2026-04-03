@@ -775,23 +775,23 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       return weighted / geometricWeight > 10 ? geometricWeight : weighted;
     };
 
-    const routedWeight =
-      segmentResults.length > 0
-        ? segmentResults.reduce(
-            (total, segmentResult) =>
-              segmentResult.segment.type === "indoor" &&
-              segmentResult.pathResult?.ok
-                ? total +
-                  getSafeIndoorWeight(
-                    segmentResult.pathResult.totalWeight,
-                    segmentResult.pathResult.pathCoords,
-                  )
-                : total,
-            0,
-          )
-        : pathResult?.ok
-          ? getSafeIndoorWeight(pathResult.totalWeight, pathResult.pathCoords)
-          : 0;
+    let routedWeight = 0;
+    if (segmentResults.length > 0) {
+      routedWeight = segmentResults.reduce(
+        (total, segmentResult) =>
+          segmentResult.segment.type === "indoor" &&
+          segmentResult.pathResult?.ok
+            ? total +
+              getSafeIndoorWeight(
+                segmentResult.pathResult.totalWeight,
+                segmentResult.pathResult.pathCoords,
+              )
+            : total,
+        0,
+      );
+    } else if (pathResult?.ok) {
+      routedWeight = getSafeIndoorWeight(pathResult.totalWeight, pathResult.pathCoords);
+    }
 
     if (!routedWeight) {
       return { duration: "--", distance: "--", type: "walking" };
