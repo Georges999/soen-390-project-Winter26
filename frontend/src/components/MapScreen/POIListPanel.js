@@ -22,6 +22,63 @@ function POIListPanel({
 }) {
   if (!isOpen) return null;
 
+  let panelBodyContent;
+  if (isLoading) {
+    panelBodyContent = (
+      <Text style={styles.poiStatusText}>Loading nearby places...</Text>
+    );
+  } else if (pois.length === 0) {
+    panelBodyContent = (
+      <Text style={styles.poiStatusText}>No nearby POIs found.</Text>
+    );
+  } else {
+    panelBodyContent = (
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+      >
+        {pois.map((poi, index) => (
+          <Pressable
+            key={`poi-row-${String(poi.id ?? "x")}-${index}`}
+            testID="poi-list-item"
+            onPress={() => onPoiSelect(poi)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: "#FFFFFF",
+              borderBottomWidth: 1,
+              borderBottomColor: "#E9E9E9",
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+            }}
+          >
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <Text style={styles.poiResultTitle} numberOfLines={1}>
+                {poi.name}
+              </Text>
+              {typeof poi.rating === "number" ? (
+                <Text
+                  style={{ marginTop: 2, fontSize: 12, color: "#5C5C5C" }}
+                >
+                  {poi.rating.toFixed(1)} ★
+                </Text>
+              ) : null}
+            </View>
+
+            <Text
+              style={{ fontSize: 12, fontWeight: "600", color: "#222" }}
+            >
+              {poi.formattedDistance}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    );
+  }
+
   return (
     <View
       testID="poi-panel"
@@ -68,55 +125,7 @@ function POIListPanel({
             flex: 1,
           }}
         >
-          {isLoading ? (
-            <Text style={styles.poiStatusText}>Loading nearby places...</Text>
-          ) : pois.length === 0 ? (
-            <Text style={styles.poiStatusText}>No nearby POIs found.</Text>
-          ) : (
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={{ paddingBottom: 20 }}
-              keyboardShouldPersistTaps="handled"
-              nestedScrollEnabled
-            >
-              {pois.map((poi, index) => (
-                <Pressable
-                  key={`poi-row-${String(poi.id ?? "x")}-${index}`}
-                  testID="poi-list-item"
-                  onPress={() => onPoiSelect(poi)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    backgroundColor: "#FFFFFF",
-                    borderBottomWidth: 1,
-                    borderBottomColor: "#E9E9E9",
-                    paddingHorizontal: 16,
-                    paddingVertical: 12,
-                  }}
-                >
-                  <View style={{ flex: 1, paddingRight: 10 }}>
-                    <Text style={styles.poiResultTitle} numberOfLines={1}>
-                      {poi.name}
-                    </Text>
-                    {typeof poi.rating === "number" ? (
-                      <Text
-                        style={{ marginTop: 2, fontSize: 12, color: "#5C5C5C" }}
-                      >
-                        {poi.rating.toFixed(1)} ★
-                      </Text>
-                    ) : null}
-                  </View>
-
-                  <Text
-                    style={{ fontSize: 12, fontWeight: "600", color: "#222" }}
-                  >
-                    {poi.formattedDistance}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          )}
+          {panelBodyContent}
         </View>
       ) : (
         <OutdoorPoiFilterForm
