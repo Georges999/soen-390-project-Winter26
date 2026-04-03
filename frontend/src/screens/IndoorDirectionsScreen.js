@@ -358,6 +358,42 @@ function resolveSegmentPath(seg, accessible) {
   return { segment: seg, pathResult: result };
 }
 
+/**
+ * Compute an effective (auto-filled) start or destination room when
+ * only one endpoint has been selected by the user.
+ */
+function computeEffectiveRoom(
+  room,
+  otherRoom,
+  activeField,
+  fieldName,
+  buildingIdFallback,
+  pref,
+  label,
+) {
+  if (room || !otherRoom || activeField === fieldName) {
+    return room;
+  }
+
+  const buildingId = otherRoom.buildingId || buildingIdFallback;
+  if (!buildingId) return null;
+
+  const entryFloorId =
+    getEntryFloor(buildingId) || getGroundFloor(buildingId) || otherRoom.floor;
+  const entryNode = pickEntryNode(entryFloorId, pref);
+  if (!entryNode) return null;
+
+  const building = getBuildingById(buildingId);
+
+  return {
+    ...entryNode,
+    floor: entryFloorId,
+    buildingId,
+    buildingName: building?.name,
+    label,
+  };
+}
+
 export default function IndoorDirectionsScreen({ route, navigation }) {
   const params = route?.params || {};
   const initialSelection = getInitialSelection(params);
@@ -396,65 +432,33 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     initialSelection.floorIdx,
   );
 
-  const effectiveStartRoom = useMemo(() => {
-    if (startRoom || !destRoom || activeField === "start") {
-      return startRoom;
-    }
+  const effectiveStartRoom = useMemo(
+    () =>
+      computeEffectiveRoom(
+        startRoom,
+        destRoom,
+        activeField,
+        "start",
+        params.building?.id,
+        resolvedTransitionPref,
+        "Entrance",
+      ),
+    [startRoom, destRoom, activeField, params.building?.id, resolvedTransitionPref],
+  );
 
-    const buildingId = destRoom.buildingId || params.building?.id;
-    if (!buildingId) return null;
-
-    const entryFloorId =
-      getEntryFloor(buildingId) || getGroundFloor(buildingId) || destRoom.floor;
-    const entryNode = pickEntryNode(entryFloorId, resolvedTransitionPref);
-    if (!entryNode) return null;
-
-    const building = getBuildingById(buildingId);
-
-    return {
-      ...entryNode,
-      floor: entryFloorId,
-      buildingId,
-      buildingName: building?.name,
-      label: "Entrance",
-    };
-  }, [
-    startRoom,
-    destRoom,
-    activeField,
-    params.building?.id,
-    resolvedTransitionPref,
-  ]);
-
-  const effectiveDestRoom = useMemo(() => {
-    if (destRoom || !startRoom || activeField === "dest") {
-      return destRoom;
-    }
-
-    const buildingId = startRoom.buildingId || params.building?.id;
-    if (!buildingId) return null;
-
-    const entryFloorId =
-      getEntryFloor(buildingId) || getGroundFloor(buildingId) || startRoom.floor;
-    const entryNode = pickEntryNode(entryFloorId, resolvedTransitionPref);
-    if (!entryNode) return null;
-
-    const building = getBuildingById(buildingId);
-
-    return {
-      ...entryNode,
-      floor: entryFloorId,
-      buildingId,
-      buildingName: building?.name,
-      label: "Exit",
-    };
-  }, [
-    destRoom,
-    startRoom,
-    activeField,
-    params.building?.id,
-    resolvedTransitionPref,
-  ]);
+  const effectiveDestRoom = useMemo(
+    () =>
+      computeEffectiveRoom(
+        destRoom,
+        startRoom,
+        activeField,
+        "dest",
+        params.building?.id,
+        resolvedTransitionPref,
+        "Exit",
+      ),
+    [destRoom, startRoom, activeField, params.building?.id, resolvedTransitionPref],
+  );
 
   const campusBuildings = useMemo(
     () => buildings[selectedCampus] || [],
