@@ -1,7 +1,7 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { View, Text, Pressable } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import React from "react";
+import PropTypes from "prop-types";
+import { View, Text, Pressable } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
 /**
  * Pure presentation component for POI info card
@@ -31,9 +31,9 @@ function POIInfoCard({
       <View style={styles.poiInfoCard}>
         <View
           style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <Text style={styles.poiInfoTitle} numberOfLines={1}>
@@ -49,8 +49,8 @@ function POIInfoCard({
 
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
+            flexDirection: "row",
+            alignItems: "center",
             marginTop: 10,
           }}
         >
