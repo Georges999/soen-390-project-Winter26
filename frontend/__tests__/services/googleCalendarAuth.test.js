@@ -173,6 +173,23 @@ describe('googleCalendarAuth', () => {
       expect(SecureStore.setItemAsync).toHaveBeenCalled();
     });
 
+    it('should fall back to default expiresIn when both new and stored tokens omit expiresIn', async () => {
+      const storedTokens = { accessToken: 'old', refreshToken: 'refresh123', issuedAt: 1000 };
+      SecureStore.getItemAsync.mockResolvedValue(JSON.stringify(storedTokens));
+      SecureStore.setItemAsync.mockResolvedValue();
+
+      AuthSession.refreshAsync.mockResolvedValue({
+        accessToken: 'new_access',
+      });
+
+      const result = await refreshAccessToken();
+      expect(result.success).toBe(true);
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+        'google_calendar_tokens',
+        expect.stringContaining('"expiresIn":3600')
+      );
+    });
+
     it('should clear tokens on refresh failure', async () => {
       SecureStore.getItemAsync.mockResolvedValue(JSON.stringify({ accessToken: 'old', refreshToken: 'refresh123' }));
       SecureStore.deleteItemAsync.mockResolvedValue();
@@ -210,10 +227,38 @@ describe('googleCalendarAuth', () => {
       expect(result).toBe('new_token');
     });
 
+    it('should return null when refresh fails for expired tokens', async () => {
+      const expiredTokens = { accessToken: 'expired', refreshToken: 'refresh123', expiresIn: 3600, issuedAt: Date.now() - 5000000 };
+      SecureStore.getItemAsync
+        .mockResolvedValueOnce(JSON.stringify(expiredTokens))
+        .mockResolvedValueOnce(JSON.stringify(expiredTokens));
+      SecureStore.deleteItemAsync.mockResolvedValue();
+      AuthSession.refreshAsync.mockRejectedValue(new Error('refresh failed'));
+
+      const result = await getValidAccessToken();
+      expect(result).toBeNull();
+    });
+
     it('should return null on error', async () => {
       SecureStore.getItemAsync.mockRejectedValue(new Error('read error'));
       const result = await getValidAccessToken();
       expect(result).toBeNull();
+    });
+
+    it('should return null when isTokenExpired throws unexpectedly', async () => {
+      const tokens = { accessToken: 'valid_token', expiresIn: 3600, issuedAt: Date.now() };
+      SecureStore.getItemAsync.mockResolvedValue(JSON.stringify(tokens));
+      const originalDateNow = Date.now;
+
+      try {
+        Date.now = jest.fn(() => {
+          throw new Error('clock failure');
+        });
+        const result = await getValidAccessToken();
+        expect(result).toBeNull();
+      } finally {
+        Date.now = originalDateNow;
+      }
     });
   });
 
