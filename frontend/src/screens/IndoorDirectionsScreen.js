@@ -865,6 +865,40 @@ function syncFloorToJourneyStage(
   }
 }
 
+/** Build the current floor's room / node / POI data for map interaction. */
+function computeCurrentFloorData(selectedFloor) {
+  if (!selectedFloor) return { rooms: [], nodes: [], pois: [] };
+
+  const floorId = selectedFloor.id;
+  const rooms = getRoomsForFloor(floorId);
+  const allNodes = getAllNodesForFloor(floorId);
+
+  return {
+    rooms,
+    nodes: allNodes.filter((n) => n.type === "hallway"),
+    pois: allNodes.filter(
+      (n) =>
+        n.type !== "hallway" && n.type !== "classroom" && n.type !== "room",
+    ),
+  };
+}
+
+/** Classify route type and build segments for cross-floor navigation. */
+function computeRouteSegments(
+  routeType,
+  effectiveStartRoom,
+  effectiveDestRoom,
+  resolvedTransitionPref,
+) {
+  if (!routeType) return [];
+  if (routeType === "same-floor" || routeType === "same-room") return [];
+  return buildRouteSegments(
+    effectiveStartRoom,
+    effectiveDestRoom,
+    resolvedTransitionPref,
+  );
+}
+
 export default function IndoorDirectionsScreen({ route, navigation }) {
   const params = route?.params || {};
   const initialSelection = getInitialSelection(params);
@@ -956,22 +990,10 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const allRooms = useMemo(() => buildAllRooms(), []);
 
   // Current floor rooms and nodes for map interaction
-  const currentFloorData = useMemo(() => {
-    if (!selectedFloor) return { rooms: [], nodes: [], pois: [] };
-
-    const floorId = selectedFloor.id;
-    const rooms = getRoomsForFloor(floorId);
-    const allNodes = getAllNodesForFloor(floorId);
-
-    return {
-      rooms,
-      nodes: allNodes.filter((n) => n.type === "hallway"),
-      pois: allNodes.filter(
-        (n) =>
-          n.type !== "hallway" && n.type !== "classroom" && n.type !== "room",
-      ),
-    };
-  }, [selectedFloor]);
+  const currentFloorData = useMemo(
+    () => computeCurrentFloorData(selectedFloor),
+    [selectedFloor],
+  );
 
   // Route type classification
   const routeType = useMemo(() => {
@@ -980,15 +1002,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   }, [effectiveStartRoom, effectiveDestRoom]);
 
   // Route segments for cross-floor / cross-building
-  const routeSegments = useMemo(() => {
-    if (!routeType) return [];
-    if (routeType === "same-floor" || routeType === "same-room") return [];
-    return buildRouteSegments(
-      effectiveStartRoom,
-      effectiveDestRoom,
-      resolvedTransitionPref,
-    );
-  }, [effectiveStartRoom, effectiveDestRoom, routeType, resolvedTransitionPref]);
+  const routeSegments = useMemo(
+    () =>
+      computeRouteSegments(
+        routeType,
+        effectiveStartRoom,
+        effectiveDestRoom,
+        resolvedTransitionPref,
+      ),
+    [effectiveStartRoom, effectiveDestRoom, routeType, resolvedTransitionPref],
+  );
 
   // Multi-segment path results (cross-floor)
   const segmentResults = useMemo(() => {
