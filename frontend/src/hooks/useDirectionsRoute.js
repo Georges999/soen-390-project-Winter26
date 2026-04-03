@@ -40,7 +40,7 @@ export function pickBestRoute(routes, isTransit) {
   }, routes[0]);
 }
 
-function buildRouteOptions(routes) {
+export function buildRouteOptions(routes) {
   return routes.map((route) => {
     const leg = route?.legs?.[0];
     const steps = leg?.steps ?? [];

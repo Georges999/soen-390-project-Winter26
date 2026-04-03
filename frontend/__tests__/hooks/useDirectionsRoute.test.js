@@ -1,6 +1,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react-native';
 import {
   buildRouteInfo,
+  buildRouteOptions,
   buildWaypointsParam,
   decodeStepCoords,
   pickBestRoute,
@@ -46,6 +47,21 @@ describe('useDirectionsRoute', () => {
   });
 
   describe('helper functions', () => {
+    it('buildWaypointsParam returns "" for null and []', () => {
+      expect(buildWaypointsParam(null)).toBe('');
+      expect(buildWaypointsParam([])).toBe('');
+    });
+
+    it('pickBestRoute returns null for null routes', () => {
+      expect(pickBestRoute(null, false)).toBeNull();
+    });
+
+    it('pickBestRoute returns first route when it is already the shortest transit route', () => {
+      const r0 = { legs: [{ duration: { value: 100 } }] };
+      const r1 = { legs: [{ duration: { value: 200 } }] };
+      expect(pickBestRoute([r0, r1], true)).toBe(r0);
+    });
+
     it('decodeStepCoords returns [] when polyline.decode throws', () => {
       const polyline = require('@mapbox/polyline');
       polyline.decode.mockImplementationOnce(() => {
@@ -55,18 +71,48 @@ describe('useDirectionsRoute', () => {
       expect(decodeStepCoords({ polyline: { points: 'bad' } })).toEqual([]);
     });
 
-    it('pickBestRoute returns null for null or empty routes', () => {
-      expect(pickBestRoute(null, false)).toBeNull();
-      expect(pickBestRoute([], true)).toBeNull();
-    });
-
     it('buildRouteInfo returns null for null leg', () => {
       expect(buildRouteInfo(null)).toBeNull();
     });
 
-    it('buildWaypointsParam returns empty string for null and empty arrays', () => {
-      expect(buildWaypointsParam(null)).toBe('');
-      expect(buildWaypointsParam([])).toBe('');
+    it('buildRouteOptions transitLines uses short_name/name/vehicle.type/Transit fallback chain', () => {
+      const routes = [
+        {
+          legs: [
+            {
+              steps: [
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: { short_name: '24', name: 'Bus 24', vehicle: { type: 'BUS' } },
+                  },
+                },
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: { name: 'Green Line', vehicle: { type: 'SUBWAY' } },
+                  },
+                },
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: { vehicle: { type: 'TRAM' } },
+                  },
+                },
+                {
+                  travel_mode: 'TRANSIT',
+                  transit_details: {
+                    line: {},
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      const [opt] = buildRouteOptions(routes);
+      expect(opt.transitLines).toEqual(['24', 'Green Line', 'TRAM', 'Transit']);
     });
   });
 
