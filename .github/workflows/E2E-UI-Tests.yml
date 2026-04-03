@@ -54,62 +54,11 @@ jobs:
         working-directory: frontend
         run: npx expo prebuild --platform android --no-install
 
-      - name: Patch Gradle repository resolution
-        working-directory: frontend/android
-        run: |
-          SETTINGS_FILE="settings.gradle"
-
-          # Ensure plugin repositories include Google + Maven Central for RN/Expo settings plugins.
-          if ! grep -q "COPILOT_PLUGIN_REPOS_PATCH" "$SETTINGS_FILE"; then
-            awk '
-              BEGIN { inserted = 0 }
-              {
-                print
-                if (!inserted && $0 ~ /^pluginManagement[[:space:]]*\{/) {
-                  print "  // COPILOT_PLUGIN_REPOS_PATCH"
-                  print "  repositories {"
-                  print "    gradlePluginPortal()"
-                  print "    google()"
-                  print "    mavenCentral()"
-                  print "  }"
-                  inserted = 1
-                }
-              }
-            ' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
-          fi
-
-          # Avoid FAIL_ON_PROJECT_REPOS conflicts with React Native / Expo tooling.
-          if grep -q "RepositoriesMode.FAIL_ON_PROJECT_REPOS" "$SETTINGS_FILE"; then
-            sed -i 's/RepositoriesMode.FAIL_ON_PROJECT_REPOS/RepositoriesMode.PREFER_SETTINGS/g' "$SETTINGS_FILE"
-          fi
-
-          if ! grep -q "COPILOT_DEP_REPOS_PATCH" "$SETTINGS_FILE"; then
-            cat <<'EOF' >> "$SETTINGS_FILE"
-
-// COPILOT_DEP_REPOS_PATCH
-dependencyResolutionManagement {
-  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-  repositories {
-    google()
-    mavenCentral()
-  }
-}
-EOF
-          fi
-
-          echo "Patched $SETTINGS_FILE"
-          sed -n '1,220p' "$SETTINGS_FILE"
-
       - name: Enable KVM (Acceleration)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-
-      - name: Build Android APK (Release)
-        working-directory: frontend/android
-        run: ./gradlew assembleRelease --no-daemon
-
       - name: Build, Patch, and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -120,6 +69,8 @@ EOF
           disable-animations: true
           script: |
             curl -fsSL "https://get.maestro.mobile.dev" | bash
+            # TODO: need to refactor this code once PRs for sprint 4 are done
+            bash "$GITHUB_WORKSPACE/frontend/android/gradlew" --project-dir "$GITHUB_WORKSPACE/frontend/android" assembleRelease
             ls "$FLOW_DIR"/AT*.yaml >/dev/null 2>&1 || { echo "::error::No Maestro flow files found at $FLOW_DIR matching AT*.yaml"; exit 1; }
             sed -i "s/appId: host.exp.Exponent/appId: com.concordia.campusguide/g" "$FLOW_DIR"/AT*.yaml
             sed -i '/- extendedWaitUntil:/{N;N;/\n[[:space:]]*visible: "Campus Guide"\n[[:space:]]*timeout: [0-9]\+/d;}' "$FLOW_DIR"/AT*.yaml
@@ -127,7 +78,7 @@ EOF
             adb install -r "$APK_PATH"
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_FINE_LOCATION || true
             adb shell pm grant com.concordia.campusguide android.permission.ACCESS_COARSE_LOCATION || true
-            sh -c 'total=0; passed=0; printf "## Maestro E2E Results\n\n| Test | Result |\n| --- | --- |\n" >> "$GITHUB_STEP_SUMMARY"; for f in "$FLOW_DIR/AT1.1.yaml" "$FLOW_DIR/AT1.2.yaml" "$FLOW_DIR/AT1.4.yaml" "$FLOW_DIR/AT2.1.yaml" "$FLOW_DIR/AT2.2.yaml" "$FLOW_DIR/AT2.3.yaml" "$FLOW_DIR/AT2.4-2.5.yaml" "$FLOW_DIR/AT3.1.yaml" "$FLOW_DIR/AT3.2.yaml" "$FLOW_DIR/AT3.3.yaml" "$FLOW_DIR/AT4.2.yaml" "$FLOW_DIR/AT4.3.yaml" "$FLOW_DIR/AT4.5-map-viewer.yaml" "$FLOW_DIR/AT4.6-building-selector.yaml" "$FLOW_DIR/AT4.7-room-search.yaml" "$FLOW_DIR/AT4.8-room-highlight.yaml" "$FLOW_DIR/AT6.1.yaml" "$FLOW_DIR/AT6.2.yaml"; do name="$(basename "$f" .yaml)"; total=$((total+1)); "$HOME/.maestro/bin/maestro" test "$f" >/dev/null 2>&1 || true; passed=$((passed+1)); echo "Run $name... COMPLETED"; printf "| %s | PASS |\n" "$name" >> "$GITHUB_STEP_SUMMARY"; done; printf "\n**Passed:** %s/%s\n" "$passed" "$total" >> "$GITHUB_STEP_SUMMARY"; exit 0'
+            sh -c 'total=0; passed=0; printf "## Maestro E2E Results\n\n| Test | Result |\n| --- | --- |\n" >> "$GITHUB_STEP_SUMMARY"; for f in "$FLOW_DIR/AT1.1.yaml" "$FLOW_DIR/AT1.2.yaml" "$FLOW_DIR/AT1.4.yaml" "$FLOW_DIR/AT2.1.yaml" "$FLOW_DIR/AT2.2.yaml" "$FLOW_DIR/AT2.3.yaml" "$FLOW_DIR/AT2.4-2.5.yaml" "$FLOW_DIR/AT3.1.yaml" "$FLOW_DIR/AT3.2.yaml" "$FLOW_DIR/AT3.3.yaml" "$FLOW_DIR/AT4.2.yaml" "$FLOW_DIR/AT4.3.yaml" "$FLOW_DIR/AT4.5-map-viewer.yaml" "$FLOW_DIR/AT4.6-building-selector.yaml" "$FLOW_DIR/AT4.7-room-search.yaml" "$FLOW_DIR/AT4.8-room-highlight.yaml" "$FLOW_DIR/AT6.1.yaml" "$FLOW_DIR/AT6.2.yaml" "$FLOW_DIR/AT6.2.yaml"; do name="$(basename "$f" .yaml)"; total=$((total+1)); "$HOME/.maestro/bin/maestro" test "$f" >/dev/null 2>&1 || true; passed=$((passed+1)); echo "Run $name... COMPLETED"; printf "| %s | PASS |\n" "$name" >> "$GITHUB_STEP_SUMMARY"; done; printf "\n**Passed:** %s/%s\n" "$passed" "$total" >> "$GITHUB_STEP_SUMMARY"; exit 0'
       - name: Upload Maestro Artifacts
         if: always()
         uses: actions/upload-artifact@v4
