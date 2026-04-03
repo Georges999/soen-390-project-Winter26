@@ -152,16 +152,57 @@ function findNearestConnector(nodes, fromNodeId, floorId) {
   return nearestStairs || nearestElevator;
 }
 
-function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'astar', accessible = false }) {
+function validateInputs(floorsData, startNodeId, endNodeId) {
   if (!floorsData) return { ok: false, reason: 'floorsData is required' };
   if (!startNodeId) return { ok: false, reason: 'startNodeId is required' };
   if (!endNodeId) return { ok: false, reason: 'endNodeId is required' };
 
-  const { graph, nodes, floorMap } = buildMultiFloorGraph(floorsData);
+  if (floorsData.graph && floorsData.nodes) {
+    if (floorsData.graph.size === 0) return { ok: false, reason: 'empty graph - no nodes found' };
+    if (!floorsData.nodes.has(startNodeId)) return { ok: false, reason: `start node "${startNodeId}" not found` };
+    if (!floorsData.nodes.has(endNodeId)) return { ok: false, reason: `end node "${endNodeId}" not found` };
+  }
 
-  if (graph.size === 0) return { ok: false, reason: 'empty graph - no nodes found' };
-  if (!nodes.has(startNodeId)) return { ok: false, reason: `start node "${startNodeId}" not found` };
-  if (!nodes.has(endNodeId)) return { ok: false, reason: `end node "${endNodeId}" not found` };
+  return null;
+}
+
+function resolveConnector(nodes, startNodeId, startFloor, accessible) {
+  const connectorId = accessible
+    ? findNearestElevator(nodes, startNodeId, startFloor)
+    : findNearestConnector(nodes, startNodeId, startFloor);
+
+  if (!connectorId) {
+    return {
+      ok: false,
+      connectorId: null,
+      reason: accessible ? 'No elevator found on this floor' : 'No stairs or elevator found on this floor',
+    };
+  }
+
+  return { ok: true, connectorId, reason: null };
+}
+
+function resolveAlgorithm(algorithm) {
+  const normalizedAlgorithm = typeof algorithm === 'string' ? algorithm.toLowerCase() : '';
+  return normalizedAlgorithm === 'dijkstra' ? 'dijkstra' : 'astar';
+}
+
+function buildPathCoords(pathNodeIds, nodes) {
+  return pathNodeIds
+    .map((nodeId) => {
+      const node = nodes.get(nodeId);
+      return node ? { id: node.id, x: node.x, y: node.y, floor: node.floor, label: node.label, type: node.type } : null;
+    })
+    .filter(Boolean);
+}
+
+function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'astar', accessible = false }) {
+  const inputError = validateInputs(floorsData, startNodeId, endNodeId);
+  if (inputError) return inputError;
+
+  const { graph, nodes, floorMap } = buildMultiFloorGraph(floorsData);
+  const graphError = validateInputs({ graph, nodes }, startNodeId, endNodeId);
+  if (graphError) return graphError;
 
   const startFloor = getNodeFloor(startNodeId, floorMap);
   const endFloor = getNodeFloor(endNodeId, floorMap);
@@ -170,18 +211,12 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
   let effectiveEndNodeId = endNodeId;
   if (startFloor !== endFloor) {
     // Find nearest stairs or elevator on the start floor to guide user there
-    const connectorId = accessible
-      ? findNearestElevator(nodes, startNodeId, startFloor)
-      : findNearestConnector(nodes, startNodeId, startFloor);
-
-    if (!connectorId) {
-      return { ok: false, reason: accessible ? 'No elevator found on this floor' : 'No stairs or elevator found on this floor' };
-    }
-    effectiveEndNodeId = connectorId;
+    const connectorResult = resolveConnector(nodes, startNodeId, startFloor, accessible);
+    if (!connectorResult.ok) return { ok: false, reason: connectorResult.reason };
+    effectiveEndNodeId = connectorResult.connectorId;
   }
 
-  const normalizedAlgorithm = typeof algorithm === 'string' ? algorithm.toLowerCase() : '';
-  const algorithmUsed = normalizedAlgorithm === 'dijkstra' ? 'dijkstra' : 'astar';
+  const algorithmUsed = resolveAlgorithm(algorithm);
   const result = algorithmUsed === 'dijkstra' 
     ? dijkstra(graph, nodes, startNodeId, effectiveEndNodeId, accessible) 
     : aStar(graph, nodes, startNodeId, effectiveEndNodeId, accessible);
@@ -191,12 +226,7 @@ function findShortestPath({ floorsData, startNodeId, endNodeId, algorithm = 'ast
     return { ok: false, reason: 'no path found' };
   }
 
-  const pathCoords = result.pathNodeIds
-    .map((nodeId) => {
-      const node = nodes.get(nodeId);
-      return node ? { id: node.id, x: node.x, y: node.y, floor: node.floor, label: node.label, type: node.type } : null;
-    })
-    .filter(Boolean);
+  const pathCoords = buildPathCoords(result.pathNodeIds, nodes);
 
   return { ok: true, algorithm: algorithmUsed, totalWeight: result.totalWeight, pathNodeIds: result.pathNodeIds, pathCoords, accessible };
 }
