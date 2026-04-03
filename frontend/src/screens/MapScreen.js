@@ -754,6 +754,13 @@ export default function MapScreen({ route, navigation }) {
     allBuildings,
   ]);
 
+  // Auto-switch to driving mode for cross-campus or cross-building routes
+  useEffect(() => {
+    if (startCampusId && destCampusId && startCampusId !== destCampusId) {
+      setTravelMode("driving");
+    }
+  }, [startCampusId, destCampusId]);
+
   const setDestinationToSelectedBuilding = () => {
     if (!selectedBuilding) return;
 

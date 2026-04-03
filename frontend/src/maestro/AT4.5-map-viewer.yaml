@@ -18,7 +18,7 @@ appId: host.exp.Exponent
     id: "tab-indoor"
 - waitForAnimationToEnd
 
-# AT4.5-1: Floor map renders correctly for default building/floor (Hall Building, Floor 8)
+# AT4.5-1: Floor map renders correctly for the default indoor building view (Hall Building)
 - extendedWaitUntil:
     visible: "Indoor Directions"
     timeout: 10000
