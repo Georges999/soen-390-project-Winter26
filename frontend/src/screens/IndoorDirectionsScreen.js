@@ -397,14 +397,16 @@ function computeEffectiveRoom(
 
 /** Compute the active indoor path result (same-floor or cross-floor). */
 function computePathResult(
-  effectiveStartRoom,
-  effectiveDestRoom,
-  routeSegments,
-  segmentResults,
-  displayedSegmentResult,
-  buildingIdFallback,
-  selectedBuilding,
-  accessibleRoute,
+  {
+    effectiveStartRoom,
+    effectiveDestRoom,
+    routeSegments,
+    segmentResults,
+    displayedSegmentResult,
+    buildingIdFallback,
+    selectedBuilding,
+    accessibleRoute,
+  },
 ) {
   if (!effectiveStartRoom || !effectiveDestRoom) return null;
 
@@ -515,14 +517,16 @@ function computeRouteStats(segmentResults, pathResult) {
 
 /** Determine the floor to display based on active journey stage. */
 function computeDisplayedFloor(
-  displayedSegmentResult,
-  mapJourneyStage,
-  routeType,
-  effectiveStartRoom,
-  effectiveDestRoom,
-  buildingIdFallback,
-  selectedBuilding,
-  selectedFloor,
+  {
+    displayedSegmentResult,
+    mapJourneyStage,
+    routeType,
+    effectiveStartRoom,
+    effectiveDestRoom,
+    buildingIdFallback,
+    selectedBuilding,
+    selectedFloor,
+  },
 ) {
   if (
     displayedSegmentResult?.segment?.type === "indoor" &&
@@ -723,15 +727,17 @@ function applyRoomSelection(field, room, floorLabel, setters) {
 
 /** Process a map tap to select a room for start or destination. */
 function processMapPress(
-  event,
-  selectionMode,
-  floorDimensions,
-  displayedMapWidth,
-  displayedMapHeight,
-  currentFloorRooms,
-  selectedFloor,
-  selectedBuilding,
-  setters,
+  {
+    event,
+    selectionMode,
+    floorDimensions,
+    displayedMapWidth,
+    displayedMapHeight,
+    currentFloorRooms,
+    selectedFloor,
+    selectedBuilding,
+    setters,
+  },
 ) {
   if (!selectionMode) return;
 
@@ -812,14 +818,16 @@ function syncMapToJourneyStage(
 
 /** Handle journey-stage selection and trigger spoken instructions. */
 function processJourneyStageSelect(
-  stageId,
-  activeJourneyStageId,
-  journeyStages,
-  segmentResults,
-  startRoom,
-  destRoom,
-  lastSpokenRef,
-  setActiveJourneyStageId,
+  {
+    stageId,
+    activeJourneyStageId,
+    journeyStages,
+    segmentResults,
+    startRoom,
+    destRoom,
+    lastSpokenRef,
+    setActiveJourneyStageId,
+  },
 ) {
   if (stageId === activeJourneyStageId) return;
 
@@ -1135,14 +1143,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const pathResult = useMemo(
     () =>
       computePathResult(
-        effectiveStartRoom,
-        effectiveDestRoom,
-        routeSegments,
-        segmentResults,
-        displayedSegmentResult,
-        params.building?.id,
-        selectedBuilding,
-        accessibleRoute,
+        {
+          effectiveStartRoom,
+          effectiveDestRoom,
+          routeSegments,
+          segmentResults,
+          displayedSegmentResult,
+          buildingIdFallback: params.building?.id,
+          selectedBuilding,
+          accessibleRoute,
+        },
       ),
     [
       effectiveStartRoom,
@@ -1178,14 +1188,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const displayedFloor = useMemo(
     () =>
       computeDisplayedFloor(
-        displayedSegmentResult,
-        mapJourneyStage,
-        routeType,
-        effectiveStartRoom,
-        effectiveDestRoom,
-        params.building?.id,
-        selectedBuilding,
-        selectedFloor,
+        {
+          displayedSegmentResult,
+          mapJourneyStage,
+          routeType,
+          effectiveStartRoom,
+          effectiveDestRoom,
+          buildingIdFallback: params.building?.id,
+          selectedBuilding,
+          selectedFloor,
+        },
       ),
     [
       displayedSegmentResult,
@@ -1295,14 +1307,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const handleJourneyStageSelect = useCallback(
     (stageId) => {
       processJourneyStageSelect(
-        stageId,
-        activeJourneyStage?.id,
-        journeyStages,
-        segmentResults,
-        startRoom,
-        destRoom,
-        lastSpokenJourneyStageIdRef,
-        setActiveJourneyStageId,
+        {
+          stageId,
+          activeJourneyStageId: activeJourneyStage?.id,
+          journeyStages,
+          segmentResults,
+          startRoom,
+          destRoom,
+          lastSpokenRef: lastSpokenJourneyStageIdRef,
+          setActiveJourneyStageId,
+        },
       );
     },
     [activeJourneyStage, journeyStages, segmentResults, startRoom, destRoom],
@@ -1348,22 +1362,24 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const handleMapPress = useCallback(
     (event) => {
       processMapPress(
-        event,
-        selectionMode,
-        floorDimensions,
-        displayedMapWidth,
-        displayedMapHeight,
-        currentFloorData.rooms,
-        selectedFloor,
-        selectedBuilding,
         {
-          setStartRoom,
-          setStartText,
-          setDestRoom,
-          setDestText,
-          setSearchQuery,
-          setActiveField,
-          setSelectionMode,
+          event,
+          selectionMode,
+          floorDimensions,
+          displayedMapWidth,
+          displayedMapHeight,
+          currentFloorRooms: currentFloorData.rooms,
+          selectedFloor,
+          selectedBuilding,
+          setters: {
+            setStartRoom,
+            setStartText,
+            setDestRoom,
+            setDestText,
+            setSearchQuery,
+            setActiveField,
+            setSelectionMode,
+          },
         },
       );
     },
