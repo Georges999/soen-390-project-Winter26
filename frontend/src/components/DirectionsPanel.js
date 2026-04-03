@@ -1,7 +1,9 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import PropTypes from "prop-types";
+
+const MAROON = "#95223D";
 
 function getVehicleIcon(vehicleType) {
   return vehicleType === "SUBWAY" ? "subway" : "directions-bus";
@@ -38,8 +40,6 @@ function getStepInstruction(step, stripHtml) {
 }
 
 export default function DirectionsPanel({
-  styles,
-  maroon,
   travelMode,
   setTravelMode,
   isCrossCampusTrip,
@@ -69,7 +69,7 @@ export default function DirectionsPanel({
         style={[styles.modeBtn, isSelected && styles.modeBtnActive]}
         onPress={() => setTravelMode(mode)}
       >
-        <MaterialIcons name={iconName} size={18} color={isSelected ? maroon : "#111"} />
+        <MaterialIcons name={iconName} size={18} color={isSelected ? MAROON : "#111"} />
         <Text style={[styles.modeBtnLabel, isSelected && styles.modeBtnTextActive]}>
           {label}
         </Text>
@@ -153,7 +153,7 @@ export default function DirectionsPanel({
                     <MaterialIcons
                       name={isTransitCollapsed ? "expand-less" : "expand-more"}
                       size={18}
-                      color={maroon}
+                      color={MAROON}
                     />
                   </Pressable>
                 </View>
@@ -193,7 +193,7 @@ export default function DirectionsPanel({
                                         <MaterialIcons
                                           name={icon}
                                           size={14}
-                                          color={isSelected ? maroon : "#111"}
+                                          color={isSelected ? MAROON : "#111"}
                                         />
                                         <Text
                                           style={[
@@ -241,7 +241,7 @@ export default function DirectionsPanel({
               <MaterialIcons
                 name={speechEnabled ? "volume-up" : "volume-off"}
                 size={18}
-                color={speechEnabled ? "#111" : maroon}
+                color={speechEnabled ? "#111" : MAROON}
               />
             </Pressable>
 
@@ -264,59 +264,260 @@ export default function DirectionsPanel({
   );
 }
 
+const styles = StyleSheet.create({
+  directionsWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  directionsPanel: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  modeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 12,
+  },
+  modeBtn: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    paddingVertical: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  modeBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  modeBtnLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#444",
+  },
+  modeBtnTextActive: {
+    color: MAROON,
+  },
+  shuttlePanel: {
+    marginTop: 8,
+    marginBottom: 6,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: "#F7F7F7",
+  },
+  transitSubRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  transitSubBtn: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    paddingVertical: 8,
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  transitSubBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  transitSubText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#444",
+  },
+  transitSubTextActive: {
+    color: MAROON,
+  },
+  shuttleNote: {
+    marginTop: 6,
+    fontSize: 11,
+    color: "#666",
+    textAlign: "center",
+  },
+  transitList: {
+    marginTop: 8,
+    gap: 8,
+  },
+  transitSummaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  transitSummaryLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  transitBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    backgroundColor: "#F3F3F3",
+  },
+  transitBadgeText: {
+    fontSize: 11,
+    color: "#111",
+    fontWeight: "700",
+  },
+  transitMeta: {
+    fontSize: 11,
+    color: "#555",
+    fontWeight: "700",
+  },
+  transitHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  collapseBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  transitRow: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EDEDED",
+  },
+  transitRowActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.06)",
+  },
+  transitLineActive: {
+    color: MAROON,
+  },
+  transitStops: {
+    marginTop: 2,
+    fontSize: 11,
+    color: "#444",
+  },
+  transitEmpty: {
+    fontSize: 11,
+    color: "#666",
+    textAlign: "center",
+    paddingVertical: 6,
+  },
+  transitSteps: {
+    marginTop: 6,
+    gap: 4,
+  },
+  transitStepRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  transitStepText: {
+    fontSize: 11,
+    color: "#333",
+    flex: 1,
+  },
+  transitStopName: {
+    fontSize: 11,
+    color: "#333",
+  },
+  transitStopCount: {
+    fontSize: 11,
+    color: "#666",
+    fontWeight: "600",
+  },
+  routeInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  routeInfoActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  routeInfoTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#111",
+  },
+  routeInfoSub: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#666",
+  },
+  goBtn: {
+    backgroundColor: MAROON,
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+  },
+  goBtnText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
+  simBtn: {
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    backgroundColor: "#fff",
+  },
+  simBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+  simBtnText: {
+    color: "#444",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  simBtnTextActive: {
+    color: MAROON,
+  },
+  muteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  muteBtnActive: {
+    borderColor: MAROON,
+    backgroundColor: "rgba(149, 34, 61, 0.08)",
+  },
+});
+
 DirectionsPanel.propTypes = {
-  styles: PropTypes.shape({
-    directionsWrap: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    directionsPanel: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    modeRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    modeBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    modeBtnActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    modeBtnLabel: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    modeBtnTextActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    shuttlePanel: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSubRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSubBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSubBtnActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSubText: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSubTextActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitHeaderRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    shuttleNote: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    collapseBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitList: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitEmpty: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitRowActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSummaryRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSummaryLeft: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitBadge: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitBadgeText: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitLineActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitMeta: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitStops: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitSteps: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitStepRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitStepText: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitStopName: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    transitStopCount: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    routeInfoRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    routeInfoTitle: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    routeInfoSub: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    routeInfoDistanceText: PropTypes.oneOfType([
-      PropTypes.object,
-      PropTypes.array,
-      PropTypes.number,
-    ]),
-    routeInfoActions: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    muteBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    muteBtnActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    simBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    simBtnActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    simBtnText: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    simBtnTextActive: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    goBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-    goBtnText: PropTypes.oneOfType([PropTypes.object, PropTypes.array, PropTypes.number]),
-  }).isRequired,
-  maroon: PropTypes.string.isRequired,
   travelMode: PropTypes.string.isRequired,
   setTravelMode: PropTypes.func.isRequired,
   isCrossCampusTrip: PropTypes.bool.isRequired,

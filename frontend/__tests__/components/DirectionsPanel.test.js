@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
 
 jest.mock('@expo/vector-icons', () => {
   const React = require('react');
@@ -13,26 +12,7 @@ jest.mock('@expo/vector-icons', () => {
 
 import DirectionsPanel from '../../src/components/DirectionsPanel';
 
-const mockStyles = StyleSheet.create({
-  directionsWrap: {}, directionsPanel: {}, modeRow: {}, modeBtn: {},
-  modeBtnActive: {}, modeBtnLabel: {}, modeBtnTextActive: {},
-  shuttlePanel: {}, transitSubRow: {}, transitSubBtn: {},
-  transitSubBtnActive: {}, transitSubText: {}, transitSubTextActive: {},
-  transitHeaderRow: {}, shuttleNote: {}, collapseBtn: {},
-  transitList: {}, transitEmpty: {}, transitRow: {}, transitRowActive: {},
-  transitSummaryRow: {}, transitSummaryLeft: {}, transitBadge: {},
-  transitBadgeText: {}, transitMeta: {}, transitStops: {},
-  transitSteps: {}, transitStepRow: {}, transitStepText: {},
-  transitStopName: {}, transitStopCount: {}, transitLineActive: {},
-  routeInfoRow: {}, routeInfoTitle: {}, routeInfoSub: {},
-  routeInfoActions: {}, muteBtn: {}, muteBtnActive: {},
-  simBtn: {}, simBtnActive: {}, simBtnText: {}, simBtnTextActive: {},
-  goBtn: {}, goBtnText: {},
-});
-
 const baseProps = {
-  styles: mockStyles,
-  maroon: '#95223D',
   travelMode: 'walking',
   setTravelMode: jest.fn(),
   isCrossCampusTrip: false,
