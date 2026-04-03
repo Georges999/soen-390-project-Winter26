@@ -1,9 +1,9 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { View, Pressable } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import React from "react";
+import PropTypes from "prop-types";
+import { View, Pressable } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
-const MAROON = '#95223D';
+const MAROON = "#95223D";
 
 /**
  * Pure presentation component for map recenter button
