@@ -145,7 +145,7 @@ function isGenericHallwayInstruction(text = "") {
   );
 }
 
-function prepareSegmentSpokenInstructions(steps = []) {
+export function prepareSegmentSpokenInstructions(steps = []) {
   const normalizedSteps = steps
     .map((step) => normalizeSpokenInstructionText(step))
     .filter(Boolean);

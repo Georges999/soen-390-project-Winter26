@@ -6,6 +6,7 @@ import IndoorDirectionsScreen, {
   buildAllRooms,
   getSelectionForLocation,
   getInitialSelection,
+  prepareSegmentSpokenInstructions,
 } from '../../src/screens/IndoorDirectionsScreen';
 import { buildings } from '../../src/data/indoorFloorData';
 
@@ -181,6 +182,19 @@ describe('IndoorDirectionsScreen', () => {
     expect(selection.campusId).toBe('sgw');
     expect(selection.buildingIdx).toBe(1);
     expect(selection.floorIdx).toBe(1);
+  });
+
+  it('prepareSegmentSpokenInstructions should collapse consecutive generic hallway instructions', () => {
+    const spokenSteps = prepareSegmentSpokenInstructions([
+      'Continue along the corridor',
+      'Continue through the hallway',
+      'Take the stairs from Floor 2 to Floor 8',
+    ]);
+
+    expect(spokenSteps).toEqual([
+      'Continue along the corridor',
+      'Take the stairs from Floor 2 to Floor 8',
+    ]);
   });
 
   it('should render safely when the selected campus data is unavailable', () => {
