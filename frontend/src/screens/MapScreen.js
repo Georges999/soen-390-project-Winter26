@@ -1140,7 +1140,6 @@ export default function MapScreen({ route, navigation }) {
       <View style={{ flex: 1 }}>
         {/* red input box */}
         <SearchBox
-          styles={styles}
           startText={startText}
           destText={destText}
           activeField={activeField}
@@ -1427,8 +1426,6 @@ export default function MapScreen({ route, navigation }) {
 
         {/* Bottom sheet */}
         <BuildingBottomSheet
-          styles={styles}
-          maroon={MAROON}
           selectedBuilding={selectedBuilding}
           getBuildingName={getBuildingName}
           getAmenities={getAmenities}
@@ -1542,8 +1539,6 @@ export default function MapScreen({ route, navigation }) {
 
         {canShowDirectionsPanel && (
           <DirectionsPanel
-            styles={styles}
-            maroon={MAROON}
             travelMode={travelMode}
             setTravelMode={setTravelMode}
             isCrossCampusTrip={Boolean(isCrossCampusTrip)}

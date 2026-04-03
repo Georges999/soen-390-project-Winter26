@@ -1,11 +1,11 @@
 import React from "react";
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable, Image, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import PropTypes from "prop-types";
 
+const MAROON = "#95223D";
+
 export default function BuildingBottomSheet({
-  styles,
-  maroon,
   selectedBuilding,
   getBuildingName,
   getAmenities,
@@ -51,7 +51,7 @@ export default function BuildingBottomSheet({
 
                 <View style={styles.amenityRow}>
                   <View style={styles.amenityLeft}>
-                    <MaterialIcons name="wc" size={16} color={maroon} />
+                    <MaterialIcons name="wc" size={16} color={MAROON} />
                     <Text style={styles.amenityLabel}>Bathrooms</Text>
                   </View>
                   <Text style={styles.amenityValue}>
@@ -61,7 +61,7 @@ export default function BuildingBottomSheet({
 
                 <View style={styles.amenityRow}>
                   <View style={styles.amenityLeft}>
-                    <MaterialIcons name="water-drop" size={16} color={maroon} />
+                    <MaterialIcons name="water-drop" size={16} color={MAROON} />
                     <Text style={styles.amenityLabel}>Water fountains</Text>
                   </View>
                   <Text style={styles.amenityValue}>
@@ -71,7 +71,7 @@ export default function BuildingBottomSheet({
 
                 <View style={styles.amenityRow}>
                   <View style={styles.amenityLeft}>
-                    <MaterialIcons name="wc" size={16} color={maroon} />
+                    <MaterialIcons name="wc" size={16} color={MAROON} />
                     <Text style={styles.amenityLabel}>
                       Gender-neutral bathrooms
                     </Text>
@@ -82,7 +82,7 @@ export default function BuildingBottomSheet({
                 </View>
                 <View style={styles.amenityRow}>
                   <View style={styles.amenityLeft}>
-                    <MaterialIcons name="accessible" size={16} color={maroon} />
+                    <MaterialIcons name="accessible" size={16} color={MAROON} />
                     <Text style={styles.amenityLabel}>
                       Wheelchair accessible
                     </Text>
@@ -113,30 +113,123 @@ export default function BuildingBottomSheet({
   );
 }
 
+const styles = StyleSheet.create({
+  sheetWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  sheet: {
+    backgroundColor: "#fff",
+    borderRadius: 22,
+    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 18,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  sheetHandle: {
+    alignSelf: "center",
+    width: 44,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "#E6E6E6",
+    marginBottom: 12,
+  },
+  sheetHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  sheetHeaderLeft: { flexDirection: "row", gap: 12, flex: 1, paddingRight: 8 },
+  buildingIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: MAROON,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buildingIconImage: { width: 28, height: 28 },
+  buildingTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#111",
+    letterSpacing: 0.4,
+  },
+  buildingSub: { marginTop: 4, fontSize: 13, color: "#666", lineHeight: 18 },
+  amenitiesWrap: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#EAEAEA",
+  },
+  amenitiesTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#111",
+    marginBottom: 8,
+    letterSpacing: 0.3,
+  },
+  amenityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+  },
+  amenityLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flex: 1,
+    paddingRight: 10,
+  },
+  amenityLabel: {
+    fontSize: 13,
+    color: "#333",
+    fontWeight: "700",
+    flexShrink: 1,
+  },
+  amenityValue: {
+    fontSize: 13,
+    color: "#666",
+    fontWeight: "800",
+  },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  closeBtnText: { fontSize: 16, color: "#333", fontWeight: "700" },
+  directionsBtn: {
+    marginTop: 16,
+    backgroundColor: MAROON,
+    borderRadius: 18,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  directionsBtnText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  directionsBtnIcon: { width: 18, height: 18 },
+});
+
 BuildingBottomSheet.propTypes = {
-  styles: PropTypes.shape({
-    sheetWrap: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    sheet: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    sheetHandle: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    sheetHeaderRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    sheetHeaderLeft: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    buildingIcon: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    buildingIconImage: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    buildingTitle: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    buildingSub: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    amenitiesWrap: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    amenitiesTitle: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    amenityRow: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    amenityLeft: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    amenityLabel: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    amenityValue: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    closeBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    closeBtnText: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    directionsBtn: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    directionsBtnIcon: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-    directionsBtnText: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  }).isRequired,
-  maroon: PropTypes.string.isRequired,
   selectedBuilding: PropTypes.shape({
     address: PropTypes.string,
   }),

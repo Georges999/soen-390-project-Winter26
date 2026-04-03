@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, Pressable, TextInput, Image, ScrollView } from "react-native";
+import { View, Text, Pressable, TextInput, Image, ScrollView, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import PropTypes from "prop-types";
 
+const MAROON = "#95223D";
+
 function SearchBox({
-  styles,
   startText,
   destText,
   activeField,
@@ -78,7 +79,7 @@ function SearchBox({
       </View>
 
       <Pressable style={styles.swapBtn} onPress={onSwap}>
-        <MaterialIcons name="swap-vert" size={18} color="#95223D" />
+        <MaterialIcons name="swap-vert" size={18} color={MAROON} />
       </Pressable>
 
       {hasSuggestions && (
@@ -139,30 +140,7 @@ function SearchBox({
   );
 }
 
-const stylePropType = PropTypes.oneOfType([
-  PropTypes.object,
-  PropTypes.array,
-  PropTypes.number,
-]);
-
 SearchBox.propTypes = {
-  styles: PropTypes.shape({
-    redBox: stylePropType,
-    inputRow: stylePropType,
-    searchIcon: stylePropType,
-    input: stylePropType,
-    inputPlaceholder: stylePropType,
-    clearBtn: stylePropType,
-    clearBtnText: stylePropType,
-    swapBtn: stylePropType,
-    searchResults: stylePropType,
-    searchResultsScroll: stylePropType,
-    searchResultRow: stylePropType,
-    searchResultText: stylePropType,
-    searchSectionLabel: stylePropType,
-    noResultsContainer: stylePropType,
-    noResultsText: stylePropType,
-  }).isRequired,
   startText: PropTypes.string.isRequired,
   destText: PropTypes.string.isRequired,
   activeField: PropTypes.string,
@@ -184,5 +162,116 @@ SearchBox.propTypes = {
   onSelectBuilding: PropTypes.func.isRequired,
   onSelectRoom: PropTypes.func.isRequired,
 };
+
+const styles = StyleSheet.create({
+  redBox: {
+    position: "absolute",
+    top: 10,
+    left: 16,
+    right: 16,
+    zIndex: 50,
+    backgroundColor: MAROON,
+    borderRadius: 22,
+    padding: 12,
+  },
+  inputRow: {
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  input: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+    paddingVertical: 0,
+    flex: 1,
+  },
+  searchIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+    opacity: 0.8,
+  },
+  inputPlaceholder: {
+    fontSize: 12,
+    fontStyle: "italic",
+    fontWeight: "500",
+  },
+  searchResults: {
+    marginTop: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 12,
+    maxHeight: 240,
+  },
+  searchResultsScroll: {
+    overflow: "hidden",
+  },
+  searchResultRow: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.12)",
+  },
+  searchResultText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  searchSectionLabel: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 4,
+    textTransform: "uppercase",
+  },
+  noResultsContainer: {
+    marginTop: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: "center",
+  },
+  noResultsText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#fff",
+    textAlign: "center",
+    opacity: 0.8,
+  },
+  clearBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+  },
+  clearBtnText: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  swapBtn: {
+    position: "absolute",
+    right: 350,
+    top: 47,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+});
 
 export default SearchBox;

@@ -125,6 +125,26 @@ describe('googleCalendarAuth OAuth flows', () => {
     expect(secureStoreMock.setItemAsync).toHaveBeenCalled();
   });
 
+  it('uses token fallbacks when refreshToken and expiresIn are missing', async () => {
+    const { moduleApi, secureStoreMock } = loadModule({
+      exchangeResult: {
+        accessToken: 'exchanged_access',
+      },
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({ success: true, accessToken: 'exchanged_access' });
+    expect(secureStoreMock.setItemAsync).toHaveBeenCalledWith(
+      'google_calendar_tokens',
+      expect.stringContaining('"refreshToken":null')
+    );
+    expect(secureStoreMock.setItemAsync).toHaveBeenCalledWith(
+      'google_calendar_tokens',
+      expect.stringContaining('"expiresIn":3600')
+    );
+  });
+
   it('returns cancel error when user cancels', async () => {
     const { moduleApi } = loadModule({
       promptAsyncResult: { type: 'cancel' },
@@ -158,6 +178,14 @@ describe('googleCalendarAuth OAuth flows', () => {
 
     const result = await moduleApi.authenticateWithGoogle();
     expect(result).toEqual({ success: false, error: 'oauth boom' });
+  });
+
+  it('falls back to generic auth failure message when thrown error has no message', async () => {
+    const { moduleApi, promptAsyncMock } = loadModule();
+    promptAsyncMock.mockRejectedValueOnce({});
+
+    const result = await moduleApi.authenticateWithGoogle();
+    expect(result).toEqual({ success: false, error: 'Authentication failed' });
   });
 
   it('returns an auth error when success does not include a code', async () => {
@@ -230,6 +258,24 @@ describe('googleCalendarAuth OAuth flows', () => {
       'exp://127.0.0.1'
     );
     expect(parseReturnUrlMock).toHaveBeenCalled();
+  });
+
+  it('returns failure when Expo proxy browser result is non-success', async () => {
+    const { moduleApi, parseReturnUrlMock } = loadModule({
+      appOwnership: 'expo',
+      owner: null,
+      slug: null,
+      openAuthResult: { type: 'dismiss' },
+      webClientId: 'expo_web_client_id',
+    });
+
+    const result = await moduleApi.authenticateWithGoogle();
+
+    expect(result).toEqual({
+      success: false,
+      error: 'Authentication failed',
+    });
+    expect(parseReturnUrlMock).not.toHaveBeenCalled();
   });
 
   it('builds a native redirect URI from a Google client id on Android', async () => {
