@@ -1426,8 +1426,6 @@ export default function MapScreen({ route, navigation }) {
 
         {/* Bottom sheet */}
         <BuildingBottomSheet
-          styles={styles}
-          maroon={MAROON}
           selectedBuilding={selectedBuilding}
           getBuildingName={getBuildingName}
           getAmenities={getAmenities}

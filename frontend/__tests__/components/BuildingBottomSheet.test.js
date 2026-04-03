@@ -1,21 +1,9 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
 import BuildingBottomSheet from '../../src/components/BuildingBottomSheet';
-
-const mockStyles = StyleSheet.create({
-  sheetWrap: {}, sheet: {}, sheetHandle: {}, sheetHeaderRow: {},
-  sheetHeaderLeft: {}, buildingIcon: {}, buildingIconImage: {},
-  buildingTitle: {}, buildingSub: {}, amenitiesWrap: {},
-  amenitiesTitle: {}, amenityRow: {}, amenityLeft: {},
-  amenityLabel: {}, amenityValue: {}, closeBtn: {}, closeBtnText: {},
-  directionsBtn: {}, directionsBtnText: {}, directionsBtnIcon: {},
-});
 
 describe('BuildingBottomSheet', () => {
   const baseProps = {
-    styles: mockStyles,
-    maroon: '#95223D',
     selectedBuilding: null,
     getBuildingName: (b) => b?.name || 'Building',
     getAmenities: (b) => ({
