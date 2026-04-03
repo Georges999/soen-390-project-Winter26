@@ -207,6 +207,73 @@ const applyNextClassPrefill = ({
   });
 };
 
+const formatPOIDistance = (distance) => {
+  if (typeof distance !== "number" || Number.isNaN(distance)) return "";
+  if (distance < 1000) return `${Math.round(distance)}m`;
+  return `${(distance / 1000).toFixed(1)}km`;
+};
+
+const renderPOIContent = ({
+  isPOILoading,
+  displayedPOIs,
+  styles,
+  setSelectedPOI,
+  setIsPOIPanelOpen,
+}) => {
+  if (isPOILoading) {
+    return <Text style={styles.poiStatusText}>Loading nearby places...</Text>;
+  }
+
+  if (displayedPOIs.length === 0) {
+    return <Text style={styles.poiStatusText}>No nearby POIs found.</Text>;
+  }
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      keyboardShouldPersistTaps="handled"
+      nestedScrollEnabled
+    >
+      {displayedPOIs.map((poi, index) => (
+        <Pressable
+          key={`poi-row-${String(poi.id ?? "x")}-${index}`}
+          testID="poi-list-item"
+          onPress={() => {
+            setSelectedPOI(poi);
+            setIsPOIPanelOpen(false);
+          }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "#FFFFFF",
+            borderBottomWidth: 1,
+            borderBottomColor: "#E9E9E9",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+          }}
+        >
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={styles.poiResultTitle} numberOfLines={1}>
+              {poi.name}
+            </Text>
+            {typeof poi.rating === "number" ? (
+              <Text style={{ marginTop: 2, fontSize: 12, color: "#5C5C5C" }}>
+                {poi.rating.toFixed(1)} ★
+              </Text>
+            ) : null}
+          </View>
+
+          <Text style={{ fontSize: 12, fontWeight: "600", color: "#222" }}>
+            {formatPOIDistance(poi.distance)}
+          </Text>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+};
+
 const zoomMapToCoordinate = (mapRef, coord) => {
   mapRef.current?.animateToRegion(
     { ...coord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
@@ -955,67 +1022,6 @@ export default function MapScreen({ route, navigation }) {
     (startIndoorRoom || destIndoorRoom) && !activeField,
   );
 
-  const formatPOIDistance = (distance) => {
-    if (typeof distance !== "number" || Number.isNaN(distance)) return "";
-    if (distance < 1000) return `${Math.round(distance)}m`;
-    return `${(distance / 1000).toFixed(1)}km`;
-  };
-
-  const renderPOIContent = () => {
-    if (isPOILoading) {
-      return <Text style={styles.poiStatusText}>Loading nearby places...</Text>;
-    }
-
-    if (displayedPOIs.length === 0) {
-      return <Text style={styles.poiStatusText}>No nearby POIs found.</Text>;
-    }
-
-    return (
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled
-      >
-        {displayedPOIs.map((poi, index) => (
-          <Pressable
-            key={`poi-row-${String(poi.id ?? "x")}-${index}`}
-            testID="poi-list-item"
-            onPress={() => {
-              setSelectedPOI(poi);
-              setIsPOIPanelOpen(false);
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              backgroundColor: "#FFFFFF",
-              borderBottomWidth: 1,
-              borderBottomColor: "#E9E9E9",
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-            }}
-          >
-            <View style={{ flex: 1, paddingRight: 10 }}>
-              <Text style={styles.poiResultTitle} numberOfLines={1}>
-                {poi.name}
-              </Text>
-              {typeof poi.rating === "number" ? (
-                <Text style={{ marginTop: 2, fontSize: 12, color: "#5C5C5C" }}>
-                  {poi.rating.toFixed(1)} ★
-                </Text>
-              ) : null}
-            </View>
-
-            <Text style={{ fontSize: 12, fontWeight: "600", color: "#222" }}>
-              {formatPOIDistance(poi.distance)}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    );
-  };
-
   const isBottomPanelOpen = Boolean(selectedBuilding) || canShowDirectionsPanel;
 
   //Move recenter floating button upward when panel is open, so it doesn’t overlap the panel
@@ -1452,7 +1458,13 @@ export default function MapScreen({ route, navigation }) {
                   flex: 1,
                 }}
               >
-                {renderPOIContent()}
+                {renderPOIContent({
+                  isPOILoading,
+                  displayedPOIs,
+                  styles,
+                  setSelectedPOI,
+                  setIsPOIPanelOpen,
+                })}
               </View>
             ) : (
               <OutdoorPoiFilterForm
