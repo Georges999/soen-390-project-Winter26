@@ -1,11 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { View, Image, ScrollView } from "react-native";
+import { View, Image, ScrollView, Text } from "react-native";
 import IndoorPoiMarkers from "../IndoorPoiMarkers";
 
 /**
  * Pure presentation component for indoor floor map panel
  * Displays floor plan image with POI markers and room highlights
+ * Shows fallback message when floor image is not available
  * All rendering logic, no state management
  */
 function IndoorFloorMapPanel({
@@ -16,7 +17,13 @@ function IndoorFloorMapPanel({
   onInspectModeChange,
 }) {
   if (!currentFloor?.image) {
-    return null;
+    return (
+      <View style={styles.floorPlanContainer}>
+        <Text style={styles.floorPlanNotAvailableText}>
+          Floor plan not available
+        </Text>
+      </View>
+    );
   }
 
   const imageStyle = inspectMode
