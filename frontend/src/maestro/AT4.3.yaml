@@ -53,3 +53,27 @@ appId: host.exp.Exponent
 - hideKeyboard
 - waitForAnimationToEnd
 
+
+# Clear selected start room, then scroll so floor chips are safely tappable
+- tapOn:
+    point: "77%,21%"
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
+
+
+- scrollUntilVisible:
+        element:
+            text: "9"
+        direction: DOWN
+        timeout: 10000
+- tapOn: "9"
+- waitForAnimationToEnd
+- assertVisible: "Hall Building · Floor 9"
+- assertNotVisible:
+    id: "selected-room-highlight"
+
+# Visible for floor 9
+- assertVisible: "Washroom"
+- assertVisible: "Elevator"
+- assertVisible: "Stairs"
