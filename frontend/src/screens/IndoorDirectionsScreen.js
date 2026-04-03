@@ -42,7 +42,6 @@ import {
   buildJourneyStages,
   getBuildingName,
   getDefaultJourneyStage,
-  getFloorLabel,
   getJourneyMapStage,
 } from "../utils/pathfinding/navigationJourney";
 import {
