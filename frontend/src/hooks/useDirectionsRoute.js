@@ -9,7 +9,7 @@ const MODE_MAP = {
   transit: "transit",
 };
 
-function buildWaypointsParam(waypoints) {
+export function buildWaypointsParam(waypoints) {
   return Array.isArray(waypoints) && waypoints.length
     ? `&waypoints=${waypoints.map((p) => encodeURIComponent(p)).join("|")}`
     : "";
@@ -30,7 +30,7 @@ function buildRequestUrl(originParam, destinationParam, apiMode, waypointsParam)
   );
 }
 
-function pickBestRoute(routes, isTransit) {
+export function pickBestRoute(routes, isTransit) {
   if (!routes?.length) return null;
   if (!isTransit) return routes[0];
   return routes.reduce((best, current) => {
@@ -71,7 +71,7 @@ function buildRouteOptions(routes) {
   });
 }
 
-function decodeStepCoords(step) {
+export function decodeStepCoords(step) {
   if (!step.polyline?.points) return [];
   try {
     return polyline
@@ -107,7 +107,7 @@ function buildSteps(steps) {
   }));
 }
 
-function buildRouteInfo(leg) {
+export function buildRouteInfo(leg) {
   if (!leg) return null;
   return {
     durationText: leg.duration?.text ?? "",

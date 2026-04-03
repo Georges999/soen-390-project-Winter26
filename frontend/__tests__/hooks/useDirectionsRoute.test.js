@@ -1,5 +1,11 @@
 import { renderHook, waitFor, act } from '@testing-library/react-native';
-import { useDirectionsRoute } from '../../src/hooks/useDirectionsRoute';
+import {
+  buildRouteInfo,
+  buildWaypointsParam,
+  decodeStepCoords,
+  pickBestRoute,
+  useDirectionsRoute,
+} from '../../src/hooks/useDirectionsRoute';
 
 jest.mock('@mapbox/polyline', () => ({
   decode: jest.fn(() => [[45.4968, -73.5788], [45.4952, -73.5779]]),
@@ -37,6 +43,31 @@ describe('useDirectionsRoute', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     globalThis.fetch = jest.fn();
+  });
+
+  describe('helper functions', () => {
+    it('decodeStepCoords returns [] when polyline.decode throws', () => {
+      const polyline = require('@mapbox/polyline');
+      polyline.decode.mockImplementationOnce(() => {
+        throw new Error('decode failed');
+      });
+
+      expect(decodeStepCoords({ polyline: { points: 'bad' } })).toEqual([]);
+    });
+
+    it('pickBestRoute returns null for null or empty routes', () => {
+      expect(pickBestRoute(null, false)).toBeNull();
+      expect(pickBestRoute([], true)).toBeNull();
+    });
+
+    it('buildRouteInfo returns null for null leg', () => {
+      expect(buildRouteInfo(null)).toBeNull();
+    });
+
+    it('buildWaypointsParam returns empty string for null and empty arrays', () => {
+      expect(buildWaypointsParam(null)).toBe('');
+      expect(buildWaypointsParam([])).toBe('');
+    });
   });
 
   it('should return empty when no startCoord', () => {
