@@ -18,60 +18,81 @@ appId: host.exp.Exponent
 
 # Ensure Indoor screen loaded
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 10000
 
 #Select room and verify highlight is visible
 - tapOn:
-    text: "Search room or click on map"
+    text: "Search start or use map pin button"
 - inputText: "H837"
 - extendedWaitUntil:
-    visible: "H837.*Hall Building"
+    visible: "H837, Floor 8 · Hall Building"
     timeout: 10000
 - tapOn:
-    text: "H837.*Hall Building"
+    text: "H837, Floor 8 · Hall Building"
 - waitForAnimationToEnd
 - hideKeyboard
 - assertVisible:
     id: "selected-room-highlight"
-- assertVisible: "Room Selected"
-- assertVisible: "Get Directions"
+
 
 #Switching floors in same building -> highlight should be hidden on other floor and restored when returning
+- tapOn:
+    point: "77%,21%"
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
+- scrollUntilVisible:
+        element:
+            text: "9"
+        direction: DOWN
+        timeout: 10000
 - tapOn: "9"
 - waitForAnimationToEnd
+- assertVisible: "Hall Building · Floor 9"
 - assertNotVisible:
     id: "selected-room-highlight"
-- assertVisible: "Room Selected"
 
 - tapOn: "8"
 - waitForAnimationToEnd
+- assertVisible: "Hall Building · Floor 8"
 - assertVisible:
     id: "selected-room-highlight"
 
 #new room
+- scrollUntilVisible:
+        element:
+            text: "H837, Floor 8"
+        direction: UP
+        timeout: 10000
 - tapOn:
-    text: "Search room or click on map"
+    text: "H837, Floor 8"
+- eraseText
 - inputText: "H861"
 - extendedWaitUntil:
-    visible: "H861.*Hall Building"
+    visible: "H861, Floor 8 · Hall Building"
     timeout: 10000
 - tapOn:
-    text: "H861.*Hall Building"
+    text: "H861, Floor 8 · Hall Building"
 - waitForAnimationToEnd
 - hideKeyboard
 - assertVisible:
     id: "selected-room-highlight"
-- assertVisible: "Room Selected"
-- assertVisible: "Get Directions"
+
 
 # 4) Selection/highlight clears when switching building/campus
+- scrollUntilVisible:
+        element:
+            text: "H861, Floor 8"
+        direction: UP
+        timeout: 10000
+- tapOn:
+    point: "77%,21%"
+- waitForAnimationToEnd
 - tapOn: "John Molson Building"
 - waitForAnimationToEnd
-- assertNotVisible: "Room Selected"
 - assertNotVisible:
     id: "selected-room-highlight"
 
 - tapOn: "Loyola"
 - waitForAnimationToEnd
-- assertNotVisible: "Room Selected"
