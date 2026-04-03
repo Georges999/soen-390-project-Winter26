@@ -55,21 +55,25 @@ function buildGraph(floorData) {
       const baseWeight = edge.weight ?? euclideanDistance(nodesMap.get(from), nodesMap.get(to));
       const accessible = !isStairsNode(from, nodesMap) && !isStairsNode(to, nodesMap);
 
-      // Penalise edges that pass through room/classroom nodes so the
-      // pathfinder prefers hallway-only routes.  The penalty only affects
-      // the "entering-room" direction; leaving a room toward a hallway
-      // keeps normal weight so start/end room nodes are still reachable.
-      const ROOM_PENALTY = 1000;
-      const fromIsRoom = nodesMap.get(from)?.type === 'room' || nodesMap.get(from)?.type === 'classroom';
-      const toIsRoom   = nodesMap.get(to)?.type   === 'room' || nodesMap.get(to)?.type   === 'classroom';
+      // Penalise edges that touch room/classroom nodes so the
+      // pathfinder strongly prefers hallway-only routes.
+      // BOTH directions are penalised — this prevents rooms from being
+      // used as transit shortcuts (hallway→room→hallway).
+      // The start / end room is still reachable because the penalty is
+      // small compared to a huge detour; but using TWO room edges
+      // (enter + leave) makes the shortcut far too expensive.
+      const ROOM_TRANSIT_PENALTY = 50000;
+      const fromType = nodesMap.get(from)?.type || '';
+      const toType   = nodesMap.get(to)?.type   || '';
+      const fromIsRoom = fromType === 'room' || fromType === 'classroom';
+      const toIsRoom   = toType   === 'room' || toType   === 'classroom';
 
-      // hallway → room  (entering a room): penalise
-      // room → hallway  (leaving a room):  normal weight
-      const weightToRoom   = toIsRoom   ? baseWeight + ROOM_PENALTY : baseWeight;
-      const weightFromRoom = fromIsRoom ? baseWeight + ROOM_PENALTY : baseWeight;
+      // Both directions penalised when a room/classroom is involved
+      const weightForward  = toIsRoom   || fromIsRoom ? baseWeight + ROOM_TRANSIT_PENALTY : baseWeight;
+      const weightBackward = fromIsRoom || toIsRoom   ? baseWeight + ROOM_TRANSIT_PENALTY : baseWeight;
 
-      graph.get(from).push({ to, weight: weightToRoom, accessible });
-      graph.get(to).push({ to: from, weight: weightFromRoom, accessible });
+      graph.get(from).push({ to, weight: weightForward, accessible });
+      graph.get(to).push({ to: from, weight: weightBackward, accessible });
     });
   }
   return { graph, nodes: nodesMap };

@@ -52,6 +52,7 @@ import {
   indoorPoiLegendStyles,
   indoorPoiMarkerStyle,
 } from "../styles/indoorSharedStyles";
+import { smoothPath } from "../utils/pathfinding/pathSmoothing";
 export {
   buildAllRooms,
   getInitialSelection,
@@ -763,23 +764,21 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     const scaleX = displayedMapWidth / displayWidth;
     const scaleY = displayedMapHeight / displayHeight;
 
-    let pathD = `M ${coords[0].x * scaleX} ${coords[0].y * scaleY}`;
-    for (let i = 1; i < coords.length; i++) {
-      pathD += ` L ${coords[i].x * scaleX} ${coords[i].y * scaleY}`;
-    }
+    // Scale raw coordinates to display dimensions
+    const scaledPoints = coords.map((c) => ({
+      x: c.x * scaleX,
+      y: c.y * scaleY,
+      type: c.type,
+    }));
+
+    // Apply smoothing pipeline: axis-snap → simplify → Catmull-Rom curves
+    const pathD = smoothPath(scaledPoints);
 
     return {
       path: pathD,
-      start: { x: coords[0].x * scaleX, y: coords[0].y * scaleY },
-      end: {
-        x: coords[coords.length - 1].x * scaleX,
-        y: coords[coords.length - 1].y * scaleY,
-      },
-      points: coords.map((c) => ({
-        x: c.x * scaleX,
-        y: c.y * scaleY,
-        type: c.type,
-      })),
+      start: scaledPoints[0],
+      end: scaledPoints[scaledPoints.length - 1],
+      points: scaledPoints,
     };
   }, [
     pathResult,
@@ -1497,6 +1496,51 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                   );
                 })}
               </ScrollView>
+            </View>
+          )}
+
+          {/* Outdoor navigation bridge — shown when outdoor stage is active */}
+          {activeJourneyStage?.type === "outdoor" && (
+            <View style={styles.outdoorBridgeCard}>
+              <MaterialIcons name="directions-walk" size={28} color={MAROON} />
+              <Text style={styles.outdoorBridgeTitle}>
+                Walk outside to{" "}
+                {getBuildingName(activeJourneyStage.destinationBuildingId)}
+              </Text>
+              <Text style={styles.outdoorBridgeSubtitle}>
+                {activeJourneyStage.description}
+              </Text>
+              <Pressable
+                testID="outdoor-navigate-btn"
+                style={styles.outdoorBridgeButton}
+                onPress={() => {
+                  const fromCoords = activeJourneyStage.fromCoords;
+                  const toCoords = activeJourneyStage.toCoords;
+                  if (fromCoords && toCoords) {
+                    // Navigate to the Map tab (parent tab navigator)
+                    // using the correct screen name "Map"
+                    const parent = navigation.getParent();
+                    (parent || navigation).navigate("Map", {
+                      outdoorRoute: {
+                        startName:
+                          getBuildingName(activeJourneyStage.fromBuildingId) +
+                          " Building",
+                        destName:
+                          getBuildingName(
+                            activeJourneyStage.destinationBuildingId,
+                          ) + " Building",
+                        startCoords: fromCoords,
+                        destCoords: toCoords,
+                      },
+                    });
+                  }
+                }}
+              >
+                <MaterialIcons name="map" size={18} color="#fff" />
+                <Text style={styles.outdoorBridgeButtonText}>
+                  View outdoor route
+                </Text>
+              </Pressable>
             </View>
           )}
 
@@ -2245,6 +2289,45 @@ const styles = StyleSheet.create({
   journeyStageTitleActive: {
     color: "#fff",
   },
+  outdoorBridgeCard: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#f0f7ff",
+    borderWidth: 1,
+    borderColor: "#c4ddf5",
+    alignItems: "center",
+  },
+  outdoorBridgeTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2c3e50",
+    marginTop: 8,
+    textAlign: "center",
+  },
+  outdoorBridgeSubtitle: {
+    fontSize: 13,
+    color: "#5a7a97",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  outdoorBridgeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: MAROON,
+    gap: 6,
+  },
+  outdoorBridgeButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   mapStageHeader: {
     width: "100%",
     flexDirection: "row",
@@ -2310,5 +2393,6 @@ IndoorDirectionsScreen.propTypes = {
     navigate: PropTypes.func,
     goBack: PropTypes.func,
     addListener: PropTypes.func,
+    getParent: PropTypes.func,
   }),
 };
