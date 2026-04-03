@@ -4,6 +4,15 @@
 import { MinHeap } from './priorityQueue.js';
 import { euclideanDistance, buildMultiFloorGraph, getNodeFloor } from './graphBuilder.js';
 
+function relaxDijkstra(currentId, neighborId, weight, distances, previous, pq) {
+  const newDistance = distances.get(currentId) + weight;
+  if (newDistance < distances.get(neighborId)) {
+    distances.set(neighborId, newDistance);
+    previous.set(neighborId, currentId);
+    pq.insert(neighborId, newDistance);
+  }
+}
+
 function dijkstra(graph, _nodes, startId, endId, accessibleOnly = false) {
   if (!graph.has(startId) || !graph.has(endId)) return null;
 
@@ -23,26 +32,39 @@ function dijkstra(graph, _nodes, startId, endId, accessibleOnly = false) {
     if (currentId === endId) break;
 
     for (const { to: neighborId, weight, accessible } of graph.get(currentId) || []) {
-      if (visited.has(neighborId)) continue;
-      if (accessibleOnly && accessible === false) continue;
-      const newDistance = distances.get(currentId) + weight;
-      if (newDistance < distances.get(neighborId)) {
-        distances.set(neighborId, newDistance);
-        previous.set(neighborId, currentId);
-        pq.insert(neighborId, newDistance);
-      }
+      if (shouldSkipNeighbor(visited, neighborId, accessibleOnly, accessible)) continue;
+      relaxDijkstra(currentId, neighborId, weight, distances, previous, pq);
     }
   }
 
   if (!visited.has(endId)) return null;
 
+  return { pathNodeIds: reconstructPath(previous, endId), totalWeight: distances.get(endId) };
+}
+
+function shouldSkipNeighbor(visited, neighborId, accessibleOnly, accessible) {
+  return visited.has(neighborId) || (accessibleOnly && accessible === false);
+}
+
+function relaxNeighbor(currentId, neighborId, weight, scores, heuristic, pq) {
+  const { gScore, fScore, previous } = scores;
+  const tentativeGScore = gScore.get(currentId) + weight;
+  if (tentativeGScore < gScore.get(neighborId)) {
+    previous.set(neighborId, currentId);
+    gScore.set(neighborId, tentativeGScore);
+    fScore.set(neighborId, tentativeGScore + heuristic(neighborId));
+    pq.insert(neighborId, fScore.get(neighborId));
+  }
+}
+
+function reconstructPath(previous, endId) {
   const pathNodeIds = [];
   let current = endId;
   while (current !== undefined) {
     pathNodeIds.unshift(current);
     current = previous.get(current);
   }
-  return { pathNodeIds, totalWeight: distances.get(endId) };
+  return pathNodeIds;
 }
 
 function aStar(graph, nodes, startId, endId, accessibleOnly = false) {
@@ -76,27 +98,14 @@ function aStar(graph, nodes, startId, endId, accessibleOnly = false) {
     if (currentId === endId) break;
 
     for (const { to: neighborId, weight, accessible } of graph.get(currentId) || []) {
-      if (visited.has(neighborId)) continue;
-      if (accessibleOnly && accessible === false) continue;
-      const tentativeGScore = gScore.get(currentId) + weight;
-      if (tentativeGScore < gScore.get(neighborId)) {
-        previous.set(neighborId, currentId);
-        gScore.set(neighborId, tentativeGScore);
-        fScore.set(neighborId, tentativeGScore + heuristic(neighborId));
-        pq.insert(neighborId, fScore.get(neighborId));
-      }
+      if (shouldSkipNeighbor(visited, neighborId, accessibleOnly, accessible)) continue;
+      relaxNeighbor(currentId, neighborId, weight, { gScore, fScore, previous }, heuristic, pq);
     }
   }
 
   if (!visited.has(endId)) return null;
 
-  const pathNodeIds = [];
-  let current = endId;
-  while (current !== undefined) {
-    pathNodeIds.unshift(current);
-    current = previous.get(current);
-  }
-  return { pathNodeIds, totalWeight: gScore.get(endId) };
+  return { pathNodeIds: reconstructPath(previous, endId), totalWeight: gScore.get(endId) };
 }
 
 /**
