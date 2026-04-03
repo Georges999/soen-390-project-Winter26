@@ -1541,8 +1541,6 @@ export default function MapScreen({ route, navigation }) {
 
         {canShowDirectionsPanel && (
           <DirectionsPanel
-            styles={styles}
-            maroon={MAROON}
             travelMode={travelMode}
             setTravelMode={setTravelMode}
             isCrossCampusTrip={Boolean(isCrossCampusTrip)}
