@@ -73,6 +73,10 @@ async function setupRouteViaPolygons(result) {
 }
 
 describe('MapScreen - Additional Coverage', () => {
+  const mockNavigation = {
+    navigate: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     locationService.getUserCoords.mockResolvedValue({
@@ -118,6 +122,90 @@ describe('MapScreen - Additional Coverage', () => {
         fireEvent.press(getByText('John Molson Building'));
       });
       expect(destInput.props.value).toBe('John Molson Building');
+    });
+
+    it('should show and select a room match for the outdoor directions search', async () => {
+      const { getByTestId, getByText } = render(<MapScreen navigation={mockNavigation} />);
+      const destInput = getByTestId('dest-input');
+      await focusAndType(destInput, 'H837');
+
+      expect(getByText('Room matches')).toBeTruthy();
+      expect(getByText('H837 · Hall Building')).toBeTruthy();
+
+      await act(async () => {
+        fireEvent.press(getByText('H837 · Hall Building'));
+      });
+
+      expect(destInput.props.value).toBe('H837 · Hall Building');
+      expect(getByTestId('indoor-handoff-button')).toBeTruthy();
+
+      await act(async () => {
+        fireEvent.press(getByTestId('indoor-handoff-button'));
+      });
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Indoor',
+        expect.objectContaining({
+          screen: 'IndoorDirections',
+          params: expect.objectContaining({
+            destinationRoom: expect.objectContaining({
+              label: 'H837',
+              floor: 'Hall-8',
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('should show room matches beyond the previous truncated limit', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+      const destInput = getByTestId('dest-input');
+      await focusAndType(destInput, 'H82');
+
+      expect(getByText('H820 · Hall Building')).toBeTruthy();
+      expect(getByText('H825 · Hall Building')).toBeTruthy();
+    });
+
+    it('should find a hall room when the search includes the building name', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+      const startInput = getByTestId('start-input');
+      await focusAndType(startInput, 'Hall 937');
+
+      expect(getByText('H937 · Hall Building')).toBeTruthy();
+    });
+
+    it('should let the user fill both room fields before using the indoor handoff button', async () => {
+      const { getByTestId, getByText } = render(<MapScreen navigation={mockNavigation} />);
+      const startInput = getByTestId('start-input');
+      const destInput = getByTestId('dest-input');
+
+      await focusAndType(startInput, 'H837');
+      await act(async () => {
+        fireEvent.press(getByText('H837 · Hall Building'));
+      });
+
+      await focusAndType(destInput, 'Hall 937');
+      await act(async () => {
+        fireEvent.press(getByText('H937 · Hall Building'));
+      });
+
+      expect(startInput.props.value).toBe('H837 · Hall Building');
+      expect(destInput.props.value).toBe('H937 · Hall Building');
+
+      await act(async () => {
+        fireEvent.press(getByTestId('indoor-handoff-button'));
+      });
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Indoor',
+        expect.objectContaining({
+          screen: 'IndoorDirections',
+          params: expect.objectContaining({
+            startRoom: expect.objectContaining({ label: 'H837' }),
+            destinationRoom: expect.objectContaining({ label: 'H937' }),
+          }),
+        }),
+      );
     });
 
     it('should show and select My location option for dest field', async () => {

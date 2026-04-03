@@ -14,6 +14,7 @@ import RouteOverlay from "../components/RouteOverlay";
 import OutdoorPoiFilterForm from "../components/OutdoorPoiFilterForm";
 import campuses from "../data/campuses.json";
 import shuttleSchedule from "../data/shuttleSchedule.json";
+import { buildAllRooms, getFilteredRooms } from "../utils/indoorMapUtils";
 import { filterPOIsByMode } from "../utils/poiFilter";
 
 import { useDefaultStartMyLocation } from "../hooks/useDefaultStartMyLocation";
@@ -42,6 +43,13 @@ const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
 const defaultCampusId = campuses.sgw?.id ?? campusList[0]?.id;
 
 const MAROON = "#95223D";
+const ROOM_BUILDING_SEARCH_ALIASES = {
+  hall: ["h", "hall building", "henry f hall building"],
+  mb: ["mb", "john molson building"],
+  cc: ["cc", "central building"],
+  vl: ["vl", "vanier library", "vanier library building"],
+  ve: ["ve", "vanier extension"],
+};
 
 export const getPoiApiRadius = (fetchRadius, mode, radius) => {
   if (typeof fetchRadius === "number" && Number.isFinite(fetchRadius)) {
@@ -147,6 +155,159 @@ export const handleRecenterPressLogic = ({ routeCoords, userCoord, mapRef }) => 
   }
 };
 
+const setLooseDestinationAndOpenPanel = ({
+  location,
+  setDestText,
+  setDestCoord,
+  setDestCampusId,
+  openDirectionsPanel,
+}) => {
+  setDestText(location);
+  setDestCoord(null);
+  setDestCampusId(null);
+  openDirectionsPanel();
+};
+
+const applyNextClassPrefill = ({
+  location,
+  allBuildings,
+  setDestinationAndOpenPanel,
+  setDestText,
+  setDestCoord,
+  setDestCampusId,
+  openDirectionsPanel,
+}) => {
+  const code = String(location).trim().split(/\s+/)[0];
+  if (!code) {
+    setLooseDestinationAndOpenPanel({
+      location,
+      setDestText,
+      setDestCoord,
+      setDestCampusId,
+      openDirectionsPanel,
+    });
+    return;
+  }
+
+  const building = allBuildings.find(
+    (b) => (b.label || "").toUpperCase() === code.toUpperCase(),
+  );
+  if (building) {
+    const center = getPolygonCenter(building.coordinates);
+    setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
+    return;
+  }
+
+  setLooseDestinationAndOpenPanel({
+    location,
+    setDestText,
+    setDestCoord,
+    setDestCampusId,
+    openDirectionsPanel,
+  });
+};
+
+const formatPOIDistance = (distance) => {
+  if (typeof distance !== "number" || Number.isNaN(distance)) return "";
+  if (distance < 1000) return `${Math.round(distance)}m`;
+  return `${(distance / 1000).toFixed(1)}km`;
+};
+
+const renderPOIContent = ({
+  isPOILoading,
+  displayedPOIs,
+  styles,
+  setSelectedPOI,
+  setIsPOIPanelOpen,
+}) => {
+  if (isPOILoading) {
+    return <Text style={styles.poiStatusText}>Loading nearby places...</Text>;
+  }
+
+  if (displayedPOIs.length === 0) {
+    return <Text style={styles.poiStatusText}>No nearby POIs found.</Text>;
+  }
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      keyboardShouldPersistTaps="handled"
+      nestedScrollEnabled
+    >
+      {displayedPOIs.map((poi, index) => (
+        <Pressable
+          key={`poi-row-${String(poi.id ?? "x")}-${index}`}
+          testID="poi-list-item"
+          onPress={() => {
+            setSelectedPOI(poi);
+            setIsPOIPanelOpen(false);
+          }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "#FFFFFF",
+            borderBottomWidth: 1,
+            borderBottomColor: "#E9E9E9",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+          }}
+        >
+          <View style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={styles.poiResultTitle} numberOfLines={1}>
+              {poi.name}
+            </Text>
+            {typeof poi.rating === "number" ? (
+              <Text style={{ marginTop: 2, fontSize: 12, color: "#5C5C5C" }}>
+                {poi.rating.toFixed(1)} ★
+              </Text>
+            ) : null}
+          </View>
+
+          <Text style={{ fontSize: 12, fontWeight: "600", color: "#222" }}>
+            {formatPOIDistance(poi.distance)}
+          </Text>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+};
+
+const useSyncStartCampusFromCurrentBuilding = ({
+  startText,
+  currentBuilding,
+  setStartCampusId,
+}) => {
+  useEffect(() => {
+    if (startText !== "My location") return;
+    if (currentBuilding?.__campusId) {
+      setStartCampusId(currentBuilding.__campusId);
+    }
+  }, [startText, currentBuilding, setStartCampusId]);
+};
+
+const useSyncDestinationFromSelectedPOI = ({
+  selectedPOI,
+  setShowDirectionsPanel,
+  setDestinationDetails,
+  setDestIndoorRoom,
+}) => {
+  useEffect(() => {
+    if (!selectedPOI) return;
+    // When a POI card is shown, hide the bottom directions panel so
+    // the two are never visible at the same time.
+    setShowDirectionsPanel(false);
+    setDestinationDetails(selectedPOI.name, selectedPOI.coords, null);
+    setDestIndoorRoom(null);
+  }, [
+    selectedPOI,
+    setShowDirectionsPanel,
+    setDestinationDetails,
+    setDestIndoorRoom,
+  ]);
+};
+
 const zoomMapToCoordinate = (mapRef, coord) => {
   mapRef.current?.animateToRegion(
     { ...coord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
@@ -161,7 +322,7 @@ const fitMapToRoute = (mapRef, routeCoords) => {
   });
 };
 
-export default function MapScreen({ route }) {
+export default function MapScreen({ route, navigation }) {
   const [selectedCampusId, setSelectedCampusId] = useState(defaultCampusId);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -185,6 +346,8 @@ export default function MapScreen({ route }) {
   const [activeField, setActiveField] = useState(null);
   const [startText, setStartText] = useState("");
   const [destText, setDestText] = useState("");
+  const [startIndoorRoom, setStartIndoorRoom] = useState(null);
+  const [destIndoorRoom, setDestIndoorRoom] = useState(null);
   const [hasLocationPerm, setHasLocationPerm] = useState(false);
   const [startCampusId, setStartCampusId] = useState(null);
   const [destCampusId, setDestCampusId] = useState(null);
@@ -257,10 +420,12 @@ export default function MapScreen({ route }) {
 
   const clearOriginDetails = () => {
     clearLocationDetails(setStartText, setStartCoord, setStartCampusId);
+    setStartIndoorRoom(null);
   };
 
   const clearDestinationDetails = () => {
     clearLocationDetails(setDestText, setDestCoord, setDestCampusId);
+    setDestIndoorRoom(null);
   };
 
   const openDirectionsPanel = () => {
@@ -277,6 +442,7 @@ export default function MapScreen({ route }) {
     setText,
     setCoord,
     clearDetails,
+    clearRoomSelection,
     preserveMyLocation = false,
   }) => {
     setHasInteracted(true);
@@ -287,6 +453,7 @@ export default function MapScreen({ route }) {
     }
 
     setText(value);
+    clearRoomSelection?.();
     if (setCoord && (!preserveMyLocation || value !== "My location")) {
       setCoord(null);
     }
@@ -298,6 +465,7 @@ export default function MapScreen({ route }) {
       setText: setStartText,
       setCoord: setStartCoord,
       clearDetails: clearOriginDetails,
+      clearRoomSelection: () => setStartIndoorRoom(null),
       preserveMyLocation: true,
     });
   };
@@ -308,6 +476,7 @@ export default function MapScreen({ route }) {
       setText: setDestText,
       setCoord: setDestCoord,
       clearDetails: clearDestinationDetails,
+      clearRoomSelection: () => setDestIndoorRoom(null),
     });
   };
 
@@ -334,10 +503,19 @@ export default function MapScreen({ route }) {
       ),
     [], //runs once only
   );
+  const allRooms = useMemo(() => buildAllRooms(), []);
 
   const getBuildingName = (b) => b?.name || b?.label || "Building";
   const getBuildingKey = (campusId, b) =>
     `${campusId}:${b?.id ?? b?.name ?? b?.label ?? "unknown"}`;
+  const getRoomKey = (room) =>
+    `${room?.campusId ?? "unknown"}:${room?.buildingId ?? "unknown"}:${room?.id ?? room?.label ?? "room"}`;
+  const getRoomLabel = (room) => {
+    if (!room) return "Room";
+    return room.buildingName
+      ? `${room.label} · ${room.buildingName}`
+      : room.label || "Room";
+  };
   const isCurrentBuilding = (campusId, building) => {
     if (!currentBuilding) return false;
     return (
@@ -366,6 +544,7 @@ export default function MapScreen({ route }) {
     //Only fill if user explicitly selected a field first
     if (activeField === "start") {
       setOriginDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
+      setStartIndoorRoom(null);
       setActiveField(null); //resetting to false so next tap doesn't also change start
       Keyboard.dismiss();
       return;
@@ -373,6 +552,7 @@ export default function MapScreen({ route }) {
 
     if (activeField === "dest") {
       setDestinationDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
+      setDestIndoorRoom(null);
       setActiveField(null);
       Keyboard.dismiss();
       return;
@@ -413,8 +593,52 @@ export default function MapScreen({ route }) {
 
     if (field === "start") {
       setOriginDetails(name, center, building.__campusId ?? null);
+      setStartIndoorRoom(null);
     } else if (field === "dest") {
       setDestinationDetails(name, center, building.__campusId ?? null);
+      setDestIndoorRoom(null);
+    }
+
+    setActiveField(null);
+    Keyboard.dismiss();
+  };
+
+  const selectRoomForField = (room, field) => {
+    const buildingAliases = ROOM_BUILDING_SEARCH_ALIASES[room?.buildingId] ?? [];
+    const normalizedAliases = new Set(
+      buildingAliases.map((alias) => normalizeText(alias)),
+    );
+    const matchedBuilding =
+      allBuildings.find(
+        (building) =>
+          building.id === room?.buildingId &&
+          building.__campusId === room?.campusId,
+      ) ??
+      allBuildings.find(
+        (building) =>
+          building.__campusId === room?.campusId &&
+          normalizedAliases.has(normalizeText(building.label || "")),
+      ) ??
+      allBuildings.find(
+        (building) =>
+          building.__campusId === room?.campusId &&
+          normalizedAliases.has(normalizeText(building.name || "")),
+      ) ??
+      allBuildings.find((building) => building.id === room?.buildingId);
+    const center = matchedBuilding
+      ? getPolygonCenter(matchedBuilding.coordinates)
+      : null;
+
+    if (!matchedBuilding || !center) return;
+
+    const label = getRoomLabel(room);
+
+    if (field === "start") {
+      setOriginDetails(label, center, matchedBuilding.__campusId ?? null);
+      setStartIndoorRoom(room);
+    } else if (field === "dest") {
+      setDestinationDetails(label, center, matchedBuilding.__campusId ?? null);
+      setDestIndoorRoom(room);
     }
 
     setActiveField(null);
@@ -428,8 +652,10 @@ export default function MapScreen({ route }) {
 
     if (field === "start") {
       setOriginToUserLocation(coords);
+      setStartIndoorRoom(null);
     } else if (field === "dest") {
       setDestinationDetails("My location", coords, null);
+      setDestIndoorRoom(null);
     }
 
     setActiveField(null);
@@ -464,6 +690,18 @@ export default function MapScreen({ route }) {
     return [...startsWithMatches, ...includesMatches].slice(0, 6);
   }, [activeField, startText, destText, allBuildings]);
 
+  const roomResults = useMemo(() => {
+    if (!activeField) return [];
+
+    const query = activeField === "start" ? startText : destText;
+    const normalizedQuery = String(query).toUpperCase().replaceAll(/[^A-Z0-9]/g, "");
+    if (normalizedQuery.length < 2) return [];
+
+    return getFilteredRooms(allRooms, query, {
+      preferredCampusId: selectedCampusId,
+    });
+  }, [activeField, startText, destText, allRooms, selectedCampusId]);
+
   //decide whether to show the “My location” suggestion row
   const shouldShowMyLocationOption = useMemo(() => {
     if (!activeField) return false;
@@ -479,6 +717,8 @@ export default function MapScreen({ route }) {
 
     setStartText(outdoor.startName || "");
     setDestText(outdoor.destName || "");
+    setStartIndoorRoom(null);
+    setDestIndoorRoom(null);
     setHasInteracted(true);
     setShowDirectionsPanel(true);
 
@@ -496,27 +736,18 @@ export default function MapScreen({ route }) {
     setStartText("My location");
     setStartCampusId(null);
     setStartCoord(userCoord ?? null);
+    setStartIndoorRoom(null);
+    setDestIndoorRoom(null);
 
-    const code = String(location).trim().split(/\s+/)[0];
-    if (code) {
-      const building = allBuildings.find(
-        (b) => (b.label || "").toUpperCase() === code.toUpperCase(),
-      );
-      if (building) {
-        const center = getPolygonCenter(building.coordinates);
-        setDestinationAndOpenPanel(location, center, building.__campusId ?? null);
-      } else {
-        setDestText(location);
-        setDestCoord(null);
-        setDestCampusId(null);
-        openDirectionsPanel();
-      }
-    } else {
-      setDestText(location);
-      setDestCoord(null);
-      setDestCampusId(null);
-      openDirectionsPanel();
-    }
+    applyNextClassPrefill({
+      location,
+      allBuildings,
+      setDestinationAndOpenPanel,
+      setDestText,
+      setDestCoord,
+      setDestCampusId,
+      openDirectionsPanel,
+    });
   }, [
     route?.params?.nextClassLocation,
     route?.params?.nextClassSummary,
@@ -534,6 +765,7 @@ export default function MapScreen({ route }) {
       center,
       selectedBuilding.__campusId ?? selectedCampus?.id ?? null,
     );
+    setDestIndoorRoom(null);
 
     setSelectedBuilding(null);
     Keyboard.dismiss();
@@ -556,6 +788,8 @@ export default function MapScreen({ route }) {
     const nextDestCoord = startCoord;
     const nextStartCampusId = destCampusId;
     const nextDestCampusId = startCampusId;
+    const nextStartIndoorRoom = destIndoorRoom;
+    const nextDestIndoorRoom = startIndoorRoom;
 
     setStartText(nextStartText);
     setDestText(nextDestText);
@@ -563,6 +797,8 @@ export default function MapScreen({ route }) {
     setDestCoord(nextDestCoord);
     setStartCampusId(nextStartCampusId);
     setDestCampusId(nextDestCampusId);
+    setStartIndoorRoom(nextStartIndoorRoom);
+    setDestIndoorRoom(nextDestIndoorRoom);
   };
 
   //when campus selection/toggle change this makes sure context is reset cleanly
@@ -782,13 +1018,11 @@ export default function MapScreen({ route }) {
     allBuildings,
   });
 
-  //detect campus when start is my location
-  useEffect(() => {
-    if (startText !== "My location") return;
-    if (currentBuilding?.__campusId) {
-      setStartCampusId(currentBuilding.__campusId);
-    }
-  }, [startText, currentBuilding]);
+  useSyncStartCampusFromCurrentBuilding({
+    startText,
+    currentBuilding,
+    setStartCampusId,
+  });
 
   const { setCurrentStepIndex } = useNavigationSteps({
     navActive,
@@ -816,67 +1050,9 @@ export default function MapScreen({ route }) {
   const canShowDirectionsPanel = Boolean(
     showDirectionsPanel && startCoord && destCoord && !selectedPOI,
   );
-
-  const formatPOIDistance = (distance) => {
-    if (typeof distance !== "number" || Number.isNaN(distance)) return "";
-    if (distance < 1000) return `${Math.round(distance)}m`;
-    return `${(distance / 1000).toFixed(1)}km`;
-  };
-
-  const renderPOIContent = () => {
-    if (isPOILoading) {
-      return <Text style={styles.poiStatusText}>Loading nearby places...</Text>;
-    }
-
-    if (displayedPOIs.length === 0) {
-      return <Text style={styles.poiStatusText}>No nearby POIs found.</Text>;
-    }
-
-    return (
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled
-      >
-        {displayedPOIs.map((poi, index) => (
-          <Pressable
-            key={`poi-row-${String(poi.id ?? "x")}-${index}`}
-            testID="poi-list-item"
-            onPress={() => {
-              setSelectedPOI(poi);
-              setIsPOIPanelOpen(false);
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              backgroundColor: "#FFFFFF",
-              borderBottomWidth: 1,
-              borderBottomColor: "#E9E9E9",
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-            }}
-          >
-            <View style={{ flex: 1, paddingRight: 10 }}>
-              <Text style={styles.poiResultTitle} numberOfLines={1}>
-                {poi.name}
-              </Text>
-              {typeof poi.rating === "number" ? (
-                <Text style={{ marginTop: 2, fontSize: 12, color: "#5C5C5C" }}>
-                  {poi.rating.toFixed(1)} ★
-                </Text>
-              ) : null}
-            </View>
-
-            <Text style={{ fontSize: 12, fontWeight: "600", color: "#222" }}>
-              {formatPOIDistance(poi.distance)}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    );
-  };
+  const shouldShowIndoorHandoff = Boolean(
+    (startIndoorRoom || destIndoorRoom) && !activeField,
+  );
 
   const isBottomPanelOpen = Boolean(selectedBuilding) || canShowDirectionsPanel;
 
@@ -911,13 +1087,12 @@ export default function MapScreen({ route }) {
     },
   });
 
-  useEffect(() => {
-    if (!selectedPOI) return;
-    // When a POI card is shown, hide the bottom directions panel so
-    // the two are never visible at the same time.
-    setShowDirectionsPanel(false);
-    setDestinationDetails(selectedPOI.name, selectedPOI.coords, null);
-  }, [selectedPOI]);
+  useSyncDestinationFromSelectedPOI({
+    selectedPOI,
+    setShowDirectionsPanel,
+    setDestinationDetails,
+    setDestIndoorRoom,
+  });
 
   //Without this comment,we'd need to write a unit test specifically to force a missing config scenario to achieve 100% test coverage
   /* istanbul ignore next -- defensive guard if campus config is invalid/missing */
@@ -963,9 +1138,12 @@ export default function MapScreen({ route }) {
           destText={destText}
           activeField={activeField}
           searchResults={searchResults}
+          roomResults={roomResults}
           shouldShowMyLocationOption={shouldShowMyLocationOption}
           getBuildingKey={getBuildingKey}
           getBuildingName={getBuildingName}
+          getRoomKey={getRoomKey}
+          getRoomLabel={getRoomLabel}
           onStartChange={handleStartTextChange}
           onDestChange={handleDestTextChange}
           onStartFocus={() => {
@@ -981,7 +1159,32 @@ export default function MapScreen({ route }) {
           onSwap={handleSwapStartDest}
           onSelectMyLocation={selectMyLocationForField}
           onSelectBuilding={selectBuildingForField}
+          onSelectRoom={selectRoomForField}
         />
+
+        {shouldShowIndoorHandoff && (
+          <View style={styles.indoorHandoffWrap}>
+            <Pressable
+              testID="indoor-handoff-button"
+              style={styles.indoorHandoffButton}
+              onPress={() => {
+                navigation?.navigate?.("Indoor", {
+                  screen: "IndoorDirections",
+                  params: {
+                    ...(startIndoorRoom ? { startRoom: startIndoorRoom } : {}),
+                    ...(destIndoorRoom
+                      ? { destinationRoom: destIndoorRoom }
+                      : {}),
+                  },
+                });
+              }}
+            >
+              <Text style={styles.indoorHandoffButtonText}>
+                Go to Indoor Directions
+              </Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Map */}
         <MapView
@@ -1285,7 +1488,13 @@ export default function MapScreen({ route }) {
                   flex: 1,
                 }}
               >
-                {renderPOIContent()}
+                {renderPOIContent({
+                  isPOILoading,
+                  displayedPOIs,
+                  styles,
+                  setSelectedPOI,
+                  setIsPOIPanelOpen,
+                })}
               </View>
             ) : (
               <OutdoorPoiFilterForm
@@ -1365,6 +1574,9 @@ export default function MapScreen({ route }) {
 }
 
 MapScreen.propTypes = {
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func,
+  }),
   route: PropTypes.shape({
     params: PropTypes.shape({
       outdoorRoute: PropTypes.shape({

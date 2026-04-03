@@ -34,6 +34,9 @@ import { findShortestPath } from "../utils/pathfinding/pathfinding";
 import {
   classifyRoute,
   buildRouteSegments,
+  getEntryFloor,
+  getGroundFloor,
+  pickEntryNode,
 } from "../utils/pathfinding/crossFloorRouter";
 import {
   buildJourneyStages,
@@ -64,6 +67,8 @@ const BLUE = "#4A90D9";
 const GREEN = "#28a745";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MAP_INSPECT_SCALE = 1.75; //cz vanier extension is way too small to be viewed from afar
+const INDOOR_METERS_PER_MAP_UNIT = 0.1;
+const INDOOR_WALKING_SPEED_METERS_PER_SECOND = 1.2;
 
 // ── Step-text helpers (extracted to reduce cognitive complexity) ──
 
@@ -392,6 +397,66 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     initialSelection.floorIdx,
   );
 
+  const effectiveStartRoom = useMemo(() => {
+    if (startRoom || !destRoom || activeField === "start") {
+      return startRoom;
+    }
+
+    const buildingId = destRoom.buildingId || params.building?.id;
+    if (!buildingId) return null;
+
+    const entryFloorId =
+      getEntryFloor(buildingId) || getGroundFloor(buildingId) || destRoom.floor;
+    const entryNode = pickEntryNode(entryFloorId, resolvedTransitionPref);
+    if (!entryNode) return null;
+
+    const building = getBuildingById(buildingId);
+
+    return {
+      ...entryNode,
+      floor: entryFloorId,
+      buildingId,
+      buildingName: building?.name,
+      label: "Entrance",
+    };
+  }, [
+    startRoom,
+    destRoom,
+    activeField,
+    params.building?.id,
+    resolvedTransitionPref,
+  ]);
+
+  const effectiveDestRoom = useMemo(() => {
+    if (destRoom || !startRoom || activeField === "dest") {
+      return destRoom;
+    }
+
+    const buildingId = startRoom.buildingId || params.building?.id;
+    if (!buildingId) return null;
+
+    const entryFloorId =
+      getEntryFloor(buildingId) || getGroundFloor(buildingId) || startRoom.floor;
+    const entryNode = pickEntryNode(entryFloorId, resolvedTransitionPref);
+    if (!entryNode) return null;
+
+    const building = getBuildingById(buildingId);
+
+    return {
+      ...entryNode,
+      floor: entryFloorId,
+      buildingId,
+      buildingName: building?.name,
+      label: "Exit",
+    };
+  }, [
+    destRoom,
+    startRoom,
+    activeField,
+    params.building?.id,
+    resolvedTransitionPref,
+  ]);
+
   const campusBuildings = useMemo(
     () => buildings[selectedCampus] || [],
     [selectedCampus],
@@ -436,16 +501,20 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Route type classification
   const routeType = useMemo(() => {
-    if (!startRoom || !destRoom) return null;
-    return classifyRoute(startRoom, destRoom);
-  }, [startRoom, destRoom]);
+    if (!effectiveStartRoom || !effectiveDestRoom) return null;
+    return classifyRoute(effectiveStartRoom, effectiveDestRoom);
+  }, [effectiveStartRoom, effectiveDestRoom]);
 
   // Route segments for cross-floor / cross-building
   const routeSegments = useMemo(() => {
     if (!routeType) return [];
     if (routeType === "same-floor" || routeType === "same-room") return [];
-    return buildRouteSegments(startRoom, destRoom, resolvedTransitionPref);
-  }, [startRoom, destRoom, routeType, resolvedTransitionPref]);
+    return buildRouteSegments(
+      effectiveStartRoom,
+      effectiveDestRoom,
+      resolvedTransitionPref,
+    );
+  }, [effectiveStartRoom, effectiveDestRoom, routeType, resolvedTransitionPref]);
 
   // Multi-segment path results (cross-floor)
   const segmentResults = useMemo(() => {
@@ -454,8 +523,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   }, [routeSegments, accessibleRoute]);
 
   const journeyStages = useMemo(
-    () => buildJourneyStages(routeSegments, startRoom, destRoom),
-    [routeSegments, startRoom, destRoom],
+    () => buildJourneyStages(routeSegments, effectiveStartRoom, effectiveDestRoom),
+    [routeSegments, effectiveStartRoom, effectiveDestRoom],
   );
 
   const defaultJourneyStage = useMemo(
@@ -526,7 +595,32 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     selectedBuilding?.id,
   ]);
 
-  const browsingLocked = Boolean(startRoom && destRoom);
+  const browsingLocked = Boolean(effectiveStartRoom && effectiveDestRoom);
+
+  useEffect(() => {
+    const nextStartRoom = params.startRoom || null;
+    const nextDestRoom = params.destinationRoom || null;
+    const nextSelection = getInitialSelection(params);
+
+    setStartRoom(nextStartRoom);
+    setDestRoom(nextDestRoom);
+    setStartText(nextStartRoom?.label || "");
+    setDestText(nextDestRoom?.label || "");
+    setSearchQuery("");
+    setActiveField(null);
+    setSelectionMode(null);
+    setInspectMode(false);
+    setTransitionPref(null);
+    setActiveJourneyStageId(null);
+    setSelectedCampus(nextSelection.campusId);
+    setSelectedBuildingIdx(nextSelection.buildingIdx);
+    setSelectedFloorIdx(nextSelection.floorIdx);
+  }, [
+    params.startRoom,
+    params.destinationRoom,
+    params.building?.id,
+    params.floor?.id,
+  ]);
 
   useEffect(() => {
     if (!journeyStages.length) {
@@ -577,7 +671,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Calculate path - single floor (same-floor) or first indoor segment (cross-floor)
   const pathResult = useMemo(() => {
-    if (!startRoom || !destRoom) return null;
+    if (!effectiveStartRoom || !effectiveDestRoom) return null;
 
     if (routeSegments.length > 0 && segmentResults.length > 0) {
       if (displayedSegmentResult?.pathResult) {
@@ -596,7 +690,9 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     // Same-floor: build floors data from the selected building
     const routeBuilding =
       getBuildingById(
-        startRoom.buildingId || destRoom.buildingId || params.building?.id,
+        effectiveStartRoom.buildingId ||
+          effectiveDestRoom.buildingId ||
+          params.building?.id,
       ) || selectedBuilding;
     const floorsData = {
       floors: {},
@@ -617,15 +713,15 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
     const result = findShortestPath({
       floorsData,
-      startNodeId: startRoom.id,
-      endNodeId: destRoom.id,
+      startNodeId: effectiveStartRoom.id,
+      endNodeId: effectiveDestRoom.id,
       accessible: accessibleRoute,
     });
 
     return result;
   }, [
-    startRoom,
-    destRoom,
+    effectiveStartRoom,
+    effectiveDestRoom,
     params.building?.id,
     selectedBuilding,
     accessibleRoute,
@@ -638,7 +734,11 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const directionSteps = useMemo(() => {
     // Cross-floor / cross-building: combine all segments into unified steps
     if (segmentResults.length > 0) {
-      return buildMultiSegmentSteps(segmentResults, startRoom, destRoom);
+      return buildMultiSegmentSteps(
+        segmentResults,
+        effectiveStartRoom,
+        effectiveDestRoom,
+      );
     }
 
     // Same-floor: original logic
@@ -646,8 +746,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       return [];
     }
 
-    return buildSameFloorSteps(pathResult.pathCoords, startRoom, destRoom);
-  }, [pathResult, startRoom, destRoom, segmentResults]);
+    return buildSameFloorSteps(
+      pathResult.pathCoords,
+      effectiveStartRoom,
+      effectiveDestRoom,
+    );
+  }, [pathResult, effectiveStartRoom, effectiveDestRoom, segmentResults]);
 
   // Route stats - calculate actual distance
   const routeStats = useMemo(() => {
@@ -694,8 +798,12 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       return { duration: "--", distance: "--", type: "walking" };
     }
 
-    const distanceMeters = Math.round(routedWeight * 0.1);
-    const durationSeconds = distanceMeters / 1.2;
+    const distanceMeters = Math.max(
+      1,
+      Math.round(routedWeight * INDOOR_METERS_PER_MAP_UNIT),
+    );
+    const durationSeconds =
+      distanceMeters / INDOOR_WALKING_SPEED_METERS_PER_SECOND;
     const durationMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
 
     return {
@@ -730,15 +838,17 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
     if (
       (routeType === "same-floor" || routeType === "same-room") &&
-      startRoom?.floor &&
-      startRoom.floor === destRoom?.floor
+      effectiveStartRoom?.floor &&
+      effectiveStartRoom.floor === effectiveDestRoom?.floor
     ) {
       const routeBuilding =
         getBuildingById(
-          startRoom.buildingId || destRoom?.buildingId || params.building?.id,
+          effectiveStartRoom.buildingId ||
+            effectiveDestRoom?.buildingId ||
+            params.building?.id,
         ) || selectedBuilding;
       const routeFloor = routeBuilding?.floors?.find(
-        (floor) => floor.id === startRoom.floor,
+        (floor) => floor.id === effectiveStartRoom.floor,
       );
       if (routeFloor) return routeFloor;
     }
@@ -748,8 +858,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     displayedSegmentResult,
     routeType,
     mapJourneyStage,
-    startRoom,
-    destRoom,
+    effectiveStartRoom,
+    effectiveDestRoom,
     params.building?.id,
     selectedBuilding,
     selectedFloor,
@@ -1126,20 +1236,20 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           </>
         )}
 
-        {!svgPath && startRoom?.x && startRoom?.y && (
+        {!svgPath && effectiveStartRoom?.x && effectiveStartRoom?.y && (
           <Circle
-            cx={scaleCoord(startRoom.x, startRoom.y).x}
-            cy={scaleCoord(startRoom.x, startRoom.y).y}
+            cx={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).x}
+            cy={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).y}
             r={12}
             fill={GREEN}
             stroke="#fff"
             strokeWidth={3}
           />
         )}
-        {!svgPath && destRoom?.x && destRoom?.y && (
+        {!svgPath && effectiveDestRoom?.x && effectiveDestRoom?.y && (
           <Circle
-            cx={scaleCoord(destRoom.x, destRoom.y).x}
-            cy={scaleCoord(destRoom.x, destRoom.y).y}
+            cx={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).x}
+            cy={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).y}
             r={12}
             fill={MAROON}
             stroke="#fff"
@@ -1398,8 +1508,8 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           </View>
 
           {(routeType === "cross-floor" || routeType === "cross-building") &&
-            startRoom &&
-            destRoom && (
+            effectiveStartRoom &&
+            effectiveDestRoom && (
               <View style={styles.transferModeControls}>
                 <View style={styles.transferModeOptionsStandalone}>
                   <Pressable
@@ -1665,7 +1775,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           )}
 
           {/* Route Stats Bar */}
-          {startRoom && destRoom ? (
+          {effectiveStartRoom && effectiveDestRoom ? (
             <>
               <View style={styles.statsBar}>
                 <View style={styles.statItem}>

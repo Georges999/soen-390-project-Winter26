@@ -138,6 +138,7 @@ describe("indoorRoomHighlightData", () => {
   it("generates aliases for Hall rooms", () => {
     const aliases = getRoomAliases("Hall-8", "H837");
     expect(aliases).toContain("H837");
+    expect(aliases).toContain("HALL837");
   });
 
   it("generates aliases for MB rooms with MB prefix", () => {
