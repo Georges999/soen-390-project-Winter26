@@ -93,15 +93,13 @@ function IndoorMapScreen({ navigation }) {
     const hasLeftSelectedRoomBuilding =
       !selectedRoomContext ||
       selectedRoomContext.campusId !== selectedCampus ||
-      selectedRoomContext.building?.id !== currentBuilding?.id ||
-      selectedRoomContext.floor?.id !== currentFloor?.id;
+      selectedRoomContext.building?.id !== currentBuilding?.id;
 
     if (hasLeftSelectedRoomBuilding) {
       setSelectedRoom(null);
     }
   }, [
     currentBuilding?.id,
-    currentFloor?.id,
     selectedCampus,
     selectedRoom,
     selectedRoomContext,
