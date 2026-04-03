@@ -326,6 +326,25 @@ describe('IndoorMapScreen', () => {
     expect(getByTestId('selected-room-highlight')).toBeTruthy();
   });
 
+  it('should not reuse a same-labeled Hall room highlight when switching to floor 2', () => {
+    const {
+      getByPlaceholderText,
+      getAllByText,
+      getByText,
+      queryByTestId,
+    } = render(
+      <IndoorMapScreen navigation={mockNavigation} />
+    );
+
+    fireEvent.changeText(getByPlaceholderText('Search room or click on map'), 'H110');
+    fireEvent.press(getAllByText(/H110/)[0]);
+    expect(getByText('Floor 1')).toBeTruthy();
+
+    fireEvent.press(getByText('2'));
+    expect(getByText('Room Selected')).toBeTruthy();
+    expect(queryByTestId('selected-room-highlight')).toBeNull();
+  });
+
   it('should clear selection when switching buildings', () => {
     const { getByPlaceholderText, getByText, queryByText } = render(
       <IndoorMapScreen navigation={mockNavigation} />

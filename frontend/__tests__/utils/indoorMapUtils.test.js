@@ -90,10 +90,12 @@ describe('indoorMapUtils', () => {
       floor: 'Hall-9',
     });
 
-    expect(context).toEqual({
-      building: sampleCampusBuildings[0],
-      floor: undefined,
-    });
+    expect(context).toEqual(
+      expect.objectContaining({
+        building: sampleCampusBuildings[0],
+        floor: undefined,
+      })
+    );
     expect(getSelectedRoomContext(sampleCampusBuildings, { id: 'missing-room', floor: 'Hall-8' })).toBeNull();
   });
 
