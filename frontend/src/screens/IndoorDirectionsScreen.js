@@ -1281,6 +1281,31 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     </View>
   );
 
+  const renderFloorPlanContent = () => {
+    if (inspectMode) {
+      return (
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.floorPlanScrollContent}
+          showsHorizontalScrollIndicator={false}
+        >
+          <ScrollView
+            contentContainerStyle={styles.floorPlanScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {renderFloorPlanMap()}
+          </ScrollView>
+        </ScrollView>
+      );
+    }
+
+    return (
+      <View style={styles.floorPlanScrollContent}>
+        {renderFloorPlanMap()}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -1756,24 +1781,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               </View>
             )}
             {displayedFloor?.image ? (
-              inspectMode ? (
-                <ScrollView
-                  horizontal
-                  contentContainerStyle={styles.floorPlanScrollContent}
-                  showsHorizontalScrollIndicator={false}
-                >
-                  <ScrollView
-                    contentContainerStyle={styles.floorPlanScrollContent}
-                    showsVerticalScrollIndicator={false}
-                  >
-                    {renderFloorPlanMap()}
-                  </ScrollView>
-                </ScrollView>
-              ) : (
-                <View style={styles.floorPlanScrollContent}>
-                  {renderFloorPlanMap()}
-                </View>
-              )
+              renderFloorPlanContent()
             ) : (
               <View style={styles.noFloorPlan}>
                 <MaterialIcons name="map" size={48} color="#ccc" />
