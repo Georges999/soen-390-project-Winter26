@@ -1,0 +1,76 @@
+appId: host.exp.Exponent
+---
+
+# AT5.1: Multi-Floor Indoor Routing (same interaction style as AT4.2)
+
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+# Wait for Indoor Map screen
+- extendedWaitUntil:
+    visible: "Indoor Map"
+    timeout: 10000
+
+# Destination on Hall floor 8
+- tapOn:
+    text: "Search room or click on map"
+- inputText: "H-837"
+- extendedWaitUntil:
+    visible: "H837 · Hall Building"
+    timeout: 8000
+- tapOn: "H837 · Hall Building"
+- hideKeyboard
+- waitForAnimationToEnd
+
+- assertVisible: "Room Selected"
+- assertVisible: "Get Directions"
+- tapOn: "Get Directions"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Indoor Directions"
+    timeout: 12000
+
+# Start point on Hall floor 9 to force cross-floor route
+- tapOn: "Search start or use map pin button"
+- eraseText
+- inputText: "921"
+- extendedWaitUntil:
+    visible: "H921, Floor 9 · Hall Building"
+    timeout: 8000
+- tapOn: "H921, Floor 9 · Hall Building"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Multi-floor routing signals
+- extendedWaitUntil:
+    visible: "Floor-by-floor journey"
+    timeout: 12000
+- assertVisible: "Floor-by-floor journey"
+- assertVisible: "H921, Floor 9"
+- assertVisible:
+    id: "indoor-route-overlay"
+- assertVisible:
+    id: "indoor-route-overlay-path"
+
+# Accessibility toggle is present and usable
+- assertVisible:
+    id: "accessibility-switch"
+- tapOn:
+    id: "accessibility-switch"
+- waitForAnimationToEnd
+- assertVisible: "Indoor Directions"

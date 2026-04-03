@@ -1,0 +1,72 @@
+appId: host.exp.Exponent
+---
+
+# AT5.2: Class Floor to Destination (Same Campus, Different Building)
+# Scenario scope: Hall Building -> John Molson Building (JMSB)
+
+- launchApp
+- waitForAnimationToEnd
+
+# Open Campus Guide
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+# Navigate to Indoor tab
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+# Confirm Indoor Map screen is loaded
+- extendedWaitUntil:
+    visible: "Indoor Map"
+    timeout: 12000
+
+# Select destination room in JMSB (same campus)
+- tapOn:
+    text: "Search room or click on map"
+- inputText: "MB1.309"
+- extendedWaitUntil:
+    visible: "MB1.309 · John Molson Building"
+    timeout: 8000
+- assertVisible: "MB1.309 · John Molson Building"
+- tapOn: "MB1.309 · John Molson Building"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Open Indoor Directions
+- assertVisible: "Room Selected"
+- assertVisible: "Get Directions"
+- tapOn: "Get Directions"
+- waitForAnimationToEnd
+
+# Confirm Indoor Directions screen
+- extendedWaitUntil:
+    visible: "Indoor Directions"
+    timeout: 12000
+
+# Set start room in Hall Building
+- tapOn: "Search start or use map pin button"
+- eraseText
+- inputText: "921"
+- extendedWaitUntil:
+    visible: "H921, Floor 9 · Hall Building"
+    timeout: 8000
+- assertVisible: "H921, Floor 9 · Hall Building"
+- tapOn: "H921, Floor 9 · Hall Building"
+- hideKeyboard
+- waitForAnimationToEnd
+
+# Verify route generation for Hall -> JMSB
+- assertVisible: "Indoor Directions"
+- assertVisible: "Floor-by-floor journey"
+- assertVisible:
+    id: "indoor-route-overlay"
+- assertVisible:
+    id: "indoor-route-overlay-path"

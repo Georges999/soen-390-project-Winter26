@@ -42,7 +42,6 @@ import {
   buildJourneyStages,
   getBuildingName,
   getDefaultJourneyStage,
-  getFloorLabel,
   getJourneyMapStage,
 } from "../utils/pathfinding/navigationJourney";
 import {
@@ -499,65 +498,33 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     initialSelection.floorIdx,
   );
 
-  const effectiveStartRoom = useMemo(() => {
-    if (startRoom || !destRoom || activeField === "start") {
-      return startRoom;
-    }
+  const effectiveStartRoom = useMemo(
+    () =>
+      computeEffectiveRoom(
+        startRoom,
+        destRoom,
+        activeField,
+        "start",
+        params.building?.id,
+        resolvedTransitionPref,
+        "Entrance",
+      ),
+    [startRoom, destRoom, activeField, params.building?.id, resolvedTransitionPref],
+  );
 
-    const buildingId = destRoom.buildingId || params.building?.id;
-    if (!buildingId) return null;
-
-    const entryFloorId =
-      getEntryFloor(buildingId) || getGroundFloor(buildingId) || destRoom.floor;
-    const entryNode = pickEntryNode(entryFloorId, resolvedTransitionPref);
-    if (!entryNode) return null;
-
-    const building = getBuildingById(buildingId);
-
-    return {
-      ...entryNode,
-      floor: entryFloorId,
-      buildingId,
-      buildingName: building?.name,
-      label: "Entrance",
-    };
-  }, [
-    startRoom,
-    destRoom,
-    activeField,
-    params.building?.id,
-    resolvedTransitionPref,
-  ]);
-
-  const effectiveDestRoom = useMemo(() => {
-    if (destRoom || !startRoom || activeField === "dest") {
-      return destRoom;
-    }
-
-    const buildingId = startRoom.buildingId || params.building?.id;
-    if (!buildingId) return null;
-
-    const entryFloorId =
-      getEntryFloor(buildingId) || getGroundFloor(buildingId) || startRoom.floor;
-    const entryNode = pickEntryNode(entryFloorId, resolvedTransitionPref);
-    if (!entryNode) return null;
-
-    const building = getBuildingById(buildingId);
-
-    return {
-      ...entryNode,
-      floor: entryFloorId,
-      buildingId,
-      buildingName: building?.name,
-      label: "Exit",
-    };
-  }, [
-    destRoom,
-    startRoom,
-    activeField,
-    params.building?.id,
-    resolvedTransitionPref,
-  ]);
+  const effectiveDestRoom = useMemo(
+    () =>
+      computeEffectiveRoom(
+        destRoom,
+        startRoom,
+        activeField,
+        "dest",
+        params.building?.id,
+        resolvedTransitionPref,
+        "Exit",
+      ),
+    [destRoom, startRoom, activeField, params.building?.id, resolvedTransitionPref],
+  );
 
   const campusBuildings = useMemo(
     () => buildings[selectedCampus] || [],
@@ -584,22 +551,10 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const allRooms = useMemo(() => buildAllRooms(), []);
 
   // Current floor rooms and nodes for map interaction
-  const currentFloorData = useMemo(() => {
-    if (!selectedFloor) return { rooms: [], nodes: [], pois: [] };
-
-    const floorId = selectedFloor.id;
-    const rooms = getRoomsForFloor(floorId);
-    const allNodes = getAllNodesForFloor(floorId);
-
-    return {
-      rooms,
-      nodes: allNodes.filter((n) => n.type === "hallway"),
-      pois: allNodes.filter(
-        (n) =>
-          n.type !== "hallway" && n.type !== "classroom" && n.type !== "room",
-      ),
-    };
-  }, [selectedFloor]);
+  const currentFloorData = useMemo(
+    () => computeCurrentFloorData(selectedFloor),
+    [selectedFloor],
+  );
 
   // Route type classification
   const routeType = useMemo(() => {
@@ -608,15 +563,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   }, [effectiveStartRoom, effectiveDestRoom]);
 
   // Route segments for cross-floor / cross-building
-  const routeSegments = useMemo(() => {
-    if (!routeType) return [];
-    if (routeType === "same-floor" || routeType === "same-room") return [];
-    return buildRouteSegments(
-      effectiveStartRoom,
-      effectiveDestRoom,
-      resolvedTransitionPref,
-    );
-  }, [effectiveStartRoom, effectiveDestRoom, routeType, resolvedTransitionPref]);
+  const routeSegments = useMemo(
+    () =>
+      computeRouteSegments(
+        routeType,
+        effectiveStartRoom,
+        effectiveDestRoom,
+        resolvedTransitionPref,
+      ),
+    [effectiveStartRoom, effectiveDestRoom, routeType, resolvedTransitionPref],
+  );
 
   // Multi-segment path results (cross-floor)
   const segmentResults = useMemo(() => {
@@ -667,37 +623,23 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     [searchQuery, allRooms, selectedBuilding?.id, selectedCampus],
   );
 
-  const displayedSegmentResult = useMemo(() => {
-    if (!segmentResults.length) return null;
-
-    if (activeJourneyStage?.type === "indoor") {
-      return segmentResults[activeJourneyStage.segmentIndex] || null;
-    }
-
-    if (mapJourneyStage?.type === "indoor") {
-      return segmentResults[mapJourneyStage.segmentIndex] || null;
-    }
-
-    const selectedFloorSegment = segmentResults.find(
-      ({ segment }) =>
-        segment.type === "indoor" &&
-        segment.floorId === selectedFloor?.id &&
-        segment.buildingId === selectedBuilding?.id,
-    );
-    if (selectedFloorSegment) {
-      return selectedFloorSegment;
-    }
-
-    return (
-      segmentResults.find(({ segment }) => segment.type === "indoor") || null
-    );
-  }, [
-    segmentResults,
-    activeJourneyStage,
-    mapJourneyStage,
-    selectedFloor?.id,
-    selectedBuilding?.id,
-  ]);
+  const displayedSegmentResult = useMemo(
+    () =>
+      computeDisplayedSegmentResult(
+        segmentResults,
+        activeJourneyStage,
+        mapJourneyStage,
+        selectedFloor?.id,
+        selectedBuilding?.id,
+      ),
+    [
+      segmentResults,
+      activeJourneyStage,
+      mapJourneyStage,
+      selectedFloor?.id,
+      selectedBuilding?.id,
+    ],
+  );
 
   const browsingLocked = Boolean(effectiveStartRoom && effectiveDestRoom);
 
@@ -727,44 +669,23 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   ]);
 
   useEffect(() => {
-    if (!journeyStages.length) {
-      if (activeJourneyStageId !== null) {
-        setActiveJourneyStageId(null);
-      }
-      return;
-    }
-
-    const currentStageStillExists = journeyStages.some(
-      (stage) => stage.id === activeJourneyStageId,
+    syncJourneyStageId(
+      journeyStages,
+      activeJourneyStageId,
+      defaultJourneyStage,
+      setActiveJourneyStageId,
     );
-    if (!currentStageStillExists && defaultJourneyStage) {
-      setActiveJourneyStageId(defaultJourneyStage.id);
-    }
   }, [journeyStages, activeJourneyStageId, defaultJourneyStage]);
 
   useEffect(() => {
-    if (
-      !browsingLocked ||
-      !mapJourneyStage?.mapBuildingId ||
-      !mapJourneyStage?.mapFloorId
-    ) {
-      return;
-    }
-
-    const nextSelection = getSelectionForLocation(
-      mapJourneyStage.mapBuildingId,
-      mapJourneyStage.mapFloorId,
+    syncMapToJourneyStage(
+      browsingLocked,
+      mapJourneyStage,
+      selectedCampus,
+      selectedBuildingIdx,
+      selectedFloorIdx,
+      { setSelectedCampus, setSelectedBuildingIdx, setSelectedFloorIdx },
     );
-
-    if (
-      nextSelection.campusId !== selectedCampus ||
-      nextSelection.buildingIdx !== selectedBuildingIdx ||
-      nextSelection.floorIdx !== selectedFloorIdx
-    ) {
-      setSelectedCampus(nextSelection.campusId);
-      setSelectedBuildingIdx(nextSelection.buildingIdx);
-      setSelectedFloorIdx(nextSelection.floorIdx);
-    }
   }, [
     browsingLocked,
     mapJourneyStage,
@@ -820,87 +741,22 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   ]);
 
   // Generate step-by-step directions from path (supports multi-segment)
-  const directionSteps = useMemo(() => {
-    // Cross-floor / cross-building: combine all segments into unified steps
-    if (segmentResults.length > 0) {
-      return buildMultiSegmentSteps(
+  const directionSteps = useMemo(
+    () =>
+      computeDirectionSteps(
         segmentResults,
+        pathResult,
         effectiveStartRoom,
         effectiveDestRoom,
-      );
-    }
-
-    // Same-floor: original logic
-    if (!pathResult?.ok || !pathResult.pathCoords) {
-      return [];
-    }
-
-    return buildSameFloorSteps(
-      pathResult.pathCoords,
-      effectiveStartRoom,
-      effectiveDestRoom,
-    );
-  }, [pathResult, effectiveStartRoom, effectiveDestRoom, segmentResults]);
+      ),
+    [pathResult, effectiveStartRoom, effectiveDestRoom, segmentResults],
+  );
 
   // Route stats - calculate actual distance
-  const routeStats = useMemo(() => {
-    const getPathGeometryWeight = (coords = []) => {
-      if (!Array.isArray(coords) || coords.length < 2) return 0;
-
-      let total = 0;
-      for (let i = 1; i < coords.length; i += 1) {
-        const dx = (coords[i]?.x || 0) - (coords[i - 1]?.x || 0);
-        const dy = (coords[i]?.y || 0) - (coords[i - 1]?.y || 0);
-        total += Math.hypot(dx, dy);
-      }
-      return total;
-    };
-
-    const getSafeIndoorWeight = (weighted = 0, coords = []) => {
-      const geometricWeight = getPathGeometryWeight(coords);
-      if (!geometricWeight) return weighted || 0;
-      if (!weighted) return geometricWeight;
-
-      // Large ratios indicate synthetic graph penalties (e.g., room-transit penalties).
-      return weighted / geometricWeight > 10 ? geometricWeight : weighted;
-    };
-
-    const routedWeight =
-      segmentResults.length > 0
-        ? segmentResults.reduce(
-            (total, segmentResult) =>
-              segmentResult.segment.type === "indoor" &&
-              segmentResult.pathResult?.ok
-                ? total +
-                  getSafeIndoorWeight(
-                    segmentResult.pathResult.totalWeight,
-                    segmentResult.pathResult.pathCoords,
-                  )
-                : total,
-            0,
-          )
-        : pathResult?.ok
-          ? getSafeIndoorWeight(pathResult.totalWeight, pathResult.pathCoords)
-          : 0;
-
-    if (!routedWeight) {
-      return { duration: "--", distance: "--", type: "walking" };
-    }
-
-    const distanceMeters = Math.max(
-      1,
-      Math.round(routedWeight * INDOOR_METERS_PER_MAP_UNIT),
-    );
-    const durationSeconds =
-      distanceMeters / INDOOR_WALKING_SPEED_METERS_PER_SECOND;
-    const durationMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
-
-    return {
-      duration: `${durationMinutes} min`,
-      distance: `${distanceMeters}m`,
-      type: "walking",
-    };
-  }, [pathResult, segmentResults]);
+  const routeStats = useMemo(
+    () => computeRouteStats(segmentResults, pathResult),
+    [pathResult, segmentResults],
+  );
 
   // Determine the floor image to display for active segment
   const displayedFloor = useMemo(() => {
@@ -944,63 +800,39 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
     : MAP_IMAGE_HEIGHT;
 
   // Generate SVG path from coordinates
-  const svgPath = useMemo(() => {
-    if (
-      !pathResult?.ok ||
-      !pathResult.pathCoords ||
-      pathResult.pathCoords.length < 2
-    ) {
-      return null;
-    }
-
-    const coords = pathResult.pathCoords;
-    const displayWidth = displayedFloor?.width || floorDimensions.width;
-    const displayHeight = displayedFloor?.height || floorDimensions.height;
-    const scaleX = displayedMapWidth / displayWidth;
-    const scaleY = displayedMapHeight / displayHeight;
-
-    // Scale raw coordinates to display dimensions
-    const scaledPoints = coords.map((c) => ({
-      x: c.x * scaleX,
-      y: c.y * scaleY,
-      type: c.type,
-    }));
-
-    // Apply smoothing pipeline: axis-snap → simplify → Catmull-Rom curves
-    const pathD = smoothPath(scaledPoints);
-
-    return {
-      path: pathD,
-      start: scaledPoints[0],
-      end: scaledPoints[scaledPoints.length - 1],
-      points: scaledPoints,
-    };
-  }, [
-    pathResult,
-    displayedFloor,
-    floorDimensions,
-    displayedMapWidth,
-    displayedMapHeight,
-  ]);
+  const svgPath = useMemo(
+    () =>
+      computeSvgPath(
+        pathResult,
+        displayedFloor,
+        floorDimensions,
+        displayedMapWidth,
+        displayedMapHeight,
+      ),
+    [
+      pathResult,
+      displayedFloor,
+      floorDimensions,
+      displayedMapWidth,
+      displayedMapHeight,
+    ],
+  );
 
   const handleFieldChange = (text, field) => {
-    if (field === "start" && startRoom) {
-      setStartRoom(null);
-      setTransitionPref(null);
-    }
-
-    if (field === "dest" && destRoom) {
-      setDestRoom(null);
-      setTransitionPref(null);
-    }
-
-    setActiveField(field);
-    setSearchQuery(text);
-    if (field === "start") {
-      setStartText(text);
-    } else {
-      setDestText(text);
-    }
+    processFieldChange(
+      text,
+      field,
+      { startRoom, destRoom },
+      {
+        setStartRoom,
+        setDestRoom,
+        setActiveField,
+        setSearchQuery,
+        setStartText,
+        setDestText,
+        setTransitionPref,
+      },
+    );
   };
 
   const syncSelectionToLocation = useCallback(
@@ -1033,19 +865,13 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   const handleFloorChange = (index) => {
     setSelectedFloorIdx(index);
     setSelectionMode(null);
-
-    const nextFloor = selectedBuilding?.floors?.[index];
-    if (!nextFloor || !browsingLocked) return;
-
-    const matchingStage = journeyStages.find(
-      (stage) =>
-        stage.mapBuildingId === selectedBuilding?.id &&
-        stage.mapFloorId === nextFloor.id,
+    syncFloorToJourneyStage(
+      index,
+      selectedBuilding,
+      browsingLocked,
+      journeyStages,
+      setActiveJourneyStageId,
     );
-
-    if (matchingStage) {
-      setActiveJourneyStageId(matchingStage.id);
-    }
   };
 
   const handleJourneyStageSelect = useCallback(
@@ -1081,17 +907,16 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   const handleSelectRoom = (room) => {
     const floorLabel = room.floor?.split("-")[1] || room.floor;
-    if (activeField === "start") {
-      setStartRoom(room);
-      setStartText(room.label + ", Floor " + floorLabel);
-    } else {
-      setDestRoom(room);
-      setDestText(room.label + ", Floor " + floorLabel);
-    }
+    applyRoomSelection(activeField, room, floorLabel, {
+      setStartRoom,
+      setStartText,
+      setDestRoom,
+      setDestText,
+      setSearchQuery,
+      setActiveField,
+      setSelectionMode,
+    });
     syncSelectionToLocation(room.buildingId, room.floor, room.campusId);
-    setSearchQuery("");
-    setActiveField(null);
-    setSelectionMode(null);
   };
 
   const handleSwap = () => {
@@ -1335,6 +1160,31 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       </Svg>
     </View>
   );
+
+  const renderFloorPlanContent = () => {
+    if (inspectMode) {
+      return (
+        <ScrollView
+          horizontal
+          contentContainerStyle={styles.floorPlanScrollContent}
+          showsHorizontalScrollIndicator={false}
+        >
+          <ScrollView
+            contentContainerStyle={styles.floorPlanScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {renderFloorPlanMap()}
+          </ScrollView>
+        </ScrollView>
+      );
+    }
+
+    return (
+      <View style={styles.floorPlanScrollContent}>
+        {renderFloorPlanMap()}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -1811,24 +1661,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
               </View>
             )}
             {displayedFloor?.image ? (
-              inspectMode ? (
-                <ScrollView
-                  horizontal
-                  contentContainerStyle={styles.floorPlanScrollContent}
-                  showsHorizontalScrollIndicator={false}
-                >
-                  <ScrollView
-                    contentContainerStyle={styles.floorPlanScrollContent}
-                    showsVerticalScrollIndicator={false}
-                  >
-                    {renderFloorPlanMap()}
-                  </ScrollView>
-                </ScrollView>
-              ) : (
-                <View style={styles.floorPlanScrollContent}>
-                  {renderFloorPlanMap()}
-                </View>
-              )
+              renderFloorPlanContent()
             ) : (
               <View style={styles.noFloorPlan}>
                 <MaterialIcons name="map" size={48} color="#ccc" />
