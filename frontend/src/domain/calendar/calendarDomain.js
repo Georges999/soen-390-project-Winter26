@@ -1,9 +1,9 @@
-const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+const DAY_CODES = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
-export function getByDayCodes(recurrenceString = '') {
-  const match = String(recurrenceString).match(/BYDAY=([A-Z,]+)/);
+export function getByDayCodes(recurrenceString = "") {
+  const match = /BYDAY=([A-Z,]+)/.exec(String(recurrenceString));
   if (!match) return [];
-  return match[1].split(',');
+  return match[1].split(",");
 }
 
 export function getStartOfDay(date) {
@@ -34,49 +34,59 @@ export function getWeekRange(referenceDate) {
   const weekDays = getWeekDays(referenceDate);
   return {
     timeMin: getStartOfDay(weekDays[0]),
-    timeMax: getEndOfDay(weekDays[weekDays.length - 1]),
+    timeMax: getEndOfDay(weekDays.at(-1)),
   };
 }
 
 export function getEventStartValue(event) {
-  return event?.startTime || event?.start?.dateTime || event?.start?.date || null;
+  return (
+    event?.startTime || event?.start?.dateTime || event?.start?.date || null
+  );
 }
 
 export function getEventSummary(event) {
-  return event?.summary || event?.title || '';
+  return event?.summary || event?.title || "";
 }
 
 export function getEventLocation(event) {
-  return event?.location || '';
+  return event?.location || "";
 }
 
 export function getEventStartTimeMs(event) {
   const value = getEventStartValue(event);
-  if (!value) return NaN;
+  if (!value) return Number.NaN;
   return new Date(value).getTime();
 }
 
 export function sortEventsByStartTime(events = []) {
-  return [...events].sort((a, b) => getEventStartTimeMs(a) - getEventStartTimeMs(b));
+  return [...events].sort(
+    (a, b) => getEventStartTimeMs(a) - getEventStartTimeMs(b),
+  );
 }
 
-export function getLegacyClassesForDate(calendars = [], selectedDate) {
-  const selectedCalendars = calendars.filter((calendar) => calendar?.selected);
-  const events = selectedCalendars.flatMap((calendar) => calendar?.events || []);
+export function getLegacyClassesForDate(calendars, selectedDate) {
+  const safeCalendars = calendars || [];
+  const selectedCalendars = safeCalendars.filter(
+    (calendar) => calendar?.selected,
+  );
+  const events = selectedCalendars.flatMap(
+    (calendar) => calendar?.events || [],
+  );
   const selectedDayCode = DAY_CODES[selectedDate.getDay()];
 
   const matchingEvents = events.filter((event) => {
-    const recurrence = event?.recurrence?.[0] || '';
+    const recurrence = event?.recurrence?.[0] || "";
     return getByDayCodes(recurrence).includes(selectedDayCode);
   });
 
   return sortEventsByStartTime(matchingEvents);
 }
 
-export function getLiveClassesForDate(events = [], selectedDate) {
+export function getLiveClassesForDate(events, selectedDate) {
+  const safeEvents = events || [];
   const selectedDayMs = getStartOfDay(selectedDate).getTime();
 
-  const matchingEvents = events.filter((event) => {
+  const matchingEvents = safeEvents.filter((event) => {
     const startValue = getEventStartValue(event);
     if (!startValue) return false;
     return getStartOfDay(new Date(startValue)).getTime() === selectedDayMs;
