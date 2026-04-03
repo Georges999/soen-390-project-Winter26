@@ -1,4 +1,10 @@
-import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import PropTypes from "prop-types";
 import { View, Text, Pressable, Keyboard, ScrollView } from "react-native";
 import MapView, { Polygon, Marker } from "react-native-maps";
@@ -12,6 +18,13 @@ import DirectionsPanel from "../components/DirectionsPanel";
 import ShuttleModal from "../components/ShuttleModal";
 import RouteOverlay from "../components/RouteOverlay";
 import OutdoorPoiFilterForm from "../components/OutdoorPoiFilterForm";
+import MapHeaderControls from "../components/MapScreen/MapHeaderControls";
+import POIInfoCard from "../components/MapScreen/POIInfoCard";
+import POIListPanel from "../components/MapScreen/POIListPanel";
+import RecenterButton from "../components/MapScreen/RecenterButton";
+import IndoorHandoffPanel from "../components/MapScreen/IndoorHandoffPanel";
+import POIButton from "../components/MapScreen/POIButton";
+import BuildingOverlays from "../components/MapScreen/BuildingOverlays";
 import campuses from "../data/campuses.json";
 import shuttleSchedule from "../data/shuttleSchedule.json";
 import { buildAllRooms, getFilteredRooms } from "../utils/indoorMapUtils";
@@ -148,7 +161,11 @@ export const handlePoiInfoCtaLogic = ({
 export const getPoiInfoCardBottomOffset = (isPOIPanelOpen) =>
   isPOIPanelOpen ? 300 : 40;
 
-export const handleRecenterPressLogic = ({ routeCoords, userCoord, mapRef }) => {
+export const handleRecenterPressLogic = ({
+  routeCoords,
+  userCoord,
+  mapRef,
+}) => {
   const targetCoord = routeCoords.length > 0 ? routeCoords[0] : userCoord;
   if (targetCoord) {
     zoomMapToCoordinate(mapRef, targetCoord);
@@ -543,7 +560,11 @@ export default function MapScreen({ route, navigation }) {
 
     //Only fill if user explicitly selected a field first
     if (activeField === "start") {
-      setOriginDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
+      setOriginDetails(
+        name,
+        center,
+        building.__campusId ?? selectedCampus?.id ?? null,
+      );
       setStartIndoorRoom(null);
       setActiveField(null); //resetting to false so next tap doesn't also change start
       Keyboard.dismiss();
@@ -551,7 +572,11 @@ export default function MapScreen({ route, navigation }) {
     }
 
     if (activeField === "dest") {
-      setDestinationDetails(name, center, building.__campusId ?? selectedCampus?.id ?? null);
+      setDestinationDetails(
+        name,
+        center,
+        building.__campusId ?? selectedCampus?.id ?? null,
+      );
       setDestIndoorRoom(null);
       setActiveField(null);
       Keyboard.dismiss();
@@ -604,7 +629,8 @@ export default function MapScreen({ route, navigation }) {
   };
 
   const selectRoomForField = (room, field) => {
-    const buildingAliases = ROOM_BUILDING_SEARCH_ALIASES[room?.buildingId] ?? [];
+    const buildingAliases =
+      ROOM_BUILDING_SEARCH_ALIASES[room?.buildingId] ?? [];
     const normalizedAliases = new Set(
       buildingAliases.map((alias) => normalizeText(alias)),
     );
@@ -694,7 +720,9 @@ export default function MapScreen({ route, navigation }) {
     if (!activeField) return [];
 
     const query = activeField === "start" ? startText : destText;
-    const normalizedQuery = String(query).toUpperCase().replaceAll(/[^A-Z0-9]/g, "");
+    const normalizedQuery = String(query)
+      .toUpperCase()
+      .replaceAll(/[^A-Z0-9]/g, "");
     if (normalizedQuery.length < 2) return [];
 
     return getFilteredRooms(allRooms, query, {
@@ -1114,19 +1142,12 @@ export default function MapScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        {/* <Text style={styles.title}>Select Your Campus</Text> */}
-        {!hasInteracted && (
-          <Text style={styles.subtitle}>
-            Choose a campus to explore buildings and get directions
-          </Text>
-        )}
-        {currentBuilding && (
-          <Text style={styles.currentBuildingText}>
-            Current building: {getBuildingName(currentBuilding)}
-          </Text>
-        )}
-      </View>
+      <MapHeaderControls
+        hasInteracted={hasInteracted}
+        currentBuilding={currentBuilding}
+        getBuildingName={getBuildingName}
+        styles={styles}
+      />
 
       <CampusToggle
         campuses={campusList}
@@ -1168,29 +1189,19 @@ export default function MapScreen({ route, navigation }) {
           onSelectRoom={selectRoomForField}
         />
 
-        {shouldShowIndoorHandoff && (
-          <View style={styles.indoorHandoffWrap}>
-            <Pressable
-              testID="indoor-handoff-button"
-              style={styles.indoorHandoffButton}
-              onPress={() => {
-                navigation?.navigate?.("Indoor", {
-                  screen: "IndoorDirections",
-                  params: {
-                    ...(startIndoorRoom ? { startRoom: startIndoorRoom } : {}),
-                    ...(destIndoorRoom
-                      ? { destinationRoom: destIndoorRoom }
-                      : {}),
-                  },
-                });
-              }}
-            >
-              <Text style={styles.indoorHandoffButtonText}>
-                Go to Indoor Directions
-              </Text>
-            </Pressable>
-          </View>
-        )}
+        <IndoorHandoffPanel
+          isVisible={shouldShowIndoorHandoff}
+          onPress={() => {
+            navigation?.navigate?.("Indoor", {
+              screen: "IndoorDirections",
+              params: {
+                ...(startIndoorRoom ? { startRoom: startIndoorRoom } : {}),
+                ...(destIndoorRoom ? { destinationRoom: destIndoorRoom } : {}),
+              },
+            });
+          }}
+          styles={styles}
+        />
 
         {/* Map */}
         <MapView
@@ -1208,126 +1219,23 @@ export default function MapScreen({ route, navigation }) {
           onPress={() => setActiveField(null)}
           onRegionChangeComplete={(region) => setMapRegion(region)}
         >
-          {selectedCampus.buildings.map((building) => {
-            const center = getPolygonCenter(building.coordinates);
-            const label = building.label || building.name;
-
-            return (
-              <React.Fragment key={building.id}>
-                <Polygon
-                  testID={`building-${building.id}`}
-                  coordinates={building.coordinates}
-                  fillColor={
-                    isCurrentBuilding(selectedCampus.id, building)
-                      ? "rgba(37, 99, 235, 0.35)"
-                      : "rgba(149, 34, 61, 0.25)"
-                  }
-                  strokeColor={
-                    isCurrentBuilding(selectedCampus.id, building)
-                      ? "rgba(37, 99, 235, 0.95)"
-                      : "rgba(149, 34, 61, 0.9)"
-                  }
-                  strokeWidth={2}
-                  tappable
-                  onPress={() => handleBuildingPress(building)}
-                />
-
-                {!showCampusLabels && center && label ? (
-                  <Marker
-                    coordinate={center}
-                    anchor={{ x: 0.5, y: 0.5 }}
-                    tracksViewChanges={false}
-                    pointerEvents="none"
-                  >
-                    <View style={styles.buildingLabel}>
-                      <Text style={styles.buildingLabelText}>{label}</Text>
-                    </View>
-                  </Marker>
-                ) : null}
-              </React.Fragment>
-            );
-          })}
-
-          {/* show other campus buildings too */}
-          {otherCampuses.map((campus) =>
-            campus.buildings.map((building) => {
-              const center = getPolygonCenter(building.coordinates);
-              const label = building.label || building.name;
-              const key = `${campus.id}-${building.id}`;
-
-              return (
-                <React.Fragment key={key}>
-                  <Polygon
-                    testID={`building-${campus.id}-${building.id}`}
-                    coordinates={building.coordinates}
-                    fillColor={
-                      isCurrentBuilding(campus.id, building)
-                        ? "rgba(37, 99, 235, 0.2)"
-                        : "rgba(149, 34, 61, 0.10)"
-                    }
-                    strokeColor={
-                      isCurrentBuilding(campus.id, building)
-                        ? "rgba(37, 99, 235, 0.85)"
-                        : "rgba(149, 34, 61, 0.55)"
-                    }
-                    strokeWidth={2}
-                    tappable
-                    onPress={() => handleBuildingPress(building)}
-                  />
-
-                  {!showCampusLabels && center && label ? (
-                    <Marker
-                      coordinate={center}
-                      anchor={{ x: 0.5, y: 0.5 }}
-                      tracksViewChanges={false}
-                      pointerEvents="none"
-                    >
-                      <View style={styles.buildingLabel}>
-                        <Text style={styles.buildingLabelText}>{label}</Text>
-                      </View>
-                    </Marker>
-                  ) : null}
-                </React.Fragment>
-              );
-            }),
-          )}
-
-          {showCampusLabels &&
-            campusList.map((campus) => (
-              <Marker
-                key={`campus-label-${campus.id}`}
-                coordinate={{
-                  latitude: campus.region.latitude,
-                  longitude: campus.region.longitude,
-                }}
-                anchor={{ x: 0.5, y: 0.5 }}
-                tracksViewChanges={false}
-                pointerEvents="none"
-              >
-                <View style={styles.campusLabel}>
-                  <Text style={styles.campusLabelText}>
-                    {campus.id === "sgw" ? "SGW" : "Loyola"}
-                  </Text>
-                </View>
-              </Marker>
-            ))}
-
-          {displayedPOIs.map((poi, idx) => (
-            <Marker
-              key={`poi-mkr-${String(poi.id ?? idx)}-${idx}`}
-              coordinate={poi.coords}
-              tracksViewChanges={false}
-              anchor={{ x: 0.5, y: 0.5 }}
-              onPress={() => {
-                setSelectedPOI(poi);
-                setIsPOIPanelOpen(false);
-                setHasRequestedPOIs(true);
-              }}
-              testID="poi-marker"
-            >
-              <View style={styles.poiMarker} collapsable={false} />
-            </Marker>
-          ))}
+          <BuildingOverlays
+            selectedCampusId={selectedCampusId}
+            selectedCampus={selectedCampus}
+            otherCampuses={otherCampuses}
+            showCampusLabels={showCampusLabels}
+            campusList={campusList}
+            isCurrentBuilding={isCurrentBuilding}
+            getBuildingName={getBuildingName}
+            displayedPOIs={displayedPOIs}
+            onBuildingPress={handleBuildingPress}
+            onPoiPress={(poi) => {
+              setSelectedPOI(poi);
+              setIsPOIPanelOpen(false);
+              setHasRequestedPOIs(true);
+            }}
+            styles={styles}
+          />
 
           <RouteOverlay
             safeRouteCoords={safeRouteCoords}
@@ -1337,92 +1245,41 @@ export default function MapScreen({ route, navigation }) {
           />
         </MapView>
 
-        {selectedPOI && (
-          <View
-            testID="poi-info-card"
-            style={[
-              styles.poiInfoCardContainer,
-              { bottom: getPoiInfoCardBottomOffset(isPOIPanelOpen) },
-            ]}
-          >
-            <View style={styles.poiInfoCard}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={styles.poiInfoTitle} numberOfLines={1}>
-                  {selectedPOI.name}
-                </Text>
-                <Pressable
-                  accessibilityLabel="Dismiss POI info card"
-                  onPress={() => setSelectedPOI(null)}
-                >
-                  <MaterialIcons name="clear" size={18} color="#1F1F1F" />
-                </Pressable>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 10,
-                }}
-              >
-                <View style={styles.poiInfoTag}>
-                  <Text style={styles.poiInfoTagText}>
-                    {lastPoiCategory}
-                  </Text>
-                </View>
-                <Text style={styles.poiInfoDistance}>
-                  {formatPOIDistance(selectedPOI.distance)}
-                </Text>
-              </View>
-
-              <Text style={styles.poiInfoAddress} numberOfLines={2}>
-                {selectedPOI.address}
-              </Text>
-
-              <Pressable
-                testID="poi-get-directions-btn"
-                style={styles.poiInfoCTA}
-                onPress={() => {
-                  handlePoiInfoCtaLogic({
-                    startText,
-                    userCoord,
-                    selectedPOI,
-                    setHasInteracted,
-                    setStartText,
-                    setStartCoord,
-                    setStartCampusId,
-                    setDestCoord,
-                    setDestText,
-                    setDestCampusId,
-                    setShowDirectionsPanel,
-                    setSelectedPOI,
-                  });
-                }}
-              >
-                <Text style={styles.poiInfoCTAText}>Get Directions</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
+        <POIInfoCard
+          poi={selectedPOI}
+          lastPoiCategory={lastPoiCategory}
+          poiDistance={formatPOIDistance(selectedPOI?.distance)}
+          isPanelOpen={isPOIPanelOpen}
+          onClose={() => setSelectedPOI(null)}
+          onGetDirections={() => {
+            handlePoiInfoCtaLogic({
+              startText,
+              userCoord,
+              selectedPOI,
+              setHasInteracted,
+              setStartText,
+              setStartCoord,
+              setStartCampusId,
+              setDestCoord,
+              setDestText,
+              setDestCampusId,
+              setShowDirectionsPanel,
+              setSelectedPOI,
+            });
+          }}
+          getPoiInfoCardBottomOffset={getPoiInfoCardBottomOffset}
+          styles={styles}
+        />
 
         {/* Recenter Button - recenter on route start */}
-        {hasLocationPerm && (routeCoords.length > 0 || userCoord) && (
-          <Pressable
-            testID="recenter-button"
-            style={[styles.recenterBtn, { bottom: recenterBottomOffset }]}
-            onPress={() => {
-              handleRecenterPressLogic({ routeCoords, userCoord, mapRef });
-            }}
-          >
-            <MaterialIcons name="my-location" size={24} color={MAROON} />
-          </Pressable>
-        )}
+        <RecenterButton
+          isVisible={hasLocationPerm && (routeCoords.length > 0 || userCoord)}
+          bottomOffset={recenterBottomOffset}
+          onPress={() => {
+            handleRecenterPressLogic({ routeCoords, userCoord, mapRef });
+          }}
+          styles={styles}
+        />
 
         {/* Bottom sheet */}
         <BuildingBottomSheet
@@ -1433,88 +1290,39 @@ export default function MapScreen({ route, navigation }) {
           onDirections={setDestinationToSelectedBuilding}
         />
 
-        {isPOIPanelOpen && (
-          <View
-            testID="poi-panel"
-            style={
-              hasRequestedPOIs
-                ? [
-                    styles.poiPanel,
-                    {
-                      position: "absolute",
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      width: "100%",
-                      backgroundColor: "#FFFFFF",
-                      borderTopLeftRadius: 16,
-                      borderTopRightRadius: 16,
-                      borderBottomLeftRadius: 0,
-                      borderBottomRightRadius: 0,
-                      padding: 16,
-                      maxHeight: "40%",
-                      justifyContent: "flex-start",
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: -2 },
-                      shadowOpacity: 0.12,
-                      shadowRadius: 8,
-                      elevation: 8,
-                    },
-                  ]
-                : styles.poiPanel
+        <POIListPanel
+          isOpen={isPOIPanelOpen}
+          hasRequested={hasRequestedPOIs}
+          isLoading={isPOILoading}
+          pois={displayedPOIs.map((poi) => ({
+            ...poi,
+            formattedDistance: formatPOIDistance(poi.distance),
+          }))}
+          onClose={() => {
+            setIsPOIPanelOpen(false);
+            if (
+              directionsVisibleBeforePoiRef.current &&
+              startCoord &&
+              destCoord &&
+              !selectedPOI
+            ) {
+              setShowDirectionsPanel(true);
             }
-          >
-            <View style={styles.poiPanelHeader}>
-              <Text style={styles.poiPanelTitle}>Outdoor POIs</Text>
-              <Pressable
-                onPress={() => {
-                  setIsPOIPanelOpen(false);
-                  if (
-                    directionsVisibleBeforePoiRef.current &&
-                    startCoord &&
-                    destCoord &&
-                    !selectedPOI
-                  ) {
-                    setShowDirectionsPanel(true);
-                  }
-                  directionsVisibleBeforePoiRef.current = false;
-                }}
-              >
-                <MaterialIcons name="close" size={20} color="#1F1F1F" />
-              </Pressable>
-            </View>
-
-            {hasRequestedPOIs ? (
-              <View
-                style={{
-                  marginTop: 8,
-                  overflow: "hidden",
-                  flex: 1,
-                }}
-              >
-                {renderPOIContent({
-                  isPOILoading,
-                  displayedPOIs,
-                  styles,
-                  setSelectedPOI,
-                  setIsPOIPanelOpen,
-                })}
-              </View>
-            ) : (
-              <OutdoorPoiFilterForm
-                styles={styles}
-                maroon={MAROON}
-                onShowOnMap={loadNearbyPOIs}
-              />
-            )}
-          </View>
-        )}
+            directionsVisibleBeforePoiRef.current = false;
+          }}
+          onPoiSelect={(poi) => {
+            setSelectedPOI(poi);
+            setIsPOIPanelOpen(false);
+          }}
+          onShowOnMap={loadNearbyPOIs}
+          styles={styles}
+          maroonColor={MAROON}
+        />
 
         {/* POI Button */}
-        <Pressable
-          testID="poi-button"
-          accessibilityLabel="Outdoor points of interest"
-          hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+        <POIButton
+          isOpen={isPOIPanelOpen}
+          isClearFilterPanel={!hasRequestedPOIs}
           onPress={() => {
             directionsVisibleBeforePoiRef.current = Boolean(
               showDirectionsPanel && startCoord && destCoord && !selectedPOI,
@@ -1526,16 +1334,8 @@ export default function MapScreen({ route, navigation }) {
             setHasRequestedPOIs(false);
             setIsPOIPanelOpen(true);
           }}
-          style={[
-            styles.poiButton,
-            isPOIPanelOpen && styles.poiButtonActive,
-            isPOIPanelOpen &&
-              !hasRequestedPOIs &&
-              styles.poiButtonClearFilterPanel,
-          ]}
-        >
-          <MaterialIcons name="info-outline" size={22} style={styles.poiButtonIcon} />
-        </Pressable>
+          styles={styles}
+        />
 
         {canShowDirectionsPanel && (
           <DirectionsPanel
