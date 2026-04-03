@@ -261,6 +261,11 @@
           "weight": 128.83
         },
         {
+          "from": "MB1annotated_hallway_012",
+          "to": "MB1annotated_hallway_013",
+          "weight": 133.9
+        },
+        {
           "from": "MB1annotated_classroom_007",
           "to": "MB1annotated_hallway_013",
           "weight": 115.37

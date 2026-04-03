@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
+import * as Speech from "expo-speech";
 import {
   View,
   Text,
@@ -87,21 +88,125 @@ function buildSegmentIcon(method) {
   return method === "elevator" ? "elevator" : "stairs";
 }
 
-function getPathLength(pathCoords = []) {
-  if (!Array.isArray(pathCoords) || pathCoords.length < 2) return 0;
+function findJourneyStageById(journeyStages, stageId) {
+  return journeyStages.find((stage) => stage.id === stageId) || null;
+}
 
-  return pathCoords.slice(1).reduce((total, point, index) => {
-    const previousPoint = pathCoords[index];
-    if (!previousPoint) return total;
+function getSegmentSpeechSteps(stage, segmentResults) {
+  if (!stage) return [];
 
-    return (
-      total +
-      Math.hypot(
-        (point.x || 0) - (previousPoint.x || 0),
-        (point.y || 0) - (previousPoint.y || 0),
-      )
-    );
-  }, 0);
+  const selectedSegmentResult = segmentResults[stage.segmentIndex];
+  const segment = selectedSegmentResult?.segment;
+
+  if (!segment) return [];
+
+  if (segment.type === "indoor") {
+    const coords = selectedSegmentResult?.pathResult?.pathCoords || [];
+    const steps = [];
+
+    for (let i = 1; i < coords.length - 1; i += 1) {
+      steps.push(nodeStepText(coords[i]));
+    }
+
+    if (!steps.length) {
+      const floorLabel = FLOOR_META[segment.floorId]?.floorLabel || segment.floorId;
+      return [`Walk on Floor ${floorLabel}`];
+    }
+
+    return steps;
+  }
+
+  if (segment.type === "vertical") {
+    const fromLabel = FLOOR_META[segment.fromFloor]?.floorLabel || segment.fromFloor;
+    const toLabel = FLOOR_META[segment.toFloor]?.floorLabel || segment.toFloor;
+    const method =
+      segment.transitionType === "elevator" ? "elevator" : "stairs";
+    return [`Take the ${method} from Floor ${fromLabel} to Floor ${toLabel}`];
+  }
+
+  if (segment.type === "outdoor") {
+    return [
+      `Walk outside to the ${segment.toBuildingId?.toUpperCase() || "destination"} building`,
+    ];
+  }
+
+  return [];
+}
+
+function speakSegmentSteps(steps) {
+  if (!steps.length) return;
+  Speech.stop();
+  Speech.speak(steps.join(". "));
+}
+
+function normalizeSpokenInstructionText(text = "") {
+  return String(text).replaceAll(/\s+/g, " ").trim();
+}
+
+function isGenericHallwayInstruction(text = "") {
+  return (
+    text === "Continue through the hallway" ||
+    text === "Continue along the corridor"
+  );
+}
+
+export function prepareSegmentSpokenInstructions(steps = []) {
+  const normalizedSteps = steps
+    .map((step) => normalizeSpokenInstructionText(step))
+    .filter(Boolean);
+
+  return normalizedSteps.reduce((compacted, step) => {
+    const previousStep = compacted.at(-1);
+    if (!previousStep) {
+      compacted.push(step);
+      return compacted;
+    }
+
+    const previousLower = previousStep.toLowerCase();
+    const currentLower = step.toLowerCase();
+
+    // Remove direct consecutive duplicates in the spoken queue.
+    if (previousLower === currentLower) {
+      return compacted;
+    }
+
+    // Collapse back-to-back generic hallway instructions to one spoken step.
+    if (
+      isGenericHallwayInstruction(previousStep) &&
+      isGenericHallwayInstruction(step)
+    ) {
+      return compacted;
+    }
+
+    compacted.push(step);
+    return compacted;
+  }, []);
+}
+
+function buildSegmentSpokenInstructions({
+  stage,
+  journeyStages,
+  segmentResults,
+  startRoom,
+  destRoom,
+}) {
+  const segmentSteps = getSegmentSpeechSteps(stage, segmentResults);
+  const spokenSteps = prepareSegmentSpokenInstructions(segmentSteps);
+
+  if (!spokenSteps.length) return [];
+
+  const stageIndex = journeyStages.findIndex((journeyStage) => journeyStage.id === stage.id);
+  const contextualSteps = [...spokenSteps];
+
+  if (stageIndex === 0) {
+    contextualSteps.unshift(`Start at ${startRoom?.label || "starting point"}`);
+  }
+
+  if (stageIndex === journeyStages.length - 1) {
+    contextualSteps.push(`You have arrived at ${destRoom?.label || "destination"}`);
+  }
+
+  return contextualSteps;
 }
 
 function getMapStageBuildingLabel(buildingId) {
@@ -278,6 +383,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
   // Transition preference for cross-floor routes
   const [transitionPref, setTransitionPref] = useState(null); // "stairs" | "elevator"
   const [activeJourneyStageId, setActiveJourneyStageId] = useState(null);
+  const lastSpokenJourneyStageIdRef = useRef(null);
   const resolvedTransitionPref =
     transitionPref || (accessibleRoute ? "elevator" : "stairs");
 
@@ -649,27 +755,52 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
 
   // Route stats - calculate actual distance
   const routeStats = useMemo(() => {
-    const routedPathLength =
+    const getPathGeometryWeight = (coords = []) => {
+      if (!Array.isArray(coords) || coords.length < 2) return 0;
+
+      let total = 0;
+      for (let i = 1; i < coords.length; i += 1) {
+        const dx = (coords[i]?.x || 0) - (coords[i - 1]?.x || 0);
+        const dy = (coords[i]?.y || 0) - (coords[i - 1]?.y || 0);
+        total += Math.hypot(dx, dy);
+      }
+      return total;
+    };
+
+    const getSafeIndoorWeight = (weighted = 0, coords = []) => {
+      const geometricWeight = getPathGeometryWeight(coords);
+      if (!geometricWeight) return weighted || 0;
+      if (!weighted) return geometricWeight;
+
+      // Large ratios indicate synthetic graph penalties (e.g., room-transit penalties).
+      return weighted / geometricWeight > 10 ? geometricWeight : weighted;
+    };
+
+    const routedWeight =
       segmentResults.length > 0
         ? segmentResults.reduce(
             (total, segmentResult) =>
               segmentResult.segment.type === "indoor" &&
               segmentResult.pathResult?.ok
-                ? total + getPathLength(segmentResult.pathResult.pathCoords)
+                ? total +
+                  getSafeIndoorWeight(
+                    segmentResult.pathResult.totalWeight,
+                    segmentResult.pathResult.pathCoords,
+                  )
                 : total,
             0,
           )
         : pathResult?.ok
-          ? getPathLength(pathResult.pathCoords)
+          ? getSafeIndoorWeight(pathResult.totalWeight, pathResult.pathCoords)
           : 0;
 
-    if (!routedPathLength) {
+    if (!routedWeight) {
       return { duration: "--", distance: "--", type: "walking" };
     }
 
     const distanceMeters = Math.max(
       1,
-      Math.round(routedPathLength * INDOOR_METERS_PER_MAP_UNIT),
+      Math.round(routedWeight * INDOOR_METERS_PER_MAP_UNIT),
     );
     const durationSeconds =
       distanceMeters / INDOOR_WALKING_SPEED_METERS_PER_SECOND;
@@ -856,6 +987,47 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
       setActiveJourneyStageId(matchingStage.id);
     }
   };
+
+  const handleJourneyStageSelect = useCallback(
+    (stageId) => {
+      if (stageId === activeJourneyStage?.id) {
+        return;
+      }
+
+      const selectedStage = findJourneyStageById(journeyStages, stageId);
+      setActiveJourneyStageId(stageId);
+
+      if (!selectedStage) return;
+
+      const spokenSteps = buildSegmentSpokenInstructions({
+        stage: selectedStage,
+        journeyStages,
+        segmentResults,
+        startRoom,
+        destRoom,
+      });
+      if (!spokenSteps.length) return;
+
+      if (lastSpokenJourneyStageIdRef.current === stageId) return;
+
+      speakSegmentSteps(spokenSteps);
+      lastSpokenJourneyStageIdRef.current = stageId;
+    },
+    [activeJourneyStage, journeyStages, segmentResults, startRoom, destRoom],
+  );
+
+  useEffect(() => {
+    const unsubscribe = navigation?.addListener?.("blur", () => {
+      Speech.stop();
+      lastSpokenJourneyStageIdRef.current = null;
+    });
+
+    return () => {
+      unsubscribe?.();
+      Speech.stop();
+      lastSpokenJourneyStageIdRef.current = null;
+    };
+  }, [navigation]);
 
   const handleSelectRoom = (room) => {
     const floorLabel = room.floor?.split("-")[1] || room.floor;
@@ -1422,7 +1594,7 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
                         styles.journeyStageCard,
                         isActive && styles.journeyStageCardActive,
                       ]}
-                      onPress={() => setActiveJourneyStageId(stage.id)}
+                      onPress={() => handleJourneyStageSelect(stage.id)}
                     >
                       <View style={styles.journeyStageHeaderRow}>
                         <MaterialIcons
@@ -2355,6 +2527,7 @@ IndoorDirectionsScreen.propTypes = {
   navigation: PropTypes.shape({
     navigate: PropTypes.func,
     goBack: PropTypes.func,
+    addListener: PropTypes.func,
     getParent: PropTypes.func,
   }),
 };
