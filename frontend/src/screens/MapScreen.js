@@ -274,6 +274,40 @@ const renderPOIContent = ({
   );
 };
 
+const useSyncStartCampusFromCurrentBuilding = ({
+  startText,
+  currentBuilding,
+  setStartCampusId,
+}) => {
+  useEffect(() => {
+    if (startText !== "My location") return;
+    if (currentBuilding?.__campusId) {
+      setStartCampusId(currentBuilding.__campusId);
+    }
+  }, [startText, currentBuilding, setStartCampusId]);
+};
+
+const useSyncDestinationFromSelectedPOI = ({
+  selectedPOI,
+  setShowDirectionsPanel,
+  setDestinationDetails,
+  setDestIndoorRoom,
+}) => {
+  useEffect(() => {
+    if (!selectedPOI) return;
+    // When a POI card is shown, hide the bottom directions panel so
+    // the two are never visible at the same time.
+    setShowDirectionsPanel(false);
+    setDestinationDetails(selectedPOI.name, selectedPOI.coords, null);
+    setDestIndoorRoom(null);
+  }, [
+    selectedPOI,
+    setShowDirectionsPanel,
+    setDestinationDetails,
+    setDestIndoorRoom,
+  ]);
+};
+
 const zoomMapToCoordinate = (mapRef, coord) => {
   mapRef.current?.animateToRegion(
     { ...coord, latitudeDelta: 0.003, longitudeDelta: 0.003 },
@@ -984,13 +1018,11 @@ export default function MapScreen({ route, navigation }) {
     allBuildings,
   });
 
-  //detect campus when start is my location
-  useEffect(() => {
-    if (startText !== "My location") return;
-    if (currentBuilding?.__campusId) {
-      setStartCampusId(currentBuilding.__campusId);
-    }
-  }, [startText, currentBuilding]);
+  useSyncStartCampusFromCurrentBuilding({
+    startText,
+    currentBuilding,
+    setStartCampusId,
+  });
 
   const { setCurrentStepIndex } = useNavigationSteps({
     navActive,
@@ -1055,14 +1087,12 @@ export default function MapScreen({ route, navigation }) {
     },
   });
 
-  useEffect(() => {
-    if (!selectedPOI) return;
-    // When a POI card is shown, hide the bottom directions panel so
-    // the two are never visible at the same time.
-    setShowDirectionsPanel(false);
-    setDestinationDetails(selectedPOI.name, selectedPOI.coords, null);
-    setDestIndoorRoom(null);
-  }, [selectedPOI]);
+  useSyncDestinationFromSelectedPOI({
+    selectedPOI,
+    setShowDirectionsPanel,
+    setDestinationDetails,
+    setDestIndoorRoom,
+  });
 
   //Without this comment,we'd need to write a unit test specifically to force a missing config scenario to achieve 100% test coverage
   /* istanbul ignore next -- defensive guard if campus config is invalid/missing */
