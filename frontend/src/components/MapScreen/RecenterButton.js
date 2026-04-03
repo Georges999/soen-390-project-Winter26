@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { View, Pressable } from "react-native";
+import { Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const MAROON = "#95223D";

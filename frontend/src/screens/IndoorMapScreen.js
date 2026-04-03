@@ -12,11 +12,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { buildings } from "../data/indoorFloorData";
 import IndoorPoiLegend from "../components/IndoorPoiLegend";
-import {
-  IndoorBuildingSelector,
-  IndoorCampusToggle,
-  IndoorFloorSelector,
-} from "../components/IndoorSelectors";
 import FloorLabelControls from "../components/IndoorMapScreen/FloorLabelControls";
 import IndoorFloorMapPanel from "../components/IndoorMapScreen/IndoorFloorMapPanel";
 import RoomSearchSection from "../components/IndoorMapScreen/RoomSearchSection";
