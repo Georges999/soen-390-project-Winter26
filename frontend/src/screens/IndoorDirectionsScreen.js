@@ -1236,26 +1236,26 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           </>
         )}
 
-        {!svgPath && effectiveStartRoom?.x && effectiveStartRoom?.y && (
-          <Circle
-            cx={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).x}
-            cy={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).y}
-            r={12}
-            fill={GREEN}
-            stroke="#fff"
-            strokeWidth={3}
-          />
-        )}
-        {!svgPath && effectiveDestRoom?.x && effectiveDestRoom?.y && (
-          <Circle
-            cx={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).x}
-            cy={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).y}
-            r={12}
-            fill={MAROON}
-            stroke="#fff"
-            strokeWidth={3}
-          />
-        )}
+        {!svgPath && effectiveStartRoom?.x && effectiveStartRoom?.y && effectiveStartRoom?.floor === selectedFloor?.id && (
+        <Circle
+          cx={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).x}
+          cy={scaleCoord(effectiveStartRoom.x, effectiveStartRoom.y).y}
+          r={12}
+          fill={GREEN}
+          stroke="#fff"
+          strokeWidth={3}
+        />
+      )}
+      {!svgPath && effectiveDestRoom?.x && effectiveDestRoom?.y && effectiveDestRoom?.floor === selectedFloor?.id && (
+        <Circle
+          cx={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).x}
+          cy={scaleCoord(effectiveDestRoom.x, effectiveDestRoom.y).y}
+          r={12}
+          fill={MAROON}
+          stroke="#fff"
+          strokeWidth={3}
+        />
+      )}
       </Svg>
     </View>
   );

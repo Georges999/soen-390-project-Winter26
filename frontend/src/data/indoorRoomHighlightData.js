@@ -139,6 +139,11 @@ function addRoomCoordinate(target, floorId, room) {
       target[floorId][alias] = { x: room.x, y: room.y };
     }
   });
+
+  const normalizedRoomId = normalizeRoomLabel(room.id);
+  if (normalizedRoomId && !target[floorId][normalizedRoomId]) {
+    target[floorId][normalizedRoomId] = { x: room.x, y: room.y };
+  }
 }
 
 function addFloorRoom(target, floorId, room) {
@@ -195,11 +200,20 @@ const roomsByFloor = MAPPING_SOURCES.reduce((accumulator, source) => {
   return accumulator;
 }, {});
 
-export function getRoomHighlightPoint(floorId, roomLabel) {
-  if (!floorId || !roomLabel) return null;
+export function getRoomHighlightPoint(floorId, roomReference) {
+  if (!floorId || !roomReference) return null;
 
   const floorCoordinates = roomHighlightCoordinates[floorId];
   if (!floorCoordinates) return null;
+
+  const roomIdKey =
+    typeof roomReference === "object" ? normalizeRoomLabel(roomReference.id) : "";
+  if (roomIdKey && floorCoordinates[roomIdKey]) {
+    return floorCoordinates[roomIdKey];
+  }
+
+  const roomLabel =
+    typeof roomReference === "object" ? roomReference.label : roomReference;
 
   return floorCoordinates[normalizeRoomLabel(roomLabel)] ?? null;
 }

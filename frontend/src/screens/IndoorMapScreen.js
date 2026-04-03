@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   View,
@@ -76,29 +76,47 @@ function IndoorMapScreen({ navigation }) {
   );
 
   const selectedRoomContext = useMemo(() => {
-    return getSelectedRoomContext(campusBuildings, selectedRoom);
-  }, [campusBuildings, selectedRoom]);
+    return getSelectedRoomContext(buildings, selectedRoom);
+  }, [selectedRoom]);
 
   const selectedRoomHighlight = useMemo(
     () =>
       selectedRoomContext?.floor?.id === currentFloor?.id
-        ? getRoomHighlightPoint(currentFloor?.id, selectedRoom?.label)
+        ? getRoomHighlightPoint(currentFloor?.id, selectedRoom)
         : null,
-    [currentFloor?.id, selectedRoom?.label, selectedRoomContext]
+    [currentFloor?.id, selectedRoom, selectedRoomContext]
   );
+
+  useEffect(() => {
+    if (!selectedRoom) return;
+
+    const hasLeftSelectedRoomBuilding =
+      !selectedRoomContext ||
+      selectedRoomContext.campusId !== selectedCampus ||
+      selectedRoomContext.building?.id !== currentBuilding?.id ||
+      selectedRoomContext.floor?.id !== currentFloor?.id;
+
+    if (hasLeftSelectedRoomBuilding) {
+      setSelectedRoom(null);
+    }
+  }, [
+    currentBuilding?.id,
+    currentFloor?.id,
+    selectedCampus,
+    selectedRoom,
+    selectedRoomContext,
+  ]);
 
   const handleCampusToggle = (campus) => {
     setSelectedCampus(campus);
     setSelectedBuildingIdx(0);
     setSelectedFloorIdx(0);
-    setSelectedRoom(null);
     setSearchQuery("");
   };
 
   const handleBuildingSelect = (idx) => {
     setSelectedBuildingIdx(idx);
     setSelectedFloorIdx(0);
-    setSelectedRoom(null);
   };
 
   const handleFloorSelect = (idx) => {
@@ -330,7 +348,7 @@ function IndoorMapScreen({ navigation }) {
               <View>
                 <Text style={styles.selectedRoomText}>Room Selected</Text>
                 <Text style={styles.selectedRoomDetail}>
-                  {selectedRoom.label || "Unknown"} · Floor {currentFloor?.label || "?"} · {currentBuilding?.name || "Unknown"}
+                  {selectedRoom.label || "Unknown"} · Floor {selectedRoomContext?.floor?.label || "?"} · {selectedRoomContext?.building?.name || "Unknown"}
                 </Text>
               </View>
             </View>
