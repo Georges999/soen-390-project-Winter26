@@ -11,15 +11,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import campuses from '../data/campuses.json';
 import { isAuthenticated } from '../services/googleCalendarAuth';
 import { useNextClass } from '../hooks/useNextClass';
+import {
+  getEventLocation,
+  getEventSummary,
+  getMinutesUntilEvent,
+} from '../domain/calendar/calendarDomain';
 
 const MAROON = '#95223D';
 const campusList = [campuses.sgw, campuses.loyola].filter(Boolean);
-
-function getMinutesUntil(event) {
-  const startTime = event.startTime || event.start?.dateTime;
-  const mins = Math.floor((new Date(startTime).getTime() - Date.now()) / 1000 / 60);
-  return Math.max(0, mins);
-}
 
 export default function NextClassScreen({ navigation }) {
   const [isConnected, setIsConnected] = useState(false);
@@ -63,8 +62,8 @@ export default function NextClassScreen({ navigation }) {
 
   function handleGetDirections() {
     navigation.navigate('Map', {
-      nextClassLocation: nextClass?.location,
-      nextClassSummary: nextClass?.summary || nextClass?.title,
+      nextClassLocation: getEventLocation(nextClass),
+      nextClassSummary: getEventSummary(nextClass),
     });
   }
 
@@ -98,16 +97,16 @@ export default function NextClassScreen({ navigation }) {
           </View>
 
           <View style={styles.classInfoRow}>
-            <Text style={styles.courseName}>{nextClass.summary || nextClass.title}</Text>
+            <Text style={styles.courseName}>{getEventSummary(nextClass)}</Text>
             <View style={styles.dot} />
-            <Text style={styles.roomCode}>{nextClass.location}</Text>
+            <Text style={styles.roomCode}>{getEventLocation(nextClass)}</Text>
           </View>
 
           <View style={styles.timeRow}>
             <Text style={styles.startsIn}>
               Starts in{' '}
               <Text style={styles.minutesText}>
-                {getMinutesUntil(nextClass)} min
+                {getMinutesUntilEvent(nextClass)} min
               </Text>
             </Text>
             <Pressable
