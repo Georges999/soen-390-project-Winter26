@@ -1220,13 +1220,11 @@ export default function MapScreen({ route, navigation }) {
           onRegionChangeComplete={(region) => setMapRegion(region)}
         >
           <BuildingOverlays
-            selectedCampusId={selectedCampusId}
             selectedCampus={selectedCampus}
             otherCampuses={otherCampuses}
             showCampusLabels={showCampusLabels}
             campusList={campusList}
             isCurrentBuilding={isCurrentBuilding}
-            getBuildingName={getBuildingName}
             displayedPOIs={displayedPOIs}
             onBuildingPress={handleBuildingPress}
             onPoiPress={(poi) => {

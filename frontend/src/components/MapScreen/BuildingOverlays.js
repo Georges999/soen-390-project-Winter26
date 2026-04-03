@@ -10,13 +10,11 @@ import { getPolygonCenter } from "../../utils/geoUtils";
  * Receives campus data and callback handlers as props
  */
 function BuildingOverlays({
-  selectedCampusId,
   selectedCampus,
   otherCampuses,
   showCampusLabels,
   campusList,
   isCurrentBuilding,
-  getBuildingName,
   displayedPOIs,
   onBuildingPress,
   onPoiPress,
@@ -29,91 +27,77 @@ function BuildingOverlays({
 
   if (!selectedCampus) return null;
 
+  const selectedCampusColors = {
+    activeFill: "rgba(37, 99, 235, 0.35)",
+    inactiveFill: "rgba(149, 34, 61, 0.25)",
+    activeStroke: "rgba(37, 99, 235, 0.95)",
+    inactiveStroke: "rgba(149, 34, 61, 0.9)",
+  };
+
+  const otherCampusColors = {
+    activeFill: "rgba(37, 99, 235, 0.2)",
+    inactiveFill: "rgba(149, 34, 61, 0.10)",
+    activeStroke: "rgba(37, 99, 235, 0.85)",
+    inactiveStroke: "rgba(149, 34, 61, 0.55)",
+  };
+
+  const renderBuildingOverlay = ({ building, campusId, testId, colors, key }) => {
+    const center = getPolygonCenter(building.coordinates);
+    const label = building.label || building.name;
+    const isActive = isCurrentBuilding(campusId, building);
+
+    return (
+      <React.Fragment key={key}>
+        <Polygon
+          testID={testId}
+          coordinates={building.coordinates}
+          fillColor={isActive ? colors.activeFill : colors.inactiveFill}
+          strokeColor={isActive ? colors.activeStroke : colors.inactiveStroke}
+          strokeWidth={2}
+          tappable
+          onPress={() => onBuildingPress(building)}
+        />
+
+        {shouldShowBuildingLabels && center && label ? (
+          <Marker
+            coordinate={center}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={false}
+            pointerEvents="none"
+          >
+            <View style={styles.buildingLabel}>
+              <Text style={styles.buildingLabelText}>{label}</Text>
+            </View>
+          </Marker>
+        ) : null}
+      </React.Fragment>
+    );
+  };
+
   return (
     <>
       {/* Selected campus buildings */}
-      {selectedCampus.buildings.map((building) => {
-        const center = getPolygonCenter(building.coordinates);
-        const label = building.label || building.name;
-
-        return (
-          <React.Fragment key={building.id}>
-            <Polygon
-              testID={`building-${building.id}`}
-              coordinates={building.coordinates}
-              fillColor={
-                isCurrentBuilding(selectedCampus.id, building)
-                  ? "rgba(37, 99, 235, 0.35)"
-                  : "rgba(149, 34, 61, 0.25)"
-              }
-              strokeColor={
-                isCurrentBuilding(selectedCampus.id, building)
-                  ? "rgba(37, 99, 235, 0.95)"
-                  : "rgba(149, 34, 61, 0.9)"
-              }
-              strokeWidth={2}
-              tappable
-              onPress={() => onBuildingPress(building)}
-            />
-
-            {shouldShowBuildingLabels && center && label ? (
-              <Marker
-                coordinate={center}
-                anchor={{ x: 0.5, y: 0.5 }}
-                tracksViewChanges={false}
-                pointerEvents="none"
-              >
-                <View style={styles.buildingLabel}>
-                  <Text style={styles.buildingLabelText}>{label}</Text>
-                </View>
-              </Marker>
-            ) : null}
-          </React.Fragment>
-        );
-      })}
+      {selectedCampus.buildings.map((building) =>
+        renderBuildingOverlay({
+          building,
+          campusId: selectedCampus.id,
+          testId: `building-${building.id}`,
+          colors: selectedCampusColors,
+          key: building.id,
+        }),
+      )}
 
       {/* Other campus buildings */}
       {otherCampuses.map((campus) =>
-        campus.buildings.map((building) => {
-          const center = getPolygonCenter(building.coordinates);
-          const label = building.label || building.name;
-          const key = `${campus.id}-${building.id}`;
-
-          return (
-            <React.Fragment key={key}>
-              <Polygon
-                testID={`building-${campus.id}-${building.id}`}
-                coordinates={building.coordinates}
-                fillColor={
-                  isCurrentBuilding(campus.id, building)
-                    ? "rgba(37, 99, 235, 0.2)"
-                    : "rgba(149, 34, 61, 0.10)"
-                }
-                strokeColor={
-                  isCurrentBuilding(campus.id, building)
-                    ? "rgba(37, 99, 235, 0.85)"
-                    : "rgba(149, 34, 61, 0.55)"
-                }
-                strokeWidth={2}
-                tappable
-                onPress={() => onBuildingPress(building)}
-              />
-
-              {shouldShowBuildingLabels && center && label ? (
-                <Marker
-                  coordinate={center}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                  tracksViewChanges={false}
-                  pointerEvents="none"
-                >
-                  <View style={styles.buildingLabel}>
-                    <Text style={styles.buildingLabelText}>{label}</Text>
-                  </View>
-                </Marker>
-              ) : null}
-            </React.Fragment>
-          );
-        }),
+        campus.buildings.map((building) =>
+          renderBuildingOverlay({
+            building,
+            campusId: campus.id,
+            testId: `building-${campus.id}-${building.id}`,
+            colors: otherCampusColors,
+            key: `${campus.id}-${building.id}`,
+          }),
+        ),
       )}
 
       {/* Campus labels when zoomed out */}
@@ -155,7 +139,6 @@ function BuildingOverlays({
 }
 
 BuildingOverlays.propTypes = {
-  selectedCampusId: PropTypes.string,
   selectedCampus: PropTypes.shape({
     id: PropTypes.string.isRequired,
     buildings: PropTypes.array.isRequired,
@@ -169,7 +152,6 @@ BuildingOverlays.propTypes = {
   showCampusLabels: PropTypes.bool.isRequired,
   campusList: PropTypes.array.isRequired,
   isCurrentBuilding: PropTypes.func.isRequired,
-  getBuildingName: PropTypes.func.isRequired,
   displayedPOIs: PropTypes.array.isRequired,
   onBuildingPress: PropTypes.func.isRequired,
   onPoiPress: PropTypes.func.isRequired,
