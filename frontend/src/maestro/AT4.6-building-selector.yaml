@@ -61,7 +61,7 @@ appId: host.exp.Exponent
 - assertVisible: "Vanier Library"
 - assertNotVisible: "John Molson Building"
 
-# Switch back to SGW - resets to Hall Building, Floor 8
+# Switch back to SGW - resets to Hall Building, Floor 1
 - tapOn: "SGW"
 - waitForAnimationToEnd
 - assertVisible: "Hall Building · Floor 1"
