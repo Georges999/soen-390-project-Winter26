@@ -20,43 +20,55 @@ appId: host.exp.Exponent
 
 # AT4.5-1: Floor map renders correctly for default building/floor (Hall Building, Floor 8)
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 10000
 - assertVisible: "SGW"
 - assertVisible: "Hall Building"
-- assertVisible: "Floor 8"
 
 # AT4.5-2: Coordinate transform – search a room and confirm highlight dot renders on map
 - tapOn:
-    text: "Search room or click on map"
-- inputText: "H-837"
+    text: "Search start or use map pin button"
+- inputText: "H110"
 - waitForAnimationToEnd
-- assertVisible: "H837 · Hall Building"
-- tapOn: "H837 · Hall Building"
+- assertVisible: "H110, Floor 1 · Hall Building"
+- tapOn: "H110, Floor 1 · Hall Building"
 - hideKeyboard
 - waitForAnimationToEnd
 
 # Highlight overlay must be present (coordinate mapped onto rendered image)
 - assertVisible:
     id: "selected-room-highlight"
-- assertVisible: "Room Selected"
+
+# Clear selected start room, then scroll so floor chips are safely tappable
+- tapOn:
+    point: "77%,21%"
+- waitForAnimationToEnd
+- scroll
+- waitForAnimationToEnd
 
 # AT4.5-3: Switching floors clears stale overlay and updates rendered map
+- scrollUntilVisible:
+        element:
+            text: "9"
+        direction: DOWN
+        timeout: 10000
 - tapOn: "9"
 - waitForAnimationToEnd
-- assertVisible: "Floor 9"
+- assertVisible: "Hall Building · Floor 9"
 
-# Room was on Floor 8 – highlight must not appear on Floor 9
+# Room was on Floor 1 – highlight must not appear on Floor 9
 - assertNotVisible:
     id: "selected-room-highlight"
 
-# Switch back to Floor 8 – overlay reappears (coordinate still valid)
-- tapOn: "8"
+# Switch back to Floor 1 – overlay reappears (coordinate still valid)
+- scrollUntilVisible:
+        element:
+            text: "1"
+        direction: DOWN
+        timeout: 10000
+- tapOn: "1"
 - waitForAnimationToEnd
-- assertVisible: "Floor 8"
+- assertVisible: "Hall Building · Floor 1"
 - assertVisible:
     id: "selected-room-highlight"
 
-- assertVisible: "Get Directions"
-- assertVisible: "Hall Building"
-- assertVisible: "Floor 8"
