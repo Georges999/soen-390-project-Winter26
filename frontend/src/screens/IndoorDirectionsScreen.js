@@ -149,13 +149,11 @@ function prepareSegmentSpokenInstructions(steps = []) {
     .map((step) => normalizeSpokenInstructionText(step))
     .filter(Boolean);
 
-  const compacted = [];
-
-  normalizedSteps.forEach((step) => {
+  return normalizedSteps.reduce((compacted, step) => {
     const previousStep = compacted.at(-1);
     if (!previousStep) {
       compacted.push(step);
-      return;
+      return compacted;
     }
 
     const previousLower = previousStep.toLowerCase();
@@ -163,7 +161,7 @@ function prepareSegmentSpokenInstructions(steps = []) {
 
     // Remove direct consecutive duplicates in the spoken queue.
     if (previousLower === currentLower) {
-      return;
+      return compacted;
     }
 
     // Collapse back-to-back generic hallway instructions to one spoken step.
@@ -171,13 +169,12 @@ function prepareSegmentSpokenInstructions(steps = []) {
       isGenericHallwayInstruction(previousStep) &&
       isGenericHallwayInstruction(step)
     ) {
-      return;
+      return compacted;
     }
 
     compacted.push(step);
-  });
-
-  return compacted;
+    return compacted;
+  }, []);
 }
 
 function buildSegmentSpokenInstructions({
