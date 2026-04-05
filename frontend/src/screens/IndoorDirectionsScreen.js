@@ -1125,7 +1125,7 @@ function renderRouteDetailsSection({
   );
 }
 
-function renderIndoorDirectionsScrollContent({
+function IndoorDirectionsScrollContent({
   styles,
   browsingLocked,
   selectedCampus,
@@ -2356,58 +2356,58 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           <Text style={styles.headerTitle}>Indoor Directions</Text>
         </View>
 
-        {renderIndoorDirectionsScrollContent({
-          styles,
-          browsingLocked,
-          selectedCampus,
-          handleCampusChange,
-          campusBuildings,
-          selectedBuildingIdx,
-          handleBuildingChange,
-          activeField,
-          searchQuery,
-          startText,
-          destText,
-          startRoom,
-          destRoom,
-          selectionMode,
-          handleFieldChange,
-          setActiveField,
-          setSearchQuery,
-          setStartRoom,
-          setStartText,
-          setDestRoom,
-          setDestText,
-          toggleSelectionMode,
-          handleSwap,
-          searchResults,
-          handleSelectRoom,
-          accessibleRoute,
-          setAccessibleRoute,
-          routeType,
-          effectiveStartRoom,
-          effectiveDestRoom,
-          resolvedTransitionPref,
-          setTransitionPref,
-          journeyStages,
-          activeJourneyStage,
-          handleJourneyStageSelect,
-          navigation,
-          handleMapPress,
-          displayedFloor,
-          mapJourneyStage,
-          displayedSegmentResult,
-          selectedBuilding,
-          inspectMode,
-          toggleInspectMode,
-          activeJourneyStepNumber,
-          renderFloorPlanContent,
-          selectedFloorIdx,
-          handleFloorChange,
-          routeStats,
-          pathResult,
-          directionSteps,
-        })}
+        <IndoorDirectionsScrollContent
+          styles={styles}
+          browsingLocked={browsingLocked}
+          selectedCampus={selectedCampus}
+          handleCampusChange={handleCampusChange}
+          campusBuildings={campusBuildings}
+          selectedBuildingIdx={selectedBuildingIdx}
+          handleBuildingChange={handleBuildingChange}
+          activeField={activeField}
+          searchQuery={searchQuery}
+          startText={startText}
+          destText={destText}
+          startRoom={startRoom}
+          destRoom={destRoom}
+          selectionMode={selectionMode}
+          handleFieldChange={handleFieldChange}
+          setActiveField={setActiveField}
+          setSearchQuery={setSearchQuery}
+          setStartRoom={setStartRoom}
+          setStartText={setStartText}
+          setDestRoom={setDestRoom}
+          setDestText={setDestText}
+          toggleSelectionMode={toggleSelectionMode}
+          handleSwap={handleSwap}
+          searchResults={searchResults}
+          handleSelectRoom={handleSelectRoom}
+          accessibleRoute={accessibleRoute}
+          setAccessibleRoute={setAccessibleRoute}
+          routeType={routeType}
+          effectiveStartRoom={effectiveStartRoom}
+          effectiveDestRoom={effectiveDestRoom}
+          resolvedTransitionPref={resolvedTransitionPref}
+          setTransitionPref={setTransitionPref}
+          journeyStages={journeyStages}
+          activeJourneyStage={activeJourneyStage}
+          handleJourneyStageSelect={handleJourneyStageSelect}
+          navigation={navigation}
+          handleMapPress={handleMapPress}
+          displayedFloor={displayedFloor}
+          mapJourneyStage={mapJourneyStage}
+          displayedSegmentResult={displayedSegmentResult}
+          selectedBuilding={selectedBuilding}
+          inspectMode={inspectMode}
+          toggleInspectMode={toggleInspectMode}
+          activeJourneyStepNumber={activeJourneyStepNumber}
+          renderFloorPlanContent={renderFloorPlanContent}
+          selectedFloorIdx={selectedFloorIdx}
+          handleFloorChange={handleFloorChange}
+          routeStats={routeStats}
+          pathResult={pathResult}
+          directionSteps={directionSteps}
+        />
       </View>
     </SafeAreaView>
   );
