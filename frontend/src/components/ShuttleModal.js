@@ -2,6 +2,14 @@ import React from "react";
 import { View, Text, Modal, Pressable, Image } from "react-native";
 import PropTypes from "prop-types";
 
+function computeEta(t, estimatedTravelMin) {
+  const [h, m] = t.split(":").map((v) => Number.parseInt(v, 10));
+  const mins = h * 60 + m + (estimatedTravelMin || 0);
+  const eh = Math.floor(mins / 60) % 24;
+  const em = mins % 60;
+  return `${eh.toString().padStart(2, "0")}:${em.toString().padStart(2, "0")}`;
+}
+
 function ShuttleModal({
   styles,
   isOpen,
@@ -61,15 +69,7 @@ function ShuttleModal({
                         <Text style={styles.departureTime}>{t}</Text>
                         <Text style={styles.departureEta}>
                           ETA{" "}
-                          {(() => {
-                            const [h, m] = t.split(":").map((v) => Number.parseInt(v, 10));
-                            const mins = h * 60 + m + (schedule.estimatedTravelMin || 0);
-                            const eh = Math.floor(mins / 60) % 24;
-                            const em = mins % 60;
-                            return `${eh.toString().padStart(2, "0")}:${em
-                              .toString()
-                              .padStart(2, "0")}`;
-                          })()}
+                          {computeEta(t, schedule.estimatedTravelMin)}
                         </Text>
                       </View>
                     ))

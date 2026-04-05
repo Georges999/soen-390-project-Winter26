@@ -25,26 +25,21 @@ appId: host.exp.Exponent
 
 # Confirm Indoor Map screen is loaded
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 12000
 
 # Select destination room in JMSB (same campus)
 - tapOn:
-    text: "Search room or click on map"
+    text: "Search start or use map pin button"
 - inputText: "MB1.309"
 - extendedWaitUntil:
-    visible: "MB1.309 · John Molson Building"
+    visible: "MB1.309, Floor 1 · John Molson Building"
     timeout: 8000
-- assertVisible: "MB1.309 · John Molson Building"
-- tapOn: "MB1.309 · John Molson Building"
+- assertVisible: "MB1.309, Floor 1 · John Molson Building"
+- tapOn: "MB1.309, Floor 1 · John Molson Building"
 - hideKeyboard
 - waitForAnimationToEnd
 
-# Open Indoor Directions
-- assertVisible: "Room Selected"
-- assertVisible: "Get Directions"
-- tapOn: "Get Directions"
-- waitForAnimationToEnd
 
 # Confirm Indoor Directions screen
 - extendedWaitUntil:

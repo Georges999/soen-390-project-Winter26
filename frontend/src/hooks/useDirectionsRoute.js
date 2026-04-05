@@ -116,6 +116,80 @@ export function buildRouteInfo(leg) {
   };
 }
 
+// clearRoute moved to module scope to avoid recreation on each render.
+export function clearRoute(setRouteCoords, setRouteInfo, setRouteOptions) {
+  setRouteCoords([]);
+  setRouteInfo(null);
+  setRouteOptions([]);
+}
+
+// fetchAndSetRoute moved to module scope to avoid recreation on each render.
+// It accepts the setters so it can modify component state from module scope.
+export async function fetchAndSetRoute({
+  originParam,
+  destinationParam,
+  apiMode,
+  waypointsParam,
+  routeIndex,
+  fitToRoute,
+  mapRef,
+  isCancelled,
+  setRouteCoords,
+  setRouteInfo,
+  setRouteOptions,
+}) {
+  try {
+    const isTransit = apiMode === "transit";
+    const url = buildRequestUrl(originParam, destinationParam, apiMode, waypointsParam);
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.routes?.length) {
+      console.log("Directions API error:", data.status, data.error_message);
+      if (!isCancelled()) clearRoute(setRouteCoords, setRouteInfo, setRouteOptions);
+      return;
+    }
+
+    const options = isTransit ? buildRouteOptions(data.routes) : [];
+    const clampedIndex = Math.min(
+      Math.max(routeIndex, 0),
+      isTransit ? Math.max(options.length - 1, 0) : 0,
+    );
+    const selectedRoute = isTransit
+      ? data.routes[clampedIndex]
+      : pickBestRoute(data.routes, isTransit);
+
+    const encoded = selectedRoute?.overview_polyline?.points;
+    if (!encoded) {
+      if (!isCancelled()) clearRoute(setRouteCoords, setRouteInfo, setRouteOptions);
+      return;
+    }
+
+    const points = polyline.decode(encoded).map(([lat, lng]) => ({
+      latitude: lat,
+      longitude: lng,
+    }));
+
+    if (isCancelled()) return;
+
+    setRouteCoords(points);
+    if (!isCancelled()) setRouteOptions(options);
+    const leg = selectedRoute?.legs?.[0];
+    setRouteInfo(buildRouteInfo(leg));
+
+    if (fitToRoute) {
+      mapRef?.current?.fitToCoordinates(points, {
+        edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
+        animated: true,
+      });
+    }
+  } catch (e) {
+    console.log("fetchRoute error:", e);
+    if (!isCancelled()) clearRoute(setRouteCoords, setRouteInfo, setRouteOptions);
+  }
+}
+
 export function useDirectionsRoute({
   startCoord,
   destCoord,
@@ -131,86 +205,36 @@ export function useDirectionsRoute({
   const [routeInfo, setRouteInfo] = useState(null);
   const [routeOptions, setRouteOptions] = useState([]);
 
+
   useEffect(() => {
     // clear when missing one end or when directions are disabled
     const hasOrigin = Boolean(originOverride) || Boolean(startCoord);
     const hasDestination = Boolean(destinationOverride) || Boolean(destCoord);
     if (!hasOrigin || !hasDestination || !mode) {
-      setRouteCoords([]);
-      setRouteInfo(null);
-      setRouteOptions([]);
+      clearRoute(setRouteCoords, setRouteInfo, setRouteOptions);
       return;
     }
 
     let cancelled = false;
 
-    (async () => {
-      try {
-        const apiMode = MODE_MAP[mode] || "walking"; //travel modes or when missing-> walking
-        const isTransit = apiMode === "transit";
-        const originParam = originOverride
-          ? encodeURIComponent(originOverride)
-          : `${startCoord.latitude},${startCoord.longitude}`;
-        const destinationParam = destinationOverride
-          ? encodeURIComponent(destinationOverride)
-          : `${destCoord.latitude},${destCoord.longitude}`;
-        const waypointsParam = buildWaypointsParam(waypoints);
-        const url = buildRequestUrl(originParam, destinationParam, apiMode, waypointsParam);
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (!data.routes?.length) {
-          console.log("Directions API error:", data.status, data.error_message); //when no route is returned
-          if (!cancelled) setRouteCoords([]);
-          if (!cancelled) setRouteInfo(null);
-          if (!cancelled) setRouteOptions([]);
-          return;
-        }
-
-        const options = isTransit ? buildRouteOptions(data.routes) : [];
-        const clampedIndex = Math.min(
-          Math.max(routeIndex, 0),
-          isTransit ? Math.max(options.length - 1, 0) : 0,
-        );
-        const selectedRoute = isTransit
-          ? data.routes[clampedIndex]
-          : pickBestRoute(data.routes, isTransit);
-
-        //decode the polyline returned by Google
-        const encoded = selectedRoute?.overview_polyline?.points;
-        if (!encoded) {
-          if (!cancelled) setRouteCoords([]);
-          if (!cancelled) setRouteInfo(null);
-          if (!cancelled) setRouteOptions([]);
-          return;
-        }
-        const points = polyline.decode(encoded).map(([lat, lng]) => ({
-          latitude: lat,
-          longitude: lng,
-        }));
-
-        if (cancelled) return;
-
-        setRouteCoords(points);
-        if (!cancelled) setRouteOptions(options);
-        const leg = selectedRoute?.legs?.[0];
-        setRouteInfo(buildRouteInfo(leg));
-
-        // zoom to the route
-        if (fitToRoute) {
-          mapRef?.current?.fitToCoordinates(points, {
-            edgePadding: { top: 140, right: 40, bottom: 220, left: 40 },
-            animated: true,
-          });
-        }
-      } catch (e) {
-        console.log("fetchRoute error:", e);
-        if (!cancelled) setRouteCoords([]);
-        if (!cancelled) setRouteInfo(null);
-        if (!cancelled) setRouteOptions([]);
-      }
-    })();
+    // call the extracted async function with a small isCancelled callback
+    fetchAndSetRoute({
+      originParam: originOverride
+        ? encodeURIComponent(originOverride)
+        : `${startCoord.latitude},${startCoord.longitude}`,
+      destinationParam: destinationOverride
+        ? encodeURIComponent(destinationOverride)
+        : `${destCoord.latitude},${destCoord.longitude}`,
+      apiMode: MODE_MAP[mode] || "walking",
+      waypointsParam: buildWaypointsParam(waypoints),
+      routeIndex,
+      fitToRoute,
+      mapRef,
+      isCancelled: () => cancelled,
+      setRouteCoords,
+      setRouteInfo,
+      setRouteOptions,
+    });
 
     return () => {
       cancelled = true;
