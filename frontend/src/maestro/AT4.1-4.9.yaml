@@ -1,0 +1,150 @@
+appId: host.exp.Exponent
+---
+- launchApp
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible: "Campus Guide"
+    timeout: 30000
+- tapOn: "Campus Guide"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "tab-indoor"
+    timeout: 25000
+- tapOn:
+    id: "tab-indoor"
+- waitForAnimationToEnd
+
+- assertVisible:
+    id: "tab-indoor"
+
+# SGW: Hall Building floors 1, 2, 8, 9
+- assertVisible:
+    id: "indoor-building-hall"
+- scrollUntilVisible:
+    element: 
+        id: "indoor-floor-Hall-1"
+    direction: DOWN
+    timeout: 10000
+
+- assertVisible:
+    id: "indoor-floor-Hall-1"
+
+- tapOn:
+    id: "indoor-floor-Hall-2"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "indoor-floor-Hall-2"
+
+- tapOn:
+    id: "indoor-floor-Hall-8"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "indoor-floor-Hall-8"
+
+- tapOn:
+    id: "indoor-floor-Hall-9"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "indoor-floor-Hall-9"
+
+
+# SGW: John Molson Building floors S2, 1
+- scrollUntilVisible:
+    element: 
+        id: "indoor-building-mb"
+    direction: UP
+    timeout: 10000
+- tapOn:
+    id: "indoor-building-mb"
+- waitForAnimationToEnd
+
+
+- scrollUntilVisible:
+    element: 
+        id: "indoor-floor-MB-S2"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "indoor-floor-MB-S2"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "indoor-floor-MB-S2"
+
+- tapOn:
+    id: "indoor-floor-MB-1"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "indoor-floor-MB-1"
+
+# Loyola: Central Building Floor 1
+- scrollUntilVisible:
+    element: 
+        id: "indoor-campus-loyola"
+    direction: UP
+    timeout: 10000
+- tapOn:
+    id: "indoor-campus-loyola"
+- assertVisible:
+    id: "indoor-building-cc"
+
+
+- scrollUntilVisible:
+    element: 
+        id: "indoor-floor-CC-1"
+    direction: DOWN
+    timeout: 10000
+- assertVisible:
+    id: "indoor-floor-CC-1"
+
+# Loyola: Vanier Library floor 1 and 2
+- scrollUntilVisible:
+    element: 
+        id: "indoor-building-vl"
+    direction: UP
+    timeout: 10000
+- tapOn:
+    id: "indoor-building-vl"
+
+- scrollUntilVisible:
+    element: 
+        id: "indoor-floor-VL-1"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "indoor-floor-VL-2"
+
+#Loyola: Vanier Extention floor 2
+- scrollUntilVisible:
+    element: 
+        id: "indoor-building-vl"
+    direction: UP
+    timeout: 10000
+
+# - scrollUntilVisible:
+#     element: 
+#         id: "indoor-building-ve"
+#     direction: RIGHT
+#     timeout: 10000
+- swipe:
+    start: 85%, 28%
+    end: 20%, 28%
+    duration: 500
+
+- assertVisible:
+    id: "indoor-building-ve"
+
+- tapOn:
+    id: "indoor-building-ve"
+- scrollUntilVisible:
+    element: 
+        id: "indoor-floor-VE-2"
+    direction: DOWN
+    timeout: 10000
+
+
+
+
+

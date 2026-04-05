@@ -31,9 +31,13 @@ function IndoorFloorMapPanel({
     : styles.floorPlanImage;
 
   const renderFloorPlanCanvas = () => (
-    <View style={styles.floorPlanCanvas}>
+    <View
+      testID={`indoor-floor-map-${currentFloor.id}`}
+      style={styles.floorPlanCanvas}
+    >
       <Image
         source={currentFloor.image}
+        testID="indoor-floor-map-image"
         style={imageStyle}
         resizeMode="contain"
       />
@@ -88,6 +92,7 @@ function IndoorFloorMapPanel({
 
 IndoorFloorMapPanel.propTypes = {
   currentFloor: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     image: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
     width: PropTypes.number,
     height: PropTypes.number,

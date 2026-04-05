@@ -22,6 +22,7 @@ export function IndoorCampusToggle({
         return (
           <Pressable
             key={campusId}
+            testID={`indoor-campus-${campusId}`}
             style={buildSelectorStyles(
               styles.campusButton,
               styles.campusButtonActive,
@@ -68,6 +69,7 @@ export function IndoorBuildingSelector({
       {buildings.map((building, idx) => (
         <Pressable
           key={building.id}
+          testID={`indoor-building-${building.id}`}
           style={buildSelectorStyles(
             styles.buildingChip,
             styles.buildingChipActive,
@@ -113,6 +115,7 @@ export function IndoorFloorSelector({
       {floors.map((floor, idx) => (
         <Pressable
           key={floor.id}
+          testID={`indoor-floor-${floor.id}`}
           style={buildSelectorStyles(
             styles.floorButton,
             styles.floorButtonActive,

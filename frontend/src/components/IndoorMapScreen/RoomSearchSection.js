@@ -49,6 +49,7 @@ function RoomSearchSection({
           style={styles.searchIcon}
         />
         <TextInput
+          testID="indoor-room-search-input"
           style={styles.searchInput}
           placeholder="Search room or click on map"
           placeholderTextColor="#999"

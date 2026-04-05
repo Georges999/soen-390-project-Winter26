@@ -19,10 +19,11 @@ function FloorLabelControls({
 
   return (
     <View style={styles.floorLabelContainer}>
-      <View style={styles.floorLabelBadge}>
+      <View testID="indoor-current-floor-badge" style={styles.floorLabelBadge}>
         <Text style={styles.floorLabelText}>Floor {currentFloor.label}</Text>
       </View>
       <Pressable
+        testID="indoor-inspect-toggle"
         style={[
           styles.inspectToggle,
           inspectMode && styles.inspectToggleActive,
