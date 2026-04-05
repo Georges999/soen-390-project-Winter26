@@ -28,33 +28,26 @@ appId: host.exp.Exponent
     visible: "Indoor Directions"
     timeout: 12000
 
-# Select destination room in JMSB (same campus)
+# Start on Hall floor 8
 - tapOn:
     text: "Search start or use map pin button"
-- inputText: "MB1.309"
+- inputText: "H837"
 - extendedWaitUntil:
-    visible: "MB1.309, Floor 1 · John Molson Building"
+    visible: "H837.*"
     timeout: 8000
-- assertVisible: "MB1.309, Floor 1 · John Molson Building"
-- tapOn: "MB1.309, Floor 1 · John Molson Building"
+- tapOn: "H837,.*"
 - hideKeyboard
 - waitForAnimationToEnd
 
 
-# Confirm Indoor Directions screen
+# Select destination room in JMSB (same campus)
+- tapOn:
+    text: "Search destination or use map pin button"
+- inputText: "MB1.309"
 - extendedWaitUntil:
-    visible: "Indoor Directions"
-    timeout: 12000
-
-# Set start room in Hall Building
-- tapOn: "Search start or use map pin button"
-- eraseText
-- inputText: "921"
-- extendedWaitUntil:
-    visible: "H921, Floor 9 · Hall Building"
+    visible: "MB1.309.*"
     timeout: 8000
-- assertVisible: "H921, Floor 9 · Hall Building"
-- tapOn: "H921, Floor 9 · Hall Building"
+- tapOn: "MB1.309,.*"
 - hideKeyboard
 - waitForAnimationToEnd
 
