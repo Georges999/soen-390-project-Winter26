@@ -22,23 +22,18 @@ appId: host.exp.Exponent
 
 # Wait for Indoor Map screen
 - extendedWaitUntil:
-    visible: "Indoor Map"
+    visible: "Indoor Directions"
     timeout: 10000
 
 # Destination on Hall floor 8
 - tapOn:
-    text: "Search room or click on map"
-- inputText: "H-837"
+    text: "Search start or use map pin button"
+- inputText: "H837"
 - extendedWaitUntil:
-    visible: "H837 · Hall Building"
+    visible: "H837, Floor 8 · Hall Building"
     timeout: 8000
-- tapOn: "H837 · Hall Building"
+- tapOn: "H837, Floor 8 · Hall Building"
 - hideKeyboard
-- waitForAnimationToEnd
-
-- assertVisible: "Room Selected"
-- assertVisible: "Get Directions"
-- tapOn: "Get Directions"
 - waitForAnimationToEnd
 
 - extendedWaitUntil:
