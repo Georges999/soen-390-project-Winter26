@@ -92,6 +92,7 @@ function IndoorFloorMapPanel({
 
 IndoorFloorMapPanel.propTypes = {
   currentFloor: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     image: PropTypes.oneOfType([PropTypes.number, PropTypes.object]),
     width: PropTypes.number,
     height: PropTypes.number,
