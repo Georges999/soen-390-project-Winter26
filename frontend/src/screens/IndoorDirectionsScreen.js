@@ -664,6 +664,764 @@ function computeDirectionSteps(
   );
 }
 
+function renderExplorerPanel({
+  browsingLocked,
+  selectedCampus,
+  handleCampusChange,
+  styles,
+  campusBuildings,
+  selectedBuildingIdx,
+  handleBuildingChange,
+}) {
+  if (browsingLocked) return null;
+
+  return (
+    <View style={styles.explorerPanel}>
+      <IndoorCampusToggle
+        selectedCampus={selectedCampus}
+        onSelectCampus={handleCampusChange}
+        styles={styles}
+      />
+
+      <IndoorBuildingSelector
+        buildings={campusBuildings}
+        selectedBuildingIdx={selectedBuildingIdx}
+        onSelectBuilding={handleBuildingChange}
+        styles={styles}
+      />
+    </View>
+  );
+}
+
+function renderSelectionModeIndicator(selectionMode, styles) {
+  if (!selectionMode) return null;
+
+  return (
+    <View style={styles.selectionModeIndicator}>
+      <MaterialIcons name="touch-app" size={18} color={MAROON} />
+      <Text style={styles.selectionModeText}>
+        Tap on the map to select {" "}
+        {selectionMode === "start" ? "start point" : "destination"}
+      </Text>
+    </View>
+  );
+}
+
+function renderSearchResults({
+  searchQuery,
+  activeField,
+  searchResults,
+  styles,
+  handleSelectRoom,
+}) {
+  if (!(searchQuery.trim().length > 0 && activeField)) return null;
+
+  return (
+    <View style={styles.searchResultsContainer}>
+      {searchResults.length > 0 ? (
+        <ScrollView
+          nestedScrollEnabled
+          keyboardShouldPersistTaps="handled"
+          style={styles.searchResultsScroll}
+          showsVerticalScrollIndicator
+        >
+          {searchResults.slice(0, 6).map((item) => (
+            <Pressable
+              key={item.id}
+              style={styles.searchResultItem}
+              onPress={() => handleSelectRoom(item)}
+            >
+              <Text
+                style={styles.searchResultText}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {item.label}, Floor {" "}
+                {item.floor?.split("-")[1] || item.floor} · {" "}
+                {item.buildingName}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.noResultsContainer}>
+          <MaterialIcons name="search-off" size={24} color="#999" />
+          <Text style={styles.noResultsText}>
+            No rooms or buildings found. Please try again.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function renderTransferModeControls({
+  routeType,
+  effectiveStartRoom,
+  effectiveDestRoom,
+  styles,
+  resolvedTransitionPref,
+  accessibleRoute,
+  setTransitionPref,
+}) {
+  if (
+    !(
+      (routeType === "cross-floor" || routeType === "cross-building") &&
+      effectiveStartRoom &&
+      effectiveDestRoom
+    )
+  ) {
+    return null;
+  }
+
+  return (
+    <View style={styles.transferModeControls}>
+      <View style={styles.transferModeOptionsStandalone}>
+        <Pressable
+          testID="transition-pref-stairs"
+          style={[
+            styles.transferModeOption,
+            resolvedTransitionPref === "stairs" &&
+              styles.transferModeOptionActive,
+            accessibleRoute && styles.selectorDisabled,
+          ]}
+          disabled={accessibleRoute}
+          onPress={() => setTransitionPref("stairs")}
+        >
+          <MaterialIcons
+            name="stairs"
+            size={18}
+            color={resolvedTransitionPref === "stairs" ? "#fff" : MAROON}
+          />
+          <Text
+            style={[
+              styles.transferModeOptionText,
+              resolvedTransitionPref === "stairs" &&
+                styles.transferModeOptionTextActive,
+            ]}
+          >
+            Stairs
+          </Text>
+        </Pressable>
+        <Pressable
+          testID="transition-pref-elevator"
+          style={[
+            styles.transferModeOption,
+            resolvedTransitionPref === "elevator" &&
+              styles.transferModeOptionActiveBlue,
+          ]}
+          onPress={() => setTransitionPref("elevator")}
+        >
+          <MaterialIcons
+            name="elevator"
+            size={18}
+            color={resolvedTransitionPref === "elevator" ? "#fff" : BLUE}
+          />
+          <Text
+            style={[
+              styles.transferModeOptionText,
+              styles.transferModeOptionTextBlue,
+              resolvedTransitionPref === "elevator" &&
+                styles.transferModeOptionTextActive,
+            ]}
+          >
+            Elevator
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function renderJourneyPlanner({
+  journeyStages,
+  activeJourneyStage,
+  styles,
+  handleJourneyStageSelect,
+}) {
+  if (!journeyStages.length) return null;
+
+  return (
+    <View style={styles.journeyPlannerCard}>
+      <Text style={styles.journeyPlannerTitle}>
+        Floor-by-floor journey
+      </Text>
+      <Text style={styles.journeyPlannerSubtitle}>
+        Tap a stage to preview that part of the trip.
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.journeyStageRow}
+      >
+        {journeyStages.map((stage, index) => {
+          const isActive = activeJourneyStage?.id === stage.id;
+          return (
+            <Pressable
+              key={stage.id}
+              testID={stage.id}
+              style={[
+                styles.journeyStageCard,
+                isActive && styles.journeyStageCardActive,
+              ]}
+              onPress={() => handleJourneyStageSelect(stage.id)}
+            >
+              <View style={styles.journeyStageHeaderRow}>
+                <MaterialIcons
+                  name={stage.icon}
+                  size={20}
+                  color={isActive ? "#fff" : MAROON}
+                />
+                <View
+                  style={[
+                    styles.journeyStageNumberBadge,
+                    isActive && styles.journeyStageNumberBadgeActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.journeyStageNumberText,
+                      isActive && styles.journeyStageNumberTextActive,
+                    ]}
+                  >
+                    {index + 1}
+                  </Text>
+                </View>
+              </View>
+              <Text
+                style={[
+                  styles.journeyStageTitle,
+                  isActive && styles.journeyStageTitleActive,
+                ]}
+                numberOfLines={2}
+              >
+                {stage.title}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
+
+function renderOutdoorBridgeCard({
+  activeJourneyStage,
+  styles,
+  navigation,
+}) {
+  if (activeJourneyStage?.type !== "outdoor") return null;
+
+  return (
+    <View style={styles.outdoorBridgeCard}>
+      <MaterialIcons name="directions-walk" size={28} color={MAROON} />
+      <Text style={styles.outdoorBridgeTitle}>
+        Walk outside to {" "}
+        {getBuildingName(activeJourneyStage.destinationBuildingId)}
+      </Text>
+      <Text style={styles.outdoorBridgeSubtitle}>
+        {activeJourneyStage.description}
+      </Text>
+      <Pressable
+        testID="outdoor-navigate-btn"
+        style={styles.outdoorBridgeButton}
+        onPress={() => {
+          const fromCoords = activeJourneyStage.fromCoords;
+          const toCoords = activeJourneyStage.toCoords;
+          if (fromCoords && toCoords) {
+            // Navigate to the Map tab (parent tab navigator)
+            // using the correct screen name "Map"
+            const parent = navigation.getParent();
+            (parent || navigation).navigate("Map", {
+              outdoorRoute: {
+                startName:
+                  getBuildingName(activeJourneyStage.fromBuildingId) +
+                  " Building",
+                destName:
+                  getBuildingName(
+                    activeJourneyStage.destinationBuildingId,
+                  ) + " Building",
+                startCoords: fromCoords,
+                destCoords: toCoords,
+              },
+            });
+          }
+        }}
+      >
+        <MaterialIcons name="map" size={18} color="#fff" />
+        <Text style={styles.outdoorBridgeButtonText}>
+          View outdoor route
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function renderFloorPlanSection({
+  styles,
+  selectionMode,
+  handleMapPress,
+  displayedFloor,
+  mapJourneyStage,
+  displayedSegmentResult,
+  selectedBuilding,
+  inspectMode,
+  toggleInspectMode,
+  activeJourneyStage,
+  activeJourneyStepNumber,
+  renderFloorPlanContent,
+}) {
+  return (
+    <View
+      testID="indoor-floor-plan-container"
+      style={styles.floorPlanContainer}
+      {...(selectionMode
+        ? {
+            onStartShouldSetResponder: () => true,
+            onResponderRelease: handleMapPress,
+          }
+        : {})}
+    >
+      {displayedFloor && (
+        <View style={styles.mapStageHeader}>
+          <View>
+            <Text style={styles.mapStageTitle}>
+              {getMapStageBuildingLabel(
+                mapJourneyStage?.mapBuildingId ||
+                  displayedSegmentResult?.segment?.buildingId ||
+                  selectedBuilding?.id,
+              )}{" "}
+              · Floor {displayedFloor.label}
+            </Text>
+          </View>
+          <View style={styles.mapStageActions}>
+            <Pressable
+              style={[
+                styles.inspectToggle,
+                inspectMode && styles.inspectToggleActive,
+              ]}
+              onPress={toggleInspectMode}
+            >
+              <MaterialIcons
+                name={inspectMode ? "zoom-out-map" : "zoom-in"}
+                size={14}
+                color={inspectMode ? "#fff" : MAROON}
+              />
+              <Text
+                style={[
+                  styles.inspectToggleText,
+                  inspectMode && styles.inspectToggleTextActive,
+                ]}
+              >
+                {inspectMode ? "Inspecting map" : "Inspect map"}
+              </Text>
+            </Pressable>
+            {activeJourneyStage && (
+              <View style={styles.mapStageBadge}>
+                <Text style={styles.mapStageBadgeText}>
+                  Step {activeJourneyStepNumber}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
+      {displayedFloor?.image ? (
+        renderFloorPlanContent()
+      ) : (
+        <View style={styles.noFloorPlan}>
+          <MaterialIcons name="map" size={48} color="#ccc" />
+          <Text style={styles.noFloorPlanText}>
+            Select start and destination
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function renderRouteDetailsSection({
+  effectiveStartRoom,
+  effectiveDestRoom,
+  styles,
+  routeStats,
+  pathResult,
+  directionSteps,
+}) {
+  if (!(effectiveStartRoom && effectiveDestRoom)) {
+    return (
+      <View style={styles.emptyPrompt}>
+        <MaterialIcons name="directions" size={32} color="#ccc" />
+        <Text style={styles.emptyPromptText}>
+          Select start and destination points to see walking directions
+        </Text>
+        <Text style={styles.emptyPromptSubtext}>
+          Use the search bars or tap on the map
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <>
+      <View style={styles.statsBar}>
+        <View style={styles.statItem}>
+          <View style={styles.statValueRow}>
+            <MaterialIcons
+              name="directions-walk"
+              size={18}
+              color={MAROON}
+            />
+            <Text style={styles.statValue}>{routeStats.duration}</Text>
+          </View>
+          <Text style={styles.statLabel}>walking</Text>
+        </View>
+        <View style={styles.statItem}>
+          <View style={styles.statValueRow}>
+            <Text style={styles.statValue}>{routeStats.distance}</Text>
+          </View>
+          <Text style={styles.statLabel}>distance</Text>
+        </View>
+        <View style={styles.statItemRight}>
+          <View style={styles.statValueRow}>
+            <Text style={styles.statValue}>{routeStats.type}</Text>
+          </View>
+          <Text style={styles.statLabel}>route</Text>
+        </View>
+      </View>
+
+      {pathResult && !pathResult.ok && (
+        <View style={styles.errorContainer}>
+          <MaterialIcons
+            name="error-outline"
+            size={20}
+            color="#dc3545"
+          />
+          <Text style={styles.errorText}>{pathResult.reason}</Text>
+        </View>
+      )}
+
+      {directionSteps.length > 0 && (
+        <View style={styles.stepsContainer}>
+          <Text style={styles.stepsTitle}>STEP-BY-STEP DIRECTIONS</Text>
+          {directionSteps.map((step) => (
+            <View key={step.step} style={styles.stepRow}>
+              <View style={styles.stepNumberCircle}>
+                <Text style={styles.stepNumber}>{step.step}</Text>
+              </View>
+              <View style={styles.stepTextContainer}>
+                <Text style={styles.stepText}>{step.text}</Text>
+                {step.distance != null && (
+                  <Text style={styles.stepDistance}>
+                    {step.distance}
+                  </Text>
+                )}
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
+function renderIndoorDirectionsScrollContent({
+  styles,
+  browsingLocked,
+  selectedCampus,
+  handleCampusChange,
+  campusBuildings,
+  selectedBuildingIdx,
+  handleBuildingChange,
+  activeField,
+  searchQuery,
+  startText,
+  destText,
+  startRoom,
+  destRoom,
+  selectionMode,
+  handleFieldChange,
+  setActiveField,
+  setSearchQuery,
+  setStartRoom,
+  setStartText,
+  setDestRoom,
+  setDestText,
+  toggleSelectionMode,
+  handleSwap,
+  searchResults,
+  handleSelectRoom,
+  accessibleRoute,
+  setAccessibleRoute,
+  routeType,
+  effectiveStartRoom,
+  effectiveDestRoom,
+  resolvedTransitionPref,
+  setTransitionPref,
+  journeyStages,
+  activeJourneyStage,
+  handleJourneyStageSelect,
+  navigation,
+  handleMapPress,
+  displayedFloor,
+  mapJourneyStage,
+  displayedSegmentResult,
+  selectedBuilding,
+  inspectMode,
+  toggleInspectMode,
+  activeJourneyStepNumber,
+  renderFloorPlanContent,
+  selectedFloorIdx,
+  handleFloorChange,
+  routeStats,
+  pathResult,
+  directionSteps,
+}) {
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      {renderExplorerPanel({
+        browsingLocked,
+        selectedCampus,
+        handleCampusChange,
+        styles,
+        campusBuildings,
+        selectedBuildingIdx,
+        handleBuildingChange,
+      })}
+
+      <View style={styles.searchColumnWrapper}>
+        <View style={styles.searchSection}>
+          <View style={styles.searchInputsBlock}>
+            <View
+              style={[
+                styles.inputRowContainer,
+                styles.inputRowContainerStart,
+              ]}
+            >
+              <View
+                style={[
+                  styles.inputRow,
+                  selectionMode === "start" && styles.inputRowActive,
+                ]}
+              >
+                <MaterialIcons name="trip-origin" size={18} color={GREEN} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Search start or use map pin button"
+                  placeholderTextColor="#999"
+                  value={activeField === "start" ? searchQuery : startText}
+                  onChangeText={(text) => handleFieldChange(text, "start")}
+                  onFocus={() => {
+                    setActiveField("start");
+                    setSearchQuery(startRoom?.label || startText);
+                  }}
+                  onBlur={() => {
+                    setActiveField(null);
+                  }}
+                />
+                {startText.length > 0 && (
+                  <Pressable
+                    onPress={() => {
+                      setStartRoom(null);
+                      setStartText("");
+                      if (activeField === "start") setSearchQuery("");
+                    }}
+                    hitSlop={10}
+                  >
+                    <MaterialIcons name="close" size={16} color="#999" />
+                  </Pressable>
+                )}
+              </View>
+              <Pressable
+                style={[
+                  styles.mapSelectButton,
+                  selectionMode === "start" && styles.mapSelectButtonActive,
+                ]}
+                onPress={() => toggleSelectionMode("start")}
+              >
+                <MaterialIcons
+                  name="my-location"
+                  size={20}
+                  color={selectionMode === "start" ? "#fff" : MAROON}
+                />
+              </Pressable>
+            </View>
+
+            <View
+              style={[
+                styles.inputRowContainer,
+                styles.inputRowContainerDest,
+              ]}
+            >
+              <View
+                style={[
+                  styles.inputRow,
+                  selectionMode === "dest" && styles.inputRowActive,
+                ]}
+              >
+                <MaterialIcons name="place" size={18} color={MAROON} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Search destination or use map pin button"
+                  placeholderTextColor="#999"
+                  value={activeField === "dest" ? searchQuery : destText}
+                  onChangeText={(text) => handleFieldChange(text, "dest")}
+                  onFocus={() => {
+                    setActiveField("dest");
+                    setSearchQuery(destRoom?.label || destText);
+                  }}
+                  onBlur={() => {
+                    setActiveField(null);
+                  }}
+                />
+                {destText.length > 0 && (
+                  <Pressable
+                    onPress={() => {
+                      setDestRoom(null);
+                      setDestText("");
+                      if (activeField === "dest") setSearchQuery("");
+                    }}
+                    hitSlop={10}
+                  >
+                    <MaterialIcons name="close" size={16} color="#999" />
+                  </Pressable>
+                )}
+              </View>
+              <Pressable
+                style={[
+                  styles.mapSelectButton,
+                  selectionMode === "dest" && styles.mapSelectButtonActive,
+                ]}
+                onPress={() => toggleSelectionMode("dest")}
+              >
+                <MaterialIcons
+                  name="place"
+                  size={20}
+                  color={selectionMode === "dest" ? "#fff" : MAROON}
+                />
+              </Pressable>
+            </View>
+
+            <Pressable
+              testID="swap-direction-toggle"
+              style={styles.swapButton}
+              onPress={handleSwap}
+            >
+              <MaterialIcons name="swap-vert" size={20} color={MAROON} />
+            </Pressable>
+          </View>
+        </View>
+
+        {renderSelectionModeIndicator(selectionMode, styles)}
+
+        {renderSearchResults({
+          searchQuery,
+          activeField,
+          searchResults,
+          styles,
+          handleSelectRoom,
+        })}
+      </View>
+
+      <View
+        style={styles.accessibilityRow}
+        testID="accessibility-toggle-row"
+      >
+        <View style={styles.accessibilityLabelContainer}>
+          <MaterialIcons
+            name="accessible"
+            size={22}
+            color={accessibleRoute ? BLUE : "#666"}
+          />
+          <Text
+            style={[
+              styles.accessibilityLabel,
+              accessibleRoute && styles.accessibilityLabelActive,
+            ]}
+          >
+            Accessible Route
+          </Text>
+        </View>
+        <Text style={styles.accessibilityHint}>
+          {accessibleRoute ? "Avoiding stairs" : "Uses stairs if shorter"}
+        </Text>
+        <Switch
+          testID="accessibility-switch"
+          value={accessibleRoute}
+          onValueChange={(val) => {
+            setAccessibleRoute(val);
+            if (val) setTransitionPref("elevator");
+          }}
+          trackColor={{ false: "#ddd", true: BLUE }}
+          thumbColor={accessibleRoute ? "#fff" : "#f4f3f4"}
+        />
+      </View>
+
+      {renderTransferModeControls({
+        routeType,
+        effectiveStartRoom,
+        effectiveDestRoom,
+        styles,
+        resolvedTransitionPref,
+        accessibleRoute,
+        setTransitionPref,
+      })}
+
+      {renderJourneyPlanner({
+        journeyStages,
+        activeJourneyStage,
+        styles,
+        handleJourneyStageSelect,
+      })}
+
+      {renderOutdoorBridgeCard({
+        activeJourneyStage,
+        styles,
+        navigation,
+      })}
+
+      {renderFloorPlanSection({
+        styles,
+        selectionMode,
+        handleMapPress,
+        displayedFloor,
+        mapJourneyStage,
+        displayedSegmentResult,
+        selectedBuilding,
+        inspectMode,
+        toggleInspectMode,
+        activeJourneyStage,
+        activeJourneyStepNumber,
+        renderFloorPlanContent,
+      })}
+
+      <IndoorPoiLegend styles={styles} iconColor={MAROON} />
+
+      {(journeyStages.length > 0 || !browsingLocked) && (
+        <IndoorFloorSelector
+          floors={selectedBuilding?.floors}
+          selectedFloorIdx={selectedFloorIdx}
+          onSelectFloor={handleFloorChange}
+          styles={styles}
+        />
+      )}
+
+      {renderRouteDetailsSection({
+        effectiveStartRoom,
+        effectiveDestRoom,
+        styles,
+        routeStats,
+        pathResult,
+        directionSteps,
+      })}
+    </ScrollView>
+  );
+}
+
 // ── Handler / effect helpers (extracted to reduce cognitive complexity) ──
 
 /** Process a text change in the start or destination search field. */
@@ -1598,564 +2356,58 @@ export default function IndoorDirectionsScreen({ route, navigation }) {
           <Text style={styles.headerTitle}>Indoor Directions</Text>
         </View>
 
-        <ScrollView
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {!browsingLocked && (
-            <View style={styles.explorerPanel}>
-              <IndoorCampusToggle
-                selectedCampus={selectedCampus}
-                onSelectCampus={handleCampusChange}
-                styles={styles}
-              />
-
-              <IndoorBuildingSelector
-                buildings={campusBuildings}
-                selectedBuildingIdx={selectedBuildingIdx}
-                onSelectBuilding={handleBuildingChange}
-                styles={styles}
-              />
-            </View>
-          )}
-
-          <View style={styles.searchColumnWrapper}>
-            {/* Search Inputs with Map Selection Buttons */}
-            <View style={styles.searchSection}>
-              <View style={styles.searchInputsBlock}>
-                {/* Start Input */}
-                <View
-                  style={[
-                    styles.inputRowContainer,
-                    styles.inputRowContainerStart,
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.inputRow,
-                      selectionMode === "start" && styles.inputRowActive,
-                    ]}
-                  >
-                    <MaterialIcons name="trip-origin" size={18} color={GREEN} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Search start or use map pin button"
-                      placeholderTextColor="#999"
-                      value={activeField === "start" ? searchQuery : startText}
-                      onChangeText={(text) => handleFieldChange(text, "start")}
-                      onFocus={() => {
-                        setActiveField("start");
-                        setSearchQuery(startRoom?.label || startText);
-                      }}
-                      onBlur={() => {
-                        setActiveField(null);
-                      }}
-                    />
-                    {startText.length > 0 && (
-                      <Pressable
-                        onPress={() => {
-                          setStartRoom(null);
-                          setStartText("");
-                          if (activeField === "start") setSearchQuery("");
-                        }}
-                        hitSlop={10}
-                      >
-                        <MaterialIcons name="close" size={16} color="#999" />
-                      </Pressable>
-                    )}
-                  </View>
-                  <Pressable
-                    style={[
-                      styles.mapSelectButton,
-                      selectionMode === "start" && styles.mapSelectButtonActive,
-                    ]}
-                    onPress={() => toggleSelectionMode("start")}
-                  >
-                    <MaterialIcons
-                      name="my-location"
-                      size={20}
-                      color={selectionMode === "start" ? "#fff" : MAROON}
-                    />
-                  </Pressable>
-                </View>
-
-                <View
-                  style={[
-                    styles.inputRowContainer,
-                    styles.inputRowContainerDest,
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.inputRow,
-                      selectionMode === "dest" && styles.inputRowActive,
-                    ]}
-                  >
-                    <MaterialIcons name="place" size={18} color={MAROON} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Search destination or use map pin button"
-                      placeholderTextColor="#999"
-                      value={activeField === "dest" ? searchQuery : destText}
-                      onChangeText={(text) => handleFieldChange(text, "dest")}
-                      onFocus={() => {
-                        setActiveField("dest");
-                        setSearchQuery(destRoom?.label || destText);
-                      }}
-                      onBlur={() => {
-                        setActiveField(null);
-                      }}
-                    />
-                    {destText.length > 0 && (
-                      <Pressable
-                        onPress={() => {
-                          setDestRoom(null);
-                          setDestText("");
-                          if (activeField === "dest") setSearchQuery("");
-                        }}
-                        hitSlop={10}
-                      >
-                        <MaterialIcons name="close" size={16} color="#999" />
-                      </Pressable>
-                    )}
-                  </View>
-                  <Pressable
-                    style={[
-                      styles.mapSelectButton,
-                      selectionMode === "dest" && styles.mapSelectButtonActive,
-                    ]}
-                    onPress={() => toggleSelectionMode("dest")}
-                  >
-                    <MaterialIcons
-                      name="place"
-                      size={20}
-                      color={selectionMode === "dest" ? "#fff" : MAROON}
-                    />
-                  </Pressable>
-                </View>
-
-                <Pressable
-                  testID="swap-direction-toggle"
-                  style={styles.swapButton}
-                  onPress={handleSwap}
-                >
-                  <MaterialIcons name="swap-vert" size={20} color={MAROON} />
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Selection Mode Indicator */}
-            {selectionMode && (
-              <View style={styles.selectionModeIndicator}>
-                <MaterialIcons name="touch-app" size={18} color={MAROON} />
-                <Text style={styles.selectionModeText}>
-                  Tap on the map to select{" "}
-                  {selectionMode === "start" ? "start point" : "destination"}
-                </Text>
-              </View>
-            )}
-
-            {/* Search Results Dropdown */}
-            {searchQuery.trim().length > 0 && activeField && (
-              <View style={styles.searchResultsContainer}>
-                {searchResults.length > 0 ? (
-                  <ScrollView
-                    nestedScrollEnabled
-                    keyboardShouldPersistTaps="handled"
-                    style={styles.searchResultsScroll}
-                    showsVerticalScrollIndicator
-                  >
-                    {searchResults.slice(0, 6).map((item) => (
-                      <Pressable
-                        key={item.id}
-                        style={styles.searchResultItem}
-                        onPress={() => handleSelectRoom(item)}
-                      >
-                        <Text
-                          style={styles.searchResultText}
-                          numberOfLines={2}
-                          ellipsizeMode="tail"
-                        >
-                          {item.label}, Floor{" "}
-                          {item.floor?.split("-")[1] || item.floor} ·{" "}
-                          {item.buildingName}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                ) : (
-                  <View style={styles.noResultsContainer}>
-                    <MaterialIcons name="search-off" size={24} color="#999" />
-                    <Text style={styles.noResultsText}>
-                      No rooms or buildings found. Please try again.
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-
-          {/* Accessibility Toggle */}
-          <View
-            style={styles.accessibilityRow}
-            testID="accessibility-toggle-row"
-          >
-            <View style={styles.accessibilityLabelContainer}>
-              <MaterialIcons
-                name="accessible"
-                size={22}
-                color={accessibleRoute ? BLUE : "#666"}
-              />
-              <Text
-                style={[
-                  styles.accessibilityLabel,
-                  accessibleRoute && styles.accessibilityLabelActive,
-                ]}
-              >
-                Accessible Route
-              </Text>
-            </View>
-            <Text style={styles.accessibilityHint}>
-              {accessibleRoute ? "Avoiding stairs" : "Uses stairs if shorter"}
-            </Text>
-            <Switch
-              testID="accessibility-switch"
-              value={accessibleRoute}
-              onValueChange={(val) => {
-                setAccessibleRoute(val);
-                if (val) setTransitionPref("elevator");
-              }}
-              trackColor={{ false: "#ddd", true: BLUE }}
-              thumbColor={accessibleRoute ? "#fff" : "#f4f3f4"}
-            />
-          </View>
-
-          {(routeType === "cross-floor" || routeType === "cross-building") &&
-            effectiveStartRoom &&
-            effectiveDestRoom && (
-              <View style={styles.transferModeControls}>
-                <View style={styles.transferModeOptionsStandalone}>
-                  <Pressable
-                    testID="transition-pref-stairs"
-                    style={[
-                      styles.transferModeOption,
-                      resolvedTransitionPref === "stairs" &&
-                        styles.transferModeOptionActive,
-                      accessibleRoute && styles.selectorDisabled,
-                    ]}
-                    disabled={accessibleRoute}
-                    onPress={() => setTransitionPref("stairs")}
-                  >
-                    <MaterialIcons
-                      name="stairs"
-                      size={18}
-                      color={
-                        resolvedTransitionPref === "stairs" ? "#fff" : MAROON
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.transferModeOptionText,
-                        resolvedTransitionPref === "stairs" &&
-                          styles.transferModeOptionTextActive,
-                      ]}
-                    >
-                      Stairs
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    testID="transition-pref-elevator"
-                    style={[
-                      styles.transferModeOption,
-                      resolvedTransitionPref === "elevator" &&
-                        styles.transferModeOptionActiveBlue,
-                    ]}
-                    onPress={() => setTransitionPref("elevator")}
-                  >
-                    <MaterialIcons
-                      name="elevator"
-                      size={18}
-                      color={
-                        resolvedTransitionPref === "elevator" ? "#fff" : BLUE
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.transferModeOptionText,
-                        styles.transferModeOptionTextBlue,
-                        resolvedTransitionPref === "elevator" &&
-                          styles.transferModeOptionTextActive,
-                      ]}
-                    >
-                      Elevator
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
-
-          {journeyStages.length > 0 && (
-            <View style={styles.journeyPlannerCard}>
-              <Text style={styles.journeyPlannerTitle}>
-                Floor-by-floor journey
-              </Text>
-              <Text style={styles.journeyPlannerSubtitle}>
-                Tap a stage to preview that part of the trip.
-              </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.journeyStageRow}
-              >
-                {journeyStages.map((stage, index) => {
-                  const isActive = activeJourneyStage?.id === stage.id;
-                  return (
-                    <Pressable
-                      key={stage.id}
-                      testID={stage.id}
-                      style={[
-                        styles.journeyStageCard,
-                        isActive && styles.journeyStageCardActive,
-                      ]}
-                      onPress={() => handleJourneyStageSelect(stage.id)}
-                    >
-                      <View style={styles.journeyStageHeaderRow}>
-                        <MaterialIcons
-                          name={stage.icon}
-                          size={20}
-                          color={isActive ? "#fff" : MAROON}
-                        />
-                        <View
-                          style={[
-                            styles.journeyStageNumberBadge,
-                            isActive && styles.journeyStageNumberBadgeActive,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.journeyStageNumberText,
-                              isActive && styles.journeyStageNumberTextActive,
-                            ]}
-                          >
-                            {index + 1}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text
-                        style={[
-                          styles.journeyStageTitle,
-                          isActive && styles.journeyStageTitleActive,
-                        ]}
-                        numberOfLines={2}
-                      >
-                        {stage.title}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Outdoor navigation bridge — shown when outdoor stage is active */}
-          {activeJourneyStage?.type === "outdoor" && (
-            <View style={styles.outdoorBridgeCard}>
-              <MaterialIcons name="directions-walk" size={28} color={MAROON} />
-              <Text style={styles.outdoorBridgeTitle}>
-                Walk outside to{" "}
-                {getBuildingName(activeJourneyStage.destinationBuildingId)}
-              </Text>
-              <Text style={styles.outdoorBridgeSubtitle}>
-                {activeJourneyStage.description}
-              </Text>
-              <Pressable
-                testID="outdoor-navigate-btn"
-                style={styles.outdoorBridgeButton}
-                onPress={() => {
-                  const fromCoords = activeJourneyStage.fromCoords;
-                  const toCoords = activeJourneyStage.toCoords;
-                  if (fromCoords && toCoords) {
-                    // Navigate to the Map tab (parent tab navigator)
-                    // using the correct screen name "Map"
-                    const parent = navigation.getParent();
-                    (parent || navigation).navigate("Map", {
-                      outdoorRoute: {
-                        startName:
-                          getBuildingName(activeJourneyStage.fromBuildingId) +
-                          " Building",
-                        destName:
-                          getBuildingName(
-                            activeJourneyStage.destinationBuildingId,
-                          ) + " Building",
-                        startCoords: fromCoords,
-                        destCoords: toCoords,
-                      },
-                    });
-                  }
-                }}
-              >
-                <MaterialIcons name="map" size={18} color="#fff" />
-                <Text style={styles.outdoorBridgeButtonText}>
-                  View outdoor route
-                </Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* Floor Plan with Route */}
-          <View
-            testID="indoor-floor-plan-container"
-            style={styles.floorPlanContainer}
-            {...(selectionMode
-              ? {
-                  onStartShouldSetResponder: () => true,
-                  onResponderRelease: handleMapPress,
-                }
-              : {})}
-          >
-            {displayedFloor && (
-              <View style={styles.mapStageHeader}>
-                <View>
-                  <Text style={styles.mapStageTitle}>
-                    {getMapStageBuildingLabel(
-                      mapJourneyStage?.mapBuildingId ||
-                        displayedSegmentResult?.segment?.buildingId ||
-                        selectedBuilding?.id,
-                    )}{" "}
-                    · Floor {displayedFloor.label}
-                  </Text>
-                </View>
-                <View style={styles.mapStageActions}>
-                  <Pressable
-                    style={[
-                      styles.inspectToggle,
-                      inspectMode && styles.inspectToggleActive,
-                    ]}
-                    onPress={toggleInspectMode}
-                  >
-                    <MaterialIcons
-                      name={inspectMode ? "zoom-out-map" : "zoom-in"}
-                      size={14}
-                      color={inspectMode ? "#fff" : MAROON}
-                    />
-                    <Text
-                      style={[
-                        styles.inspectToggleText,
-                        inspectMode && styles.inspectToggleTextActive,
-                      ]}
-                    >
-                      {inspectMode ? "Inspecting map" : "Inspect map"}
-                    </Text>
-                  </Pressable>
-                  {activeJourneyStage && (
-                    <View style={styles.mapStageBadge}>
-                      <Text style={styles.mapStageBadgeText}>
-                        Step {activeJourneyStepNumber}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            )}
-            {displayedFloor?.image ? (
-              renderFloorPlanContent()
-            ) : (
-              <View style={styles.noFloorPlan}>
-                <MaterialIcons name="map" size={48} color="#ccc" />
-                <Text style={styles.noFloorPlanText}>
-                  Select start and destination
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <IndoorPoiLegend styles={styles} iconColor={MAROON} />
-
-          {(journeyStages.length > 0 || !browsingLocked) && (
-            <IndoorFloorSelector
-              floors={selectedBuilding?.floors}
-              selectedFloorIdx={selectedFloorIdx}
-              onSelectFloor={handleFloorChange}
-              styles={styles}
-            />
-          )}
-
-          {/* Route Stats Bar */}
-          {effectiveStartRoom && effectiveDestRoom ? (
-            <>
-              <View style={styles.statsBar}>
-                <View style={styles.statItem}>
-                  <View style={styles.statValueRow}>
-                    <MaterialIcons
-                      name="directions-walk"
-                      size={18}
-                      color={MAROON}
-                    />
-                    <Text style={styles.statValue}>{routeStats.duration}</Text>
-                  </View>
-                  <Text style={styles.statLabel}>walking</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <View style={styles.statValueRow}>
-                    <Text style={styles.statValue}>{routeStats.distance}</Text>
-                  </View>
-                  <Text style={styles.statLabel}>distance</Text>
-                </View>
-                <View style={styles.statItemRight}>
-                  <View style={styles.statValueRow}>
-                    <Text style={styles.statValue}>{routeStats.type}</Text>
-                  </View>
-                  <Text style={styles.statLabel}>route</Text>
-                </View>
-              </View>
-
-              {/* Path Error Message */}
-              {pathResult && !pathResult.ok && (
-                <View style={styles.errorContainer}>
-                  <MaterialIcons
-                    name="error-outline"
-                    size={20}
-                    color="#dc3545"
-                  />
-                  <Text style={styles.errorText}>{pathResult.reason}</Text>
-                </View>
-              )}
-
-              {/* Step-by-Step Directions */}
-              {directionSteps.length > 0 && (
-                <View style={styles.stepsContainer}>
-                  <Text style={styles.stepsTitle}>STEP-BY-STEP DIRECTIONS</Text>
-                  {directionSteps.map((step) => (
-                    <View key={step.step} style={styles.stepRow}>
-                      <View style={styles.stepNumberCircle}>
-                        <Text style={styles.stepNumber}>{step.step}</Text>
-                      </View>
-                      <View style={styles.stepTextContainer}>
-                        <Text style={styles.stepText}>{step.text}</Text>
-                        {step.distance != null && (
-                          <Text style={styles.stepDistance}>
-                            {step.distance}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </>
-          ) : (
-            <View style={styles.emptyPrompt}>
-              <MaterialIcons name="directions" size={32} color="#ccc" />
-              <Text style={styles.emptyPromptText}>
-                Select start and destination points to see walking directions
-              </Text>
-              <Text style={styles.emptyPromptSubtext}>
-                Use the search bars or tap on the map
-              </Text>
-            </View>
-          )}
-        </ScrollView>
+        {renderIndoorDirectionsScrollContent({
+          styles,
+          browsingLocked,
+          selectedCampus,
+          handleCampusChange,
+          campusBuildings,
+          selectedBuildingIdx,
+          handleBuildingChange,
+          activeField,
+          searchQuery,
+          startText,
+          destText,
+          startRoom,
+          destRoom,
+          selectionMode,
+          handleFieldChange,
+          setActiveField,
+          setSearchQuery,
+          setStartRoom,
+          setStartText,
+          setDestRoom,
+          setDestText,
+          toggleSelectionMode,
+          handleSwap,
+          searchResults,
+          handleSelectRoom,
+          accessibleRoute,
+          setAccessibleRoute,
+          routeType,
+          effectiveStartRoom,
+          effectiveDestRoom,
+          resolvedTransitionPref,
+          setTransitionPref,
+          journeyStages,
+          activeJourneyStage,
+          handleJourneyStageSelect,
+          navigation,
+          handleMapPress,
+          displayedFloor,
+          mapJourneyStage,
+          displayedSegmentResult,
+          selectedBuilding,
+          inspectMode,
+          toggleInspectMode,
+          activeJourneyStepNumber,
+          renderFloorPlanContent,
+          selectedFloorIdx,
+          handleFloorChange,
+          routeStats,
+          pathResult,
+          directionSteps,
+        })}
       </View>
     </SafeAreaView>
   );
